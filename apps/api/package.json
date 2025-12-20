@@ -8,8 +8,9 @@
     "dev": "bun --watch run src/index.ts & tsc --watch"
   },
   "dependencies": {
+    "@melinia/shared": "workspace:*",
     "hono": "^4.10.8",
-    "@melinia/shared": "workspace:*"
+    "postgres": "^3.4.7"
   },
   "devDependencies": {
     "@types/bun": "latest"
