@@ -17,6 +17,8 @@ async function runMigration(name: string, migrationFn: () => Promise<void>): Pro
         await sql`INSERT INTO migrations(name) VALUES(${name})`;
         console.log(`Ok "${name}"`);
     }
+
+    return;
 }
 
 await runMigration("create gen_id func", async () => {
@@ -63,11 +65,21 @@ await runMigration("melinia db init", async () => {
     await sql`
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY DEFAULT gen_id('U'),
+            email TEXT UNIQUE NOT NULL,
+            ph_no VARCHAR(10) UNIQUE NOT NULL,
+            passwd_hash TEXT NOT NULL,
+
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+
+    await sql`
+        CREATE TABLE IF NOT EXISTS profile (
+            id SERIAL PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             first_name TEXT NOT NULL,
             last_name TEXT,
-            email TEXT UNIQUE NOT NULL,
-            passwd_hash TEXT NOT NULL,
-            ph_no VARCHAR(10) UNIQUE NOT NULL,
             college_id INTEGER REFERENCES colleges(id),
             degree_id INTEGER REFERENCES degrees(id),
             other_degree TEXT, --Populated only when the user choose 'Other' degree. 
@@ -75,8 +87,8 @@ await runMigration("melinia db init", async () => {
 
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    `;
+        )
+    `
 
     // users_roles(junction table)
     await sql`
@@ -90,16 +102,18 @@ await runMigration("melinia db init", async () => {
     `;
 
     //events 
-    await sql`DROP TYPE IF EXISTS part_type CASCADE;`;
-    await sql`CREATE TYPE part_type AS ENUM('SOLO', 'TEAM');`;
     await sql`
         CREATE TABLE IF NOT EXISTS events (
             id TEXT PRIMARY KEY DEFAULT gen_id('E'),
             name TEXT NOT NULL,
             description TEXT NOT NULL,
-            participation_type part_type NOT NULL DEFAULT 'SOLO', -- type 'SOLO' or 'TEAM'
-            max_allowed INTEGER NOT NULL CHECK (max_allowed > 0), -- max allowed team or solo
+            participation_type TEXT NOT NULL DEFAULT 'solo' CHECK (participation_type IN ('solo', 'team')), 
+            event_type TEXT NOT NULL CHECK (event_type IN ('technical', 'non-technical', 'flagship')),
+            max_allowed INTEGER NOT NULL CHECK (max_allowed > 0),
+            min_team_size INTEGER NOT NULL DEFAULT 1 CHECK (min_team_size > 0),
+            max_team_size INTEGER CHECK (max_team_size >= min_team_size),
             venue TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'not-started',
             start_time TIMESTAMP NOT NULL,
             end_time TIMESTAMP NOT NULL,
             registration_start TIMESTAMP NOT NULL,
@@ -107,14 +121,38 @@ await runMigration("melinia db init", async () => {
             created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
 
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+            CHECK (end_time > start_time),
+            CHECK (registration_end <= start_time),
+            CHECK (registration_start < registration_end)
+        );
+    `;
+
+    await sql`
+        CREATE TABLE IF NOT EXISTS event_rounds (
+            id SERIAL PRIMARY KEY,
+            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+            round_no INTEGER NOT NULL CHECK (round_no > 0),
+            round_description TEXT NOT NULL,
+            UNIQUE(event_id, round_no)
+        );
+    `;
+
+    await sql`
+        CREATE TABLE IF NOT EXISTS event_prizes (
+            id SERIAL PRIMARY KEY,
+            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+            position INTEGER NOT NULL CHECK (position > 0),
+            reward_value INTEGER NOT NULL CHECK (reward_value > 0),
+            UNIQUE(event_id, position)
         );
     `;
 
     await sql`
         CREATE TABLE IF NOT EXISTS event_organizers (
-            event_id TEXT NOT NULL REFERENCES events(id),
-            user_id TEXT NOT NULL REFERENCES users(id),
+            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
             PRIMARY KEY(event_id, user_id) 
@@ -123,8 +161,8 @@ await runMigration("melinia db init", async () => {
 
     await sql`
         CREATE TABLE IF NOT EXISTS event_volunteers (
-            event_id TEXT NOT NULL REFERENCES events(id),
-            user_id TEXT NOT NULL REFERENCES users(id),
+            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
             PRIMARY KEY(event_id, user_id) 
@@ -169,3 +207,18 @@ await runMigration("melinia db init", async () => {
         );
     `;
 });
+
+await runMigration("create invitations", async () => {
+    await sql`
+        CREATE TABLE IF NOT EXISTS invitations (
+            id SERIAL PRIMARY KEY,
+            team_id TEXT NOT NULL REFERENCES teams(id),
+            status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+            inviter_id TEXT NOT NULL REFERENCES users(id),
+            invitee_id TEXT REFERENCES users(id)
+        );
+    `;
+});
+
+
+await sql.end();

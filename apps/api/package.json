@@ -5,9 +5,11 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "bun --watch run src/index.ts & tsc --watch"
+    "dev": "bun --watch run src/index.ts & tsc --watch",
+    "db:migrate": "bun run src/db/migrations.ts"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
     "@melinia/shared": "workspace:*",
     "hono": "^4.10.8",
     "postgres": "^3.4.7"
