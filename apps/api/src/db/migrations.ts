@@ -19,7 +19,7 @@ async function runMigration(name: string, migrationFn: () => Promise<void>): Pro
     }
 }
 
-runMigration("create gen_id func", async () => {
+await runMigration("create gen_id func", async () => {
     await sql`
         CREATE OR REPLACE FUNCTION gen_id(entity CHAR)
         RETURNS TEXT
@@ -34,7 +34,7 @@ runMigration("create gen_id func", async () => {
     `;
 });
 
-runMigration("melinia db init", async () => {
+await runMigration("melinia db init", async () => {
     //colleges
     await sql`
         CREATE TABLE IF NOT EXISTS colleges (
@@ -66,11 +66,11 @@ runMigration("melinia db init", async () => {
             first_name TEXT NOT NULL,
             last_name TEXT,
             email TEXT UNIQUE NOT NULL,
-            passwd TEXT NOT NULL,
+            passwd_hash TEXT NOT NULL,
             ph_no VARCHAR(10) UNIQUE NOT NULL,
             college_id INTEGER REFERENCES colleges(id),
             degree_id INTEGER REFERENCES degrees(id),
-            other_degree TEXT, --Populated only when the user chose 'Other' degree. 
+            other_degree TEXT, --Populated only when the user choose 'Other' degree. 
             year INTEGER NOT NULL CHECK(year BETWEEN 1 AND 5),
 
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -144,9 +144,28 @@ runMigration("melinia db init", async () => {
     await sql`
         CREATE TABLE IF NOT EXISTS team_members (
             user_id TEXT NOT NULL REFERENCES users(id),
-            team_id TEXT NOT NULL REFERENCES teams(id),
+            team_id TEXT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
             joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY(user_id, team_id)
         );
-    `
+    `;
+
+    // qr tags 
+    await sql`
+        CREATE TABLE IF NOT EXISTS tags (
+            id TEXT PRIMARY KEY DEFAULT gen_random_uuid(), -- this will be the qr value as well.
+            status TEXT NOT NULL DEFAULT 'unused' CHECK (status IN ('unused', 'used', 'revoked')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+
+    // check-in
+    await sql`
+        CREATE TABLE IF NOT EXISTS checkin (
+            id SERIAL PRIMARY KEY,
+            tag_id TEXT UNIQUE NOT NULL REFERENCES tags(id),
+            user_id TEXT UNIQUE NOT NULL REFERENCES users(id),
+            checked_in_at TIMESTAMP NOT NULL
+        );
+    `;
 });

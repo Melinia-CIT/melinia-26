@@ -5,16 +5,17 @@ function getEnv(env: string): string {
     if (!value) {
         throw new Error(`Missing required env variable ${env}`);
     }
-    return value
+    return value;
 }
 
 const sql = postgres({
     host: getEnv('DB_HOST'),
-    port: Number(getEnv('DB_PORT')), 
+    port: Number(getEnv('DB_PORT')),
     database: getEnv('DB_NAME'),
-    username: getEnv('DB_USERNAME'), 
+    username: getEnv('DB_USERNAME'),
     password: getEnv('DB_PASSWORD'),
     max: 20,
+    ssl: "require"
 });
 
 export default sql;
