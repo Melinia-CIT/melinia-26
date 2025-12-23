@@ -9,6 +9,14 @@ export async function checkUserExists(email: string): Promise<boolean> {
     return user.length > 0;
 }
 
+export async function checkProfileCompleted(id:string) : Promise<boolean> {
+    const userWithProfile = await sql`
+        SELECT 1 from users where id = ${id} and profilecompleted = true
+    `
+    return userWithProfile.length > 0;
+
+}
+
 export async function getUser(email: string): Promise<User | null> {
     const [user] = await sql`
         SELECT * FROM users WHERE email = ${email}
