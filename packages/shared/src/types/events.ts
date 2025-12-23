@@ -51,3 +51,4 @@ export const updateEventSchema = eventSchema.partial();
 export type Event = z.infer<typeof eventSchema>;
 export type CreateEvent = z.infer<typeof createEventSchema>;
 export type UpdateEvent = z.infer<typeof updateEventSchema>; 
+
