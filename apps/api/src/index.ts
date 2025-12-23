@@ -1,23 +1,17 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import type { ApiResponse } from "@melinia/shared";
+import { events } from "./routes";
 
-export const app = new Hono()
-	.use(cors())
-	.use(logger())
+const app = new Hono();
 
-	.get("/", (c) => {
-		return c.text("Hello Hono!");
-	})
+app.use(cors());
+app.use(logger());
 
-	.get("/hello", async (c) => {
-		const data: ApiResponse = {
-			message: "Hello !",
-			success: false,
-		};
+app.get("/pint", async (c) => {
+    return c.json("pong");
+});
 
-		return c.json(data, { status: 200 });
-	});
+app.route("/", events);
 
 export default app;

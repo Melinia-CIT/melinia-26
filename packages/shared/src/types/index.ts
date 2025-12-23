@@ -1,4 +1,2 @@
-export type ApiResponse = {
-  message: string;
-  success: false;
-}
+export * from "./events";
+export * from "./users";
