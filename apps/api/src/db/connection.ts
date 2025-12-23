@@ -1,12 +1,5 @@
 import postgres from "postgres";
-
-function getEnv(env: string): string {
-    const value = process.env[env];
-    if (!value) {
-        throw new Error(`Missing required env variable ${env}`);
-    }
-    return value;
-}
+import { getEnv } from "../utils/lib";
 
 const sql = postgres({
     host: getEnv('DB_HOST'),

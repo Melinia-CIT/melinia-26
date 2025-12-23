@@ -66,7 +66,7 @@ await runMigration("melinia db init", async () => {
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY DEFAULT gen_id('U'),
             email TEXT UNIQUE NOT NULL,
-            ph_no VARCHAR(10) UNIQUE NOT NULL,
+            ph_no VARCHAR(10) UNIQUE,
             passwd_hash TEXT NOT NULL,
 
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -220,5 +220,29 @@ await runMigration("create invitations", async () => {
     `;
 });
 
+await runMigration("add role column in users table", async () => {
+    await sql.begin(async (tx) => {
+        await tx`
+            CREATE TYPE user_role as ENUM (
+                'PARTICIPANT',
+                'VOLUNTEER',
+                'ORGANIZER',
+                'ADMIN'
+            );
+        `;
+
+        await tx`
+            ALTER TABLE users
+            ADD COLUMN role user_role NOT NULL DEFAULT 'PARTICIPANT';
+        `;
+    });
+})
+
+await runMigration("add profile completion status", async () => {
+    await sql`
+        ALTER TABLE users
+        ADD COLUMN profileCompleted BOOLEAN NOT NULL DEFAULT false;
+    `;
+});
 
 await sql.end();
