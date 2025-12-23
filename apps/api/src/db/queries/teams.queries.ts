@@ -43,7 +43,7 @@ export async function getAllTeamsForUser(userId: string) {
           JOIN teams         AS t  ON t.id  = tm.team_id
           JOIN events        AS e  ON e.id  = t.event_id
           WHERE tm.user_id = ${userId}
-          ORDER BY t.created_at;
+         
         `;
 
         return { status: true, statusCode: 200, message: 'List of all teams for this user', data: rows };

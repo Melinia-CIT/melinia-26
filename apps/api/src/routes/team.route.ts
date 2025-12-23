@@ -17,14 +17,13 @@ teamRouter.post("/", zValidator("json", createTeamSchema), async (c) => {
         return sendError(c);
     }
 })
-
 teamRouter.get("/:user_id", async (c) => {
     try {
         const user_id = c.req.param("user_id");
         const { statusCode, status, data, message } = await getAllTeamsForUser(user_id);
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
-        console.error(error);
+        console.error("Error details:", error);
         return sendError(c);
     }
 });
