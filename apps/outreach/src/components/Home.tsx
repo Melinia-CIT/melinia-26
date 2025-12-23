@@ -1,10 +1,18 @@
-// const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+import Hero from "./Hero";
+import Countdown from "./Countdown";
+import Events from "./Events";
+import Footer from "./Footer";
 
 function Home() {
 
 	return (
 		<>
-		    Hello
+			<Hero />
+			<div className="flex flex-col h-[100dvh] w-full">
+				<Countdown />
+				<Events />
+			</div>
+			<Footer />
 		</>
 	);
 }
