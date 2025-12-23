@@ -21,7 +21,7 @@ export const sendSuccess = <T>(
 export const sendError = (
   c: Context,
   message = 'Something went wrong!',
-  statusCode: ContentfulStatusCode = 500
+  statusCode: any = 500
 ) => {
   return c.json(
     {
