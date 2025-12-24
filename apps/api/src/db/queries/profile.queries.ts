@@ -77,3 +77,15 @@ export async function createProfile(id: string, profile: Profile) {
     
     return profileSchema.parse(result);
 }
+export async function setProfileCompleted(userId: string) {
+    const result = await sql`
+        UPDATE users
+        SET 
+            profilecompleted = true,
+            updated_at = NOW()
+        WHERE id = ${userId}
+        RETURNING *
+    `;
+    
+    return result[0];
+}
