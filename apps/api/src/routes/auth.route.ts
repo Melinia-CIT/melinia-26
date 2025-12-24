@@ -7,7 +7,7 @@ import { generateOTP, getEnv } from "../utils/lib";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { sign, verify } from "hono/jwt";
 import { HTTPException } from "hono/http-exception";
-import { createAccessToken, createRefreshToken } from "../utils/jwt";
+import { createAccessToken, createRefreshToken, verifyToken } from "../utils/jwt";
 
 
 export const auth = new Hono();
@@ -24,8 +24,8 @@ auth.post("/send-otp", zValidator("json", generateOTPSchema), async (c) => {
     const OTP = generateOTP();
     const otpHash = await Bun.password.hash(OTP, { algorithm: "bcrypt" });
 
-    redis.set(`otp:${email}`, otpHash, "EX", 600);
-    const token = await sign({ email }, getEnv("JWT_SECRET_KEY"));
+    await redis.set(`otp:${email}`, otpHash, "EX", 600);
+    const token = await sign({ email, exp: Math.floor(Date.now() / 1000) + 10 * 60 }, getEnv("JWT_SECRET_KEY"));
 
     // TODO: send OTP via email
     console.log(`OTP(${email}): ${OTP}`);
@@ -34,9 +34,10 @@ auth.post("/send-otp", zValidator("json", generateOTPSchema), async (c) => {
         httpOnly: true,
         secure: true,
         sameSite: "Lax",
-        path: "/auth",
+        path: "/api/v1/auth",
         maxAge: 600,
     });
+
     return c.json({ "msg": "OTP sent" }, 200);
 });
 
@@ -48,7 +49,7 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
         throw new HTTPException(401, { message: "Registration token not provided" });
     }
 
-    const { email } = await verify(token, getEnv("JWT_SECRET_KEY"));
+    const { email } = await verifyToken(token);
     const otpHash = await redis.get(`otp:${email}`);
 
     if (!otpHash) {
@@ -63,12 +64,12 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
 
     await redis.del(`otp:${email}`);
 
-    const regToken = await sign({ email, otpVerified: true }, getEnv("JWT_SECRET_KEY"));
+    const regToken = await sign({ email, otpVerified: true, exp: Math.floor(Date.now() / 1000) + 10 * 60 }, getEnv("JWT_SECRET_KEY"));
     setCookie(c, "registration_token", regToken, {
         httpOnly: true,
         secure: true,
         sameSite: "Lax",
-        path: "/auth",
+        path: "/api/v1/auth",
         maxAge: 600,
     });
 
@@ -84,7 +85,7 @@ auth.post("/register", zValidator("json", registrationSchema), async (c) => {
         throw new HTTPException(401, { message: "Registration token not provided" });
     }
 
-    const { email, otpVerified } = await verify(token, getEnv("JWT_SECRET_KEY"));
+    const { email, otpVerified } = await verifyToken(token);
     if (!otpVerified) {
         throw new HTTPException(401, { message: "Email not verified." });
     }
@@ -101,16 +102,23 @@ auth.post("/register", zValidator("json", registrationSchema), async (c) => {
     const passwdHash = await Bun.password.hash(passwd);
     const user = await insertUser(email as string, passwdHash);
 
-    deleteCookie(c, "registration-cookie");
+    deleteCookie(c, "registration_token", {
+        path: "/api/v1/auth",
+        httpOnly: true,
+        secure: true,
+        sameSite: "Lax",
+    });
 
-    const accessToken = await createAccessToken(user.email);
-    const refreshToken = await createRefreshToken(user.email);
+    const accessToken = await createAccessToken(user.id, user.role);
+    const refreshToken = await createRefreshToken(user.id, user.role);
+
+    await redis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
 
     setCookie(c, "refresh_token", refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: "Strict",
-        path: "/auth/refresh",
+        path: "/api/v1/auth",
         maxAge: 60 * 60 * 24 * 7,
     });
 
@@ -123,40 +131,38 @@ auth.post("/login", zValidator("json", loginSchema), async (c) => {
     const user = await getUser(email);
 
     if (!user) {
-        throw new HTTPException(404, { message: "User does not exists" });
+        throw new HTTPException(401, { message: "User does not exists" });
     }
 
     if (!await Bun.password.verify(passwd, user.passwd_hash)) {
         throw new HTTPException(401, { message: "Invalid password" });
     }
 
-    const accessToken = await createAccessToken(user.email);
-    const refreshToken = await createRefreshToken(user.email);
+    const accessToken = await createAccessToken(user.id, user.role);
+    const refreshToken = await createRefreshToken(user.id, user.role);
 
-    redis.set(`refresh:${user.email}`, refreshToken, "EX", 7 * 24 * 60 * 60);
+    await redis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
 
     setCookie(c, "refresh_token", refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: "Strict",
-        path: "/auth/refresh",
+        path: "/api/v1/auth",
         maxAge: 60 * 60 * 24 * 7,
     });
 
-    return c.json({ login: "Ok", accessToken }, 200);
+    return c.json({ message: "Ok", accessToken }, 200);
 });
 
 auth.post("/logout", async (c) => {
     const refreshToken = getCookie(c, "refresh_token");
 
     if (refreshToken) {
-        try {
-            await verify(refreshToken, getEnv("JWT_SECRET_KEY"));
-            redis.del(`refresh:${refreshToken}`);
-        } finally {
-            deleteCookie(c, "refresh_token");
-        }
+        const { id } = await verify(refreshToken, getEnv("JWT_SECRET_KEY"));
+        await redis.del(`refresh:${id}`);
     }
+
+    deleteCookie(c, "refresh_token", { path: "/api/v1/auth", httpOnly: true, secure: true, sameSite: "Strict" });
 
     return c.json({ message: "Ok" }, 200);
 });
@@ -168,15 +174,15 @@ auth.post("/refresh", async (c) => {
         throw new HTTPException(401, { message: "refresh token not provided" });
     }
 
-    const decoded = await verify(refreshToken, getEnv("JWT_SECRET_KEY"));
+    const { id, role } = await verifyToken(refreshToken);
 
-    const storedToken = await redis.get(`refresh:${decoded.email}`);
+    const storedToken = await redis.get(`refresh:${id}`);
 
-    if (storedToken && storedToken !== refreshToken) {
+    if (!storedToken || storedToken !== refreshToken) {
         throw new HTTPException(401, { message: "Invalid refresh token" });
     }
 
-    const accessToken = await createAccessToken(decoded.email as string);
+    const accessToken = await createAccessToken(id as string, role as string);
 
     return c.json({ accessToken }, 200);
 });
