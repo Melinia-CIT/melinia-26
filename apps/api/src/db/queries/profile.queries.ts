@@ -3,11 +3,11 @@ import { type Profile, profileSchema } from "@melinia/shared/dist"
 
 export async function getProfile(id: string): Promise<Profile> {
     const user_details = await sql`
-        SELECT p.first_name,
-               p.last_name,
-               c.name as college_name,
-               d.name as degree_name,
-               p.other_degree,
+        SELECT p.first_name as "firstName",
+               p.last_name as "lastName",
+               c.name as college,
+               d.name as degree,
+               p.other_degree as "otherDegree",
                p.year
         FROM profile p
         LEFT JOIN colleges c ON p.college_id = c.id
@@ -51,8 +51,8 @@ export async function createProfile(id: string, profile: Profile) {
                 ${id},
                 ${firstName},
                 ${lastName ?? null},
-                (SELECT id FROM college WHERE name = ${college}),
-                (SELECT id FROM degree WHERE name = ${degree}),
+                (SELECT id FROM colleges WHERE name = ${college}),
+                (SELECT id FROM degrees WHERE name = ${degree}),
                 ${otherDegree ?? null},
                 ${year},
                 NOW(),
