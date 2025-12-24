@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { events, auth, teamRouter } from "./routes";
+import { events, auth, user, teamRouter } from "./routes";
 
 const app = new Hono();
 
@@ -15,5 +15,6 @@ app.get("/ping", async (c) => {
 app.route("/", events);
 app.route("/auth", auth);
 app.route("/api/v1/teams", teamRouter);
+app.route("/api/v1/user",user);
 
 export default app;
