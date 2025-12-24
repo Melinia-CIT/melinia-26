@@ -1,7 +1,7 @@
-import sql from "../connection";
-import {type Profile, profileSchema} from "@melinia/shared/dist";
+import sql from "../connection"
+import { type Profile, profileSchema } from "@melinia/shared/dist"
 
-export async function getProfile(id:string): Promise<Profile> {
+export async function getProfile(id: string): Promise<Profile> {
     const user_details = await sql`
         SELECT p.first_name,
                p.last_name,
@@ -14,29 +14,26 @@ export async function getProfile(id:string): Promise<Profile> {
         LEFT JOIN degrees d ON p.degree_id = d.id
         INNER JOIN users u ON p.user_id = u.id
         WHERE u.id = ${id}
-`;
-    return profileSchema.parse(user_details);
-    
+`
+    return profileSchema.parse(user_details[0])
 }
-export async function checkCollegeExists(college_name : string) : Promise<boolean>{
-
+export async function checkCollegeExists(college_name: string): Promise<boolean> {
     const college = await sql`
         SELECT 1 FROM colleges WHERE name =   ${college_name}
-    `;
+    `
 
-    return college.length != 0;
+    return college.length != 0
 }
-export async function checkDegreeExists(degree_name : string) : Promise<boolean>{
-
-    const  degree = await sql`
+export async function checkDegreeExists(degree_name: string): Promise<boolean> {
+    const degree = await sql`
         SELECT 1 FROM  degrees WHERE name =   ${degree_name}
-    `;
+    `
 
-    return degree.length != 0;
+    return degree.length != 0
 }
 export async function createProfile(id: string, profile: Profile) {
-    const {firstName, lastName, college, degree, year, otherDegree} = profile;
-    
+    const { firstName, lastName, college, degree, year, otherDegree } = profile
+
     const [result] = await sql`
         WITH inserted AS (
             INSERT INTO profile (
@@ -73,14 +70,14 @@ export async function createProfile(id: string, profile: Profile) {
         FROM inserted i
         LEFT JOIN colleges c ON i.college_id = c.id
         LEFT JOIN degrees d ON i.degree_id = d.id
-    `;
-    
-    return profileSchema.parse(result);
+    `
+
+    return profileSchema.parse(result)
 }
 
 export async function updateProfile(id: string, profile: Profile) {
-    const {firstName, lastName, college, degree, year, otherDegree} = profile;
-    
+    const { firstName, lastName, college, degree, year, otherDegree } = profile
+
     const [result] = await sql`
         WITH updated AS (
             UPDATE profile
@@ -105,11 +102,10 @@ export async function updateProfile(id: string, profile: Profile) {
         FROM updated u
         LEFT JOIN colleges c ON u.college_id = c.id
         LEFT JOIN degrees d ON u.degree_id = d.id
-    `;
-    
-    return profileSchema.parse(result);
-}
+    `
 
+    return profileSchema.parse(result)
+}
 
 export async function setProfileCompleted(userId: string) {
     const result = await sql`
@@ -119,7 +115,7 @@ export async function setProfileCompleted(userId: string) {
             updated_at = NOW()
         WHERE id = ${userId}
         RETURNING *
-    `;
-    
-    return result[0];
+    `
+
+    return result[0]
 }
