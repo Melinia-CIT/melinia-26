@@ -21,7 +21,7 @@ export async function getProfile(id:string): Promise<Profile> {
 export async function checkCollegeExists(college_name : string) : Promise<boolean>{
 
     const college = await sql`
-        SELECT 1 FROM college WHERE name =   ${college_name}
+        SELECT 1 FROM colleges WHERE name =   ${college_name}
     `;
 
     return college.length != 0;
@@ -29,7 +29,7 @@ export async function checkCollegeExists(college_name : string) : Promise<boolea
 export async function checkDegreeExists(degree_name : string) : Promise<boolean>{
 
     const  degree = await sql`
-        SELECT 1 FROM  degree WHERE name =   ${degree_name}
+        SELECT 1 FROM  degrees WHERE name =   ${degree_name}
     `;
 
     return degree.length != 0;
@@ -71,8 +71,8 @@ export async function createProfile(id: string, profile: Profile) {
             i.other_degree AS "otherDegree",
             i.year
         FROM inserted i
-        LEFT JOIN college c ON i.college_id = c.id
-        LEFT JOIN degree d ON i.degree_id = d.id
+        LEFT JOIN colleges c ON i.college_id = c.id
+        LEFT JOIN degrees d ON i.degree_id = d.id
     `;
     
     return profileSchema.parse(result);
@@ -103,8 +103,8 @@ export async function updateProfile(id: string, profile: Profile) {
             u.other_degree AS "otherDegree",
             u.year
         FROM updated u
-        LEFT JOIN college c ON u.college_id = c.id
-        LEFT JOIN degree d ON u.degree_id = d.id
+        LEFT JOIN colleges c ON u.college_id = c.id
+        LEFT JOIN degrees d ON u.degree_id = d.id
     `;
     
     return profileSchema.parse(result);
