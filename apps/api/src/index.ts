@@ -5,16 +5,20 @@ import { events, auth, user, teamRouter } from "./routes";
 
 const app = new Hono();
 
+const v1 = new Hono();
+
 app.use(cors());
 app.use(logger());
 
-app.get("/ping", async (c) => {
+v1.get("/ping", async (c) => {
     return c.json("pong");
 });
 
-app.route("/", events);
-app.route("/auth", auth);
-app.route("/api/v1/teams", teamRouter);
-app.route("/api/v1/user",user);
+v1.route("/auth", auth);
+v1.route("/users", user);
+v1.route("/events", events);
+v1.route("/teams", teamRouter);
+
+app.route("/api/v1", v1);
 
 export default app;
