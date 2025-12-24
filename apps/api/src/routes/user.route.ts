@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { profileSchema , createEventSchema} from "@packages/shared/dist";
-import { createEvent, getProfile , checkProfileCompleted} from "../db/queries";
+import { createProfile, getProfile , checkProfileCompleted, checkCollegeExists,  checkDegreeExists} from "../db/queries";
 import { getUserID } from "../middleware/profile.middleware";
+import { HTTPException } from "hono/http-exception";
 
 export const user = new Hono();
 
@@ -11,35 +12,41 @@ user.get("/profile", getUserID, async (c) => {
     const user_id = c.get("user_id");
 
     const profile = getProfile(user_id);
-    if (profile === undefined)
 
     return c.json({
         details:profile
     }, 200);
 });
 
-/*
 
 
 user.post("/profile", getUserID, zValidator("json",profileSchema),async (c) => {
-    try {
 	const user_id = c.get("user_id")
 	const profile_completed = await checkProfileCompleted(user_id)
-	if (profile_completed){
 
-		return c.json({
-			error: "Profile already exists",
-			message: "A profile has already been created for this user. Use PUT to update.",
-		}, 409);
+	if (profile_completed){
+            throw new HTTPException(409, {message: "Profile already exists" })
+
 	}
 
-    const input = c.req.valid('json');
-    const { statusCode, status, data, message } = await (input);
+	const input = c.req.valid('json');
+	const college_exists = await checkCollegeExists(input["college"])
+	if (!college_exists){
+	    throw new HTTPException(400, {message: "college does not exist"})
+	}
+	if (input["degree"] !== "other"){
+		const degree_exists = await checkDegreeExists(input["degree"])
+	}
 
-    return sendSuccess(c, data, message, status, statusCode);
-} catch (error: unknown) {
-	console.error(error);
-	return sendError(c);
-}
+	if (!college_exists){
+	    throw new HTTPException(400, {message: "degree does not exist"})
+	}
+	const profile_result = await createProfile(user_id, input);
+
+	if (profile_result === undefined){
+	    throw new HTTPException(500, { message: "internal server error" })
+	}
+	return c.json({status:true,
+		      message:"Profile created successfully"},200);
+
 })
-*/
