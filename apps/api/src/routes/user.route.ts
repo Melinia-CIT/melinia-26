@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { profileSchema , createEventSchema} from "@packages/shared/dist";
+import { profileSchema } from "@packages/shared/dist";
 import { createProfile, getProfile , checkProfileCompleted, checkCollegeExists,  checkDegreeExists, setProfileCompleted, updateProfile} from "../db/queries";
 import { getUserID } from "../middleware/profile.middleware";
 import { HTTPException } from "hono/http-exception";
@@ -16,7 +16,7 @@ user.get("/profile", getUserID, async (c) => {
         throw new HTTPException(404, {message: "Profile not created" })
     }
 
-    const profile = getProfile(user_id);
+    const profile = await getProfile(user_id);
 
     return c.json({
         details:profile
