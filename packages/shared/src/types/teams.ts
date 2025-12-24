@@ -10,7 +10,6 @@ export const teamSchema = z.object({
 // Create team schema - member_emails should be optional or have validation
 export const createTeamSchema = z.object({
   name: z.string().min(1, "Team name is required").max(255, "Team name is too long"),
-  leader_id: z.string().min(1, "Leader ID is required"),
   event_id: z.string().min(1, "Event ID is required").nullable().optional(),
   member_emails: z.array(
     z.string().email("Invalid email format")

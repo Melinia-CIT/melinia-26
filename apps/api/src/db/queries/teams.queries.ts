@@ -13,7 +13,7 @@ import {
 } from "@melinia/shared/dist/";
 
 // Create Team with Member Invitations
-export async function createTeam(input: CreateTeam) {
+export async function createTeam(input: CreateTeam, leader_id:string) {
     const data = createTeamSchema.parse(input);
 
     try {
@@ -55,13 +55,13 @@ export async function createTeam(input: CreateTeam) {
         if (data.event_id) {
             [teamRow] = await sql`
                 INSERT INTO teams (name, leader_id, event_id)
-                VALUES (${data.name}, ${data.leader_id}, ${data.event_id})
+                VALUES (${data.name}, ${leader_id}, ${data.event_id})
                 RETURNING id
             `;
         } else {
             [teamRow] = await sql`
                 INSERT INTO teams (name, leader_id)
-                VALUES (${data.name}, ${data.leader_id})
+                VALUES (${data.name}, ${leader_id})
                 RETURNING id
             `;
         }
@@ -72,7 +72,7 @@ export async function createTeam(input: CreateTeam) {
         // Add leader as team member
         await sql`
             INSERT INTO team_members (team_id, user_id)
-            VALUES (${team_id}, ${data.leader_id})
+            VALUES (${team_id}, ${leader_id})
         `;
 
         // Get user IDs for invitees and create invitations
@@ -85,7 +85,7 @@ export async function createTeam(input: CreateTeam) {
             for (const invitee of invitees) {
                 const [invitationRow] = await sql`
                     INSERT INTO invitations (team_id, invitee_id, inviter_id, status)
-                    VALUES (${team_id}, ${invitee.id}, ${data.leader_id}, 'pending')
+                    VALUES (${team_id}, ${invitee.id}, ${leader_id}, 'pending')
                     RETURNING id
                 `;
                 if (invitationRow?.id) {
@@ -100,7 +100,7 @@ export async function createTeam(input: CreateTeam) {
             message: 'Team created successfully',
             data: {
                 team_id,
-                leader_id: data.leader_id,
+                leader_id: leader_id,
                 team_name: data.name,
                 invitations_sent: invitation_ids.length
             }

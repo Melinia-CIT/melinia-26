@@ -17,13 +17,16 @@ import {
 import { getUserRole } from "../middleware/teams.middleware";
 import { createTeam, getAllTeamsForUser, acceptTeamInvitation, getPendingInvitations } from "../db/queries/teams.queries";
 import { sendError, sendSuccess } from "../utils/response";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 export const teamRouter = new Hono();
 
-teamRouter.post("/", zValidator("json", createTeamSchema),async (c) => {
+teamRouter.post("/", authMiddleware,zValidator("json", createTeamSchema),async (c) => {
     try {
-        const input = c.req.valid('json');
-        const { statusCode, status, data, message } = await createTeam(input);
+        const user_id = c.get('user_id');
+        const formData = await c.req.valid('json');
+        
+        const { statusCode, status, data, message } = await createTeam(formData, user_id);
 
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
