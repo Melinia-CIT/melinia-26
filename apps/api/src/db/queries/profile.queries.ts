@@ -84,8 +84,8 @@ export async function updateProfile(id: string, profile: Profile) {
             SET
                 first_name = ${firstName},
                 last_name = ${lastName ?? null},
-                college_id = (SELECT id FROM college WHERE name = ${college}),
-                degree_id = (SELECT id FROM degree WHERE name = ${degree}),
+                college_id = (SELECT id FROM colleges WHERE name = ${college}),
+                degree_id = (SELECT id FROM degrees WHERE name = ${degree}),
                 other_degree = ${otherDegree ?? null},
                 year = ${year},
                 updated_at = NOW()
