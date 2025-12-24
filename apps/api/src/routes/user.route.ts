@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { profileSchema , createEventSchema} from "@packages/shared/dist";
-import { createProfile, getProfile , checkProfileCompleted, checkCollegeExists,  checkDegreeExists} from "../db/queries";
+import { createProfile, getProfile , checkProfileCompleted, checkCollegeExists,  checkDegreeExists, setProfileCompleted} from "../db/queries";
 import { getUserID } from "../middleware/profile.middleware";
 import { HTTPException } from "hono/http-exception";
 
@@ -50,6 +50,9 @@ user.post("/profile", getUserID, zValidator("json",profileSchema),async (c) => {
 	if (profile_result === undefined){
 	    throw new HTTPException(500, { message: "internal server error" })
 	}
+
+	await setProfileCompleted(user_id)
+	
 	return c.json({status:true,
 		      message:"Profile created successfully"},200);
 
