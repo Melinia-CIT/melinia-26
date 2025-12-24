@@ -40,3 +40,6 @@ export const loginSchema = z.object({
     email: z.email(),
     passwd: z.string().min(1)
 });
+
+
+export type Profile = z.infer<typeof profileSchema>;
