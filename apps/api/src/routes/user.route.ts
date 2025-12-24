@@ -10,6 +10,11 @@ export const user = new Hono();
 
 user.get("/profile", getUserID, async (c) => {
     const user_id = c.get("user_id");
+    const profile_completed = await checkProfileCompleted(user_id)
+
+    if (!profile_completed){
+        throw new HTTPException(404, {message: "Profile not created" })
+    }
 
     const profile = getProfile(user_id);
 
@@ -26,7 +31,6 @@ user.post("/profile", getUserID, zValidator("json",profileSchema),async (c) => {
 
 	if (profile_completed){
             throw new HTTPException(409, {message: "Profile already exists" })
-
 	}
 
 	const input = c.req.valid('json');
