@@ -18,7 +18,6 @@ export const getUserID = createMiddleware<{ Variables: Variables }>(async (c, ne
     }
     
     try {
-	console.log(process.env['JWT_SECRET_KEY'])
         const decodedPayload = await verify(token, String(process.env['JWT_SECRET_KEY'])) as Attributes;
         const { user_id } = decodedPayload;
         
