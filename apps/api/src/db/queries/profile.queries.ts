@@ -77,6 +77,40 @@ export async function createProfile(id: string, profile: Profile) {
     
     return profileSchema.parse(result);
 }
+
+export async function updateProfile(id: string, profile: Profile) {
+    const {firstName, lastName, college, degree, year, otherDegree} = profile;
+    
+    const [result] = await sql`
+        WITH updated AS (
+            UPDATE profile
+            SET
+                first_name = ${firstName},
+                last_name = ${lastName ?? null},
+                college_id = (SELECT id FROM college WHERE name = ${college}),
+                degree_id = (SELECT id FROM degree WHERE name = ${degree}),
+                other_degree = ${otherDegree ?? null},
+                year = ${year},
+                updated_at = NOW()
+            WHERE user_id = ${id}
+            RETURNING *
+        )
+        SELECT 
+            u.first_name AS "firstName",
+            u.last_name AS "lastName",
+            c.name AS college,
+            d.name AS degree,
+            u.other_degree AS "otherDegree",
+            u.year
+        FROM updated u
+        LEFT JOIN college c ON u.college_id = c.id
+        LEFT JOIN degree d ON u.degree_id = d.id
+    `;
+    
+    return profileSchema.parse(result);
+}
+
+
 export async function setProfileCompleted(userId: string) {
     const result = await sql`
         UPDATE users
