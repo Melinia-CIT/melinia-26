@@ -18,12 +18,62 @@ export async function getProfile(id:string): Promise<Profile> {
     return profileSchema.parse(user_details);
     
 }
+export async function checkCollegeExists(college_name : string) : Promise<boolean>{
 
-/*
-export async function createProfile(id : string, profile : Profile) {
+    const college = await sql`
+        SELECT 1 FROM college WHERE name =   ${college_name}
+    `;
 
-	const {firstName,lastName, college, degree, year, otherDegree } = profile;
+    return college.length != 0;
+}
+export async function checkDegreeExists(degree_name : string) : Promise<boolean>{
 
+    const  degree = await sql`
+        SELECT 1 FROM  degree WHERE name =   ${degree_name}
+    `;
 
-
-}*/
+    return degree.length != 0;
+}
+export async function createProfile(id: string, profile: Profile) {
+    const {firstName, lastName, college, degree, year, otherDegree} = profile;
+    
+    const [result] = await sql`
+        WITH inserted AS (
+            INSERT INTO profile (
+                user_id,
+                first_name,
+                last_name,
+                college_id,
+                degree_id,
+                other_degree,
+                year,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                ${id},
+                ${firstName},
+                ${lastName ?? null},
+                (SELECT id FROM college WHERE name = ${college}),
+                (SELECT id FROM degree WHERE name = ${degree}),
+                ${otherDegree ?? null},
+                ${year},
+                NOW(),
+                NOW()
+            )
+            RETURNING *
+        )
+        SELECT 
+            i.first_name AS "firstName",
+            i.last_name AS "lastName",
+            c.name AS college,
+            d.name AS degree,
+            i.other_degree AS "otherDegree",
+            i.year
+        FROM inserted i
+        LEFT JOIN college c ON i.college_id = c.id
+        LEFT JOIN degree d ON i.degree_id = d.id
+    `;
+    
+    return profileSchema.parse(result);
+}
