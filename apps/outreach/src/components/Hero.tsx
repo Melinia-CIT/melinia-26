@@ -1,15 +1,28 @@
+import { useRef, useEffect } from "react";
+
 function Hero() {
-    return(
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        if (videoRef.current) {
+            // Ensure video plays from the start
+            videoRef.current.currentTime = 0;
+        }
+    }, []);
+
+    return (
         <>
-            <div
-                className="bg-blue-200 h-[100dvh] w-full bg-cover bg-center"
-                style={{ backgroundImage: "url('/atsv-bg.jpg')" }}
-            >
-                <img
-                    src="melinia-26.png"
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            <div className="relative h-[100dvh] w-full bg-black overflow-hidden">
+                {/* Video with brightness filter */}
+                <video
+                    ref={videoRef}
+                    src="/website-entry.mp4"
+                    autoPlay
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover brightness-75"
                 />
-			</div>
+            </div>
         </>
     );
 }
