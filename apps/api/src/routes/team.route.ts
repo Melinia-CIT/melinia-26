@@ -162,6 +162,41 @@ teamRouter.delete("/:team_id/pending_invitations/:invitation_id", authMiddleware
         return sendError(c);
     }
 })
+// Accept invitations
+teamRouter.post("/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
+    try {
+        const invitationID = Number(c.req.param('invitation_id'));
+        const userID:string = c.get('user_id');
+
+        if(!invitationID){
+            return sendError(c, "Invalid Invitation", 400);
+        }
+        const input = {user_id:userID, invitation_id:invitationID};
+        const { statusCode, status, data, message } = await acceptTeamInvitation(input);
+        return sendSuccess(c, data, message, status, statusCode);
+    } catch (error: unknown) {
+        console.error("Error details:", error);
+        return sendError(c);
+    }
+})
+
+// Accept invitations
+teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
+    try {
+        const invitationID = Number(c.req.param('invitation_id'));
+        const userID:string = c.get('user_id');
+
+        if(!invitationID){
+            return sendError(c, "Invalid Invitation", 400);
+        }
+        const input = {user_id:userID, invitation_id:invitationID};
+        const { statusCode, status, data, message } = await declineTeamInvitation(input);
+        return sendSuccess(c, data, message, status, statusCode);
+    } catch (error: unknown) {
+        console.error("Error details:", error);
+        return sendError(c);
+    }
+})
 
 teamRouter.get("/", authMiddleware, async (c) => {
     try {

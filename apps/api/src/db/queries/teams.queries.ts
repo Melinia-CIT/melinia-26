@@ -184,7 +184,8 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
             return {
                 status: false,
                 statusCode: 404,
-                message: 'Invitation not found'
+                message: 'Invitation not found',
+                data:{}
             };
         }
 
@@ -192,7 +193,8 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
             return {
                 status: false,
                 statusCode: 403,
-                message: 'This invitation is not for you'
+                message: 'This invitation is not for you',
+                data:{}
             };
         }
 
@@ -200,7 +202,8 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
             return {
                 status: false,
                 statusCode: 400,
-                message: `Invitation already ${invitation.status}`
+                message: `Invitation already ${invitation.status}`,
+                data:{}
             };
         }
 
@@ -211,7 +214,8 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
         return {
             status: true,
             statusCode: 200,
-            message: 'Invitation declined'
+            message: 'Invitation declined',
+            data:{}
         };
     } catch (error) {
         throw error;
