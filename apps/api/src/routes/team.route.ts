@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import {
     type CreateTeam,
@@ -15,17 +15,29 @@ import {
 } from "@melinia/shared/dist/";
 
 import { getUserRole } from "../middleware/teams.middleware";
-import { createTeam, getAllTeamsForUser, acceptTeamInvitation, getPendingInvitations } from "../db/queries/teams.queries";
+import {
+    createTeam,
+    getAllTeamsForUser,
+    acceptTeamInvitation,
+    declineTeamInvitation,
+    deleteTeam,
+    deleteTeamMember,
+    getPendingInvitations,
+    getTeamDetails,
+    updateTeam
+} from "../db/queries/teams.queries";
 import { sendError, sendSuccess } from "../utils/response";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { HTTPException } from "hono/http-exception";
 
 export const teamRouter = new Hono();
 
-teamRouter.post("/", authMiddleware,zValidator("json", createTeamSchema),async (c) => {
+// Create Team //
+teamRouter.post("/", authMiddleware, zValidator("json", createTeamSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
         const formData = await c.req.valid('json');
-        
+
         const { statusCode, status, data, message } = await createTeam(formData, user_id);
 
         return sendSuccess(c, data, message, status, statusCode);
@@ -35,13 +47,47 @@ teamRouter.post("/", authMiddleware,zValidator("json", createTeamSchema),async (
     }
 })
 
-teamRouter.get("/pending_invitations",async(c)=>{
+// Get Team details by team_id
+teamRouter.post("/:team_id", authMiddleware, async (c) => {
     try {
-        const user_id = c.req.query('user_id');
-        console.log('user_id', user_id)
-        if(!user_id){
-            return sendSuccess(c, {}, "Forriben", false, 401);
+
+        const teamID = c.req.param('team_id');
+        if(!teamID){
+            throw new HTTPException(400, {message:"Invalid Team ID"})
         }
+        const { statusCode, status, data, message } = await getTeamDetails(teamID);
+
+        return sendSuccess(c, data, message, status, statusCode);
+    } catch (error: unknown) {
+        console.error(error);
+        return sendError(c);
+    }
+})
+
+//Update Team 
+teamRouter.put("/:team_id", authMiddleware, zValidator("json",updateTeamSchema), async (c) => {
+    try {
+        const user_id = c.get('user_id');
+        const team_id = c.req.param('team_id');
+        if(!team_id){
+            return sendError(c, "Invalid Team", 400);
+        }
+
+        const formData = await c.req.valid('json');
+
+        const { statusCode, status, data, message } = await updateTeam(formData, user_id,team_id);
+
+        return sendSuccess(c, data, message, status, statusCode);
+    } catch (error: unknown) {
+        console.error(error);
+        return sendError(c);
+    }
+})
+
+//List of Pending Invitations for a Particular user
+teamRouter.get("/pending_invitations", authMiddleware, async (c: Context) => {
+    try {
+        const user_id = c.get('user_id');
         const { statusCode, status, data, message } = await getPendingInvitations(user_id);
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
@@ -51,7 +97,7 @@ teamRouter.get("/pending_invitations",async(c)=>{
 })
 
 
-teamRouter.get("/", getUserRole,async (c) => {
+teamRouter.get("/", authMiddleware, async (c) => {
     try {
         const user_id = c.get("user_id");
         const { statusCode, status, data, message } = await getAllTeamsForUser(user_id);

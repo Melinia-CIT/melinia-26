@@ -37,8 +37,6 @@ export const deleteTeamMemberSchema = z.object({
 
 // Update team schema (renamed from updateTeamMemberSchema for clarity)
 export const updateTeamSchema = z.object({
-  team_id: z.string().min(1, "Invalid Team ID"),
-  requester_id: z.string().min(1, "Invalid Requester ID"),
   name: z.string().min(1, "Team name is required").max(255, "Team name is too long").optional(),
   event_id: z.string().min(1, "Invalid Event ID").optional()
 });

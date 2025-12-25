@@ -397,11 +397,11 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
 }
 
 // Update Team (name, event_id)
-export async function updateTeam(input: UpdateTeamRequest) {
-    const data = updateTeamSchema.parse(input);
+export async function updateTeam(input: UpdateTeamRequest, requester_id:string, team_id:string) {
+    const formData = updateTeamSchema.parse(input);
     
     try {
-        const { team_id, requester_id, name, event_id } = data;
+        const {  name, event_id } = formData;
 
         // Verify requester is the team leader
         const [team] = await sql`
@@ -434,7 +434,8 @@ export async function updateTeam(input: UpdateTeamRequest) {
                 return {
                     status: false,
                     statusCode: 409,
-                    message: 'Team name already taken'
+                    message: 'Team name already taken',
+                    data:{}
                 };
             }
         }
@@ -462,14 +463,16 @@ export async function updateTeam(input: UpdateTeamRequest) {
             return {
                 status: false,
                 statusCode: 400,
-                message: 'No fields to update'
+                message: 'No fields to update',
+                data:{}
             };
         }
 
         return {
             status: true,
             statusCode: 200,
-            message: 'Team updated successfully'
+            message: 'Team updated successfully',
+            data:{}
         };
     } catch (error) {
         throw error;
