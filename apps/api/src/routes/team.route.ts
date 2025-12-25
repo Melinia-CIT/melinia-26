@@ -22,7 +22,7 @@ import {
     declineTeamInvitation,
     deleteTeam,
     deleteTeamMember,
-    getPendingInvitations,
+    getPendingInvitationsForTeam,
     getTeamDetails,
     updateTeam
 } from "../db/queries/teams.queries";
@@ -101,7 +101,7 @@ teamRouter.delete("/:team_id", authMiddleware, async (c) => {
     }
 })
 
-teamRouter.delete(":team_id/team_member/:member_id", authMiddleware, async (c) => {
+teamRouter.delete("/:team_id/team_member/:member_id", authMiddleware, async (c) => {
     try {
         const teamID = c.req.param('team_id');
         const memberID = c.req.param('member_id');
@@ -124,11 +124,15 @@ teamRouter.delete(":team_id/team_member/:member_id", authMiddleware, async (c) =
     }
 })
 
-//List of Pending Invitations for a Particular user
-teamRouter.get("/pending_invitations", authMiddleware, async (c: Context) => {
+//List of Pending Invitations for a Particular team
+teamRouter.get("/:team_id/pending_invitations", authMiddleware, async (c: Context) => {
     try {
-        const user_id = c.get('user_id');
-        const { statusCode, status, data, message } = await getPendingInvitations(user_id);
+        const teamID = c.req.param('team_id');
+        if(!teamID){
+            return sendError(c, "Invalid team", 400);
+        }
+
+        const { statusCode, status, data, message } = await getPendingInvitationsForTeam(teamID);
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error("Error details:", error);

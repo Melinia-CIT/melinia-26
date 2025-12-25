@@ -298,40 +298,38 @@ export async function getTeamDetails(teamId: string) {
     }
 }
 
-// Get Pending Invitations for User
-export async function getPendingInvitations(userId: string) {
+// Get Pending Invitations for Team
+export async function getPendingInvitationsForTeam(team_id: string) {
     try {
         const invitations = await sql`
             SELECT
                 i.id AS invitation_id,
                 i.team_id,
-                t.name AS team_name,
+                i.invitee_id,
+                u.email AS invitee_email,
+                p.first_name AS invitee_first_name,
+                p.last_name AS invitee_last_name,
                 i.inviter_id,
-                u.email AS inviter_email,
-                p.first_name AS inviter_first_name,
-                p.last_name AS inviter_last_name,
-                i.status,
-                e.name AS event_name
+                ui.email AS inviter_email,
+                i.status
             FROM invitations AS i
-            JOIN teams AS t ON t.id = i.team_id
-            JOIN users AS u ON u.id = i.inviter_id
+            JOIN users AS u ON u.id = i.invitee_id
             LEFT JOIN profile AS p ON p.user_id = u.id
-            LEFT JOIN events AS e ON e.id = t.event_id
-            WHERE i.invitee_id = ${userId} AND i.status = 'pending'
+            JOIN users AS ui ON ui.id = i.inviter_id
+            WHERE i.team_id = ${team_id} AND i.status = 'pending'
             ORDER BY i.id DESC
         `;
 
         return {
             status: true,
             statusCode: 200,
-            message: 'Pending invitations retrieved',
+            message: 'Pending invitations for team retrieved',
             data: invitations
         };
     } catch (error) {
         throw error;
     }
 }
-
 // Delete Team Member (only leader can delete)
 export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
     const data = deleteTeamMemberSchema.parse(input);
