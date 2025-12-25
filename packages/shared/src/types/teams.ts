@@ -40,7 +40,10 @@ export const updateTeamSchema = z.object({
   name: z.string().min(1, "Team name is required").max(255, "Team name is too long").optional(),
   event_id: z.string().min(1, "Invalid Event ID").optional()
 });
-
+export const addNewMemberSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  team_id: z.string().min(1, "Invalid Team ID")
+})
 // Type exports
 export type Team = z.infer<typeof teamSchema>;
 export type CreateTeam = z.infer<typeof createTeamSchema>;
@@ -48,6 +51,7 @@ export type RespondInvitationRequest = z.infer<typeof respondInvitationSchema>;
 export type DeleteTeamRequest = z.infer<typeof deleteTeamSchema>;
 export type DeleteTeamMemberRequest = z.infer<typeof deleteTeamMemberSchema>;
 export type UpdateTeamRequest = z.infer<typeof updateTeamSchema>;
+export type addNewMemberRequest = z.infer<typeof addNewMemberSchema>
 
 // Optional: Additional useful schemas
 

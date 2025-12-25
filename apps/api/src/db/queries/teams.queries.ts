@@ -5,11 +5,13 @@ import {
     type DeleteTeamMemberRequest,
     type DeleteTeamRequest,
     type UpdateTeamRequest,
+    type addNewMemberRequest,
+    addNewMemberSchema,
     createTeamSchema,
     respondInvitationSchema,
     deleteTeamMemberSchema,
     deleteTeamSchema,
-    updateTeamSchema
+    updateTeamSchema,
 } from "@melinia/shared/dist/";
 
 // Create Team with Member Invitations
@@ -396,6 +398,135 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
             status: true,
             statusCode: 200,
             message: 'Team member removed successfully'
+        };
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function inviteTeamMember(input: addNewMemberRequest, requester_id:string) {
+    try {
+        const { team_id, email } = input;
+
+        // 1. Verify team exists
+        const [team] = await sql`
+            SELECT leader_id FROM teams WHERE id = ${team_id}
+        `;
+
+        if (!team) {
+            return {
+                status: false,
+                statusCode: 404,
+                message: 'Team not found',
+                data: {}
+            };
+        }
+
+        // 2. Check if requester is team leader
+        if (team.leader_id !== requester_id) {
+            return {
+                status: false,
+                statusCode: 403,
+                message: 'Only team leader can invite members',
+                data: {}
+            };
+        }
+
+        // 3. Check if email exists in users table
+        const [user] = await sql`
+            SELECT id, email FROM users WHERE email = ${email}
+        `;
+
+        if (!user) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: `User with email "${email}" does not exist in the system`,
+                data: {}
+            };
+        }
+
+        const invitee_id = user.id;
+
+        // 4. Check if requester is trying to invite themselves
+        if (invitee_id === requester_id) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: 'Cannot invite yourself to the team',
+                data: {}
+            };
+        }
+
+        // 5. Check if user is already a member of the team
+        const [existingMember] = await sql`
+            SELECT user_id FROM team_members 
+            WHERE team_id = ${team_id} AND user_id = ${invitee_id}
+        `;
+
+        if (existingMember) {
+            return {
+                status: false,
+                statusCode: 409,
+                message: `User "${email}" is already a member of this team`,
+                data: {}
+            };
+        }
+
+        // 6. Check if user already has a pending invitation
+        const [existingInvitation] = await sql`
+            SELECT id, status FROM invitations 
+            WHERE team_id = ${team_id} 
+            AND invitee_id = ${invitee_id}
+            AND status = 'pending'
+        `;
+
+        if (existingInvitation) {
+            return {
+                status: false,
+                statusCode: 409,
+                message: `User "${email}" already has a pending invitation to this team`,
+                data: { invitation_id: existingInvitation.id }
+            };
+        }
+
+        // // 7. Check if user previously declined the invitation
+        // const [declinedInvitation] = await sql`
+        //     SELECT id, status FROM invitations 
+        //     WHERE team_id = ${team_id} 
+        //     AND invitee_id = ${invitee_id}
+        //     AND status = 'declined'
+        // `;
+
+        // if (declinedInvitation) {
+        //     return {
+        //         status: false,
+        //         statusCode: 409,
+        //         message: `User "${email}" has previously declined an invitation to this team. Please contact them directly if you want to invite them again.`,
+        //         data: {}
+        //     };
+        // }
+
+        // 8. Create new invitation
+        const [invitationRow] = await sql`
+            INSERT INTO invitations (team_id, invitee_id, inviter_id, status)
+            VALUES (${team_id}, ${invitee_id}, ${requester_id}, 'pending')
+            RETURNING id
+        `;
+
+        if (!invitationRow) {
+            throw new Error('Failed to create invitation');
+        }
+
+        return {
+            status: true,
+            statusCode: 201,
+            message: `Invitation sent to "${email}" successfully`,
+            data: {
+                invitation_id: invitationRow.id,
+                invitee_email: email,
+                team_id: team_id
+            }
         };
     } catch (error) {
         throw error;

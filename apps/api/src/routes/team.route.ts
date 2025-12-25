@@ -11,7 +11,8 @@ import {
     deleteTeamMemberSchema,
     deleteTeamSchema,
     updateTeamSchema,
-    getPendingInvitationsSchema
+    getPendingInvitationsSchema,
+    addNewMemberSchema
 } from "@melinia/shared/dist/";
 
 import { getUserRole } from "../middleware/teams.middleware";
@@ -25,7 +26,8 @@ import {
     getPendingInvitationsForTeam,
     getTeamDetails,
     updateTeam,
-    deleteInvitation
+    deleteInvitation,
+    inviteTeamMember
 } from "../db/queries/teams.queries";
 import { sendError, sendSuccess } from "../utils/response";
 import { authMiddleware } from "../middleware/auth.middleware";
@@ -102,6 +104,7 @@ teamRouter.delete("/:team_id", authMiddleware, async (c) => {
     }
 })
 
+// delete a teammate
 teamRouter.delete("/:team_id/team_member/:member_id", authMiddleware, async (c) => {
     try {
         const teamID = c.req.param('team_id');
@@ -180,7 +183,7 @@ teamRouter.post("/pending_invitations/:invitation_id", authMiddleware, async (c:
     }
 })
 
-// Accept invitations
+// Decline invitations
 teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
     try {
         const invitationID = Number(c.req.param('invitation_id'));
@@ -194,6 +197,20 @@ teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: 
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error("Error details:", error);
+        return sendError(c);
+    }
+})
+// Add a new member //
+teamRouter.post("/add_member", authMiddleware, zValidator("json", addNewMemberSchema), async (c) => {
+    try {
+        const user_id = c.get('user_id');
+        const formData = await c.req.valid('json');
+
+        const { statusCode, status, data, message } = await inviteTeamMember(formData, user_id);
+
+        return sendSuccess(c, data, message, status, statusCode);
+    } catch (error: unknown) {
+        console.error(error);
         return sendError(c);
     }
 })
