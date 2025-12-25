@@ -2,13 +2,13 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { profileSchema } from "@packages/shared/dist";
 import { createProfile, getProfile , checkProfileCompleted, checkCollegeExists,  checkDegreeExists, setProfileCompleted, updateProfile} from "../db/queries";
-import { getUserID } from "../middleware/profile.middleware";
+import { authMiddleware} from "../middleware/auth.middleware";
 import { HTTPException } from "hono/http-exception";
 
 export const user = new Hono();
 
 
-user.get("/profile", getUserID, async (c) => {
+user.get("/profile",authMiddleware, async (c) => {
     const user_id = c.get("user_id");
     const profile_completed = await checkProfileCompleted(user_id)
 
@@ -25,7 +25,7 @@ user.get("/profile", getUserID, async (c) => {
 
 
 
-user.post("/profile", getUserID, zValidator("json",profileSchema),async (c) => {
+user.post("/profile", authMiddleware, zValidator("json",profileSchema),async (c) => {
 	const user_id = c.get("user_id")
 	const profile_completed = await checkProfileCompleted(user_id)
 
@@ -58,7 +58,7 @@ user.post("/profile", getUserID, zValidator("json",profileSchema),async (c) => {
 
 })
 
-user.put("/profile", getUserID, zValidator("json", profileSchema), async (c) => {
+user.put("/profile",authMiddleware, zValidator("json", profileSchema), async (c) => {
 	const user_id = c.get("user_id");
 	const profile_completed = await checkProfileCompleted(user_id);
 	
