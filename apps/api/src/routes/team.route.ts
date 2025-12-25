@@ -101,6 +101,29 @@ teamRouter.delete("/:team_id", authMiddleware, async (c) => {
     }
 })
 
+teamRouter.delete(":team_id/team_member/:member_id", authMiddleware, async (c) => {
+    try {
+        const teamID = c.req.param('team_id');
+        const memberID = c.req.param('member_id');
+        const userID = c.get('user_id');
+
+        if(!teamID){
+            return sendError(c, "Invalid Team", 400);
+        }
+        if(!memberID){
+            return sendError(c, "Invalid Member", 400);
+        }
+
+        const input:DeleteTeamMemberRequest = {requester_id:userID, member_id:memberID, team_id:teamID}
+        const { statusCode, status, data, message } = await deleteTeamMember(input);
+
+        return sendSuccess(c, data, message, status, statusCode);
+    } catch (error: unknown) {
+        console.error(error);
+        return sendError(c);
+    }
+})
+
 //List of Pending Invitations for a Particular user
 teamRouter.get("/pending_invitations", authMiddleware, async (c: Context) => {
     try {

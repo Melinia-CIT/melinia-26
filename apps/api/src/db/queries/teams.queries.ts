@@ -348,7 +348,8 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
             return {
                 status: false,
                 statusCode: 404,
-                message: 'Team not found'
+                message: 'Team not found',
+                data:{}
             };
         }
 
@@ -356,7 +357,8 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
             return {
                 status: false,
                 statusCode: 403,
-                message: 'Only team leader can remove members'
+                message: 'Only team leader can remove members',
+                data:{}
             };
         }
 
@@ -364,7 +366,8 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
             return {
                 status: false,
                 statusCode: 400,
-                message: 'Cannot remove team leader'
+                message: 'Cannot remove team leader',
+                data:{}
             };
         }
 
@@ -377,7 +380,8 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
             return {
                 status: false,
                 statusCode: 404,
-                message: 'Member not found in this team'
+                message: 'Member not found in this team',
+                data:{}
             };
         }
 
