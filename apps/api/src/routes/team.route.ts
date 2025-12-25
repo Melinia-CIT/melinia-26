@@ -48,7 +48,7 @@ teamRouter.post("/", authMiddleware, zValidator("json", createTeamSchema), async
 })
 
 // Get Team details by team_id
-teamRouter.post("/:team_id", authMiddleware, async (c) => {
+teamRouter.get("/:team_id", authMiddleware, async (c) => {
     try {
 
         const teamID = c.req.param('team_id');
@@ -76,6 +76,23 @@ teamRouter.put("/:team_id", authMiddleware, zValidator("json",updateTeamSchema),
         const formData = await c.req.valid('json');
 
         const { statusCode, status, data, message } = await updateTeam(formData, user_id,team_id);
+
+        return sendSuccess(c, data, message, status, statusCode);
+    } catch (error: unknown) {
+        console.error(error);
+        return sendError(c);
+    }
+})
+
+// Get Team details by team_id
+teamRouter.delete("/:team_id", authMiddleware, async (c) => {
+    try {
+        const teamID = c.req.param('team_id');
+        const userID = c.get('user_id');
+        if(!teamID){
+            throw new HTTPException(400, {message:"Invalid Team ID"})
+        }
+        const { statusCode, status, data, message } = await deleteTeam(userID, teamID);
 
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {

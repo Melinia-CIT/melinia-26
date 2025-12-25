@@ -480,11 +480,9 @@ export async function updateTeam(input: UpdateTeamRequest, requester_id:string, 
 }
 
 // Delete Team (only leader can delete)
-export async function deleteTeam(input: DeleteTeamRequest) {
-    const data = deleteTeamSchema.parse(input);
+export async function deleteTeam(requester_id:string, team_id:string) {
     
     try {
-        const { team_id, requester_id } = data;
 
         const [team] = await sql`
             SELECT leader_id FROM teams WHERE id = ${team_id}
@@ -494,7 +492,8 @@ export async function deleteTeam(input: DeleteTeamRequest) {
             return {
                 status: false,
                 statusCode: 404,
-                message: 'Team not found'
+                message: 'Team not found',
+                data:{}
             };
         }
 
@@ -502,19 +501,22 @@ export async function deleteTeam(input: DeleteTeamRequest) {
             return {
                 status: false,
                 statusCode: 403,
-                message: 'Only team leader can delete team'
+                message: 'Only team leader can delete team',
+                data:{}
             };
         }
 
         // Delete team (cascades to team_members and invitations)
         await sql`
-            DELETE FROM teams WHERE id = ${team_id}
+            DELETE FROM teams
+            WHERE id = ${team_id}
         `;
 
         return {
             status: true,
             statusCode: 200,
-            message: 'Team deleted successfully'
+            message: 'Team deleted successfully',
+            data:{}
         };
     } catch (error) {
         throw error;
