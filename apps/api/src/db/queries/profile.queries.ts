@@ -18,8 +18,8 @@ export async function getProfile(id: string): Promise<Profile> {
         INNER JOIN users u ON p.user_id = u.id
         WHERE u.id = ${id}
     `
-    console.log(user_details);
-    return profileSchema.parse(user_details[0])
+    console.log(user_details)
+    return user_details[0] as Profile
 }
 
 export async function checkCollegeExists(college_name: string): Promise<boolean> {
@@ -37,6 +37,7 @@ export async function checkDegreeExists(degree_name: string): Promise<boolean> {
     return degree.length != 0
 }
 export async function createProfile(id: string, profile: Profile) {
+    profileSchema.parse(profile)
     const { firstName, lastName, college, degree, year, otherDegree } = profile
 
     const [result] = await sql`
@@ -80,9 +81,10 @@ export async function createProfile(id: string, profile: Profile) {
         LEFT JOIN degrees d ON i.degree_id = d.id
     `
 
-    return profileSchema.parse(result)
+    return result
 }
 export async function updateProfile(id: string, profile: Profile) {
+    profileSchema.parse(profile)
     const { firstName, lastName, college, degree, year, otherDegree } = profile
     const [result] = await sql`
         WITH updated AS (
@@ -112,9 +114,8 @@ export async function updateProfile(id: string, profile: Profile) {
         LEFT JOIN colleges c ON u.college_id = c.id
         LEFT JOIN degrees d ON u.degree_id = d.id
     `
-    return profileSchema.parse(result)
+    return result
 }
-
 
 export async function setProfileCompleted(userId: string) {
     const result = await sql`
