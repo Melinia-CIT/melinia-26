@@ -245,4 +245,16 @@ await runMigration("add profile completion status", async () => {
     `;
 });
 
+await runMigration("cascade invitations when team is deleted", async () => {
+    await sql`
+        ALTER TABLE invitations
+        DROP CONSTRAINT IF EXISTS invitations_team_id_fkey;
+    `;
+
+    await sql`
+        ALTER TABLE invitations
+        ADD CONSTRAINT invitations_team_id_fkey 
+        FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE;
+    `;
+});
 await sql.end();

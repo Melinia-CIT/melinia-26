@@ -14,7 +14,7 @@ type Variables = {
 };
 
 export const getUserRole = createMiddleware<{ Variables: Variables }>(async (c, next) => {
-    const token = await getCookie(c, 'access-token');
+    const token = await String(c.header('access-token'));
     
     if (!token) {
         return sendError(c, "Forbidden", 401);
@@ -32,3 +32,4 @@ export const getUserRole = createMiddleware<{ Variables: Variables }>(async (c, 
         return sendError(c, "Invalid token", 401);
     }
 });
+
