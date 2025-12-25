@@ -24,7 +24,8 @@ import {
     deleteTeamMember,
     getPendingInvitationsForTeam,
     getTeamDetails,
-    updateTeam
+    updateTeam,
+    deleteInvitation
 } from "../db/queries/teams.queries";
 import { sendError, sendSuccess } from "../utils/response";
 import { authMiddleware } from "../middleware/auth.middleware";
@@ -140,6 +141,27 @@ teamRouter.get("/:team_id/pending_invitations", authMiddleware, async (c: Contex
     }
 })
 
+//Delete a Invitation
+teamRouter.delete("/:team_id/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
+    try {
+        const teamID = c.req.param('team_id');
+        const invitationID = Number(c.req.param('invitation_id'));
+        const userID:string = c.get('user_id');
+
+        if(!teamID){
+            return sendError(c, "Invalid team", 400);
+        }
+        if(!invitationID){
+            return sendError(c, "Invalid Invitation", 400);
+        }
+        const input = {requester_id:userID, invitation_id:invitationID};
+        const { statusCode, status, data, message } = await deleteInvitation(input);
+        return sendSuccess(c, data, message, status, statusCode);
+    } catch (error: unknown) {
+        console.error("Error details:", error);
+        return sendError(c);
+    }
+})
 
 teamRouter.get("/", authMiddleware, async (c) => {
     try {

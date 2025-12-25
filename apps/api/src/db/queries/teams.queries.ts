@@ -480,6 +480,64 @@ export async function updateTeam(input: UpdateTeamRequest, requester_id:string, 
         throw error;
     }
 }
+// Delete Team Invitation (only leader can delete)
+export async function deleteInvitation(input: { invitation_id: number; requester_id: string }) {
+    try {
+        const { invitation_id, requester_id } = input;
+
+        // Get invitation details
+        const [invitation] = await sql`
+            SELECT team_id, status FROM invitations WHERE id = ${invitation_id}
+        `;
+
+        if (!invitation) {
+            return {
+                status: false,
+                statusCode: 404,
+                message: 'Invitation not found',
+                data: {}
+            };
+        }
+
+        // Get team leader
+        const [team] = await sql`
+            SELECT leader_id FROM teams WHERE id = ${invitation.team_id}
+        `;
+
+        if (!team) {
+            return {
+                status: false,
+                statusCode: 404,
+                message: 'Team not found',
+                data: {}
+            };
+        }
+
+        // Check if requester is team leader
+        if (team.leader_id !== requester_id) {
+            return {
+                status: false,
+                statusCode: 403,
+                message: 'Only team leader can delete invitations',
+                data: {}
+            };
+        }
+
+        // Delete invitation
+        await sql`
+            DELETE FROM invitations WHERE id = ${invitation_id}
+        `;
+
+        return {
+            status: true,
+            statusCode: 200,
+            message: 'Invitation deleted successfully',
+            data: {}
+        };
+    } catch (error) {
+        throw error;
+    }
+}
 
 // Delete Team (only leader can delete)
 export async function deleteTeam(requester_id:string, team_id:string) {
