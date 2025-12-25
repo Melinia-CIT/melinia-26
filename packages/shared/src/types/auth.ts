@@ -24,7 +24,7 @@ export const profileSchema = z.object({
     lastName: z.string().min(1).max(80).trim().optional(),
     college: z.string().trim(),
     degree: z.string().trim(),
-    otherDegree: z.string().trim().optional(),
+    otherDegree: z.string().trim().nullable().optional(),
     year: z.number().min(1).max(5)
 }).refine((data) => {
     if (data?.degree.toLowerCase() === "other") {

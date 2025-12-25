@@ -6,7 +6,10 @@ export async function getProfile(id: string): Promise<Profile> {
         SELECT p.first_name as "firstName",
                p.last_name as "lastName",
                c.name as college,
-               d.name as degree,
+               CASE 
+                   WHEN p.other_degree IS NOT NULL THEN 'other'
+                   ELSE d.name
+               END as degree,
                p.other_degree as "otherDegree",
                p.year
         FROM profile p
@@ -14,9 +17,11 @@ export async function getProfile(id: string): Promise<Profile> {
         LEFT JOIN degrees d ON p.degree_id = d.id
         INNER JOIN users u ON p.user_id = u.id
         WHERE u.id = ${id}
-`
-    return profileSchema.parse(user_details[0])
+    `
+    console.log(user_details)
+    return user_details[0] as Profile
 }
+
 export async function checkCollegeExists(college_name: string): Promise<boolean> {
     const college = await sql`
         SELECT 1 FROM colleges WHERE name =   ${college_name}
@@ -32,6 +37,7 @@ export async function checkDegreeExists(degree_name: string): Promise<boolean> {
     return degree.length != 0
 }
 export async function createProfile(id: string, profile: Profile) {
+    profileSchema.parse(profile)
     const { firstName, lastName, college, degree, year, otherDegree } = profile
 
     const [result] = await sql`
@@ -64,7 +70,10 @@ export async function createProfile(id: string, profile: Profile) {
             i.first_name AS "firstName",
             i.last_name AS "lastName",
             c.name AS college,
-            d.name AS degree,
+	    CASE 
+                WHEN i.other_degree IS NOT NULL THEN 'other'
+                ELSE d.name
+            END AS degree,
             i.other_degree AS "otherDegree",
             i.year
         FROM inserted i
@@ -72,12 +81,11 @@ export async function createProfile(id: string, profile: Profile) {
         LEFT JOIN degrees d ON i.degree_id = d.id
     `
 
-    return profileSchema.parse(result)
+    return result
 }
-
 export async function updateProfile(id: string, profile: Profile) {
+    profileSchema.parse(profile)
     const { firstName, lastName, college, degree, year, otherDegree } = profile
-
     const [result] = await sql`
         WITH updated AS (
             UPDATE profile
@@ -96,15 +104,17 @@ export async function updateProfile(id: string, profile: Profile) {
             u.first_name AS "firstName",
             u.last_name AS "lastName",
             c.name AS college,
-            d.name AS degree,
+            CASE 
+                WHEN u.other_degree IS NOT NULL THEN 'other'
+                ELSE d.name
+            END AS degree,
             u.other_degree AS "otherDegree",
             u.year
         FROM updated u
         LEFT JOIN colleges c ON u.college_id = c.id
         LEFT JOIN degrees d ON u.degree_id = d.id
     `
-
-    return profileSchema.parse(result)
+    return result
 }
 
 export async function setProfileCompleted(userId: string) {
