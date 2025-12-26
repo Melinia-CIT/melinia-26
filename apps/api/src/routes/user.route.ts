@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { profileSchema } from "@packages/shared/dist";
+import { profileSchema , createProfileSchema } from "@packages/shared/dist";
 import { createProfile, getProfile , checkProfileCompleted, checkCollegeExists,  checkDegreeExists, setProfileCompleted, updateProfile} from "../db/queries";
 import { authMiddleware} from "../middleware/auth.middleware";
 import { HTTPException } from "hono/http-exception";
@@ -25,7 +25,7 @@ user.get("/profile",authMiddleware, async (c) => {
 
 
 
-user.post("/profile", authMiddleware, zValidator("json",profileSchema),async (c) => {
+user.post("/profile", authMiddleware, zValidator("json", createProfileSchema ),async (c) => {
 	const user_id = c.get("user_id")
 	const profile_completed = await checkProfileCompleted(user_id)
 
@@ -58,7 +58,7 @@ user.post("/profile", authMiddleware, zValidator("json",profileSchema),async (c)
 
 })
 
-user.put("/profile",authMiddleware, zValidator("json", profileSchema), async (c) => {
+user.put("/profile",authMiddleware, zValidator("json", createProfileSchema), async (c) => {
 	const user_id = c.get("user_id");
 	const profile_completed = await checkProfileCompleted(user_id);
 	
