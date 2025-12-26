@@ -4,7 +4,7 @@ await sql`
     CREATE TABLE IF NOT EXISTS migrations (
         id SERIAL PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
-        executed_at TIMESTAMP DEFAULT NOW()
+        executed_at TIMESTAMPTZ DEFAULT NOW()
     );
 `;
 
@@ -25,14 +25,40 @@ await runMigration("create gen_id func", async () => {
     await sql`
         CREATE OR REPLACE FUNCTION gen_id(entity CHAR)
         RETURNS TEXT
+        LANGUAGE plpgsql
         AS $$
-            DECLARE
-                id TEXT;
-            BEGIN
-                id := 'MLN' || entity || LPAD(FLOOR(random() * 1000000)::TEXT, 6, '0');
-                RETURN id;
-            END;
-        $$ LANGUAGE plpgsql;
+        DECLARE
+            letters TEXT := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            numbers TEXT := '0123456789';
+            result TEXT := '';
+            chars TEXT[] := ARRAY['','','','','',''];  -- 6 empty slots
+            letter_count INT := 0;
+            number_count INT := 0;
+            i INT;
+            rand_pos INT;
+        BEGIN
+            -- Place 3 random letters
+            WHILE letter_count < 3 LOOP
+                rand_pos := floor(random() * 6 + 1)::int;
+                IF chars[rand_pos] = '' THEN
+                    chars[rand_pos] := substr(letters, floor(random() * 26 + 1)::int, 1);
+                    letter_count := letter_count + 1;
+                END IF;
+            END LOOP;
+            
+            -- Fill remaining positions with numbers
+            FOR i IN 1..6 LOOP
+                IF chars[i] = '' THEN
+                    chars[i] := substr(numbers, floor(random() * 10 + 1)::int, 1);
+                END IF;
+            END LOOP;
+            
+            -- Concatenate array into result
+            result := array_to_string(chars, '');
+            
+            RETURN 'MLN' || entity || result;
+        END;
+        $$;
     `;
 });
 
@@ -69,8 +95,8 @@ await runMigration("melinia db init", async () => {
             ph_no VARCHAR(10) UNIQUE,
             passwd_hash TEXT NOT NULL,
 
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
     `;
 
@@ -85,8 +111,8 @@ await runMigration("melinia db init", async () => {
             other_degree TEXT, --Populated only when the user choose 'Other' degree. 
             year INTEGER NOT NULL CHECK(year BETWEEN 1 AND 5),
 
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
     `
 
@@ -95,7 +121,7 @@ await runMigration("melinia db init", async () => {
         CREATE TABLE IF NOT EXISTS user_roles (
             user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
             role_id INT REFERENCES roles(id) ON DELETE CASCADE,
-            assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            assigned_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
             assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
             PRIMARY KEY(user_id, role_id)
         );
@@ -113,15 +139,14 @@ await runMigration("melinia db init", async () => {
             min_team_size INTEGER NOT NULL DEFAULT 1 CHECK (min_team_size > 0),
             max_team_size INTEGER CHECK (max_team_size >= min_team_size),
             venue TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'not-started',
-            start_time TIMESTAMP NOT NULL,
-            end_time TIMESTAMP NOT NULL,
-            registration_start TIMESTAMP NOT NULL,
-            registration_end TIMESTAMP NOT NULL,
+            start_time TIMESTAMPTZ NOT NULL,
+            end_time TIMESTAMPTZ NOT NULL,
+            registration_start TIMESTAMPTZ NOT NULL,
+            registration_end TIMESTAMPTZ NOT NULL,
             created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
 
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
             CHECK (end_time > start_time),
             CHECK (registration_end <= start_time),
@@ -153,7 +178,7 @@ await runMigration("melinia db init", async () => {
         CREATE TABLE IF NOT EXISTS event_organizers (
             event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
             user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            assigned_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
             assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
             PRIMARY KEY(event_id, user_id) 
         );
@@ -163,7 +188,7 @@ await runMigration("melinia db init", async () => {
         CREATE TABLE IF NOT EXISTS event_volunteers (
             event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
             user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            assigned_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
             assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
             PRIMARY KEY(event_id, user_id) 
         );
@@ -183,7 +208,7 @@ await runMigration("melinia db init", async () => {
         CREATE TABLE IF NOT EXISTS team_members (
             user_id TEXT NOT NULL REFERENCES users(id),
             team_id TEXT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-            joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            joined_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY(user_id, team_id)
         );
     `;
@@ -193,7 +218,7 @@ await runMigration("melinia db init", async () => {
         CREATE TABLE IF NOT EXISTS tags (
             id TEXT PRIMARY KEY DEFAULT gen_random_uuid(), -- this will be the qr value as well.
             status TEXT NOT NULL DEFAULT 'unused' CHECK (status IN ('unused', 'used', 'revoked')),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
     `;
 
@@ -203,7 +228,7 @@ await runMigration("melinia db init", async () => {
             id SERIAL PRIMARY KEY,
             tag_id TEXT UNIQUE NOT NULL REFERENCES tags(id),
             user_id TEXT UNIQUE NOT NULL REFERENCES users(id),
-            checked_in_at TIMESTAMP NOT NULL
+            checked_in_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
     `;
 });
@@ -241,7 +266,7 @@ await runMigration("add role column in users table", async () => {
 await runMigration("add profile completion status", async () => {
     await sql`
         ALTER TABLE users
-        ADD COLUMN profileCompleted BOOLEAN NOT NULL DEFAULT false;
+        ADD COLUMN profile_completed BOOLEAN NOT NULL DEFAULT false;
     `;
 });
 
@@ -257,4 +282,47 @@ await runMigration("cascade invitations when team is deleted", async () => {
         FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE;
     `;
 });
+
+await runMigration("remove user_roles and roles table", async () => {
+    await sql.begin(async (tx) => {
+        await tx`DROP TABLE user_roles;`;
+        await tx`DROP TABLE roles; `
+    });
+});
+
+await runMigration("automatic updates on updated_at column", async () => {
+    await sql.begin(async (tx) => {
+        await tx`
+            CREATE OR REPLACE FUNCTION update_updated_at()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = NOW();
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        `;
+
+        await tx`
+            CREATE TRIGGER update_users_updated_at
+            BEFORE UPDATE ON users
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at();
+        `;
+
+        await tx`
+            CREATE TRIGGER update_events_updated_at
+            BEFORE UPDATE ON events
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at();
+        `;
+
+        await tx`
+            CREATE TRIGGER update_profile_updated_at
+            BEFORE UPDATE ON profile
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at();
+        `;
+    });
+});
+
 await sql.end();

@@ -8,6 +8,7 @@ import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { sign, verify } from "hono/jwt";
 import { HTTPException } from "hono/http-exception";
 import { createAccessToken, createRefreshToken, verifyToken } from "../utils/jwt";
+import { createHash } from "crypto";
 
 
 export const auth = new Hono();
@@ -22,7 +23,7 @@ auth.post("/send-otp", zValidator("json", generateOTPSchema), async (c) => {
     }
 
     const OTP = generateOTP();
-    const otpHash = await Bun.password.hash(OTP, { algorithm: "bcrypt" });
+    const otpHash = createHash("sha256").update(OTP).digest("hex");
 
     await redis.set(`otp:${email}`, otpHash, "EX", 600);
     const token = await sign({ email, exp: Math.floor(Date.now() / 1000) + 10 * 60 }, getEnv("JWT_SECRET_KEY"));
@@ -50,15 +51,15 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
     }
 
     const { email } = await verifyToken(token);
-    const otpHash = await redis.get(`otp:${email}`);
+    const storedOtpHash = await redis.get(`otp:${email}`);
 
-    if (!otpHash) {
+    if (!storedOtpHash) {
         throw new HTTPException(400, { message: "OTP expired or invalid" });
     }
 
-    const isValidOTP = await Bun.password.verify(otp, otpHash);
+    const otpHash = createHash("sha256").update(otp).digest("hex");
 
-    if (!isValidOTP) {
+    if (otpHash !== storedOtpHash) {
         throw new HTTPException(401, { message: "Invalid OTP" });
     }
 
