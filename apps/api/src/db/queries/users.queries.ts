@@ -11,7 +11,7 @@ export async function checkUserExists(email: string): Promise<boolean> {
 
 export async function checkProfileCompleted(id:string) : Promise<boolean> {
     const userWithProfile = await sql`
-        SELECT 1 from users where id = ${id} and profilecompleted = true
+        SELECT 1 from users where id = ${id} and profile_completed = true
     `
     return userWithProfile.length > 0;
 
