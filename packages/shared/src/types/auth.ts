@@ -5,41 +5,63 @@ export const generateOTPSchema = z.object({
 })
 
 export const verifyOTPSchema = z.object({
-    otp: z.string()
+    otp: z
+        .string()
         .length(6)
-        .regex(/^\d{6}$/, "OTP Should be 6 length")
-});
+        .regex(/^\d{6}$/, "OTP Should be 6 length"),
+})
 
 export const registrationSchema = z.object({
-    passwd: z.string()
+    passwd: z
+        .string()
         .min(8, "Password must be atleast 8 characters")
-        .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
-        .regex(/[a-z]/, 'Must contain at least one lowercase letter')
-        .regex(/[0-9]/, 'Must contain at least one number'),
-    confirmPasswd: z.string()
-});
+        .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+        .regex(/[a-z]/, "Must contain at least one lowercase letter")
+        .regex(/[0-9]/, "Must contain at least one number"),
+    confirmPasswd: z.string(),
+})
 
-export const profileSchema = z.object({
-    firstName: z.string().min(1).max(80).trim(),
-    lastName: z.string().min(1).max(80).trim().optional(),
-    college: z.string().trim(),
-    degree: z.string().trim(),
-    otherDegree: z.string().trim().nullable().optional(),
-    year: z.number().min(1).max(5)
-}).refine((data) => {
-    if (data?.degree.toLowerCase() === "other") {
-        return !!data.otherDegree && data.otherDegree.trim().length > 0;
-    }
-    return true
-}, {
-    error: "Please specify your degree.",
-    path: ["otherDegree"]
-});
+export const profileSchema = z
+    .object({
+        firstName: z.string().min(1).max(80).trim(),
+        lastName: z.string().min(1).max(80).trim().optional(),
+        college: z.string().trim(),
+        degree: z.string().trim(),
+        otherDegree: z.string().trim().nullable().optional(),
+        year: z.number().min(1).max(5),
+    })
+    .refine(
+        data => {
+            if (data?.degree.toLowerCase() === "other") {
+                return !!data.otherDegree && data.otherDegree.trim().length > 0
+            }
+            return true
+        },
+        {
+            message: "Please specify your degree when degree is 'other'",
+            path: ["otherDegree"],
+        }
+    )
+    .refine(
+        data => {
+            if (data?.degree.toLowerCase() !== "other") {
+                return data.otherDegree === null || data.otherDegree === undefined
+            }
+            return true
+        },
+        {
+            message: "otherDegree must be null when degree is not 'other'",
+            path: ["otherDegree"],
+        }
+    )
 
 export const loginSchema = z.object({
     email: z.email(),
-    passwd: z.string().min(1)
-});
+    passwd: z.string().min(1),
+})
 
-
-export type Profile = z.infer<typeof profileSchema>;
+export const createProfileSchema = profileSchema.safeExtend({
+    ph_no: z.string().length(10).regex(/^\d+$/),
+})
+export type Profile = z.infer<typeof profileSchema>
+export type createProfileType = z.infer<typeof createProfileSchema>
