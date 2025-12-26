@@ -1,7 +1,7 @@
 import sql from "../connection"
-import { type Profile, profileSchema } from "@melinia/shared/dist"
+import { type Profile, createProfileSchema, type createProfileType } from "@melinia/shared/dist"
 
-export async function getProfile(id: string): Promise<Profile> {
+export async function getProfile(id: string): Promise<Profile | null> {
     const user_details = await sql`
         SELECT p.first_name as "firstName",
                p.last_name as "lastName",
@@ -18,7 +18,7 @@ export async function getProfile(id: string): Promise<Profile> {
         INNER JOIN users u ON p.user_id = u.id
         WHERE u.id = ${id}
     `
-    return user_details[0] as Profile
+    return user_details.length > 0 ? (user_details[0] as Profile) : null
 }
 
 export async function checkCollegeExists(college_name: string): Promise<boolean> {
@@ -37,9 +37,17 @@ export async function checkDegreeExists(degree_name: string): Promise<boolean> {
     return degree.length != 0
 }
 
-export async function createProfile(id: string, profile: Profile) {
-    profileSchema.parse(profile)
-    const { firstName, lastName, college, degree, year, otherDegree } = profile
+export async function createProfile(id: string, profile: createProfileType) {
+    createProfileSchema.parse(profile)
+    const { firstName, lastName, college, degree, year, otherDegree, ph_no } = profile
+
+    if (ph_no) {
+        const sql_result = await sql`
+	    UPDATE users
+	    SET ph_no = ${ph_no}
+	    WHERE id = ${id}
+	    `
+    }
 
     const [result] = await sql`
         WITH inserted AS (
@@ -84,10 +92,16 @@ export async function createProfile(id: string, profile: Profile) {
 
     return result
 }
+export async function updateProfile(id: string, profile: createProfileType) {
+    createProfileSchema.parse(profile)
+    const { firstName, lastName, college, degree, year, otherDegree, ph_no } = profile
 
-export async function updateProfile(id: string, profile: Profile) {
-    profileSchema.parse(profile)
-    const { firstName, lastName, college, degree, year, otherDegree } = profile
+    const sql_result = await sql`
+        UPDATE users
+        SET ph_no = ${ph_no}
+        WHERE id = ${id}
+    `
+
     const [result] = await sql`
         WITH updated AS (
             UPDATE profile
