@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Scratch Pad",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

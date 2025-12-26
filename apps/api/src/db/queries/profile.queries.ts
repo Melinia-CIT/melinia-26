@@ -1,133 +1,196 @@
 import sql from "../connection"
-import { type Profile, profileSchema } from "@melinia/shared/dist"
+import { type Profile, type CreateProfile, profileSchema } from "@melinia/shared"
 
-export async function getProfile(id: string): Promise<Profile> {
-    const user_details = await sql`
-        SELECT p.first_name as "firstName",
-               p.last_name as "lastName",
+interface IdResult {
+    id: number;
+}
+
+async function resolveDegreeId(degreeName: string, collegeId: number): Promise<number> {
+    const result = await sql<IdResult[]>`
+        WITH ins AS (
+            INSERT INTO degrees (name, college_id) 
+            VALUES (${degreeName}, ${collegeId}) 
+            ON CONFLICT (name, college_id) DO NOTHING 
+            RETURNING id
+        )
+        SELECT id FROM ins
+        UNION ALL
+        SELECT id FROM degrees WHERE name = ${degreeName} and college_id = ${collegeId}
+        LIMIT 1
+    `;
+
+    if (!result[0]) {
+        throw new Error(`Failed to resolve ID for ${degreeName}`);
+    }
+
+    return result[0].id;
+}
+
+async function resolveCollegeId(collegeName: string): Promise<number> {
+    const result = await sql<IdResult[]>`
+        WITH ins AS (
+            INSERT INTO colleges (name) 
+            VALUES (${collegeName}) 
+            ON CONFLICT (name) DO NOTHING 
+            RETURNING id
+        )
+        SELECT id FROM ins
+        UNION ALL
+        SELECT id FROM colleges WHERE name = ${collegeName}
+        LIMIT 1
+    `;
+
+    if (!result[0]) {
+        throw new Error(`Failed to resolve ID for ${collegeName}`);
+    }
+
+    return result[0].id;
+}
+
+export async function checkPhoneNumberExists(phone_number: string): Promise<boolean> {
+    const number = await sql`SELECT 1 FROM  users WHERE ph_no = ${phone_number}`
+
+    return number.length > 0;
+}
+
+export async function getProfileById(id: string): Promise<Profile | null> {
+    const [profile] = await sql`
+        SELECT p.first_name,
+               p.last_name,
                c.name as college,
-               CASE 
-                   WHEN p.other_degree IS NOT NULL THEN 'other'
-                   ELSE d.name
-               END as degree,
-               p.other_degree as "otherDegree",
-               p.year
+               d.name as degree,
+               p.year,
+               p.created_at,
+               p.updated_at
         FROM profile p
         LEFT JOIN colleges c ON p.college_id = c.id
         LEFT JOIN degrees d ON p.degree_id = d.id
         INNER JOIN users u ON p.user_id = u.id
         WHERE u.id = ${id}
-    `
-    return user_details[0] as Profile
+    `;
+
+    return profile ? profileSchema.parse(profile) : null;
 }
 
-export async function checkCollegeExists(college_name: string): Promise<boolean> {
-    const college = await sql`
-        SELECT 1 FROM colleges WHERE name =   ${college_name}
-    `
 
-    return college.length != 0
-}
+export async function createProfile(userId: string, profileData: CreateProfile): Promise<Profile> {
+    const {
+        first_name,
+        last_name,
+        college,
+        degree,
+        year,
+        ph_no
+    } = profileData;
 
-export async function checkDegreeExists(degree_name: string): Promise<boolean> {
-    const degree = await sql`
-        SELECT 1 FROM  degrees WHERE name =   ${degree_name}
-    `
+    const collegeId = await resolveCollegeId(college);
+    const degreeId = await resolveDegreeId(degree, collegeId);
 
-    return degree.length != 0
-}
-
-export async function createProfile(id: string, profile: Profile) {
-    profileSchema.parse(profile)
-    const { firstName, lastName, college, degree, year, otherDegree } = profile
-
-    const [result] = await sql`
-        WITH inserted AS (
+    const [profile] = await sql`
+            WITH p AS (
             INSERT INTO profile (
                 user_id,
                 first_name,
                 last_name,
                 college_id,
                 degree_id,
-                other_degree,
-                year,
-                created_at,
-                updated_at
+                year
             )
             VALUES (
-                ${id},
-                ${firstName},
-                ${lastName ?? null},
-                (SELECT id FROM colleges WHERE name = ${college}),
-                (SELECT id FROM degrees WHERE name = ${degree}),
-                ${otherDegree ?? null},
-                ${year},
-                NOW(),
-                NOW()
+                ${userId},
+                ${first_name},
+                ${last_name ?? null},
+                ${collegeId},
+                ${degreeId},
+                ${year}
             )
             RETURNING *
         )
         SELECT 
-            i.first_name AS "firstName",
-            i.last_name AS "lastName",
-            c.name AS college,
-	    CASE 
-                WHEN i.other_degree IS NOT NULL THEN 'other'
-                ELSE d.name
-            END AS degree,
-            i.other_degree AS "otherDegree",
-            i.year
-        FROM inserted i
-        LEFT JOIN colleges c ON i.college_id = c.id
-        LEFT JOIN degrees d ON i.degree_id = d.id
-    `
+            p.*, 
+            c.name as college, 
+            d.name as degree
+        FROM p
+        JOIN colleges c ON p.college_id = c.id
+        JOIN degrees d ON p.degree_id = d.id;
+    `;
 
-    return result
+    await sql`
+        UPDATE users
+        SET ph_no = ${ph_no}
+        WHERE id = ${userId}
+	`;
+
+    return profileSchema.parse(profile);
 }
 
-export async function updateProfile(id: string, profile: Profile) {
-    profileSchema.parse(profile)
-    const { firstName, lastName, college, degree, year, otherDegree } = profile
-    const [result] = await sql`
-        WITH updated AS (
-            UPDATE profile
-            SET
-                first_name = ${firstName},
-                last_name = ${lastName ?? null},
-                college_id = (SELECT id FROM colleges WHERE name = ${college}),
-                degree_id = (SELECT id FROM degrees WHERE name = ${degree}),
-                other_degree = ${otherDegree ?? null},
-                year = ${year},
+// TODO: This methods upserts, need refinement in the return.
+export async function updateProfile(userId: string, profileData: CreateProfile): Promise<Profile> {
+    const {
+        first_name,
+        last_name,
+        college,
+        degree,
+        year,
+        ph_no
+    } = profileData;
+
+    const collegeId = await resolveCollegeId(college);
+    const degreeId = await resolveDegreeId(degree, collegeId);
+
+    await sql`
+        UPDATE users
+        SET ph_no = ${ph_no}
+        WHERE id = ${userId}
+	`;
+
+    const [profile] = await sql`
+        WITH upsert AS (
+            INSERT INTO profile (
+                user_id,
+                first_name,
+                last_name,
+                college_id,
+                degree_id,
+                year
+            )
+            VALUES (
+                ${userId},
+                ${first_name},
+                ${last_name ?? null},
+                ${collegeId},
+                ${degreeId},
+                ${year}
+            )
+            ON CONFLICT (user_id) 
+            DO UPDATE SET
+                first_name = EXCLUDED.first_name,
+                last_name = EXCLUDED.last_name,
+                college_id = EXCLUDED.college_id,
+                degree_id = EXCLUDED.degree_id,
+                year = EXCLUDED.year,
                 updated_at = NOW()
-            WHERE user_id = ${id}
             RETURNING *
         )
         SELECT 
-            u.first_name AS "firstName",
-            u.last_name AS "lastName",
-            c.name AS college,
-            CASE 
-                WHEN u.other_degree IS NOT NULL THEN 'other'
-                ELSE d.name
-            END AS degree,
-            u.other_degree AS "otherDegree",
-            u.year
-        FROM updated u
-        LEFT JOIN colleges c ON u.college_id = c.id
-        LEFT JOIN degrees d ON u.degree_id = d.id
-    `
-    return result
+            upsert.*, 
+            c.name as college, 
+            d.name as degree
+        FROM upsert
+        JOIN colleges c ON upsert.college_id = c.id
+        JOIN degrees d ON upsert.degree_id = d.id;
+    `;
+
+    return profileSchema.parse(profile);
 }
 
 export async function setProfileCompleted(userId: string) {
-    const result = await sql`
+    const [result] = await sql`
         UPDATE users
-        SET 
-            profile_completed = true,
-            updated_at = NOW()
+        SET profile_completed = true
         WHERE id = ${userId}
         RETURNING *
-    `
+    `;
 
-    return result[0]
+    return result;
 }
