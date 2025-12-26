@@ -63,5 +63,10 @@ export const loginSchema = z.object({
 export const createProfileSchema = profileSchema.safeExtend({
     ph_no: z.string().length(10).regex(/^\d+$/),
 })
+
+export const fullProfileSchema = createProfileSchema.safeExtend({
+    email: z.email()
+})
 export type Profile = z.infer<typeof profileSchema>
+export type FullProfile = z.infer<typeof fullProfileSchema>
 export type createProfileType = z.infer<typeof createProfileSchema>
