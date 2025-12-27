@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {EmailStep, OTPStep, PasswordStep, ProfileStep, FormData, Errors, ProgressBar, Step} from '../features/registration';
+import { EmailStep, OTPStep, PasswordStep, ProfileStep, FormData, Errors, ProgressBar, Step } from '../features/registration';
 
 
 
@@ -155,8 +155,9 @@ const Register: React.FC = () => {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center px-2 py-3 items-center">
       <div className="w-full max-w-md flex flex-col items-center">
         <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('/melinia-alt.jpg')] bg-cover bg-center mb-10" />
-
-        <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />
+        <div className='w-full px-10'>
+          <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />
+        </div>
 
         <div className="w-full bg-zinc-900 rounded-lg p-6 mb-6">
           {currentStep === 1 && (
