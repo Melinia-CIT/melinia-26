@@ -58,9 +58,7 @@ export async function createProfile(id: string, profile: createProfileType) {
                 college_id,
                 degree_id,
                 other_degree,
-                year,
-                created_at,
-                updated_at
+                year
             )
             VALUES (
                 ${id},
@@ -69,9 +67,7 @@ export async function createProfile(id: string, profile: createProfileType) {
                 (SELECT id FROM colleges WHERE name = ${college}),
                 (SELECT id FROM degrees WHERE name = ${degree}),
                 ${otherDegree ?? null},
-                ${year},
-                NOW(),
-                NOW()
+                ${year}
             )
             RETURNING *
         )
@@ -112,8 +108,7 @@ export async function updateProfile(id: string, profile: createProfileType) {
                 college_id = (SELECT id FROM colleges WHERE name = ${college}),
                 degree_id = (SELECT id FROM degrees WHERE name = ${degree}),
                 other_degree = ${otherDegree ?? null},
-                year = ${year},
-                updated_at = NOW()
+                year = ${year}
             WHERE user_id = ${id}
             RETURNING *
         )
@@ -138,8 +133,7 @@ export async function setProfileCompleted(userId: string) {
     const result = await sql`
         UPDATE users
         SET 
-            profile_completed = true,
-            updated_at = NOW()
+            profile_completed = true
         WHERE id = ${userId}
         RETURNING *
     `
