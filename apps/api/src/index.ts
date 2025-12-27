@@ -15,7 +15,7 @@ v1.get("/ping", async (c) => {
 });
 
 v1.route("/auth", auth);
-v1.route("/users", user);
+v1.route("/user", user);
 v1.route("/events", events);
 v1.route("/teams", teamRouter);
 
