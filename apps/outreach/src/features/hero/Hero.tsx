@@ -33,14 +33,14 @@ function Hero({ isVisible = true }: HeroProps) {
             <div
                 className="absolute inset-0 flex items-center justify-center p-8"
                 style={{
-                    background: "url('https://cdn.melinia.dev/melinia-alt.jpg') center center/cover no-repeat",
+                    background: "url('https://cdn.melinia.dev/melinia-land.webp') center center/cover no-repeat",
                 }}
             >
-                {/* <img
-                    src="/melinia-26.png"
+                <img
+                    src="https://cdn.melinia.dev/melinia-26.png"
                     alt="Melinia 26 Logo"
-                    className={`w-64 md:w-96 lg:w-[32rem] object-contain transition-all duration-1000 delay-500 ${isVisible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'} drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]`}
-                /> */}
+                    className={`w-[25rem] md:w-[24rem] lg:w-[60rem] object-contain transition-all duration-1000 delay-500 ${isVisible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'} drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]`}
+                />
             </div>
 
         </div>

@@ -45,54 +45,46 @@ function Countdown() {
     return (
         <>
             <div
-                className="h-[20%] w-full bg-cover bg-center flex items-center justify-center gap-4 text-white"
-                style={{ background: "url('/countdown-bg.png') no-repeat object-fit" }}
+                className="w-full min-h-[180px] md:min-h-[200px] bg-cover bg-center flex items-center justify-center gap-3 md:gap-6 lg:gap-8 text-white px-4 py-8 md:py-12"
+                // style={{ background: "url('/countdown-bg.png') no-repeat center/cover" }}
             >
                 {/* Days */}
-                <div className="flex flex-col items-center gap-2">
-                    <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-xl w-24 h-24 flex items-center justify-center">
-                        <span className="text-5xl font-bold">{formatNumber(timeLeft.days)}</span>
-                    </div>
-                    <span className="text-sm font-semibold uppercase tracking-wider">Days</span>
+                <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-lg md:rounded-xl w-20 h-20 md:w-25 md:h-25 lg:w-30 lg:h-30 flex flex-col items-center justify-center">
+                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold leading-none">{formatNumber(timeLeft.days)}</span>
+                    <span className="text-[8px] md:text-[10px] lg:text-xs font-semibold uppercase tracking-widest text-white/60 md:mt-1">Days</span>
                 </div>
 
                 {/* Spider Web Separator */}
-                <div className="scale-50 opacity-70">
+                <div className="hidden sm:block scale-[0.3] md:scale-50">
                     <SpiderWeb />
                 </div>
 
                 {/* Hours */}
-                <div className="flex flex-col items-center gap-2">
-                    <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-xl w-24 h-24 flex items-center justify-center">
-                        <span className="text-5xl font-bold">{formatNumber(timeLeft.hours)}</span>
-                    </div>
-                    <span className="text-sm font-semibold uppercase tracking-wider">Hours</span>
+                <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-lg md:rounded-xl w-20 h-20 md:w-25 md:h-25 lg:w-30 lg:h-30 flex flex-col items-center justify-center">
+                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold leading-none">{formatNumber(timeLeft.hours)}</span>
+                    <span className="text-[8px] md:text-[10px] lg:text-xs font-semibold uppercase tracking-widest text-white/60 md:mt-1">Hours</span>
                 </div>
 
                 {/* Spider Web Separator */}
-                <div className="scale-50 opacity-70">
+                <div className="hidden md:block scale-[0.3] md:scale-50">
                     <SpiderWeb />
                 </div>
 
                 {/* Minutes */}
-                <div className="flex flex-col items-center gap-2">
-                    <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-xl w-24 h-24 flex items-center justify-center">
-                        <span className="text-5xl font-bold">{formatNumber(timeLeft.minutes)}</span>
-                    </div>
-                    <span className="text-sm font-semibold uppercase tracking-wider">Minutes</span>
+                <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-lg md:rounded-xl w-20 h-20 md:w-25 md:h-25 lg:w-30 lg:h-30 flex flex-col items-center justify-center">
+                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold leading-none">{formatNumber(timeLeft.minutes)}</span>
+                    <span className="text-[8px] md:text-[10px] lg:text-xs font-semibold uppercase tracking-widest text-white/60 md:mt-1">Minutes</span>
                 </div>
 
                 {/* Spider Web Separator */}
-                <div className="scale-50 opacity-70">
+                <div className="hidden sm:block scale-[0.3] md:scale-50">
                     <SpiderWeb />
                 </div>
 
                 {/* Seconds */}
-                <div className="flex flex-col items-center gap-2">
-                    <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-xl w-24 h-24 flex items-center justify-center">
-                        <span className="text-5xl font-bold">{formatNumber(timeLeft.seconds)}</span>
-                    </div>
-                    <span className="text-sm font-semibold uppercase tracking-wider">Seconds</span>
+                <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-lg md:rounded-xl w-20 h-20 md:w-25 md:h-25 lg:w-30 lg:h-30 flex flex-col items-center justify-center">
+                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold leading-none">{formatNumber(timeLeft.seconds)}</span>
+                    <span className="text-[8px] md:text-[10px] lg:text-xs font-semibold uppercase tracking-widest text-white/60 md:mt-1">Seconds</span>
                 </div>
             </div>
         </>
