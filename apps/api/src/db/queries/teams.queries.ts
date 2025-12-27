@@ -717,3 +717,27 @@ export async function deleteTeam(requester_id:string, team_id:string) {
         throw error;
     }
 }
+
+export async function getPendingInvitationsForUser(user_id: string) {
+        const invitations = await sql`
+            SELECT
+                i.id AS invitation_id,
+                i.team_id,
+                i.invitee_id,
+                u.email AS invitee_email,
+                p.first_name AS invitee_first_name,
+                p.last_name AS invitee_last_name,
+                i.inviter_id,
+                ui.email AS inviter_email,
+                i.status
+            FROM invitations AS i
+            JOIN users AS u ON u.id = i.invitee_id
+            LEFT JOIN profile AS p ON p.user_id = u.id
+            JOIN users AS ui ON ui.id = i.inviter_id
+            WHERE u.user_id = ${user_id} AND i.status = 'pending'
+            ORDER BY i.id DESC
+        `;
+
+        return invitations
+}
+
