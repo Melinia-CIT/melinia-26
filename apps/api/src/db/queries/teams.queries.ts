@@ -14,12 +14,28 @@ import {
     updateTeamSchema,
 } from "@melinia/shared/dist/";
 
-// Create Team with Member Invitations
-export async function createTeam(input: CreateTeam, leader_id:string) {
+// Create Team with Member Invitations (Same College Only)
+export async function createTeam(input: CreateTeam, leader_id: string) {
     const data = createTeamSchema.parse(input);
 
     try {
-        // Check if team name is unique
+        // 1. Get leader's college_id from profile
+        const [leaderProfile] = await sql`
+            SELECT college_id FROM profile WHERE user_id = ${leader_id}
+        `;
+
+        if (!leaderProfile || !leaderProfile.college_id) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: 'Leader profile not found or college not assigned',
+                data: {}
+            };
+        }
+
+        const leader_college_id = leaderProfile.college_id;
+
+        // 2. Check if team name is unique
         const [existingTeam] = await sql`
             SELECT id FROM teams WHERE name = ${data.name}
         `;
@@ -28,18 +44,32 @@ export async function createTeam(input: CreateTeam, leader_id:string) {
             return {
                 status: false,
                 statusCode: 409,
-                message: 'Team name already taken'
+                message: 'Team name already taken',
+                data: {}
             };
         }
 
-        // Validate all email ids exist in users table
+        // 3. Validate all email ids exist in users table AND belong to same college
         if (data.member_emails && data.member_emails.length > 0) {
             const validUsers = await sql`
-                SELECT email FROM users WHERE email = ANY(${data.member_emails}::text[])
+                SELECT u.id, u.email, p.college_id 
+                FROM users u
+                LEFT JOIN profile p ON u.id = p.user_id
+                WHERE u.email = ANY(${data.member_emails}::text[])
             `;
 
-            const validEmails = validUsers.map(u => u.email);
-            const invalidEmails = data.member_emails.filter(e => !validEmails.includes(e));
+            const invalidEmails: string[] = [];
+            const differentCollegeEmails: string[] = [];
+
+            for (const email of data.member_emails) {
+                const user = validUsers.find(u => u.email === email);
+
+                if (!user) {
+                    invalidEmails.push(email);
+                } else if (user.college_id !== leader_college_id) {
+                    differentCollegeEmails.push(email);
+                }
+            }
 
             if (invalidEmails.length > 0) {
                 return {
@@ -49,11 +79,20 @@ export async function createTeam(input: CreateTeam, leader_id:string) {
                     data: { invalid_emails: invalidEmails }
                 };
             }
+
+            if (differentCollegeEmails.length > 0) {
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: `Cannot create inter-college teams. These user(s) belong to a different college: ${differentCollegeEmails.join(', ')}`,
+                    data: { different_college_emails: differentCollegeEmails }
+                };
+            }
         }
 
-        // Create team - handle optional event_id
+        // 4. Create team - handle optional event_id
         let teamRow: { id: string } | undefined;
-        
+
         if (data.event_id) {
             [teamRow] = await sql`
                 INSERT INTO teams (name, leader_id, event_id)
@@ -71,17 +110,20 @@ export async function createTeam(input: CreateTeam, leader_id:string) {
         if (!teamRow) throw new Error('Team creation failed');
         const team_id = teamRow.id;
 
-        // Add leader as team member
+        // 5. Add leader as team member
         await sql`
             INSERT INTO team_members (team_id, user_id)
             VALUES (${team_id}, ${leader_id})
         `;
 
-        // Get user IDs for invitees and create invitations
+        // 6. Get user IDs for invitees and create invitations
         let invitation_ids: number[] = [];
         if (data.member_emails && data.member_emails.length > 0) {
             const invitees = await sql`
-                SELECT id FROM users WHERE email = ANY(${data.member_emails}::text[])
+                SELECT u.id FROM users u
+                LEFT JOIN profile p ON u.id = p.user_id
+                WHERE u.email = ANY(${data.member_emails}::text[])
+                AND p.college_id = ${leader_college_id}
             `;
 
             for (const invitee of invitees) {
@@ -104,6 +146,7 @@ export async function createTeam(input: CreateTeam, leader_id:string) {
                 team_id,
                 leader_id: leader_id,
                 team_name: data.name,
+                leader_college_id: leader_college_id,
                 invitations_sent: invitation_ids.length
             }
         };
@@ -112,6 +155,148 @@ export async function createTeam(input: CreateTeam, leader_id:string) {
     }
 }
 
+// Invite Team Member (Same College Only)
+export async function inviteTeamMember(input: addNewMemberRequest, requester_id: string) {
+    try {
+        const { team_id, email } = input;
+
+        // 1. Verify team exists
+        const [team] = await sql`
+            SELECT leader_id FROM teams WHERE id = ${team_id}
+        `;
+
+        if (!team) {
+            return {
+                status: false,
+                statusCode: 404,
+                message: 'Team not found',
+                data: {}
+            };
+        }
+
+        // 2. Check if requester is team leader
+        if (team.leader_id !== requester_id) {
+            return {
+                status: false,
+                statusCode: 403,
+                message: 'Only team leader can invite members',
+                data: {}
+            };
+        }
+
+        // 3. Get leader's college_id from profile
+        const [leaderProfile] = await sql`
+            SELECT college_id FROM profile WHERE user_id = ${requester_id}
+        `;
+
+        if (!leaderProfile || !leaderProfile.college_id) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: 'Leader profile not found or college not assigned',
+                data: {}
+            };
+        }
+
+        const leader_college_id = leaderProfile.college_id;
+
+        // 4. Check if email exists in users table
+        const [user] = await sql`
+            SELECT u.id, u.email, p.college_id 
+            FROM users u
+            LEFT JOIN profile p ON u.id = p.user_id
+            WHERE u.email = ${email}
+        `;
+
+        if (!user) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: `User with email "${email}" does not exist in the system`,
+                data: {}
+            };
+        }
+
+        // 5. Check if invitee belongs to same college
+        if (user.college_id !== leader_college_id) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: `Cannot invite user from a different college. User "${email}" belongs to a different college.`,
+                data: {}
+            };
+        }
+
+        const invitee_id = user.id;
+
+        // 6. Check if requester is trying to invite themselves
+        if (invitee_id === requester_id) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: 'Cannot invite yourself to the team',
+                data: {}
+            };
+        }
+
+        // 7. Check if user is already a member of the team
+        const [existingMember] = await sql`
+            SELECT user_id FROM team_members 
+            WHERE team_id = ${team_id} AND user_id = ${invitee_id}
+        `;
+
+        if (existingMember) {
+            return {
+                status: false,
+                statusCode: 409,
+                message: `User "${email}" is already a member of this team`,
+                data: {}
+            };
+        }
+
+        // 8. Check if user already has a pending invitation
+        const [existingInvitation] = await sql`
+            SELECT id, status FROM invitations 
+            WHERE team_id = ${team_id} 
+            AND invitee_id = ${invitee_id}
+            AND status = 'pending'
+        `;
+
+        if (existingInvitation) {
+            return {
+                status: false,
+                statusCode: 409,
+                message: `User "${email}" already has a pending invitation to this team`,
+                data: { invitation_id: existingInvitation.id }
+            };
+        }
+
+        // 9. Create new invitation
+        const [invitationRow] = await sql`
+            INSERT INTO invitations (team_id, invitee_id, inviter_id, status)
+            VALUES (${team_id}, ${invitee_id}, ${requester_id}, 'pending')
+            RETURNING id
+        `;
+
+        if (!invitationRow) {
+            throw new Error('Failed to create invitation');
+        }
+
+        return {
+            status: true,
+            statusCode: 201,
+            message: `Invitation sent to "${email}" successfully`,
+            data: {
+                invitation_id: invitationRow.id,
+                invitee_email: email,
+                team_id: team_id,
+                leader_college_id: leader_college_id
+            }
+        };
+    } catch (error) {
+        throw error;
+    }
+}
 // Accept Team Invitation
 export async function acceptTeamInvitation(input: RespondInvitationRequest) {
     const data = respondInvitationSchema.parse(input);
@@ -404,134 +589,6 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
     }
 }
 
-export async function inviteTeamMember(input: addNewMemberRequest, requester_id:string) {
-    try {
-        const { team_id, email } = input;
-
-        // 1. Verify team exists
-        const [team] = await sql`
-            SELECT leader_id FROM teams WHERE id = ${team_id}
-        `;
-
-        if (!team) {
-            return {
-                status: false,
-                statusCode: 404,
-                message: 'Team not found',
-                data: {}
-            };
-        }
-
-        // 2. Check if requester is team leader
-        if (team.leader_id !== requester_id) {
-            return {
-                status: false,
-                statusCode: 403,
-                message: 'Only team leader can invite members',
-                data: {}
-            };
-        }
-
-        // 3. Check if email exists in users table
-        const [user] = await sql`
-            SELECT id, email FROM users WHERE email = ${email}
-        `;
-
-        if (!user) {
-            return {
-                status: false,
-                statusCode: 400,
-                message: `User with email "${email}" does not exist in the system`,
-                data: {}
-            };
-        }
-
-        const invitee_id = user.id;
-
-        // 4. Check if requester is trying to invite themselves
-        if (invitee_id === requester_id) {
-            return {
-                status: false,
-                statusCode: 400,
-                message: 'Cannot invite yourself to the team',
-                data: {}
-            };
-        }
-
-        // 5. Check if user is already a member of the team
-        const [existingMember] = await sql`
-            SELECT user_id FROM team_members 
-            WHERE team_id = ${team_id} AND user_id = ${invitee_id}
-        `;
-
-        if (existingMember) {
-            return {
-                status: false,
-                statusCode: 409,
-                message: `User "${email}" is already a member of this team`,
-                data: {}
-            };
-        }
-
-        // 6. Check if user already has a pending invitation
-        const [existingInvitation] = await sql`
-            SELECT id, status FROM invitations 
-            WHERE team_id = ${team_id} 
-            AND invitee_id = ${invitee_id}
-            AND status = 'pending'
-        `;
-
-        if (existingInvitation) {
-            return {
-                status: false,
-                statusCode: 409,
-                message: `User "${email}" already has a pending invitation to this team`,
-                data: { invitation_id: existingInvitation.id }
-            };
-        }
-
-        // // 7. Check if user previously declined the invitation
-        // const [declinedInvitation] = await sql`
-        //     SELECT id, status FROM invitations 
-        //     WHERE team_id = ${team_id} 
-        //     AND invitee_id = ${invitee_id}
-        //     AND status = 'declined'
-        // `;
-
-        // if (declinedInvitation) {
-        //     return {
-        //         status: false,
-        //         statusCode: 409,
-        //         message: `User "${email}" has previously declined an invitation to this team. Please contact them directly if you want to invite them again.`,
-        //         data: {}
-        //     };
-        // }
-
-        // 8. Create new invitation
-        const [invitationRow] = await sql`
-            INSERT INTO invitations (team_id, invitee_id, inviter_id, status)
-            VALUES (${team_id}, ${invitee_id}, ${requester_id}, 'pending')
-            RETURNING id
-        `;
-
-        if (!invitationRow) {
-            throw new Error('Failed to create invitation');
-        }
-
-        return {
-            status: true,
-            statusCode: 201,
-            message: `Invitation sent to "${email}" successfully`,
-            data: {
-                invitation_id: invitationRow.id,
-                invitee_email: email,
-                team_id: team_id
-            }
-        };
-    } catch (error) {
-        throw error;
-    }
-}
 
 // Update Team (name, event_id)
 export async function updateTeam(input: UpdateTeamRequest, requester_id:string, team_id:string) {
