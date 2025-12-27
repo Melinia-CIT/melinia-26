@@ -15,7 +15,6 @@ import {
     addNewMemberSchema
 } from "@melinia/shared/dist/";
 
-import { getUserRole } from "../middleware/teams.middleware";
 import {
     createTeam,
     getAllTeamsForUser,
