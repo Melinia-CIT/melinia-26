@@ -1,4 +1,4 @@
-import z from "zod"
+import z, { email } from "zod"
 
 export const generateOTPSchema = z.object({
     email: z.email(),
@@ -67,6 +67,21 @@ export const createProfileSchema = profileSchema.safeExtend({
 export const fullProfileSchema = createProfileSchema.safeExtend({
     email: z.email()
 })
+
+export const forgotPasswordSchema = z.object({
+    email: z.email()
+})
+
+export const resetPasswordSchema = z.object({
+    token: z.uuidv4(),
+    newPasswd: z
+        .string()
+        .min(8, "Password must be atleast 8 characters")
+        .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+        .regex(/[a-z]/, "Must contain at least one lowercase letter")
+        .regex(/[0-9]/, "Must contain at least one number"),
+})
+
 export type Profile = z.infer<typeof profileSchema>
 export type FullProfile = z.infer<typeof fullProfileSchema>
 export type createProfileType = z.infer<typeof createProfileSchema>
