@@ -6,16 +6,22 @@
   "scripts": {
     "build": "tsc",
     "dev": "bun --watch run src/index.ts & tsc --watch",
+    "worker": "bun --watch run src/workers/email/worker.ts",
+    "dev:all": "concurrently -n \"API,WORKER\" -c \"blue,green\" \"bun run dev\" \"bun run worker\"",
     "db:migrate": "bun run src/db/migrations.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.958.0",
     "@hono/zod-validator": "^0.7.6",
     "@melinia/shared": "workspace:*",
+    "bullmq": "^5.66.3",
     "crypto": "^1.0.1",
     "hono": "^4.10.8",
+    "ioredis": "^5.8.2",
     "postgres": "^3.4.7"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "concurrently": "^9.2.1"
   }
 }

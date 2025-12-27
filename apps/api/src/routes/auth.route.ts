@@ -9,7 +9,7 @@ import { sign, verify } from "hono/jwt";
 import { HTTPException } from "hono/http-exception";
 import { createAccessToken, createRefreshToken, verifyToken } from "../utils/jwt";
 import { createHash } from "crypto";
-
+import { sendOTP } from "../workers/email/service";
 
 export const auth = new Hono();
 
@@ -25,12 +25,17 @@ auth.post("/send-otp", zValidator("json", generateOTPSchema), async (c) => {
     const OTP = generateOTP();
     const otpHash = createHash("sha256").update(OTP).digest("hex");
 
+    // console.log(`${email}:${otp}`);
+    const jobId = await sendOTP(email, OTP);
+    console.log(jobId);
+    if (!jobId) {
+        console.error(`Failed to send OTP to ${email}`);
+        throw new HTTPException(500, { message: "Failed to send OTP, Please try again" });
+    }
+
     await redis.set(`otp:${email}`, otpHash, "EX", 600);
+
     const token = await sign({ email, exp: Math.floor(Date.now() / 1000) + 10 * 60 }, getEnv("JWT_SECRET_KEY"));
-
-    // TODO: send OTP via email
-    console.log(`OTP(${email}): ${OTP}`);
-
     setCookie(c, "registration_token", token, {
         httpOnly: true,
         secure: true,
