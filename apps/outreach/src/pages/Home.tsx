@@ -2,7 +2,7 @@ import { useState } from "react";
 import Hero from "../features/hero/Hero";
 import Countdown from "../features/countdown/Countdown";
 import Events from "../features/events/Events";
-import Footer from "../components/common/Footer";
+import Footer from "../components/Footer";
 import IntroVideo from "../features/intro/IntroVideo";
 
 function Home() {
