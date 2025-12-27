@@ -75,7 +75,7 @@ function Events() {
             <div className="relative z-10 w-full max-w-[1800px] mx-auto px-4 md:px-8 py-10 md:py-20">
                 {/* Section Header */}
                 <div className="text-center mb-8 md:mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold text-[#050608] mb-2 md:mb-3 tracking-tight">Featured Events</h2>
+                    <h2 className="text-3xl md:text-5xl font-bold text-[#050608] mb-2 md:mb-3 tracking-tight uppercase">Events</h2>
                     <p className="text-[#6F7FA3] text-sm md:text-lg px-4">Discover our flagship competitions and workshops</p>
                 </div>
 

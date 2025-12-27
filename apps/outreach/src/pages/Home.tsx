@@ -4,6 +4,9 @@ import Countdown from "../features/countdown/Countdown";
 import Events from "../features/events/Events";
 import Footer from "../components/Footer";
 import IntroVideo from "../features/intro/IntroVideo";
+import PrizePool from "../features/prize-pool/PrizePool";
+import Sponsors from "../features/sponsors/Sponsors";
+import People from "../features/people/People";
 
 function Home() {
 	const [showIntro, setShowIntro] = useState(true);
@@ -26,6 +29,12 @@ function Home() {
 				<div className="flex flex-col w-full">
 					<Countdown />
 					<Events />
+					<div className="h-[15px]" />
+					<PrizePool />
+					<div className="h-[15px]" />
+					<Sponsors />
+					<div className="h-[15px]" />
+					<People />
 				</div>
 				<Footer />
 			</div>
