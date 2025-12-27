@@ -10,12 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@melinia/api": "workspace:*",
+    "@melinia/shared": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
+    "axios": "^1.13.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router": "^7.11.0",
-    "@melinia/api": "workspace:*",
-    "@melinia/shared": "workspace:*",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
