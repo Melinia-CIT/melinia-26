@@ -18,11 +18,6 @@ function Footer() {
 
                     {/* Brand Section */}
                     <div className="col-span-1 md:col-span-1">
-                        <img
-                            src="/melinia-26.png"
-                            alt="Melinia 26"
-                            className="h-16 mb-6 brightness-200"
-                        />
                         <p className="text-gray-400 text-sm leading-relaxed mb-6">
                             Experience the convergence of technology and creativity at Melinia '26.
                             The ultimate college fest that pushes boundaries and celebrates innovation.

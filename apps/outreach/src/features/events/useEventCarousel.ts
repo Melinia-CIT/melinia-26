@@ -29,6 +29,17 @@ export const useEventCarousel = (totalEvents: number) => {
         }, 300);
     };
 
+    const handleJumpTo = (index: number) => {
+        if (isSliding || index === currentIndex) return;
+        setIsSliding(true);
+        setSlideDirection(index > currentIndex ? 'right' : 'left');
+        setTimeout(() => {
+            setCurrentIndex(index);
+            setActiveTab('overview');
+            setIsSliding(false);
+        }, 300);
+    };
+
     return {
         currentIndex,
         activeTab,
@@ -37,5 +48,6 @@ export const useEventCarousel = (totalEvents: number) => {
         setActiveTab,
         handlePrevious,
         handleNext,
+        handleJumpTo,
     };
 };

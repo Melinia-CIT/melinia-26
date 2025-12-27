@@ -13,20 +13,26 @@ export const TabBar = ({ activeTab, onTabChange }: TabBarProps) => {
     ];
 
     return (
-        <div className="flex gap-1 bg-white/60 backdrop-blur-sm p-1 rounded-full border border-gray-200/50 shadow-sm overflow-x-auto scrollbar-hide max-w-full">
-            <div className="flex gap-1 flex-nowrap min-w-max">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => onTabChange(tab.id)}
-                        className={`px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
+        <div className="relative group">
+            <div
+                className="absolute inset-0 translate-x-2 translate-y-2 rounded-full border-2 border-black bg-[#050608] -z-10"
+                aria-hidden="true"
+            />
+            <div className="flex gap-1 bg-[#F4F3ED] p-1 rounded-full border-2 border-black shadow-sm overflow-x-auto scrollbar-hide max-w-full relative z-10">
+                <div className="flex gap-1 flex-nowrap min-w-max">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => onTabChange(tab.id)}
+                            className={`px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
                                 ? 'bg-[#E1062C] text-white shadow-md'
-                                : 'text-[#6F7FA3] hover:text-[#050608] hover:bg-white/50'
-                            }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
+                                : 'text-[#6F7FA3] hover:text-[#050608] hover:bg-white'
+                                }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     );

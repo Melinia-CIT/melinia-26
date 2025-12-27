@@ -15,6 +15,7 @@ function Events() {
         setActiveTab,
         handlePrevious,
         handleNext,
+        handleJumpTo,
     } = useEventCarousel(eventsData.length);
 
     const currentEvent = eventsData[currentIndex];
@@ -45,10 +46,10 @@ function Events() {
                     <div className="overflow-hidden">
                         <div
                             className={`transition-transform duration-300 ease-out ${isSliding
-                                    ? slideDirection === 'right'
-                                        ? '-translate-x-full'
-                                        : 'translate-x-full'
-                                    : 'translate-x-0'
+                                ? slideDirection === 'right'
+                                    ? '-translate-x-full'
+                                    : 'translate-x-full'
+                                : 'translate-x-0'
                                 }`}
                         >
                             {/* Grid layout: stacked on mobile, side-by-side on desktop */}
@@ -59,20 +60,23 @@ function Events() {
                                 </div>
 
                                 {/* RIGHT COLUMN - Event Details */}
-                                <div className="space-y-4 md:space-y-5">
+                                <div className="space-y-4 md:space-y-5 pb-4">
                                     {/* Header with Tabs and Register Button */}
                                     <div className="flex items-center justify-between gap-3 flex-wrap">
                                         <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
                                         {/* Register Button */}
-                                        <button
-                                            className="w-full md:w-auto px-6 py-2.5 rounded-xl font-semibold text-white bg-[#E1062C] transition-all duration-300 hover:shadow-lg hover:scale-105 shadow-md whitespace-nowrap flex-shrink-0"
-                                            style={{
-                                                boxShadow: '0 4px 12px rgba(225, 6, 44, 0.25)'
-                                            }}
-                                        >
-                                            Register Now
-                                        </button>
+                                        <div className="relative w-full md:w-auto group">
+                                            <div
+                                                className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-md border-2 border-black bg-[#050608] -z-10"
+                                                aria-hidden="true"
+                                            />
+                                            <button
+                                                className="relative z-10 w-full md:w-auto px-6 py-2.5 rounded-md font-semibold text-white bg-[#E1062C] border-2 border-black transition-all duration-300 hover:shadow-lg hover:-translate-y-1 shadow-md whitespace-nowrap flex-shrink-0"
+                                            >
+                                                Register Now
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Content Area */}
@@ -113,13 +117,15 @@ function Events() {
                 {/* Carousel Position Indicator */}
                 <div className="flex items-center justify-center gap-2 mt-6 md:mt-10">
                     {eventsData.map((_, index) => (
-                        <div
+                        <button
                             key={index}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${index === currentIndex
-                                    ? 'w-8 md:w-10 bg-[#E1062C]'
-                                    : 'w-1.5 bg-[#6F7FA3]/30'
+                            onClick={() => handleJumpTo(index)}
+                            aria-label={`Go to event ${index + 1}`}
+                            className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${index === currentIndex
+                                ? 'w-8 md:w-10 bg-[#E1062C]'
+                                : 'w-1.5 bg-[#6F7FA3]/30 hover:bg-[#6F7FA3]/50'
                                 }`}
-                        ></div>
+                        />
                     ))}
                 </div>
             </div>
