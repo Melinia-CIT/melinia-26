@@ -11,11 +11,10 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
+    "@melinia/shared": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router": "^7.11.0",
-    "@melinia/api": "workspace:*",
-    "@melinia/shared": "workspace:*",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
