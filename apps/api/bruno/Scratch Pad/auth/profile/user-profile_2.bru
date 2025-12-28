@@ -1,0 +1,34 @@
+meta {
+  name: /user/profile_2
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/users/profile
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  User-Agent: insomnia/12.1.0
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik1MTlVVMloxMEgiLCJyb2xlIjoiUEFSVElDSVBBTlQiLCJpc3MiOiJtZWxpbmlhIiwiaWF0IjoxNzY2NzM4NDU1LCJleHAiOjE3NjY3MzkzNTV9.lLf5_WaSZhRivkFSHRWhZppzuLkMJl3rTJf8YnbHdEM
+}
+
+body:json {
+  {
+  	"firstName": "Shree",
+  	"lastName": "Kottes",
+  	"degree": "M.Sc., Software Systems",
+  	"college": "Coimbatore Institute of Technology",
+  	"year": 4
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,33 @@
+meta {
+  name: /user/profile_1
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{BASE_URL}}/users/profile
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  User-Agent: insomnia/12.1.0
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik1MTlU4MDI5NTAiLCJyb2xlIjoiUEFSVElDSVBBTlQiLCJpc3MiOiJtZWxpbmlhIiwiaWF0IjoxNzY2NzMyOTAyLCJleHAiOjE3NjY3MzM4MDJ9.Pi7gVhtG5RS0Kfoigamj9bqLewD7wlNbEtPtrbAjjYk
+}
+
+body:json {
+  {
+  	"firstName": "Anush",
+  	"degree": "M.Sc., Software Systems",
+  	"college": "CIT",
+  	"year": 4
+  }
+}
+
+settings {
+  encodeUrl: true
+}

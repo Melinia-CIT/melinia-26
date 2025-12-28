@@ -1,0 +1,27 @@
+meta {
+  name: /register
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  User-Agent: insomnia/12.1.0
+}
+
+body:json {
+  {
+  	"passwd": "Password123",
+  	"confirmPasswd": "Password123"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
