@@ -1,27 +1,45 @@
 import React, { useState } from 'react';
-import { EmailStep, OTPStep, PasswordStep, ProfileStep, FormData, Errors, ProgressBar, Step } from '../features/registration';
-
-
+import { EmailStep, OTPStep, PasswordStep, ProfileStep, ProgressBar, Step } from '../features/registration';
+import { authClient } from '../lib/api/auth.api';
+import {
+  registrationSchema,
+  profileSchema,
+  generateOTPSchema,
+  type GenerateOTPFormData,
+  verifyOTPSchema,
+  type VerifyOTPType,
+  type RegisterationType,
+  createProfileSchema,
+  type createProfileType,
+} from '@melinia/shared';
+import { TypicalResponse } from '../types/api';
+import { AxiosError } from 'axios';
+import { useNavigate } from 'react-router';
+import { ZodError } from 'zod';
 
 // Main Register Component
 const Register: React.FC = () => {
+  const router = useNavigate();
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [formData, setFormData] = useState<FormData>({
-    email: '',
-    otp: '',
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Step-specific form data
+  const [emailID, setEmailID] = useState<GenerateOTPFormData | null>(null);
+  const [otp, setOTP] = useState<VerifyOTPType | null>(null);
+  const [passwordFormData, setPasswordFormData] = useState<RegisterationType>({
     passwd: '',
     confirmPasswd: '',
+  });
+  const [profileFormData, setProfileFormData] = useState<createProfileType>({
     firstName: '',
     lastName: '',
     college: '',
     degree: '',
     otherDegree: '',
-    year: '',
+    year: 0,
     ph_no: '',
   });
-
-  const [errors, setErrors] = useState<Errors>({});
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const steps: Step[] = [
     { number: 1, label: 'Email' },
@@ -30,141 +48,212 @@ const Register: React.FC = () => {
     { number: 4, label: 'Profile' },
   ];
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  // Utility function to extract error message from backend
+  const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
+    if (error instanceof AxiosError) {
+      const data = error.response?.data
+      console.log("data:", data);
 
-  const validateOTP = (otp: string): boolean => {
-    return /^\d{6}$/.test(otp);
-  };
-
-  const validatePassword = (passwd: string): boolean => {
-    return (
-      passwd.length >= 8 &&
-      /[A-Z]/.test(passwd) &&
-      /[a-z]/.test(passwd) &&
-      /[0-9]/.test(passwd)
-    );
-  };
-
-  const validateStep = (): boolean => {
-    const newErrors: Errors = {};
-
-    if (currentStep === 1) {
-      if (!formData.email) {
-        newErrors.email = 'Email is required';
-      } else if (!validateEmail(formData.email)) {
-        newErrors.email = 'Please enter a valid email';
+      // Check if error contains ZodError details
+      if (data?.error && typeof data.error === 'object' && 'message' in data.error) {
+        const errorObj = data.error as { message?: string; name?: string };
+        if (errorObj.name === 'ZodError' && errorObj.message) {
+          try {
+            // Parse the JSON array from the message
+            const zodErrors = JSON.parse(errorObj.message);
+            if (Array.isArray(zodErrors)) {
+              const formattedErrors: Record<string, string> = {};
+              zodErrors.forEach((err: any) => {
+                const fieldKey = err.path?.[0] || fieldName;
+                formattedErrors[fieldKey] = err.message;
+              });
+              setErrors(formattedErrors);
+              return;
+            }
+          } catch (e) {
+            // If parsing fails, fall back to error message
+          }
+        }
       }
-    }
 
-    if (currentStep === 2) {
-      if (!formData.otp) {
-        newErrors.otp = 'OTP is required';
-      } else if (!validateOTP(formData.otp)) {
-        newErrors.otp = 'OTP must be exactly 6 digits';
-      }
-    }
-
-    if (currentStep === 3) {
-      if (!formData.passwd) {
-        newErrors.passwd = 'Password is required';
-      } else if (!validatePassword(formData.passwd)) {
-        newErrors.passwd =
-          'Password must be at least 8 characters with uppercase, lowercase, and number';
-      }
-      if (!formData.confirmPasswd) {
-        newErrors.confirmPasswd = 'Confirm password is required';
-      } else if (formData.passwd !== formData.confirmPasswd) {
-        newErrors.confirmPasswd = 'Passwords do not match';
-      }
-    }
-
-    if (currentStep === 4) {
-      if (!formData.firstName) {
-        newErrors.firstName = 'First name is required';
-      }
-      if (!formData.college) {
-        newErrors.college = 'College is required';
-      }
-      if (!formData.degree) {
-        newErrors.degree = 'Degree is required';
-      }
-      if (formData.degree.toLowerCase() === 'other' && !formData.otherDegree) {
-        newErrors.otherDegree = 'Please specify your degree';
-      }
-      if (!formData.year) {
-        newErrors.year = 'Year is required';
-      }
-      if (!formData.ph_no) {
-        newErrors.ph_no = 'Phone number is required';
-      } else if (!/^\d{10}$/.test(formData.ph_no)) {
-        newErrors.ph_no = 'Phone number must be exactly 10 digits';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleStepSubmit = async (): Promise<void> => {
-    if (!validateStep()) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-      setErrors({});
+      // Fall back to simple message error
+      const message = data ? data : 'An error occurred';
+      setErrors({ [fieldName]: message });
+    } else if (error instanceof Error) {
+      setErrors({ [fieldName]: error.message });
     } else {
-      console.log('Form submitted:', formData);
-      alert('Registration completed successfully!');
-      // Reset form or redirect
-      setCurrentStep(1);
-      setFormData({
-        email: '',
-        otp: '',
-        passwd: '',
-        confirmPasswd: '',
-        firstName: '',
-        lastName: '',
-        college: '',
-        degree: '',
-        otherDegree: '',
-        year: '',
-        ph_no: '',
-      });
+      setErrors({ [fieldName]: 'An unexpected error occurred' });
     }
-
-    setIsLoading(false);
   };
 
-  const handleInputChange = (name: string, value: string): void => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+  // Utility function to handle client-side Zod errors
+  const handleZodError = (error: ZodError): void => {
+    console.log("ithu zod error dhan")
+    const formattedErrors: Record<string, string> = {};
+    error.issues.forEach((issue) => {
+      const fieldName = String(issue.path[0]);
+      formattedErrors[fieldName] = issue.message;
+    });
+    setErrors(formattedErrors);
+  };
+
+  // Email Step Submit
+  const handleEmailSubmit = async (data: GenerateOTPFormData): Promise<void> => {
+    try {
+      setErrors({});
+      setIsLoading(true);
+
+      // Validate with Zod
+      const validatedData = await generateOTPSchema.parse(data);
+
+      const response = await authClient.sendOTP(validatedData);
+      console.log(response);
+      setIsLoading(false);
+      console.log(isLoading);
+
+
+
+      setEmailID(validatedData);
+      setCurrentStep(2);
+
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
+        handleZodError(error);
+      } else {
+        getBackendErrorMessage(error, 'email');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // OTP Step Submit
+  const handleOTPSubmit = async (data: VerifyOTPType): Promise<void> => {
+    try {
+      setErrors({});
+      setIsLoading(true);
+
+      // Validate with Zod
+      const validatedData = await verifyOTPSchema.parse(data);
+
+      const response = await authClient.verifyOTP(validatedData);
+
+
+      setOTP(validatedData);
+      setCurrentStep(3);
+      setIsLoading(false);
+
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
+        handleZodError(error);
+      } else {
+        getBackendErrorMessage(error, 'otp');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Password Step Submit
+  const handlePasswordSubmit = async (data: RegisterationType): Promise<void> => {
+    try {
+      setErrors({});
+      setIsLoading(true);
+
+      // Validate with Zod
+      const validatedData =await registrationSchema.parse(data);
+
+      setPasswordFormData(validatedData);
+      const response = await authClient.setPassword(validatedData);
+
+
+      setCurrentStep(4);
+      setIsLoading(true);
+
+
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
+        // Client-side Zod validation error
+        handleZodError(error);
+      } else {
+        // Backend error - display exact message
+        getBackendErrorMessage(error, 'form');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Profile Step Submit
+  const handleProfileSubmit = async (data: createProfileType): Promise<void> => {
+    try {
+      setErrors({});
+      setIsLoading(true);
+
+      // Validate with Zod
+      const validatedData = await createProfileSchema.parse(data);
+
+      // Prepare complete registration payload
+      const fullProfileData: createProfileType = {
+        ph_no: validatedData.ph_no,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        college: validatedData.college,
+        degree: validatedData.degree,
+        otherDegree: validatedData.otherDegree,
+        year: validatedData.year,
+      };
+
+      const response = await authClient.setUpProfile(fullProfileData);
+
+      if (response.status) {
+        // Success - reset and redirect
+        setProfileFormData({
+          firstName: '',
+          lastName: '',
+          college: '',
+          degree: '',
+          otherDegree: '',
+          year: 0,
+          ph_no: '',
+        });
+        setEmailID(null);
+        setOTP(null);
+        setPasswordFormData({ passwd: '', confirmPasswd: '' });
+        setCurrentStep(1);
+        // Optionally redirect to login or show success message
+        alert('Registration completed successfully!');
+        router('/user');
+      }
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
+        // Client-side Zod validation error
+        handleZodError(error);
+      } else {
+        // Backend error - display exact message
+        getBackendErrorMessage(error, 'form');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center px-2 py-3 items-center">
       <div className="w-full max-w-md flex flex-col items-center">
+        {/* Header Image */}
         <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('/melinia-alt.jpg')] bg-cover bg-center mb-10" />
-        <div className='w-full px-10'>
+
+        {/* Progress Bar */}
+        <div className="w-full px-10">
           <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />
         </div>
 
+        {/* Form Container */}
         <div className="w-full bg-zinc-900 rounded-lg p-6 mb-6">
           {currentStep === 1 && (
             <EmailStep
-              email={formData.email}
-              onEmailChange={(value) => handleInputChange('email', value)}
-              onSubmit={handleStepSubmit}
+              onSubmit={handleEmailSubmit}
               errors={errors}
               isLoading={isLoading}
             />
@@ -172,21 +261,16 @@ const Register: React.FC = () => {
 
           {currentStep === 2 && (
             <OTPStep
-              otp={formData.otp}
-              onOtpChange={(value) => handleInputChange('otp', value)}
-              onSubmit={handleStepSubmit}
+              onSubmit={handleOTPSubmit}
               errors={errors}
-              email={formData.email}
+              email={emailID?.email || ''}
               isLoading={isLoading}
             />
           )}
 
           {currentStep === 3 && (
             <PasswordStep
-              passwd={formData.passwd}
-              confirmPasswd={formData.confirmPasswd}
-              onPasswordChange={handleInputChange}
-              onSubmit={handleStepSubmit}
+              onSubmit={handlePasswordSubmit}
               errors={errors}
               isLoading={isLoading}
             />
@@ -194,18 +278,17 @@ const Register: React.FC = () => {
 
           {currentStep === 4 && (
             <ProfileStep
-              formData={{
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                college: formData.college,
-                degree: formData.degree,
-                otherDegree: formData.otherDegree,
-                year: formData.year,
-                ph_no: formData.ph_no,
+              formData={profileFormData}
+              onInputChange={(name: string, value: string) => {
+                if (name === 'year') {
+                  setProfileFormData((prev) => ({ ...prev, [name]: parseInt(value) }));
+                } else {
+                  setProfileFormData((prev) => ({ ...prev, [name]: value }));
+                }
               }}
-              onInputChange={handleInputChange}
-              onSubmit={handleStepSubmit}
+              onSubmit={handleProfileSubmit}
               errors={errors}
+              isLoading={isLoading}
             />
           )}
         </div>
