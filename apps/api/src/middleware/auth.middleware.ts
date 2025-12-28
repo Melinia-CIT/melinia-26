@@ -29,3 +29,39 @@ export const authMiddleware = createMiddleware<{ Variables: Variables }>(async (
         throw new HTTPException(401, { message: "Invalid or expired token" });
     }
 });
+
+export const adminOnlyMiddleware = createMiddleware<{ Variables: Variables }>(
+    async (c, next) => {
+        const role = c.get("role");
+
+        if (role !== "ADMIN") {
+            throw new HTTPException(403, { message: "Admin access required" });
+        }
+
+        await next();
+    }
+);
+
+export const adminAndOrganizerMiddleware = createMiddleware<{ Variables: Variables }>(
+    async (c, next) => {
+        const role = c.get("role");
+
+        if (role === "PARTICIPANT") {
+            throw new HTTPException(403, { message: "Admin or organizer access required" });
+        }
+
+        await next();
+    }
+);
+
+export const participantOnlyMiddleware = createMiddleware<{ Variables: Variables }>(
+    async (c, next) => {
+        const role = c.get("role");
+
+        if (role !== "PARTICIPANT") {
+            throw new HTTPException(403, { message: "Participant access required" });
+        }
+
+        await next();
+    }
+);
