@@ -109,7 +109,7 @@ user.get("/pending_invitations", authMiddleware, async (c: Context) => {
 
         const  data  = await getPendingInvitationsForUser(user_id);
 
-	c.json({
+	return c.json({
 		"invitations":data
 	},200)
 })
