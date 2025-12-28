@@ -65,7 +65,8 @@ export const createProfileSchema = profileSchema.safeExtend({
 })
 
 export const fullProfileSchema = createProfileSchema.safeExtend({
-    email: z.email()
+    email: z.email(),
+    id : z.string()
 })
 
 export const forgotPasswordSchema = z.object({

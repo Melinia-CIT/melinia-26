@@ -10,17 +10,19 @@ import { HTTPException } from "hono/http-exception";
 export const user = new Hono();
 
 
-export const profileCheck = async ( user_id:string) => {
+export const profileCheck = async ( user_id:string, condition : boolean) => {
 	const profile_completed = await checkProfileCompleted(user_id)
 
-	if (profile_completed){
+	if (profile_completed == true && condition === true){
             throw new HTTPException(409, {message: "Profile already exists" })
+	}else if (profile_completed == false && condition === false){
+            throw new HTTPException(404, {message: "Profile not created" })
 	}
 }
 
 user.get("/profile",authMiddleware, async (c: Context) => {
     const user_id = c.get("user_id")
-    await profileCheck(user_id)
+    await profileCheck(user_id,false)
 
     const profile = await getProfile(user_id);
 
@@ -32,7 +34,7 @@ user.get("/profile",authMiddleware, async (c: Context) => {
 user.get("/me",authMiddleware, async (c : Context) => {
 
     const user_id = c.get("user_id");
-    await profileCheck(user_id)
+    await profileCheck(user_id,false)
     const profile = await getFullInformation(user_id);
 
     return c.json({
@@ -44,7 +46,7 @@ user.get("/me",authMiddleware, async (c : Context) => {
 
 user.post("/profile", authMiddleware, zValidator("json", createProfileSchema ),async (c ) => {
 	const user_id = c.get("user_id")
-        await profileCheck(user_id)
+        await profileCheck(user_id,true)
 
 	const input = c.req.valid('json');
 	const college_exists = await checkCollegeExists(input["college"])
@@ -73,7 +75,7 @@ user.post("/profile", authMiddleware, zValidator("json", createProfileSchema ),a
 
 user.put("/profile",authMiddleware, zValidator("json", createProfileSchema), async (c ) => {
 	const user_id = c.get("user_id");
-	await profileCheck(user_id);
+	await profileCheck(user_id,false);
 	
 	const input = c.req.valid('json');
 	const college_exists = await checkCollegeExists(input["college"]);
@@ -103,11 +105,11 @@ user.put("/profile",authMiddleware, zValidator("json", createProfileSchema), asy
 
 user.get("/pending_invitations", authMiddleware, async (c: Context) => {
         const user_id = c.get('user_id');
-	await profileCheck(user_id);
+	await profileCheck(user_id,false);
 
         const  data  = await getPendingInvitationsForUser(user_id);
 
-	c.json({
+	return c.json({
 		"invitations":data
 	},200)
 })

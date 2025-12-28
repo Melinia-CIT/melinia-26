@@ -791,7 +791,7 @@ export async function getPendingInvitationsForUser(user_id: string) {
             JOIN users AS u ON u.id = i.invitee_id
             LEFT JOIN profile AS p ON p.user_id = u.id
             JOIN users AS ui ON ui.id = i.inviter_id
-            WHERE u.user_id = ${user_id} AND i.status = 'pending'
+            WHERE u.id = ${user_id} AND i.status = 'pending'
             ORDER BY i.id DESC
         `;
 
