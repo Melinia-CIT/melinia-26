@@ -146,6 +146,7 @@ export async function getFullInformation(id : string) {
                p.last_name as "lastName",
 	       u.email,
 	       u.ph_no,
+	       u.id,
                c.name as college,
                CASE 
                    WHEN p.other_degree IS NOT NULL THEN 'other'
