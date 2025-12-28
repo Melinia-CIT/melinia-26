@@ -85,3 +85,4 @@ export const resetPasswordSchema = z.object({
 export type Profile = z.infer<typeof profileSchema>
 export type FullProfile = z.infer<typeof fullProfileSchema>
 export type createProfileType = z.infer<typeof createProfileSchema>
+export type LoginRequest = z.infer<typeof loginSchema>;
