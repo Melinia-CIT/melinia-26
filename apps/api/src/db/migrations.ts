@@ -325,4 +325,31 @@ await runMigration("automatic updates on updated_at column", async () => {
     });
 });
 
+await runMigration("create payments table", async () => {
+  await sql`
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY DEFAULT gen_id('P'),
+
+      user_id TEXT NOT NULL,
+      order_id TEXT UNIQUE NOT NULL,
+      payment_id TEXT UNIQUE,
+
+      payment_status TEXT NOT NULL CHECK (
+        payment_status IN ('CREATED', 'PAID', 'FAILED')
+      ),
+
+      razorpay_order_created_at TIMESTAMP,
+      razorpay_payment_created_at TIMESTAMP,
+
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+      CONSTRAINT fk_payments_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+    );
+  `;
+});
+
 await sql.end();

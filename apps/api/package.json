@@ -18,7 +18,8 @@
     "crypto": "^1.0.1",
     "hono": "^4.10.8",
     "ioredis": "^5.8.2",
-    "postgres": "^3.4.7"
+    "postgres": "^3.4.7",
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {
     "@types/bun": "latest",
