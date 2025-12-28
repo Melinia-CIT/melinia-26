@@ -325,4 +325,17 @@ await runMigration("automatic updates on updated_at column", async () => {
     });
 });
 
+await runMigration("create event registrations", async () => {
+    await sql`
+        CREATE TABLE IF NOT EXISTS event_registrations (
+            id SERIAL PRIMARY KEY,
+            event_id TEXT NOT NULL REFERENCES events(id),
+            team_id TEXT REFERENCES teams(id),
+            user_id TEXT NOT NULL REFERENCES users(id),
+            registered_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(event_id, team_id, user_id)
+        );
+    `;
+});
+
 await sql.end();

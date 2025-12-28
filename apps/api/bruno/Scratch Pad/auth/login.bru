@@ -1,0 +1,27 @@
+meta {
+  name: /login
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{BASE_URL}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  User-Agent: insomnia/12.1.0
+}
+
+body:json {
+  {
+  	"email": "kottesh.j@gmail.com",
+  	"passwd": "Hello122"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

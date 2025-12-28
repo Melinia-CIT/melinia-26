@@ -1,0 +1,19 @@
+meta {
+  name: /logout
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{BASE_URL}}/auth/logout
+  body: none
+  auth: none
+}
+
+headers {
+  User-Agent: insomnia/12.1.0
+}
+
+settings {
+  encodeUrl: true
+}
