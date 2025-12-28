@@ -335,7 +335,8 @@ await runMigration("create event registrations", async () => {
             registered_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(event_id, team_id, user_id)
         );
-    `;
+    `;});
+
 await runMigration("create payments table", async () => {
   await sql`
     CREATE TABLE IF NOT EXISTS payments (
