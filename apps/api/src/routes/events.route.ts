@@ -3,7 +3,6 @@ import { zValidator } from "@hono/zod-validator";
 import {
     createEventSchema,
     getEventDetailsSchema,
-    deleteEventSchema,
     updateEventDetailsSchema,
     eventRegistrationSchema
 } from "@packages/shared/dist";
@@ -28,7 +27,7 @@ import { HTTPException } from "hono/http-exception";
 export const events = new Hono();
 
 // Create Event 
-events.post("/create_event", authMiddleware, adminOnlyMiddleware, zValidator("json", createEventSchema), async (c) => {
+events.post("/events", authMiddleware, adminOnlyMiddleware, zValidator("json", createEventSchema), async (c) => {
     try {
         const formData = await c.req.valid('json');
         const { statusCode, status, data, message } = await createEvent(formData);
@@ -40,7 +39,7 @@ events.post("/create_event", authMiddleware, adminOnlyMiddleware, zValidator("js
 });
 
 // Get All Events
-events.get("/get_all_events", async (c) => {
+events.get("/events", async (c) => {
     try {
         const { statusCode, status, data, message } = await getEvents();
         return sendSuccess(c, data, message, status, statusCode);
@@ -50,27 +49,32 @@ events.get("/get_all_events", async (c) => {
     }
 });
 
-// Get Event details by event_id
-events.post("/get_event_details", zValidator("json", getEventDetailsSchema), async (c) => {
+//To get the details of the specific event
+events.get("/events/:id", zValidator("param", getEventDetailsSchema), 
+  async (c) => {
     try {
-        const formData = await c.req.valid('json');
-        const { statusCode, status, data, message } = await getEventById(formData);
-        
-        if (!data) {
-            throw new HTTPException(404, { message: "Event not found" });
-        }
-        
-        return sendSuccess(c, data, message, status, statusCode);
+      const { id } = c.req.valid('param'); 
+      const formData = { id }; 
+      const { statusCode, status, data, message } = await getEventById(formData);
+      
+      if (!data) {
+        throw new HTTPException(404, { message: "Event not found" });
+      }
+      
+      return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
-        console.error(error);
-        return sendError(c);
+      console.error(error);
+      return sendError(c);
     }
-});
+  }
+);
 
 // Update Event 
-events.post("/update_event_details", authMiddleware, adminAndOrganizerMiddleware, zValidator("json", updateEventDetailsSchema), async (c) => {
+events.patch("/events/:id", authMiddleware, adminAndOrganizerMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", updateEventDetailsSchema), async (c) => {
     try {
-        const formData = await c.req.valid('json');
+        const { id } = c.req.valid('param');
+        const updateData = await c.req.valid('json');
+        const formData = { ...updateData, id };
         const { statusCode, status, data, message } = await updateEvent(formData);
         
         if (!data) {
@@ -85,9 +89,10 @@ events.post("/update_event_details", authMiddleware, adminAndOrganizerMiddleware
 });
 
 // Delete Event
-events.post("/delete_event", authMiddleware, adminOnlyMiddleware, zValidator("json", deleteEventSchema), async (c) => {
+events.delete("/events/:id", authMiddleware, adminOnlyMiddleware, zValidator("param", getEventDetailsSchema), async (c) => {
     try {
-        const formData = await c.req.valid('json');
+        const { id } = c.req.valid('param');
+        const formData = { id };
         const { statusCode, status, data, message } = await deleteEvent(formData);
         
         if (!data) {
@@ -102,12 +107,13 @@ events.post("/delete_event", authMiddleware, adminOnlyMiddleware, zValidator("js
 });
 
 // Register for Event
-events.post("/register", authMiddleware, participantOnlyMiddleware, zValidator("json", eventRegistrationSchema), async (c) => {
+events.post("/events/:id/register", authMiddleware, participantOnlyMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", eventRegistrationSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
+        const { id } = c.req.valid('param');
         const formData = await c.req.valid('json');
         
-        const { statusCode, status, data, message } = await registerForEvent({ ...formData, user_id });
+        const { statusCode, status, data, message } = await registerForEvent({ ...formData, user_id, id });
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error("Registration error:", error);

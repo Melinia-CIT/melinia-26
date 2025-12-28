@@ -99,10 +99,6 @@ export const createEventSchema = withRefinements(
         })
 );
 
-export const getEventDetailsSchema = z.object({
-    event_id: z.string().min(1, "Event id is required"),
-});
-
 export const updateEventDetailsSchema = withRefinements(
     rawEventSchema
         .omit({
@@ -114,7 +110,6 @@ export const updateEventDetailsSchema = withRefinements(
             rounds: z.array(RoundSchema).optional(),
             prizes: z.array(PrizeSchema).optional(),
             organizers: z.array(OrganizerSchema).optional(),
-            event_id: z.string().min(1, "Event id is required"),
         })
 );
 
@@ -123,13 +118,16 @@ export const deleteEventSchema = z.object({
 });
 
 export const eventRegistrationSchema = z.object({
-    event_id: z.string().min(1, "Event ID is required"),
     isTeam: z.boolean(),
     team_id: z.string().optional().nullable(),
 });
 
+
+export const getEventDetailsSchema = z.object({
+    id: z.string().min(1, "Event id is required"),
+});
+
 export type EventRegistrationInput = z.infer<typeof eventRegistrationSchema>;
-export type DeleteEventInput = z.infer<typeof deleteEventSchema>;
 export type GetEventDetailsInput = z.infer<typeof getEventDetailsSchema>;
 export type Event = z.infer<typeof eventSchema>;
 export type CreateEvent = z.infer<typeof createEventSchema>;
