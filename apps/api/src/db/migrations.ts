@@ -223,7 +223,7 @@ await runMigration("melinia db init", async () => {
     `;
 
     // check-in
-    await sql`
+    await sql`apps/api/src/db/migrations.ts
         CREATE TABLE IF NOT EXISTS checkin (
             id SERIAL PRIMARY KEY,
             tag_id TEXT UNIQUE NOT NULL REFERENCES tags(id),
@@ -336,6 +336,31 @@ await runMigration("create event registrations", async () => {
             UNIQUE(event_id, team_id, user_id)
         );
     `;
+await runMigration("create payments table", async () => {
+  await sql`
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY DEFAULT gen_id('P'),
+
+      user_id TEXT NOT NULL,
+      order_id TEXT UNIQUE NOT NULL,
+      payment_id TEXT UNIQUE,
+
+      payment_status TEXT NOT NULL CHECK (
+        payment_status IN ('CREATED', 'PAID', 'FAILED')
+      ),
+
+      razorpay_order_created_at TIMESTAMP,
+      razorpay_payment_created_at TIMESTAMP,
+
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+      CONSTRAINT fk_payments_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+    );
+  `;
 });
 
 await sql.end();
