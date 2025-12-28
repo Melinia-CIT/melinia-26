@@ -86,3 +86,7 @@ export type Profile = z.infer<typeof profileSchema>
 export type FullProfile = z.infer<typeof fullProfileSchema>
 export type createProfileType = z.infer<typeof createProfileSchema>
 export type LoginRequest = z.infer<typeof loginSchema>;
+export type GenerateOTPFormData = z.infer<typeof generateOTPSchema>;
+export type VerifyOTPType = z.infer<typeof verifyOTPSchema>;
+export type RegisterationType = z.infer<typeof registrationSchema>;
+
