@@ -6,6 +6,7 @@ import { EventOverview } from './components/EventOverview';
 import { EventRounds } from './components/EventRounds';
 import { EventPrizes } from './components/EventPrizes';
 
+
 function Events() {
     const {
         currentIndex,
@@ -41,7 +42,7 @@ function Events() {
                                 aria-hidden="true"
                             />
                             <button
-                                className="relative z-10 w-full md:w-auto px-6 py-2.5 rounded-md font-semibold text-white bg-[#E1062C] border-2 border-black transition-all duration-300 hover:shadow-lg hover:-translate-y-1 shadow-md whitespace-nowrap flex-shrink-0"
+                                className="relative z-10 w-full md:w-auto px-6 py-2.5 rounded-md font-semibold text-[#0F0B13] bg-[#D24623] border-2 border-black transition-all duration-300 hover:shadow-[0_0_20px_rgba(210,70,35,0.5)] hover:-translate-y-1 whitespace-nowrap flex-shrink-0"
                             >
                                 Register Now
                             </button>
@@ -61,22 +62,14 @@ function Events() {
 
     return (
         <div
-            className="w-full min-h-screen relative bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50"
-            style={{
-                background: "url('/sections-bg.png') center center/cover no-repeat"
-            }}
+            className="w-full min-h-screen relative bg-[#0F0B13] bg-[radial-gradient(circle_at_center,_#15101C_0%,_#0F0B13_100%)]"
         >
-            {/* Soft background gradient overlays */}
-            <div className="absolute inset-0 opacity-30 pointer-events-none">
-                <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-bl from-pink-100 to-transparent blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-to-tr from-blue-100 to-transparent blur-3xl"></div>
-            </div>
 
             <div className="relative z-10 w-full max-w-[1800px] mx-auto px-4 md:px-8 py-10 md:py-20">
                 {/* Section Header */}
                 <div className="text-center mb-8 md:mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold text-[#050608] mb-2 md:mb-3 tracking-tight uppercase">Events</h2>
-                    <p className="text-[#6F7FA3] text-sm md:text-lg px-4">Discover our flagship competitions and workshops</p>
+                    <h2 className="text-3xl md:text-5xl font-bold text-[#F2F2F2] mb-2 md:mb-3 tracking-tight uppercase">Events</h2>
+                    <p className="text-[#F2F2F2]/70 text-sm md:text-lg px-4">Discover our flagship competitions and workshops</p>
                 </div>
 
                 {/* Carousel Container - with padding for arrows */}
@@ -112,10 +105,10 @@ function Events() {
                     <button
                         onClick={handlePrevious}
                         disabled={isSliding}
-                        className="absolute left-0 lg:-left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl hover:bg-white transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed flex items-center justify-center group z-20"
+                        className="absolute left-0 lg:-left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#34143F] border border-[#752B65] shadow-lg hover:shadow-xl hover:bg-[#752B65] hover:text-[#F2F2F2] transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed flex items-center justify-center group z-20"
                         aria-label="Previous event"
                     >
-                        <svg className="w-5 h-5 text-[#6F7FA3] group-hover:text-[#E1062C] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-[#1196A9] group-hover:text-[#F2F2F2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
@@ -123,10 +116,10 @@ function Events() {
                     <button
                         onClick={handleNext}
                         disabled={isSliding}
-                        className="absolute right-0 lg:-right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl hover:bg-white transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed flex items-center justify-center group z-20"
+                        className="absolute right-0 lg:-right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#34143F] border border-[#752B65] shadow-lg hover:shadow-xl hover:bg-[#752B65] hover:text-[#F2F2F2] transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed flex items-center justify-center group z-20"
                         aria-label="Next event"
                     >
-                        <svg className="w-5 h-5 text-[#6F7FA3] group-hover:text-[#E1062C] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-[#1196A9] group-hover:text-[#F2F2F2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
@@ -140,8 +133,8 @@ function Events() {
                             onClick={() => handleJumpTo(index)}
                             aria-label={`Go to event ${index + 1}`}
                             className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${index === currentIndex
-                                ? 'w-8 md:w-10 bg-[#E1062C]'
-                                : 'w-1.5 bg-[#6F7FA3]/30 hover:bg-[#6F7FA3]/50'
+                                ? 'w-8 md:w-10 bg-[#D24623]'
+                                : 'w-1.5 bg-[#1196A9] hover:bg-[#1196A9]/80'
                                 }`}
                         />
                     ))}

@@ -1,10 +1,7 @@
 function PrizePool() {
     return (
         <div
-            className="w-full py-20 px-4 relative flex flex-col items-center justify-center overflow-hidden"
-            style={{
-                background: "url('/sections-bg.png') center center/cover no-repeat"
-            }}
+            className="w-full py-20 px-4 relative flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#0F0B13] via-[#0F0B13] to-[#200a26]"
         >
             <div className="px-6 pb-4 md:pb-8 font-bold text-3xl md:text-5xl tracking-wider uppercase text-center">
                 Total Prize Pool
