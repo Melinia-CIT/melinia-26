@@ -17,3 +17,14 @@
     }
   }
 }
+
+.geist-regular {
+  font-family: "Geist", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+body {
+  font-family: "Geist", sans-serif;
+}

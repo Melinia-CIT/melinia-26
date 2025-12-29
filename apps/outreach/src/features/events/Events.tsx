@@ -62,13 +62,13 @@ function Events() {
 
     return (
         <div
-            className="w-full min-h-screen relative bg-[#0F0B13] bg-[radial-gradient(circle_at_center,_#15101C_0%,_#0F0B13_100%)]"
+            className="w-full min-h-screen relative"
         >
 
             <div className="relative z-10 w-full max-w-[1800px] mx-auto px-4 md:px-8 py-10 md:py-20">
                 {/* Section Header */}
                 <div className="text-center mb-8 md:mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold text-[#F2F2F2] mb-2 md:mb-3 tracking-tight uppercase">Events</h2>
+                    <h2 className="text-3xl md:text-5xl font-bold mb-2 md:mb-3 tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-b from-white to-[#5227FF]">Events</h2>
                     <p className="text-[#F2F2F2]/70 text-sm md:text-lg px-4">Discover our flagship competitions and workshops</p>
                 </div>
 
