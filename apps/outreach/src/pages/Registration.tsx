@@ -24,20 +24,27 @@ const Register: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [emailID, setEmailID] = useState<GenerateOTPFormData | null>(null);
+  const [loadingEmailForm, setLoadingEmailForm] = useState<boolean>(false);
+
   const [otp, setOTP] = useState<VerifyOTPType | null>(null);
+  const [loadingOTPForm, setLoadingOTPForm] = useState<boolean>(false);
+
   const [passwordFormData, setPasswordFormData] = useState<RegisterationType>({
     passwd: '',
     confirmPasswd: '',
   });
+  const [loadingPasswordForm, setLoadingPasswordForm] = useState<boolean>(false);
   const [profileFormData, setProfileFormData] = useState<createProfileType>({
     firstName: '',
     lastName: '',
     college: '',
     degree: '',
-    otherDegree: '',
+    otherDegree: null,
     year: 0,
     ph_no: '',
   });
+  const [loadingProfileForm, setLoadingProfileForm] = useState<boolean>(false);
+
 
   const steps: Step[] = [
     { number: 1, label: 'Email' },
@@ -93,7 +100,7 @@ const Register: React.FC = () => {
   const handleEmailSubmit = async (data: GenerateOTPFormData): Promise<void> => {
     try {
       setErrors({});
-      setIsLoading(true);
+      setLoadingEmailForm(true);
 
       const validatedData = await generateOTPSchema.parse(data);
       const response = await authClient.sendOTP(validatedData);
@@ -108,15 +115,14 @@ const Register: React.FC = () => {
         getBackendErrorMessage(error, 'email');
       }
     } finally {
-      setIsLoading(false);
+      setLoadingEmailForm(false);
     }
   };
 
   const handleOTPSubmit = async (data: VerifyOTPType): Promise<void> => {
     try {
       setErrors({});
-      setIsLoading(true);
-
+      setLoadingOTPForm(true);
       const validatedData = await verifyOTPSchema.parse(data);
       const response = await authClient.verifyOTP(validatedData);
 
@@ -132,14 +138,14 @@ const Register: React.FC = () => {
       }
     } finally {
       // Always set loading to false in finally block
-      setIsLoading(false);
+      setLoadingOTPForm(false);
     }
   };
 
   const handlePasswordSubmit = async (data: RegisterationType): Promise<void> => {
     try {
       setErrors({});
-      setIsLoading(true);
+      setLoadingPasswordForm(true);
 
       const validatedData = await registrationSchema.parse(data);
       setPasswordFormData(validatedData);
@@ -153,15 +159,15 @@ const Register: React.FC = () => {
         getBackendErrorMessage(error, 'form');
       }
     } finally {
-      setIsLoading(false);
+      setLoadingPasswordForm(false);
     }
   };
 
   const handleProfileSubmit = async (data: createProfileType): Promise<void> => {
     try {
       setErrors({});
-      setIsLoading(true);
-
+      console.log("clicked")
+      setLoadingProfileForm(true);
       const validatedData = await createProfileSchema.parse(data);
 
       const fullProfileData: createProfileType = {
@@ -205,7 +211,7 @@ const Register: React.FC = () => {
         getBackendErrorMessage(error, 'form');
       }
     } finally {
-      setIsLoading(false);
+      setLoadingProfileForm(false);
     }
   };
 
@@ -223,7 +229,7 @@ const Register: React.FC = () => {
             <EmailStep
               onSubmit={handleEmailSubmit}
               errors={errors}
-              isLoading={isLoading}
+              isLoading={loadingEmailForm}
             />
           )}
 
@@ -232,7 +238,7 @@ const Register: React.FC = () => {
               onSubmit={handleOTPSubmit}
               errors={errors}
               email={emailID?.email || ''}
-              isLoading={isLoading}
+              isLoading={loadingOTPForm}
             />
           )}
 
@@ -240,7 +246,7 @@ const Register: React.FC = () => {
             <PasswordStep
               onSubmit={handlePasswordSubmit}
               errors={errors}
-              isLoading={isLoading}
+              isLoading={loadingPasswordForm}
             />
           )}
 
@@ -256,7 +262,7 @@ const Register: React.FC = () => {
               }}
               onSubmit={handleProfileSubmit}
               errors={errors}
-              isLoading={isLoading}
+              isLoading={loadingProfileForm}
             />
           )}
         </div>

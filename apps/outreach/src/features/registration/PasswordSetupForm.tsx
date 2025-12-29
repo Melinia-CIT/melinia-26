@@ -21,7 +21,7 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
     formState: { errors: formErrors, isValid, isDirty },
   } = useForm<RegisterationType>({
     resolver: zodResolver(registrationSchema),
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   return (
