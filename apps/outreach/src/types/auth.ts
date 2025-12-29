@@ -4,8 +4,13 @@ export interface AuthData {
     // other fields...
 }
 
+export interface RegisterationResponse{
+    message: string;
+    data:unknown;
+    accessToken:string;
+}
 export interface LoginResponse{
     status: boolean,
     message:string,
-    data:unknown;
+    data:AuthData;
 }

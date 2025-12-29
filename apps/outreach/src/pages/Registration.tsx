@@ -179,10 +179,10 @@ const Register: React.FC = () => {
         otherDegree: validatedData.otherDegree,
         year: validatedData.year,
       };
-
+      console.log(fullProfileData);
       const response = await authClient.setUpProfile(fullProfileData);
 
-      if (response.status) {
+      if (response) {
         // Reset form data
         setProfileFormData({
           firstName: '',
