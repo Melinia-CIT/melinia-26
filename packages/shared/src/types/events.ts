@@ -3,85 +3,85 @@ import { z } from "zod";
 export const ParticipationType = z.enum(["solo", "team"]);
 export const EventType = z.enum(["technical", "non-technical", "flagship"]);
 
-export const RoundSchema = z.object({
-    round_no: z.number().int().min(1, "Round number must be positive"),
-    round_description: z.string().min(1, "Round description is required"),
+export const roundSchema = z.object({
+    roundNo: z.number().int().min(1, "Round number must be positive"),
+    roundDescription: z.string().min(1, "Round description is required"),
 });
 
-export const PrizeSchema = z.object({
+export const prizeSchema = z.object({
     position: z.number().int().min(1, "Position must be positive"),
-    reward_value: z.number().int().min(1, "Reward value must be positive"),
+    rewardValue: z.number().int().min(1, "Reward value must be positive"),
 });
 
-export const OrganizerSchema = z.object({
-    user_id: z.string().min(1, "User ID is required"),
-    assigned_by: z.string().nullable().optional(),
+export const organizerSchema = z.object({
+    userId: z.string().min(1, "User ID is required"),
+    assignedBy: z.string().nullable().optional(),
 });
 
 const baseEventObject = {
     id: z.string(),
     name: z.string().min(1, "Event name is required"),
     description: z.string().min(1, "Description is required"),
-    participation_type: ParticipationType.default("solo"),
-    event_type: EventType,
-    max_allowed: z
+    participationType: ParticipationType.default("solo"),
+    eventType: EventType,
+    maxAllowed: z
         .number()
         .int()
         .positive("Maximum participants must be positive"),
-    min_team_size: z.number().int().min(1).nullable().optional(),
-    max_team_size: z.number().int().min(1).nullable().optional(),
+    minTeamSize: z.number().int().min(1).nullable().optional(),
+    maxTeamSize: z.number().int().min(1).nullable().optional(),
     venue: z.string().min(1, "Venue is required"),
-    event_status: z
+    eventStatus: z
         .enum(["not-started", "ongoing", "completed", "cancelled"])
         .default("not-started"),
-    registration_status: z.boolean().default(false),
-    start_time: z.coerce.date(),
-    end_time: z.coerce.date(),
-    registration_start: z.coerce.date(),
-    registration_end: z.coerce.date(),
-    created_by: z.string().nullable().optional(),
-    created_at: z.coerce.date().optional(),
-    updated_at: z.coerce.date().optional(),
+    registrationStatus: z.boolean().default(false),
+    startTime: z.coerce.date(),
+    endTime: z.coerce.date(),
+    registrationStart: z.coerce.date(),
+    registrationEnd: z.coerce.date(),
+    createdBy: z.string().nullable().optional(),
+    createdAt: z.coerce.date().optional(),
+    updatedAt: z.coerce.date().optional(),
 };
 
 const rawEventSchema = z.object(baseEventObject);
 
 const withRefinements = <T extends z.ZodTypeAny>(schema: T) =>
     schema
-        .refine((data: any) => data.end_time > data.start_time, {
+        .refine((data: any) => data.endTime > data.startTime, {
             message: "Event end time must be after start time",
-            path: ["end_time"],
+            path: ["endTime"],
         })
-        .refine((data: any) => data.registration_end <= data.start_time, {
+        .refine((data: any) => data.registrationEnd <= data.startTime, {
             message: "Registration must end before or when the event starts",
-            path: ["registration_end"],
+            path: ["registrationEnd"],
         })
-        .refine((data: any) => data.registration_start < data.registration_end, {
+        .refine((data: any) => data.registrationStart < data.registrationEnd, {
             message: "Registration start must be before registration end",
-            path: ["registration_start"],
+            path: ["registrationStart"],
         })
-        .refine((data: any) => data.registration_start < data.start_time, {
+        .refine((data: any) => data.registrationStart < data.startTime, {
             message: "Registration must start before the event starts",
-            path: ["registration_start"],
+            path: ["registrationStart"],
         })
         .refine(
             (data: any) => {
-                if (data.min_team_size && data.max_team_size) {
-                    return data.max_team_size >= data.min_team_size;
+                if (data.minTeamSize && data.maxTeamSize) {
+                    return data.maxTeamSize >= data.minTeamSize;
                 }
                 return true;
             },
             {
                 message: "Max team size must be >= min team size",
-                path: ["max_team_size"],
+                path: ["maxTeamSize"],
             }
         );
 
 export const eventSchema = withRefinements(
     rawEventSchema.safeExtend({
-        rounds: z.array(RoundSchema).optional(),
-        prizes: z.array(PrizeSchema).optional(),
-        organizers: z.array(OrganizerSchema).optional(),
+        rounds: z.array(roundSchema).optional(),
+        prizes: z.array(prizeSchema).optional(),
+        organizers: z.array(organizerSchema).optional(),
     })
 );
 
@@ -89,40 +89,40 @@ export const createEventSchema = withRefinements(
     rawEventSchema
         .omit({
             id: true,
-            created_at: true,
-            updated_at: true,
+            createdAt: true,
+            updatedAt: true,
         })
         .safeExtend({
-            rounds: z.array(RoundSchema).optional(),
-            prizes: z.array(PrizeSchema).optional(),
-            organizers: z.array(OrganizerSchema).optional(),
+            rounds: z.array(roundSchema).optional(),
+            prizes: z.array(prizeSchema).optional(),
+            organizers: z.array(organizerSchema).optional(),
         })
 );
 
 export const updateEventDetailsSchema = withRefinements(
     z.object({
-        event_id: z.string().min(1, "Event id is required"), // Add this
+        //eventId: z.string().min(1, "Event id is required"),
         name: z.string().min(1, "Event name is required"),
         description: z.string().min(1, "Description is required"),
-        participation_type: ParticipationType.default("solo"),
-        event_type: EventType,
-        max_allowed: z
+        participationType: ParticipationType.default("solo"),
+        eventType: EventType,
+        maxAllowed: z
             .number()
             .int()
             .positive("Maximum participants must be positive"),
-        min_team_size: z.number().int().min(1).nullable().optional(),
-        max_team_size: z.number().int().min(1).nullable().optional(),
+        minTeamSize: z.number().int().min(1).nullable().optional(),
+        maxTeamSize: z.number().int().min(1).nullable().optional(),
         venue: z.string().min(1, "Venue is required"),
-        start_time: z.coerce.date(),
-        end_time: z.coerce.date(),
-        registration_start: z.coerce.date(),
-        registration_end: z.coerce.date(),
-        created_by: z.string().nullable().optional(),
+        startTime: z.coerce.date(),
+        endTime: z.coerce.date(),
+        registrationStart: z.coerce.date(),
+        registrationEnd: z.coerce.date(),
+        createdBy: z.string().nullable().optional(),
     })
     .safeExtend({
-        rounds: z.array(RoundSchema).optional(),
-        prizes: z.array(PrizeSchema).optional(),
-        organizers: z.array(OrganizerSchema).optional(),
+        rounds: z.array(roundSchema).optional(),
+        prizes: z.array(prizeSchema).optional(),
+        organizers: z.array(organizerSchema).optional(),
     })
 );
 
@@ -131,8 +131,7 @@ export const deleteEventSchema = z.object({
 });
 
 export const eventRegistrationSchema = z.object({
-    isTeam: z.boolean(),
-    team_id: z.string().optional().nullable(),
+    teamId: z.string().optional().nullable(),
 });
 
 export const getEventDetailsSchema = z.object({

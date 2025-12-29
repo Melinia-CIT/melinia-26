@@ -109,26 +109,18 @@ events.delete("/events/:id", authMiddleware, adminOnlyMiddleware, zValidator("pa
 // Register for Event
 events.post("/events/:id/register", authMiddleware, participantOnlyMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", eventRegistrationSchema), async (c) => {
     try {
-        const user_id = c.get('user_id');
+        const userId = c.get('user_id');
         const { id } = c.req.valid('param');
-        const formData = await c.req.valid('json');
+        const formData = await c.req.valid('json');  // { teamId? }
         
-        const { statusCode, status, data, message } = await registerForEvent({ ...formData, user_id, id });
+        const { statusCode, status, data, message } = await registerForEvent({ 
+            ...formData, 
+            userId, 
+            id 
+        });
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error("Registration error:", error);
-        return sendError(c);
-    }
-});
-
-// Get My Registrations
-events.get("/my-registrations", authMiddleware, async (c) => {
-    try {
-        const user_id = c.get("user_id");
-        const { statusCode, status, data, message } = await getUserEventRegistrations(user_id);
-        return sendSuccess(c, data, message, status, statusCode);
-    } catch (error: unknown) {
-        console.error("Error details:", error);
         return sendError(c);
     }
 });

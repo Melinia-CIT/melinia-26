@@ -1,20 +1,53 @@
 import sql from "../connection";
 import {
-    type Event, eventSchema, 
-    createEventSchema, type CreateEvent, 
+    type Event, eventSchema,
+    createEventSchema, type CreateEvent,
     getEventDetailsSchema, type GetEventDetailsInput,
     type DeleteEventInput,
     type UpdateEventDetailsInput, updateEventDetailsSchema,
-    eventRegistrationSchema, type EventRegistrationInput 
+    type EventRegistrationInput,eventRegistrationSchema
 } from "@melinia/shared/dist";
 
+const dbRoundToCamel = (r: any) => ({
+    roundNo: r.round_no,
+    roundDescription: r.round_description,
+});
+
+const dbPrizeToCamel = (p: any) => ({
+    position: p.position,
+    rewardValue: p.reward_value,
+});
+
+const dbOrganizerToCamel = (o: any) => ({
+    userId: o.user_id,
+    assignedBy: o.assigned_by,
+});
+
+const dbEventToCamel = (e: any) => ({
+    id: e.id,
+    name: e.name,
+    description: e.description,
+    participationType: e.participation_type,
+    eventType: e.event_type,
+    maxAllowed: e.max_allowed,
+    minTeamSize: e.min_team_size,
+    maxTeamSize: e.max_team_size,
+    venue: e.venue,
+    startTime: e.start_time,
+    endTime: e.end_time,
+    registrationStart: e.registration_start,
+    registrationEnd: e.registration_end,
+    createdBy: e.created_by,
+    createdAt: e.created_at,
+    updatedAt: e.updated_at,
+});
 
 // 1. Create Event
 export async function createEvent(input: CreateEvent) {
     const data = createEventSchema.parse(input);
-    const minTeamSize = data.min_team_size ?? 1;
-    const maxTeamSize = data.max_team_size ?? null;
-    const createdBy = data.created_by ?? null;
+    const minTeamSize = data.minTeamSize ?? 1;
+    const maxTeamSize = data.maxTeamSize ?? null;
+    const createdBy = data.createdBy ?? null;
 
     try {
         const [eventRow] = await sql`
@@ -24,9 +57,9 @@ export async function createEvent(input: CreateEvent) {
                 start_time, end_time, registration_start, registration_end, created_by
             )
             VALUES (
-                ${data.name}, ${data.description}, ${data.participation_type}, ${data.event_type},
-                ${data.max_allowed}, ${minTeamSize}, ${maxTeamSize}, ${data.venue},
-                ${data.start_time}, ${data.end_time}, ${data.registration_start}, ${data.registration_end}, ${createdBy}
+                ${data.name}, ${data.description}, ${data.participationType}, ${data.eventType},
+                ${data.maxAllowed}, ${minTeamSize}, ${maxTeamSize}, ${data.venue},
+                ${data.startTime}, ${data.endTime}, ${data.registrationStart}, ${data.registrationEnd}, ${createdBy}
             )
             RETURNING *;
         `;
@@ -35,7 +68,7 @@ export async function createEvent(input: CreateEvent) {
             return {
                 status: false,
                 statusCode: 500,
-                message: 'Event creation failed',
+                message: "Event creation failed",
                 data: {}
             };
         }
@@ -46,7 +79,7 @@ export async function createEvent(input: CreateEvent) {
             for (const r of data.rounds) {
                 await sql`
                     INSERT INTO event_rounds (event_id, round_no, round_description)
-                    VALUES (${eventId}, ${r.round_no}, ${r.round_description});
+                    VALUES (${eventId}, ${r.roundNo}, ${r.roundDescription});
                 `;
             }
         }
@@ -55,7 +88,7 @@ export async function createEvent(input: CreateEvent) {
             for (const p of data.prizes) {
                 await sql`
                     INSERT INTO event_prizes (event_id, position, reward_value)
-                    VALUES (${eventId}, ${p.position}, ${p.reward_value});
+                    VALUES (${eventId}, ${p.position}, ${p.rewardValue});
                 `;
             }
         }
@@ -64,28 +97,32 @@ export async function createEvent(input: CreateEvent) {
             for (const o of data.organizers) {
                 await sql`
                     INSERT INTO event_organizers (event_id, user_id, assigned_by)
-                    VALUES (${eventId}, ${o.user_id}, ${o.assigned_by ?? createdBy});
+                    VALUES (${eventId}, ${o.userId}, ${o.assignedBy ?? createdBy});
                 `;
             }
         }
 
-        const rounds = await sql`SELECT round_no, round_description FROM event_rounds WHERE event_id = ${eventId} ORDER BY round_no;`;
-        const prizes = await sql`SELECT position, reward_value FROM event_prizes WHERE event_id = ${eventId} ORDER BY position;`;
-        const organizers = await sql`SELECT user_id, assigned_by FROM event_organizers WHERE event_id = ${eventId};`;
+        const roundsRows = await sql`SELECT round_no, round_description FROM event_rounds WHERE event_id = ${eventId} ORDER BY round_no;`;
+        const prizesRows = await sql`SELECT position, reward_value FROM event_prizes WHERE event_id = ${eventId} ORDER BY position;`;
+        const organizersRows = await sql`SELECT user_id, assigned_by FROM event_organizers WHERE event_id = ${eventId};`;
 
-        const fullEvent = { ...eventRow, rounds, prizes, organizers };
+        const fullEvent = {
+            ...dbEventToCamel(eventRow),
+            rounds: roundsRows.map(dbRoundToCamel),
+            prizes: prizesRows.map(dbPrizeToCamel),
+            organizers: organizersRows.map(dbOrganizerToCamel),
+        };
 
         return {
             status: true,
             statusCode: 201,
-            message: 'Event created successfully',
+            message: "Event created successfully",
             data: eventSchema.parse(fullEvent)
         };
     } catch (error) {
         throw error;
     }
 }
-
 
 // 2. Get All Events
 export async function getEvents() {
@@ -102,7 +139,7 @@ export async function getEvents() {
             return {
                 status: true,
                 statusCode: 200,
-                message: 'No events found',
+                message: "No events found",
                 data: []
             };
         }
@@ -112,17 +149,16 @@ export async function getEvents() {
         const prizes = await sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ANY(${eventIds});`;
         const organizers = await sql`SELECT event_id, user_id, assigned_by FROM event_organizers WHERE event_id = ANY(${eventIds});`;
 
-        // Group data by event_id
         const roundsByEvent: Record<string, any[]> = {};
         const prizesByEvent: Record<string, any[]> = {};
         const organizersByEvent: Record<string, any[]> = {};
 
-        for (const r of rounds) (roundsByEvent[r.event_id] ??= []).push({ round_no: r.round_no, round_description: r.round_description });
-        for (const p of prizes) (prizesByEvent[p.event_id] ??= []).push({ position: p.position, reward_value: p.reward_value });
-        for (const o of organizers) (organizersByEvent[o.event_id] ??= []).push({ user_id: o.user_id, assigned_by: o.assigned_by });
+        for (const r of rounds) (roundsByEvent[r.event_id] ??= []).push(dbRoundToCamel(r));
+        for (const p of prizes) (prizesByEvent[p.event_id] ??= []).push(dbPrizeToCamel(p));
+        for (const o of organizers) (organizersByEvent[o.event_id] ??= []).push(dbOrganizerToCamel(o));
 
         const fullEvents = events.map((row: any) => ({
-            ...row,
+            ...dbEventToCamel(row),
             rounds: roundsByEvent[row.id] ?? [],
             prizes: prizesByEvent[row.id] ?? [],
             organizers: organizersByEvent[row.id] ?? [],
@@ -131,14 +167,13 @@ export async function getEvents() {
         return {
             status: true,
             statusCode: 200,
-            message: 'Events fetched successfully',
+            message: "Events fetched successfully",
             data: fullEvents
         };
     } catch (error) {
         throw error;
     }
 }
-
 
 // 3. Get Event By ID
 export async function getEventById(input: GetEventDetailsInput) {
@@ -157,21 +192,26 @@ export async function getEventById(input: GetEventDetailsInput) {
             return {
                 status: false,
                 statusCode: 404,
-                message: 'Event not found',
+                message: "Event not found",
                 data: {}
             };
         }
 
-        const rounds = await sql`SELECT round_no, round_description FROM event_rounds WHERE event_id = ${id} ORDER BY round_no;`;
-        const prizes = await sql`SELECT position, reward_value FROM event_prizes WHERE event_id = ${id} ORDER BY position;`;
-        const organizers = await sql`SELECT user_id, assigned_by FROM event_organizers WHERE event_id = ${id};`;
+        const roundsRows = await sql`SELECT round_no, round_description FROM event_rounds WHERE event_id = ${id} ORDER BY round_no;`;
+        const prizesRows = await sql`SELECT position, reward_value FROM event_prizes WHERE event_id = ${id} ORDER BY position;`;
+        const organizersRows = await sql`SELECT user_id, assigned_by FROM event_organizers WHERE event_id = ${id};`;
 
-        const fullEvent = { ...eventRow, rounds, prizes, organizers };
+        const fullEvent = {
+            ...dbEventToCamel(eventRow),
+            rounds: roundsRows.map(dbRoundToCamel),
+            prizes: prizesRows.map(dbPrizeToCamel),
+            organizers: organizersRows.map(dbOrganizerToCamel),
+        };
 
         return {
             status: true,
             statusCode: 200,
-            message: 'Event details retrieved successfully',
+            message: "Event details retrieved successfully",
             data: eventSchema.parse(fullEvent)
         };
     } catch (error) {
@@ -179,24 +219,23 @@ export async function getEventById(input: GetEventDetailsInput) {
     }
 }
 
-
 // 4. Update Event
-export async function updateEvent(input: UpdateEventDetailsInput) {
+export async function updateEvent(input: UpdateEventDetailsInput & { id: string }) {
     const data = updateEventDetailsSchema.parse(input);
-    const eventId = data.event_id;
-    const minTeamSize = data.min_team_size ?? 1;
-    const maxTeamSize = data.max_team_size ?? null;
-    const createdBy = data.created_by ?? null;
+    const eventId = input.id;
+    const minTeamSize = data.minTeamSize ?? 1;
+    const maxTeamSize = data.maxTeamSize ?? null;
+    const createdBy = data.createdBy ?? null;
 
     try {
         const [eventRow] = await sql`
             UPDATE events SET
                 name = ${data.name}, description = ${data.description},
-                participation_type = ${data.participation_type}, event_type = ${data.event_type},
-                max_allowed = ${data.max_allowed}, min_team_size = ${minTeamSize},
+                participation_type = ${data.participationType}, event_type = ${data.eventType},
+                max_allowed = ${data.maxAllowed}, min_team_size = ${minTeamSize},
                 max_team_size = ${maxTeamSize}, venue = ${data.venue},
-                start_time = ${data.start_time}, end_time = ${data.end_time},
-                registration_start = ${data.registration_start}, registration_end = ${data.registration_end},
+                start_time = ${data.startTime}, end_time = ${data.endTime},
+                registration_start = ${data.registrationStart}, registration_end = ${data.registrationEnd},
                 created_by = ${createdBy}, updated_at = NOW()
             WHERE id = ${eventId} RETURNING *;
         `;
@@ -205,22 +244,20 @@ export async function updateEvent(input: UpdateEventDetailsInput) {
             return {
                 status: false,
                 statusCode: 404,
-                message: 'Event not found',
+                message: "Event not found",
                 data: {}
             };
         }
 
-        // Clear existing related data
         await sql`DELETE FROM event_rounds WHERE event_id = ${eventId};`;
         await sql`DELETE FROM event_prizes WHERE event_id = ${eventId};`;
         await sql`DELETE FROM event_organizers WHERE event_id = ${eventId};`;
 
-        // Insert new data
         if (data.rounds && data.rounds.length > 0) {
             for (const r of data.rounds) {
                 await sql`
                     INSERT INTO event_rounds (event_id, round_no, round_description)
-                    VALUES (${eventId}, ${r.round_no}, ${r.round_description});
+                    VALUES (${eventId}, ${r.roundNo}, ${r.roundDescription});
                 `;
             }
         }
@@ -229,7 +266,7 @@ export async function updateEvent(input: UpdateEventDetailsInput) {
             for (const p of data.prizes) {
                 await sql`
                     INSERT INTO event_prizes (event_id, position, reward_value)
-                    VALUES (${eventId}, ${p.position}, ${p.reward_value});
+                    VALUES (${eventId}, ${p.position}, ${p.rewardValue});
                 `;
             }
         }
@@ -238,29 +275,32 @@ export async function updateEvent(input: UpdateEventDetailsInput) {
             for (const o of data.organizers) {
                 await sql`
                     INSERT INTO event_organizers (event_id, user_id, assigned_by)
-                    VALUES (${eventId}, ${o.user_id}, ${o.assigned_by ?? createdBy});
+                    VALUES (${eventId}, ${o.userId}, ${o.assignedBy ?? createdBy});
                 `;
             }
         }
 
-        // Fetch updated data
-        const rounds = await sql`SELECT round_no, round_description FROM event_rounds WHERE event_id = ${eventId} ORDER BY round_no;`;
-        const prizes = await sql`SELECT position, reward_value FROM event_prizes WHERE event_id = ${eventId} ORDER BY position;`;
-        const organizers = await sql`SELECT user_id, assigned_by FROM event_organizers WHERE event_id = ${eventId};`;
+        const roundsRows = await sql`SELECT round_no, round_description FROM event_rounds WHERE event_id = ${eventId} ORDER BY round_no;`;
+        const prizesRows = await sql`SELECT position, reward_value FROM event_prizes WHERE event_id = ${eventId} ORDER BY position;`;
+        const organizersRows = await sql`SELECT user_id, assigned_by FROM event_organizers WHERE event_id = ${eventId};`;
 
-        const fullEvent = { ...eventRow, rounds, prizes, organizers };
+        const fullEvent = {
+            ...dbEventToCamel(eventRow),
+            rounds: roundsRows.map(dbRoundToCamel),
+            prizes: prizesRows.map(dbPrizeToCamel),
+            organizers: organizersRows.map(dbOrganizerToCamel),
+        };
 
         return {
             status: true,
             statusCode: 200,
-            message: 'Event updated successfully',
+            message: "Event updated successfully",
             data: eventSchema.parse(fullEvent)
         };
     } catch (error) {
         throw error;
     }
 }
-
 
 // 5. Delete Event
 export async function deleteEvent(input: DeleteEventInput) {
@@ -279,7 +319,7 @@ export async function deleteEvent(input: DeleteEventInput) {
             return {
                 status: false,
                 statusCode: 404,
-                message: 'Event not found',
+                message: "Event not found",
                 data: {}
             };
         }
@@ -287,7 +327,7 @@ export async function deleteEvent(input: DeleteEventInput) {
         return {
             status: true,
             statusCode: 200,
-            message: 'Event deleted successfully',
+            message: "Event deleted successfully",
             data: {}
         };
     } catch (error) {
@@ -295,100 +335,105 @@ export async function deleteEvent(input: DeleteEventInput) {
     }
 }
 
-
 // 6. Register For Event 
-export async function registerForEvent(input: EventRegistrationInput & { user_id: string; id: string }) {
-    const { id: event_id, isTeam, team_id, user_id } = input;
+export async function registerForEvent(input: EventRegistrationInput & { userId: string; id: string }) {
+    const { id: eventId, teamId, userId } = input;
 
     try {
         const [eventRow] = await sql`
             SELECT participation_type, min_team_size, max_team_size, registration_start, registration_end
-            FROM events WHERE id = ${event_id}
+            FROM events WHERE id = ${eventId}
         `;
 
         if (!eventRow) {
             return {
                 status: false,
                 statusCode: 404,
-                message: 'Event not found',
+                message: "Event not found",
                 data: {}
             };
         }
 
-        const event = eventRow;
         const now = new Date();
 
-        if (!(now >= new Date(event.registration_start) && now <= new Date(event.registration_end))) {
+        if (!(now >= new Date(eventRow.registration_start) && now <= new Date(eventRow.registration_end))) {
             return {
                 status: false,
                 statusCode: 400,
-                message: 'Registration is not open for this event',
+                message: "Registration is not open for this event",
                 data: {}
             };
         }
 
-        if (!isTeam) {
-            if (event.participation_type === "team") {
+        const isTeamRegistration = eventRow.participation_type === "team";
+
+        if (!isTeamRegistration) {
+            if (teamId) {
                 return {
                     status: false,
                     statusCode: 400,
-                    message: 'Solo registration not allowed for team events',
+                    message: "Team registration not allowed for solo events",
                     data: {}
                 };
             }
 
             const existing = await sql`
                 SELECT id FROM event_registrations
-                WHERE event_id = ${event_id} AND user_id = ${user_id}
+                WHERE event_id = ${eventId} AND user_id = ${userId} AND team_id IS NULL
             `;
 
             if (existing.length > 0) {
                 return {
                     status: false,
                     statusCode: 400,
-                    message: 'User already registered for this event',
+                    message: "User already registered for this event",
                     data: {}
                 };
             }
         } else {
-            if (event.participation_type === "solo") {
+            if (!teamId) {
                 return {
                     status: false,
                     statusCode: 400,
-                    message: 'Team registration not allowed for solo events',
+                    message: "Team ID is required for team events",
                     data: {}
                 };
             }
 
-            if (!team_id) {
+            const [teamLeaderRow] = await sql`
+                SELECT leader_id FROM teams 
+                WHERE id = ${teamId} AND leader_id = ${userId}
+            `;
+
+            if (!teamLeaderRow) {
                 return {
                     status: false,
-                    statusCode: 400,
-                    message: 'Team ID is required for team events',
+                    statusCode: 403,
+                    message: "Only team leader can register for events",
                     data: {}
                 };
             }
 
             const teamMembers = await sql`
-                SELECT user_id FROM team_members WHERE team_id = ${team_id}
+                SELECT user_id FROM team_members WHERE team_id = ${teamId}
             `;
 
             const teamSize = teamMembers.length;
 
-            if (event.min_team_size && teamSize < event.min_team_size) {
+            if (eventRow.min_team_size && teamSize < eventRow.min_team_size) {
                 return {
                     status: false,
                     statusCode: 400,
-                    message: `Team size ${teamSize} is less than minimum required ${event.min_team_size}`,
+                    message: `Team size ${teamSize} is less than minimum required ${eventRow.min_team_size}`,
                     data: {}
                 };
             }
 
-            if (event.max_team_size && teamSize > event.max_team_size) {
+            if (eventRow.max_team_size && teamSize > eventRow.max_team_size) {
                 return {
                     status: false,
                     statusCode: 400,
-                    message: `Team size ${teamSize} exceeds maximum allowed ${event.max_team_size}`,
+                    message: `Team size ${teamSize} exceeds maximum allowed ${eventRow.max_team_size}`,
                     data: {}
                 };
             }
@@ -397,14 +442,14 @@ export async function registerForEvent(input: EventRegistrationInput & { user_id
             if (memberIds.length > 0) {
                 const conflicts = await sql`
                     SELECT er.user_id FROM event_registrations er 
-                    WHERE er.event_id = ${event_id} AND er.user_id = ANY(${memberIds}::text[])
+                    WHERE er.event_id = ${eventId} AND er.user_id = ANY(${memberIds}::text[])
                 `;
 
                 if (conflicts.length > 0) {
                     return {
                         status: false,
                         statusCode: 400,
-                        message: 'Team cannot register - one or more members already registered for this event',
+                        message: "Team cannot register - one or more members already registered for this event",
                         data: {}
                     };
                 }
@@ -413,14 +458,14 @@ export async function registerForEvent(input: EventRegistrationInput & { user_id
 
         const [result] = await sql`
             INSERT INTO event_registrations (event_id, team_id, user_id, registered_at)
-            VALUES (${event_id}, ${team_id || null}, ${user_id}, NOW())
+            VALUES (${eventId}, ${teamId || null}, ${userId}, NOW())
             RETURNING *
         `;
 
         return {
             status: true,
             statusCode: 201,
-            message: 'Event registration successful',
+            message: "Event registration successful",
             data: result
         };
     } catch (error) {
@@ -428,23 +473,22 @@ export async function registerForEvent(input: EventRegistrationInput & { user_id
     }
 }
 
-
 // 7. Get User Event Registrations
-export async function getUserEventRegistrations(user_id: string) {
+export async function getUserEventRegistrations(userId: string) {
     try {
         const registrations = await sql`
-            SELECT 
+            SELECT
                 er.*, e.name as event_name, e.participation_type
             FROM event_registrations er
             JOIN events e ON er.event_id = e.id
-            WHERE er.user_id = ${user_id}
+            WHERE er.user_id = ${userId}
             ORDER BY er.registered_at DESC
         `;
 
         return {
             status: true,
             statusCode: 200,
-            message: 'User registrations fetched successfully',
+            message: "User registrations fetched successfully",
             data: registrations
         };
     } catch (error) {
