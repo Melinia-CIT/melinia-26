@@ -52,7 +52,7 @@ export class AuthService {
     }
 
     public async setUpProfile(profile: createProfileType):Promise<TypicalResponse>{
-        const response = await apiClient.post<TypicalResponse>("/api/v1/users/profile", profile);
+        const response = await apiClient.post<TypicalResponse>("/api/v1/user/profile", profile);
 
         return response;
     }

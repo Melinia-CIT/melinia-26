@@ -17,7 +17,8 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
   const {
     register,
     handleSubmit,
-    formState: { errors: formErrors },
+    
+    formState: { errors: formErrors, isValid, isDirty },
   } = useForm<RegisterationType>({
     resolver: zodResolver(registrationSchema),
     mode: "onBlur",
@@ -76,7 +77,7 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || !isDirty}
         className="w-full mt-4 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-950 rounded font-medium transition"
       >
         {isLoading ? "Submitting..." : "Next"}
