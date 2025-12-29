@@ -70,7 +70,7 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
     const otpHash = createHash("sha256").update(otp).digest("hex");
 
     if (otpHash !== storedOtpHash) {
-        throw new HTTPException(401, { message: "Invalid OTP" });
+        throw new HTTPException(403, { message: "Invalid OTP" });
     }
 
     await redis.del(`otp:${email}`);

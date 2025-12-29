@@ -17,14 +17,12 @@ import { AxiosError } from 'axios';
 import { useNavigate } from 'react-router';
 import { ZodError } from 'zod';
 
-// Main Register Component
 const Register: React.FC = () => {
   const router = useNavigate();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Step-specific form data
   const [emailID, setEmailID] = useState<GenerateOTPFormData | null>(null);
   const [otp, setOTP] = useState<VerifyOTPType | null>(null);
   const [passwordFormData, setPasswordFormData] = useState<RegisterationType>({
@@ -48,18 +46,15 @@ const Register: React.FC = () => {
     { number: 4, label: 'Profile' },
   ];
 
-  // Utility function to extract error message from backend
   const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
     if (error instanceof AxiosError) {
-      const data = error.response?.data
+      const data = error.response?.data;
       console.log("data:", data);
 
-      // Check if error contains ZodError details
       if (data?.error && typeof data.error === 'object' && 'message' in data.error) {
         const errorObj = data.error as { message?: string; name?: string };
         if (errorObj.name === 'ZodError' && errorObj.message) {
           try {
-            // Parse the JSON array from the message
             const zodErrors = JSON.parse(errorObj.message);
             if (Array.isArray(zodErrors)) {
               const formattedErrors: Record<string, string> = {};
@@ -76,7 +71,6 @@ const Register: React.FC = () => {
         }
       }
 
-      // Fall back to simple message error
       const message = data ? data : 'An error occurred';
       setErrors({ [fieldName]: message });
     } else if (error instanceof Error) {
@@ -86,9 +80,8 @@ const Register: React.FC = () => {
     }
   };
 
-  // Utility function to handle client-side Zod errors
   const handleZodError = (error: ZodError): void => {
-    console.log("ithu zod error dhan")
+    console.log("Zod validation error");
     const formattedErrors: Record<string, string> = {};
     error.issues.forEach((issue) => {
       const fieldName = String(issue.path[0]);
@@ -97,25 +90,17 @@ const Register: React.FC = () => {
     setErrors(formattedErrors);
   };
 
-  // Email Step Submit
   const handleEmailSubmit = async (data: GenerateOTPFormData): Promise<void> => {
     try {
       setErrors({});
       setIsLoading(true);
 
-      // Validate with Zod
       const validatedData = await generateOTPSchema.parse(data);
-
       const response = await authClient.sendOTP(validatedData);
-      console.log(response);
-      setIsLoading(false);
-      console.log(isLoading);
-
-
+      //console.log(response);
 
       setEmailID(validatedData);
       setCurrentStep(2);
-
     } catch (error: unknown) {
       if (error instanceof ZodError) {
         handleZodError(error);
@@ -127,22 +112,18 @@ const Register: React.FC = () => {
     }
   };
 
-  // OTP Step Submit
   const handleOTPSubmit = async (data: VerifyOTPType): Promise<void> => {
     try {
       setErrors({});
       setIsLoading(true);
 
-      // Validate with Zod
       const validatedData = await verifyOTPSchema.parse(data);
-
       const response = await authClient.verifyOTP(validatedData);
 
-
       setOTP(validatedData);
+      // Move to next step after successful verification
       setCurrentStep(3);
-      setIsLoading(false);
-
+      console.log("current step:",currentStep)
     } catch (error: unknown) {
       if (error instanceof ZodError) {
         handleZodError(error);
@@ -150,33 +131,25 @@ const Register: React.FC = () => {
         getBackendErrorMessage(error, 'otp');
       }
     } finally {
+      // Always set loading to false in finally block
       setIsLoading(false);
     }
   };
 
-  // Password Step Submit
   const handlePasswordSubmit = async (data: RegisterationType): Promise<void> => {
     try {
       setErrors({});
       setIsLoading(true);
 
-      // Validate with Zod
-      const validatedData =await registrationSchema.parse(data);
-
+      const validatedData = await registrationSchema.parse(data);
       setPasswordFormData(validatedData);
       const response = await authClient.setPassword(validatedData);
 
-
       setCurrentStep(4);
-      setIsLoading(true);
-
-
     } catch (error: unknown) {
       if (error instanceof ZodError) {
-        // Client-side Zod validation error
         handleZodError(error);
       } else {
-        // Backend error - display exact message
         getBackendErrorMessage(error, 'form');
       }
     } finally {
@@ -184,16 +157,13 @@ const Register: React.FC = () => {
     }
   };
 
-  // Profile Step Submit
   const handleProfileSubmit = async (data: createProfileType): Promise<void> => {
     try {
       setErrors({});
       setIsLoading(true);
 
-      // Validate with Zod
       const validatedData = await createProfileSchema.parse(data);
 
-      // Prepare complete registration payload
       const fullProfileData: createProfileType = {
         ph_no: validatedData.ph_no,
         firstName: validatedData.firstName,
@@ -207,7 +177,7 @@ const Register: React.FC = () => {
       const response = await authClient.setUpProfile(fullProfileData);
 
       if (response.status) {
-        // Success - reset and redirect
+        // Reset form data
         setProfileFormData({
           firstName: '',
           lastName: '',
@@ -221,16 +191,17 @@ const Register: React.FC = () => {
         setOTP(null);
         setPasswordFormData({ passwd: '', confirmPasswd: '' });
         setCurrentStep(1);
-        // Optionally redirect to login or show success message
+        
         alert('Registration completed successfully!');
-        router('/user');
+        // Use setTimeout to ensure state updates complete before navigation
+        setTimeout(() => {
+          router('/user');
+        }, 0);
       }
     } catch (error: unknown) {
       if (error instanceof ZodError) {
-        // Client-side Zod validation error
         handleZodError(error);
       } else {
-        // Backend error - display exact message
         getBackendErrorMessage(error, 'form');
       }
     } finally {
@@ -241,15 +212,12 @@ const Register: React.FC = () => {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center px-2 py-3 items-center">
       <div className="w-full max-w-md flex flex-col items-center">
-        {/* Header Image */}
         <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('/melinia-alt.jpg')] bg-cover bg-center mb-10" />
 
-        {/* Progress Bar */}
         <div className="w-full px-10">
           <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />
         </div>
 
-        {/* Form Container */}
         <div className="w-full bg-zinc-900 rounded-lg p-6 mb-6">
           {currentStep === 1 && (
             <EmailStep

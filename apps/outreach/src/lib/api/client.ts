@@ -28,6 +28,7 @@ class ApiClient {
                     Authorization: `Bearer ${this.authData.accessToken}`,
                 }),
             },
+            withCredentials: true
         });
 
         // Response interceptor for handling token refresh
@@ -37,7 +38,7 @@ class ApiClient {
                 const originalRequest = error.config as any;
 
                 // If 401 and not already retried, try to refresh token
-                if (error.response?.status === 401 && !originalRequest._retry) {
+                if (error.response?.status === 401 && error.config?.url?.includes("/api/v1/auth/refresh") && !originalRequest._retry) {
                     originalRequest._retry = true;
 
                     try {

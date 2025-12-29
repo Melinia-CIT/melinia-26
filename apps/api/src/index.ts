@@ -7,7 +7,7 @@ const app = new Hono();
 
 const v1 = new Hono();
 
-app.use(cors());
+app.use(cors({origin: "http://localhost:5173", credentials: true}));
 app.use(logger());
 
 v1.get("/ping", async (c) => {

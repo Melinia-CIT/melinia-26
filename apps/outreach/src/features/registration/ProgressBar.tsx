@@ -17,7 +17,7 @@ interface ProgressBarProps {
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps, steps }) => {
     return (
-        <div className="w-full mb-8">
+        <div className="w-full mb-8 flex flex-col items-center justify-between">
             <div className="flex justify-between items-center mb-4">
                 {steps.map((step, index) => (
                     <div key={step.number} className="flex items-center flex-1">
@@ -31,7 +31,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalStep
                         </div>
                         {index < steps.length - 1 && (
                             <div
-                                className={`flex-1 h-1 mx-2 transition-colors ${currentStep > step.number ? 'bg-zinc-100' : 'bg-zinc-700'
+                                className={`flex-1 h-1 mx-2 transition-colors z-100 ${currentStep > step.number ? 'bg-zinc-100' : 'bg-zinc-700'
                                     }`}
                             />
                         )}
