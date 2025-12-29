@@ -11,7 +11,8 @@ export const user = new Hono();
 
 
 export const profileCheck = async ( user_id:string, condition : boolean) => {
-	const profile_completed = await checkProfileCompleted(user_id)
+	const profile_completed = await checkProfileCompleted(user_id);
+	console.log(user_id)
 
 	if (profile_completed == true && condition === true){
             throw new HTTPException(409, {message: "Profile already exists" })

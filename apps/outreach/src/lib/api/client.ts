@@ -106,6 +106,7 @@ class ApiClient {
 
         if (typeof window !== "undefined") {
             if (authData) {
+                localStorage.clear();
                 localStorage.setItem("authData", JSON.stringify(authData));
                 // Update axios headers with new token
                 this.axiosInstance.defaults.headers.common.Authorization = `Bearer ${authData.accessToken}`;
