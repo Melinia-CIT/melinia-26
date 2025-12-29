@@ -30,38 +30,31 @@ export const authMiddleware = createMiddleware<{ Variables: Variables }>(async (
     }
 });
 
-export const adminOnlyMiddleware = createMiddleware<{ Variables: Variables }>(
-    async (c, next) => {
+type RoleCheckConfig = {
+    allowedRoles: string[];
+    errorMessage: string;
+};
+
+const createRoleMiddleware = (config: RoleCheckConfig) =>
+    createMiddleware<{ Variables: Variables }>(async (c, next) => {
         const role = c.get("role");
-
-        if (role !== "ADMIN") {
-            throw new HTTPException(403, { message: "Admin access required" });
+        if (!config.allowedRoles.includes(role)) {
+            throw new HTTPException(403, { message: config.errorMessage });
         }
-
         await next();
-    }
-);
+    });
 
-export const adminAndOrganizerMiddleware = createMiddleware<{ Variables: Variables }>(
-    async (c, next) => {
-        const role = c.get("role");
+export const adminOnlyMiddleware = createRoleMiddleware({
+    allowedRoles: ["ADMIN"],
+    errorMessage: "Admin access required"
+});
 
-        if (role === "PARTICIPANT") {
-            throw new HTTPException(403, { message: "Admin or organizer access required" });
-        }
+export const adminAndOrganizerMiddleware = createRoleMiddleware({
+    allowedRoles: ["ADMIN", "ORGANIZER"],
+    errorMessage: "Admin or organizer access required"
+});
 
-        await next();
-    }
-);
-
-export const participantOnlyMiddleware = createMiddleware<{ Variables: Variables }>(
-    async (c, next) => {
-        const role = c.get("role");
-
-        if (role !== "PARTICIPANT") {
-            throw new HTTPException(403, { message: "Participant access required" });
-        }
-
-        await next();
-    }
-);
+export const participantOnlyMiddleware = createRoleMiddleware({
+    allowedRoles: ["PARTICIPANT"],
+    errorMessage: "Participant access required"
+});
