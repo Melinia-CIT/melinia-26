@@ -22,17 +22,34 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
     register,
     handleSubmit,
     watch,
-    formState: { errors: formErrors },
+    formState: { errors: formErrors, isDirty, isValid },
   } = useForm<createProfileType>({
     resolver: zodResolver(createProfileSchema),
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: formData,
   });
 
   const degree = watch("degree", formData.degree);
 
+  // Debug validation state
+  React.useEffect(() => {
+    console.log("isValid:", isValid);
+    console.log("formErrors:", formErrors);
+    console.log("isDirty:", isDirty);
+  }, [isValid, formErrors, isDirty]);
+
+  // Wrap onSubmit to handle loading state properly
+  const handleFormSubmit = async (data: createProfileType) => {
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      // Error is handled by parent component
+      console.error("Form submission error:", error);
+    }
+  };
+
   return (
-    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+    <form className="space-y-4" onSubmit={handleSubmit(handleFormSubmit)}>
       <h2 className="text-xl font-semibold mb-6">Complete Your Profile</h2>
 
       <div className="grid grid-cols-2 gap-4">
@@ -54,9 +71,6 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
             <p className="text-red-500 text-xs mt-0.5">
               {String(formErrors.firstName.message)}
             </p>
-          )}
-          {errors.firstName && (
-            <p className="text-red-500 text-xs mt-0.5">{errors.firstName}</p>
           )}
         </div>
 
@@ -95,9 +109,6 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
               {String(formErrors.college.message)}
             </p>
           )}
-          {errors.college && (
-            <p className="text-red-500 text-xs mt-0.5">{errors.college}</p>
-          )}
         </div>
 
         {/* Degree */}
@@ -123,9 +134,6 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
             <p className="text-red-500 text-xs mt-0.5">
               {String(formErrors.degree.message)}
             </p>
-          )}
-          {errors.degree && (
-            <p className="text-red-500 text-xs mt-0.5">{errors.degree}</p>
           )}
         </div>
 
@@ -153,13 +161,10 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
               {String(formErrors.year.message)}
             </p>
           )}
-          {errors.year && (
-            <p className="text-red-500 text-xs mt-0.5">{errors.year}</p>
-          )}
         </div>
 
         {/* Other Degree - Conditional */}
-        {degree.toLowerCase() === "other" && (
+        {degree && degree.toLowerCase() === "other" && (
           <div className="col-span-2">
             <label className="block text-xs font-medium mb-1">
               Specify Degree *
@@ -180,9 +185,6 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
                 {String(formErrors.otherDegree.message)}
               </p>
             )}
-            {errors.otherDegree && (
-              <p className="text-red-500 text-xs mt-0.5">{errors.otherDegree}</p>
-            )}
           </div>
         )}
 
@@ -196,25 +198,23 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
             placeholder="1234567890"
             disabled={isLoading}
             maxLength={10}
-            {...register("ph_no", {
-              onChange: (e) => {
-                // Allow only digits
-                e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
-              },
-            })}
+            {...register("ph_no")}
             className={`w-full px-3 py-1.5 rounded-md bg-zinc-800 text-zinc-100 placeholder-zinc-500 border transition focus:outline-none text-sm ${
               formErrors.ph_no
                 ? "border-red-500 focus:border-red-500"
                 : "border-zinc-700 focus:border-zinc-500"
             } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+            onInput={(e) => {
+              // Allow only digits
+              e.currentTarget.value = e.currentTarget.value
+                .replace(/\D/g, "")
+                .slice(0, 10);
+            }}
           />
           {formErrors.ph_no?.message && (
             <p className="text-red-500 text-xs mt-0.5">
               {String(formErrors.ph_no.message)}
             </p>
-          )}
-          {errors.ph_no && (
-            <p className="text-red-500 text-xs mt-0.5">{errors.ph_no}</p>
           )}
         </div>
       </div>
@@ -230,7 +230,7 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full mt-4 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-950 rounded font-medium transition"
+        className="w-full mt-4 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 hover:enabled:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-950 rounded font-medium transition"
       >
         {isLoading ? "Submitting..." : "Complete Registration"}
       </button>

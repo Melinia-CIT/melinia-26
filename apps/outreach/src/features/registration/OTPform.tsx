@@ -24,7 +24,7 @@ export const OTPStep: React.FC<OTPStepProps> = ({
     formState: { errors: formErrors },
   } = useForm<VerifyOTPType>({
     resolver: zodResolver(verifyOTPSchema),
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   const otpValue = watch("otp", "");
