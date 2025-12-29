@@ -128,7 +128,7 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
             <option value="B.Sc">B.Sc</option>
             <option value="B.A">B.A</option>
             <option value="M.Tech">M.Tech</option>
-            <option value="Other">Other</option>
+            <option value="other">Other</option>
           </select>
           {formErrors.degree?.message && (
             <p className="text-red-500 text-xs mt-0.5">
