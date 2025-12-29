@@ -100,21 +100,34 @@ export const createEventSchema = withRefinements(
 );
 
 export const updateEventDetailsSchema = withRefinements(
-    rawEventSchema
-        .omit({
-            id: true,
-            created_at: true,
-            updated_at: true,
-        })
-        .safeExtend({
-            rounds: z.array(RoundSchema).optional(),
-            prizes: z.array(PrizeSchema).optional(),
-            organizers: z.array(OrganizerSchema).optional(),
-        })
+    z.object({
+        event_id: z.string().min(1, "Event id is required"), // Add this
+        name: z.string().min(1, "Event name is required"),
+        description: z.string().min(1, "Description is required"),
+        participation_type: ParticipationType.default("solo"),
+        event_type: EventType,
+        max_allowed: z
+            .number()
+            .int()
+            .positive("Maximum participants must be positive"),
+        min_team_size: z.number().int().min(1).nullable().optional(),
+        max_team_size: z.number().int().min(1).nullable().optional(),
+        venue: z.string().min(1, "Venue is required"),
+        start_time: z.coerce.date(),
+        end_time: z.coerce.date(),
+        registration_start: z.coerce.date(),
+        registration_end: z.coerce.date(),
+        created_by: z.string().nullable().optional(),
+    })
+    .safeExtend({
+        rounds: z.array(RoundSchema).optional(),
+        prizes: z.array(PrizeSchema).optional(),
+        organizers: z.array(OrganizerSchema).optional(),
+    })
 );
 
 export const deleteEventSchema = z.object({
-    event_id: z.string().min(1, "Event id is required"),
+    id: z.string().min(1, "Event id is required"),
 });
 
 export const eventRegistrationSchema = z.object({
@@ -122,11 +135,11 @@ export const eventRegistrationSchema = z.object({
     team_id: z.string().optional().nullable(),
 });
 
-
 export const getEventDetailsSchema = z.object({
     id: z.string().min(1, "Event id is required"),
 });
 
+export type DeleteEventInput = z.infer<typeof deleteEventSchema>;
 export type EventRegistrationInput = z.infer<typeof eventRegistrationSchema>;
 export type GetEventDetailsInput = z.infer<typeof getEventDetailsSchema>;
 export type Event = z.infer<typeof eventSchema>;

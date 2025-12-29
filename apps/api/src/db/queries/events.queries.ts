@@ -3,10 +3,11 @@ import {
     type Event, eventSchema, 
     createEventSchema, type CreateEvent, 
     getEventDetailsSchema, type GetEventDetailsInput,
-    deleteEventSchema, type DeleteEventInput, 
+    type DeleteEventInput,
     type UpdateEventDetailsInput, updateEventDetailsSchema,
     eventRegistrationSchema, type EventRegistrationInput 
 } from "@melinia/shared/dist";
+
 
 // 1. Create Event
 export async function createEvent(input: CreateEvent) {
@@ -85,6 +86,7 @@ export async function createEvent(input: CreateEvent) {
     }
 }
 
+
 // 2. Get All Events
 export async function getEvents() {
     try {
@@ -137,9 +139,10 @@ export async function getEvents() {
     }
 }
 
+
 // 3. Get Event By ID
 export async function getEventById(input: GetEventDetailsInput) {
-    const { event_id } = getEventDetailsSchema.parse(input);
+    const { id } = getEventDetailsSchema.parse(input);
 
     try {
         const [eventRow] = await sql`
@@ -147,7 +150,7 @@ export async function getEventById(input: GetEventDetailsInput) {
                    max_allowed, min_team_size, max_team_size, venue,
                    start_time, end_time, registration_start, registration_end,
                    created_by, created_at, updated_at
-            FROM events WHERE id = ${event_id};
+            FROM events WHERE id = ${id};
         `;
 
         if (!eventRow) {
@@ -159,9 +162,9 @@ export async function getEventById(input: GetEventDetailsInput) {
             };
         }
 
-        const rounds = await sql`SELECT round_no, round_description FROM event_rounds WHERE event_id = ${event_id} ORDER BY round_no;`;
-        const prizes = await sql`SELECT position, reward_value FROM event_prizes WHERE event_id = ${event_id} ORDER BY position;`;
-        const organizers = await sql`SELECT user_id, assigned_by FROM event_organizers WHERE event_id = ${event_id};`;
+        const rounds = await sql`SELECT round_no, round_description FROM event_rounds WHERE event_id = ${id} ORDER BY round_no;`;
+        const prizes = await sql`SELECT position, reward_value FROM event_prizes WHERE event_id = ${id} ORDER BY position;`;
+        const organizers = await sql`SELECT user_id, assigned_by FROM event_organizers WHERE event_id = ${id};`;
 
         const fullEvent = { ...eventRow, rounds, prizes, organizers };
 
@@ -175,6 +178,7 @@ export async function getEventById(input: GetEventDetailsInput) {
         throw error;
     }
 }
+
 
 // 4. Update Event
 export async function updateEvent(input: UpdateEventDetailsInput) {
@@ -257,17 +261,18 @@ export async function updateEvent(input: UpdateEventDetailsInput) {
     }
 }
 
+
 // 5. Delete Event
 export async function deleteEvent(input: DeleteEventInput) {
-    const { event_id } = deleteEventSchema.parse(input);
+    const { id } = input;
 
     try {
-        await sql`DELETE FROM teams WHERE event_id = ${event_id};`;
-        await sql`DELETE FROM event_rounds WHERE event_id = ${event_id};`;
-        await sql`DELETE FROM event_prizes WHERE event_id = ${event_id};`;
-        await sql`DELETE FROM event_organizers WHERE event_id = ${event_id};`;
+        await sql`DELETE FROM teams WHERE event_id = ${id};`;
+        await sql`DELETE FROM event_rounds WHERE event_id = ${id};`;
+        await sql`DELETE FROM event_prizes WHERE event_id = ${id};`;
+        await sql`DELETE FROM event_organizers WHERE event_id = ${id};`;
 
-        const result = await sql`DELETE FROM events WHERE id = ${event_id};`;
+        const result = await sql`DELETE FROM events WHERE id = ${id};`;
         const affected = (result as any).count ?? 0;
 
         if (affected === 0) {
@@ -290,9 +295,10 @@ export async function deleteEvent(input: DeleteEventInput) {
     }
 }
 
+
 // 6. Register For Event 
-export async function registerForEvent(input: EventRegistrationInput & { user_id: string }) {
-    const { event_id, isTeam, team_id, user_id } = input;
+export async function registerForEvent(input: EventRegistrationInput & { user_id: string; id: string }) {
+    const { id: event_id, isTeam, team_id, user_id } = input;
 
     try {
         const [eventRow] = await sql`
@@ -421,6 +427,7 @@ export async function registerForEvent(input: EventRegistrationInput & { user_id
         throw error;
     }
 }
+
 
 // 7. Get User Event Registrations
 export async function getUserEventRegistrations(user_id: string) {
