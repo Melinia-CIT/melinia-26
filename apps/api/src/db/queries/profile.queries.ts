@@ -37,6 +37,14 @@ export async function checkDegreeExists(degree_name: string): Promise<boolean> {
     return degree.length != 0
 }
 
+export async function checkPhoneNumberExists(phone_number : string): Promise<boolean> {
+    const number = await sql`
+        SELECT 1 FROM  users WHERE ph_no =   ${phone_number}
+    `
+
+    return number.length != 0
+}
+
 export async function createProfile(id: string, profile: createProfileType) {
     createProfileSchema.parse(profile)
     const { firstName, lastName, college, degree, year, otherDegree, ph_no } = profile

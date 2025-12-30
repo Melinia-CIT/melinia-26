@@ -1,7 +1,7 @@
 import { Hono , type Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { fullProfileSchema , createProfileSchema , type FullProfile } from "@packages/shared/dist";
-import { getFullInformation, createProfile, getProfile , checkProfileCompleted, checkCollegeExists,  checkDegreeExists, setProfileCompleted, updateProfile} from "../db/queries";
+import { getFullInformation, createProfile, getProfile , checkProfileCompleted, checkCollegeExists,  checkDegreeExists, setProfileCompleted, updateProfile, checkPhoneNumberExists} from "../db/queries";
 import { getPendingInvitationsForUser } from "../db/queries/teams.queries"
 
 import { authMiddleware} from "../middleware/auth.middleware";
@@ -58,6 +58,12 @@ user.post("/profile", authMiddleware, zValidator("json", createProfileSchema ),a
 		if (!degree_exists){
 		    throw new HTTPException(400, {message: "degree does not exist"})
 		}
+	}
+
+	const phone_exists = await checkPhoneNumberExists(input["ph_no"])
+
+	if (phone_exists == true){
+	    throw new HTTPException(400, { message: "phone number is already registered" })
 	}
 
 	const profile_result = await createProfile(user_id, input);
