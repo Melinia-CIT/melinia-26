@@ -91,7 +91,6 @@ payment.post("/webhook", async c => {
         const status = event.event === "payment.captured" ? "PAID" : "FAILED"
         const paidAt = status === "PAID" ? new Date(payment.created_at * 1000) : null
 
-        // Update payment record
         await sql`
             UPDATE payments
             SET
