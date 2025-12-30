@@ -1,4 +1,4 @@
-import sql from './connection';
+import sql from "./connection"
 
 await sql`
     CREATE TABLE IF NOT EXISTS migrations (
@@ -6,19 +6,19 @@ await sql`
         name TEXT UNIQUE NOT NULL,
         executed_at TIMESTAMPTZ DEFAULT NOW()
     );
-`;
+`
 
 async function runMigration(name: string, migrationFn: () => Promise<void>): Promise<void> {
-    const [exists] = await sql`SELECT * FROM migrations WHERE name = ${name}`;
+    const [exists] = await sql`SELECT * FROM migrations WHERE name = ${name}`
 
     if (!exists) {
-        console.log(`Running migration ${name}`);
-        await migrationFn();
-        await sql`INSERT INTO migrations(name) VALUES(${name})`;
-        console.log(`Ok "${name}"`);
+        console.log(`Running migration ${name}`)
+        await migrationFn()
+        await sql`INSERT INTO migrations(name) VALUES(${name})`
+        console.log(`Ok "${name}"`)
     }
 
-    return;
+    return
 }
 
 await runMigration("create gen_id func", async () => {
@@ -59,8 +59,8 @@ await runMigration("create gen_id func", async () => {
             RETURN 'MLN' || entity || result;
         END;
         $$;
-    `;
-});
+    `
+})
 
 await runMigration("melinia db init", async () => {
     //colleges
@@ -69,7 +69,7 @@ await runMigration("melinia db init", async () => {
             id SERIAL PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         );
-    `;
+    `
 
     //degrees
     await sql`
@@ -77,7 +77,7 @@ await runMigration("melinia db init", async () => {
             id SERIAL PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         );
-    `;
+    `
 
     //roles
     await sql`
@@ -85,7 +85,7 @@ await runMigration("melinia db init", async () => {
             id SERIAL PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         );
-    `;
+    `
 
     //users
     await sql`
@@ -98,7 +98,7 @@ await runMigration("melinia db init", async () => {
             created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
-    `;
+    `
 
     await sql`
         CREATE TABLE IF NOT EXISTS profile (
@@ -125,9 +125,9 @@ await runMigration("melinia db init", async () => {
             assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
             PRIMARY KEY(user_id, role_id)
         );
-    `;
+    `
 
-    //events 
+    //events
     await sql`
         CREATE TABLE IF NOT EXISTS events (
             id TEXT PRIMARY KEY DEFAULT gen_id('E'),
@@ -152,7 +152,7 @@ await runMigration("melinia db init", async () => {
             CHECK (registration_end <= start_time),
             CHECK (registration_start < registration_end)
         );
-    `;
+    `
 
     await sql`
         CREATE TABLE IF NOT EXISTS event_rounds (
@@ -162,7 +162,7 @@ await runMigration("melinia db init", async () => {
             round_description TEXT NOT NULL,
             UNIQUE(event_id, round_no)
         );
-    `;
+    `
 
     await sql`
         CREATE TABLE IF NOT EXISTS event_prizes (
@@ -172,7 +172,7 @@ await runMigration("melinia db init", async () => {
             reward_value INTEGER NOT NULL CHECK (reward_value > 0),
             UNIQUE(event_id, position)
         );
-    `;
+    `
 
     await sql`
         CREATE TABLE IF NOT EXISTS event_organizers (
@@ -182,7 +182,7 @@ await runMigration("melinia db init", async () => {
             assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
             PRIMARY KEY(event_id, user_id) 
         );
-    `;
+    `
 
     await sql`
         CREATE TABLE IF NOT EXISTS event_volunteers (
@@ -192,7 +192,7 @@ await runMigration("melinia db init", async () => {
             assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
             PRIMARY KEY(event_id, user_id) 
         );
-    `;
+    `
 
     // teams
     await sql`
@@ -202,7 +202,7 @@ await runMigration("melinia db init", async () => {
             leader_id TEXT NOT NULL REFERENCES users(id),
             event_id TEXT REFERENCES events(id)
         );
-    `;
+    `
 
     await sql`
         CREATE TABLE IF NOT EXISTS team_members (
@@ -211,16 +211,16 @@ await runMigration("melinia db init", async () => {
             joined_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY(user_id, team_id)
         );
-    `;
+    `
 
-    // qr tags 
+    // qr tags
     await sql`
         CREATE TABLE IF NOT EXISTS tags (
             id TEXT PRIMARY KEY DEFAULT gen_random_uuid(), -- this will be the qr value as well.
             status TEXT NOT NULL DEFAULT 'unused' CHECK (status IN ('unused', 'used', 'revoked')),
             created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
-    `;
+    `
 
     // check-in
     await sql`apps/api/src/db/migrations.ts
@@ -230,8 +230,8 @@ await runMigration("melinia db init", async () => {
             user_id TEXT UNIQUE NOT NULL REFERENCES users(id),
             checked_in_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
-    `;
-});
+    `
+})
 
 await runMigration("create invitations", async () => {
     await sql`
@@ -242,11 +242,11 @@ await runMigration("create invitations", async () => {
             inviter_id TEXT NOT NULL REFERENCES users(id),
             invitee_id TEXT REFERENCES users(id)
         );
-    `;
-});
+    `
+})
 
 await runMigration("add role column in users table", async () => {
-    await sql.begin(async (tx) => {
+    await sql.begin(async tx => {
         await tx`
             CREATE TYPE user_role as ENUM (
                 'PARTICIPANT',
@@ -254,44 +254,44 @@ await runMigration("add role column in users table", async () => {
                 'ORGANIZER',
                 'ADMIN'
             );
-        `;
+        `
 
         await tx`
             ALTER TABLE users
             ADD COLUMN role user_role NOT NULL DEFAULT 'PARTICIPANT';
-        `;
-    });
+        `
+    })
 })
 
 await runMigration("add profile completion status", async () => {
     await sql`
         ALTER TABLE users
         ADD COLUMN profile_completed BOOLEAN NOT NULL DEFAULT false;
-    `;
-});
+    `
+})
 
 await runMigration("cascade invitations when team is deleted", async () => {
     await sql`
         ALTER TABLE invitations
         DROP CONSTRAINT IF EXISTS invitations_team_id_fkey;
-    `;
+    `
 
     await sql`
         ALTER TABLE invitations
         ADD CONSTRAINT invitations_team_id_fkey 
         FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE;
-    `;
-});
+    `
+})
 
 await runMigration("remove user_roles and roles table", async () => {
-    await sql.begin(async (tx) => {
-        await tx`DROP TABLE user_roles;`;
+    await sql.begin(async tx => {
+        await tx`DROP TABLE user_roles;`
         await tx`DROP TABLE roles; `
-    });
-});
+    })
+})
 
 await runMigration("automatic updates on updated_at column", async () => {
-    await sql.begin(async (tx) => {
+    await sql.begin(async tx => {
         await tx`
             CREATE OR REPLACE FUNCTION update_updated_at()
             RETURNS TRIGGER AS $$
@@ -300,30 +300,30 @@ await runMigration("automatic updates on updated_at column", async () => {
                 RETURN NEW;
             END;
             $$ LANGUAGE plpgsql;
-        `;
+        `
 
         await tx`
             CREATE TRIGGER update_users_updated_at
             BEFORE UPDATE ON users
             FOR EACH ROW
             EXECUTE FUNCTION update_updated_at();
-        `;
+        `
 
         await tx`
             CREATE TRIGGER update_events_updated_at
             BEFORE UPDATE ON events
             FOR EACH ROW
             EXECUTE FUNCTION update_updated_at();
-        `;
+        `
 
         await tx`
             CREATE TRIGGER update_profile_updated_at
             BEFORE UPDATE ON profile
             FOR EACH ROW
             EXECUTE FUNCTION update_updated_at();
-        `;
-    });
-});
+        `
+    })
+})
 
 await runMigration("create event registrations", async () => {
     await sql`
@@ -336,32 +336,42 @@ await runMigration("create event registrations", async () => {
             UNIQUE(event_id, team_id, user_id)
         );
     `;
+})
 
 await runMigration("create payments table", async () => {
-  await sql`
-    CREATE TABLE IF NOT EXISTS payments (
-      id TEXT PRIMARY KEY DEFAULT gen_id('P'),
+    await sql`
+  CREATE TABLE IF NOT EXISTS payments (
+    id SERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    order_id TEXT NOT NULL,
+    payment_id TEXT,
 
-      user_id TEXT NOT NULL,
-      order_id TEXT UNIQUE NOT NULL,
-      payment_id TEXT UNIQUE,
+    email TEXT NOT NULL,
+    payment_status TEXT NOT NULL CHECK(payment_status IN ('CREATED', 'PAID', 'FAILED', 'REFUNDED')),
+    payment_method VARCHAR(50),
 
-      payment_status TEXT NOT NULL CHECK (
-        payment_status IN ('CREATED', 'PAID', 'FAILED')
-      ),
+    amount DECIMAL(10, 2) NOT NULL,
 
-      razorpay_order_created_at TIMESTAMP,
-      razorpay_payment_created_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    paid_at TIMESTAMP,
 
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    gateway_response JSONB
+  )
 
-      CONSTRAINT fk_payments_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE
-    );
-  `;
-});
+  `
+})
 
-await sql.end();
+await runMigration("add razorpay timestamps to payments table", async () => {
+    await sql`
+    ALTER TABLE payments
+    ADD COLUMN razorpay_order_created_at TIMESTAMP
+  `
+
+    await sql`
+    ALTER TABLE payments
+    ADD COLUMN razorpay_payment_created_at TIMESTAMP
+  `
+})
+
+await sql.end()
