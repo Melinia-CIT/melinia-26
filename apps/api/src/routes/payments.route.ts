@@ -70,7 +70,7 @@ payment.post("/register-melinia", authMiddleware, async c => {
     }
 })
 
-payment.post("/webhook/razorpay", async c => {
+payment.post("/webhook", async c => {
     console.log("Razorpay webhook triggered")
 
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET!
@@ -91,7 +91,7 @@ payment.post("/webhook/razorpay", async c => {
         const status = event.event === "payment.captured" ? "PAID" : "FAILED"
         const paidAt = status === "PAID" ? new Date(payment.created_at * 1000) : null
 
-        // ✅ Update payment record
+        // Update payment record
         await sql`
             UPDATE payments
             SET
