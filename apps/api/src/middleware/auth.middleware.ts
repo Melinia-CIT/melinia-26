@@ -29,3 +29,32 @@ export const authMiddleware = createMiddleware<{ Variables: Variables }>(async (
         throw new HTTPException(401, { message: "Invalid or expired token" });
     }
 });
+
+type RoleCheckConfig = {
+    allowedRoles: string[];
+    errorMessage: string;
+};
+
+const createRoleMiddleware = (config: RoleCheckConfig) =>
+    createMiddleware<{ Variables: Variables }>(async (c, next) => {
+        const role = c.get("role");
+        if (!config.allowedRoles.includes(role)) {
+            throw new HTTPException(403, { message: config.errorMessage });
+        }
+        await next();
+    });
+
+export const adminOnlyMiddleware = createRoleMiddleware({
+    allowedRoles: ["ADMIN"],
+    errorMessage: "Admin access required"
+});
+
+export const adminAndOrganizerMiddleware = createRoleMiddleware({
+    allowedRoles: ["ADMIN", "ORGANIZER"],
+    errorMessage: "Admin or organizer access required"
+});
+
+export const participantOnlyMiddleware = createRoleMiddleware({
+    allowedRoles: ["PARTICIPANT"],
+    errorMessage: "Participant access required"
+});

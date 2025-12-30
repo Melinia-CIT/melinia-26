@@ -1,54 +1,146 @@
 import { z } from "zod";
 
 export const ParticipationType = z.enum(["solo", "team"]);
-export const EventType = z.enum([
-    "technical",
-    "non-technical",
-    "flagship",
-]);
+export const EventType = z.enum(["technical", "non-technical", "flagship"]);
 
-export const eventSchema = z.object({
+export const roundSchema = z.object({
+    roundNo: z.number().int().min(1, "Round number must be positive"),
+    roundDescription: z.string().min(1, "Round description is required"),
+});
+
+export const prizeSchema = z.object({
+    position: z.number().int().min(1, "Position must be positive"),
+    rewardValue: z.number().int().min(1, "Reward value must be positive"),
+});
+
+export const organizerSchema = z.object({
+    userId: z.string().min(1, "User ID is required"),
+    assignedBy: z.string().nullable().optional(),
+});
+
+const baseEventObject = {
     id: z.string(),
     name: z.string().min(1, "Event name is required"),
     description: z.string().min(1, "Description is required"),
-    participation_type: ParticipationType.default("solo"),
-    event_type: EventType,
-    max_allowed: z.number().int().positive("Maximum participants must be positive"),
+    participationType: ParticipationType.default("solo"),
+    eventType: EventType,
+    maxAllowed: z
+        .number()
+        .int()
+        .positive("Maximum participants must be positive"),
+    minTeamSize: z.number().int().min(1).nullable().optional(),
+    maxTeamSize: z.number().int().min(1).nullable().optional(),
     venue: z.string().min(1, "Venue is required"),
-    start_time: z.coerce.date(),
-    end_time: z.coerce.date(),
-    registration_start: z.coerce.date(),
-    registration_end: z.coerce.date(),
-    created_by: z.string().nullable().optional(),
-    created_at: z.coerce.date().optional(),
-    updated_at: z.coerce.date().optional(),
-})
-    .refine((data) => data.end_time > data.start_time, {
-        message: "Event end time must be after start time",
-        path: ["end_time"],
-    })
-    .refine((data) => data.registration_end <= data.start_time, {
-        message: "Registration must end before or when the event starts",
-        path: ["registration_end"],
-    })
-    .refine((data) => data.registration_start < data.registration_end, {
-        message: "Registration start must be before registration end",
-        path: ["registration_start"],
-    })
-    .refine((data) => data.registration_start < data.start_time, {
-        message: "Registration must start before the event starts",
-        path: ["registration_start"],
-    });
+    eventStatus: z
+        .enum(["not-started", "ongoing", "completed", "cancelled"])
+        .default("not-started"),
+    registrationStatus: z.boolean().default(false),
+    startTime: z.coerce.date(),
+    endTime: z.coerce.date(),
+    registrationStart: z.coerce.date(),
+    registrationEnd: z.coerce.date(),
+    createdBy: z.string().nullable().optional(),
+    createdAt: z.coerce.date().optional(),
+    updatedAt: z.coerce.date().optional(),
+};
 
+const rawEventSchema = z.object(baseEventObject);
 
-export const createEventSchema = eventSchema.omit({
-    id: true,
-    created_at: true,
-    updated_at: true
+const withRefinements = <T extends z.ZodTypeAny>(schema: T) =>
+    schema
+        .refine((data: any) => data.endTime > data.startTime, {
+            message: "Event end time must be after start time",
+            path: ["endTime"],
+        })
+        .refine((data: any) => data.registrationEnd <= data.startTime, {
+            message: "Registration must end before or when the event starts",
+            path: ["registrationEnd"],
+        })
+        .refine((data: any) => data.registrationStart < data.registrationEnd, {
+            message: "Registration start must be before registration end",
+            path: ["registrationStart"],
+        })
+        .refine((data: any) => data.registrationStart < data.startTime, {
+            message: "Registration must start before the event starts",
+            path: ["registrationStart"],
+        })
+        .refine(
+            (data: any) => {
+                if (data.minTeamSize && data.maxTeamSize) {
+                    return data.maxTeamSize >= data.minTeamSize;
+                }
+                return true;
+            },
+            {
+                message: "Max team size must be >= min team size",
+                path: ["maxTeamSize"],
+            }
+        );
+
+export const eventSchema = withRefinements(
+    rawEventSchema.safeExtend({
+        rounds: z.array(roundSchema).optional(),
+        prizes: z.array(prizeSchema).optional(),
+        organizers: z.array(organizerSchema).optional(),
+    })
+);
+
+export const createEventSchema = withRefinements(
+    rawEventSchema
+        .omit({
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+        })
+        .safeExtend({
+            rounds: z.array(roundSchema).optional(),
+            prizes: z.array(prizeSchema).optional(),
+            organizers: z.array(organizerSchema).optional(),
+        })
+);
+
+export const updateEventDetailsSchema = withRefinements(
+    z.object({
+        //eventId: z.string().min(1, "Event id is required"),
+        name: z.string().min(1, "Event name is required"),
+        description: z.string().min(1, "Description is required"),
+        participationType: ParticipationType.default("solo"),
+        eventType: EventType,
+        maxAllowed: z
+            .number()
+            .int()
+            .positive("Maximum participants must be positive"),
+        minTeamSize: z.number().int().min(1).nullable().optional(),
+        maxTeamSize: z.number().int().min(1).nullable().optional(),
+        venue: z.string().min(1, "Venue is required"),
+        startTime: z.coerce.date(),
+        endTime: z.coerce.date(),
+        registrationStart: z.coerce.date(),
+        registrationEnd: z.coerce.date(),
+        createdBy: z.string().nullable().optional(),
+    })
+    .safeExtend({
+        rounds: z.array(roundSchema).optional(),
+        prizes: z.array(prizeSchema).optional(),
+        organizers: z.array(organizerSchema).optional(),
+    })
+);
+
+export const deleteEventSchema = z.object({
+    id: z.string().min(1, "Event id is required"),
 });
-export const updateEventSchema = eventSchema.partial();
 
+export const eventRegistrationSchema = z.object({
+    teamId: z.string().optional().nullable(),
+});
+
+export const getEventDetailsSchema = z.object({
+    id: z.string().min(1, "Event id is required"),
+});
+
+export type DeleteEventInput = z.infer<typeof deleteEventSchema>;
+export type EventRegistrationInput = z.infer<typeof eventRegistrationSchema>;
+export type GetEventDetailsInput = z.infer<typeof getEventDetailsSchema>;
 export type Event = z.infer<typeof eventSchema>;
 export type CreateEvent = z.infer<typeof createEventSchema>;
-export type UpdateEvent = z.infer<typeof updateEventSchema>; 
-
+export type UpdateEventDetailsInput = z.infer<typeof updateEventDetailsSchema>;

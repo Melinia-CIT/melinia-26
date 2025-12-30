@@ -6,6 +6,7 @@
       "name": "melinia",
       "dependencies": {
         "hono": "^4.11.1",
+        "ioredis": "^5.8.2",
         "zod": "^4.2.1",
       },
       "devDependencies": {

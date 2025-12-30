@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "bun --watch run src/index.ts & tsc --watch",
+    "dev": "bun --watch run src/index.ts && tsc --watch",
     "worker": "bun --watch run src/workers/email/worker.ts",
     "dev:all": "concurrently -n \"API,WORKER\" -c \"blue,green\" \"bun run dev\" \"bun run worker\"",
     "db:migrate": "bun run src/db/migrations.ts"
