@@ -101,15 +101,15 @@ class ApiClient {
         return this.refreshPromise;
     }
 
-    setAuthData(authData: AuthData | null): void {
-        this.authData = authData;
+    async setAuthData(authData: AuthData | null): Promise<void> {
+        this.authData = await authData;
 
         if (typeof window !== "undefined") {
             if (authData) {
-                localStorage.clear();
+                await localStorage.clear();
                 localStorage.setItem("authData", JSON.stringify(authData));
                 // Update axios headers with new token
-                this.axiosInstance.defaults.headers.common.Authorization = `Bearer ${authData.accessToken}`;
+                this.axiosInstance.defaults.headers.common.Authorization = await `Bearer ${authData.accessToken}`;
             } else {
                 localStorage.removeItem("authData");
                 delete this.axiosInstance.defaults.headers.common.Authorization;
