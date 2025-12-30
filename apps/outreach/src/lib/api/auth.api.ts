@@ -65,19 +65,18 @@ export class AuthService {
             "/api/v1/auth/register",
             passwords
         );
-
-        if (!response) {
-            throw new Error("Failed to set password");
+        
+        if (!response?.accessToken) {
+            throw new Error("Failed to set password - no token received");
         }
-
+        
         apiClient.setAuthData({
             accessToken: response.accessToken,
             refreshToken: "",
         });
-
+        
         return response;
     }
-
     public async setUpProfile(profile: createProfileType): Promise<TypicalResponse> {
         // At this point, the token should already be set from setPassword()
         const response = await apiClient.post<TypicalResponse>(
