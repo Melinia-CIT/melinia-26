@@ -1,6 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router";
 import Home from "./pages/Home";
-import Login from "./pages/Login";
+import Login from "./pages/auth/Login";
+import ResetPassword from "./pages/auth/ResetPassword";
+import AppLayout from "./pages/userland/Layout";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import Main from "./pages/userland/Main";
 
 function App() {
 	return (
@@ -8,6 +12,14 @@ function App() {
 			<Routes>
 				<Route path="/" element={<Home />} />
 				<Route path="/login" element={<Login />} />
+				<Route path="/forgot-password" element={<ForgotPassword />} />
+				<Route path="/reset-password" element={<ResetPassword />} />
+				<Route path="/app" element={<AppLayout />} >
+					<Route index element={<Main />} />
+					<Route path="events" />
+					<Route path="leaderboard" />
+					<Route path="teams" />
+				</Route>
 			</Routes>
 		</BrowserRouter>
 	);
