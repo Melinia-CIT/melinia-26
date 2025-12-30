@@ -22,7 +22,7 @@ function Events() {
 
     const renderEventSlide = (event: typeof eventsData[0], isAbsolute: boolean = false) => (
         <div className={`${isAbsolute ? 'absolute inset-0 w-full h-full' : 'relative w-full'}`}>
-            {/* Grid layout: stacked on mobile, side-by-side on desktop */}
+
             <div className="grid grid-cols-1 lg:grid-cols-[35%_65%] gap-6 md:gap-8 px-4 md:px-10 h-full">
                 {/* LEFT COLUMN - Event Visual Card */}
                 <div className="space-y-6">
@@ -30,21 +30,22 @@ function Events() {
                 </div>
 
                 {/* RIGHT COLUMN - Event Details */}
-                <div className="space-y-4 md:space-y-5 pb-4">
+                <div className="space-y-4 md:space-y-8 p-4 pb-4">
                     {/* Header with Tabs and Register Button */}
                     <div className="flex items-center justify-between gap-3 flex-wrap">
                         <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
                         {/* Register Button */}
                         <div className="relative w-full md:w-auto group">
-                            <div
-                                className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-md border-2 border-black bg-[#050608] -z-10"
-                                aria-hidden="true"
-                            />
                             <button
-                                className="relative z-10 w-full md:w-auto px-6 py-2.5 rounded-md font-semibold text-[#0F0B13] bg-[#D24623] border-2 border-black transition-all duration-300 hover:shadow-[0_0_20px_rgba(210,70,35,0.5)] hover:-translate-y-1 whitespace-nowrap flex-shrink-0"
+                                className="relative w-full md:w-auto px-6 py-2.5 rounded-xl font-semibold text-[#0F0B13] border border-white/20 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(210,70,35,0.6)] hover:-translate-y-1 whitespace-nowrap flex-shrink-0 backdrop-blur-sm"
+                                style={{
+                                    background: 'linear-gradient(135deg, #D24623 0%, #EA8427 100%)',
+                                    boxShadow: '0 4px 20px rgba(210, 70, 35, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                }}
                             >
-                                Register Now
+                                <span className="relative z-10">Register Now</span>
+                                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             </button>
                         </div>
                     </div>
@@ -65,10 +66,10 @@ function Events() {
             className="w-full min-h-screen relative"
         >
 
-            <div className="relative z-10 w-full max-w-[1800px] mx-auto px-4 md:px-8 py-10 md:py-20">
-                {/* Section Header */}
+            <div className="relative z-10 w-full  mx-auto px-4 md:px-8 py-10 md:py-20">
+                {/* Section Header */} 
                 <div className="text-center mb-8 md:mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold mb-2 md:mb-3 tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-b from-white to-[#5227FF]">Events</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-2 md:mb-3 tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-b from-white to-[#5227FF]">Events</h2>
                     <p className="text-[#F2F2F2]/70 text-sm md:text-lg px-4">Discover our flagship competitions and workshops</p>
                 </div>
 
@@ -105,10 +106,14 @@ function Events() {
                     <button
                         onClick={handlePrevious}
                         disabled={isSliding}
-                        className="absolute left-0 lg:-left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#34143F] border border-[#752B65] shadow-lg hover:shadow-xl hover:bg-[#752B65] hover:text-[#F2F2F2] transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed flex items-center justify-center group z-20"
+                        className="absolute left-0 lg:-left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/20 shadow-lg hover:shadow-xl hover:scale-110 hover:border-[#752B65]/50 transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed flex items-center justify-center group z-20 backdrop-blur-lg"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(52, 20, 63, 0.8) 0%, rgba(15, 11, 19, 0.9) 100%)',
+                            boxShadow: '0 4px 20px rgba(15, 11, 19, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                        }}
                         aria-label="Previous event"
                     >
-                        <svg className="w-5 h-5 text-[#1196A9] group-hover:text-[#F2F2F2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-[#1196A9] group-hover:text-[#F2F2F2] group-hover:scale-110 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
@@ -116,10 +121,14 @@ function Events() {
                     <button
                         onClick={handleNext}
                         disabled={isSliding}
-                        className="absolute right-0 lg:-right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#34143F] border border-[#752B65] shadow-lg hover:shadow-xl hover:bg-[#752B65] hover:text-[#F2F2F2] transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed flex items-center justify-center group z-20"
+                        className="absolute right-0 lg:-right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/20 shadow-lg hover:shadow-xl hover:scale-110 hover:border-[#752B65]/50 transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed flex items-center justify-center group z-20 backdrop-blur-lg"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(52, 20, 63, 0.8) 0%, rgba(15, 11, 19, 0.9) 100%)',
+                            boxShadow: '0 4px 20px rgba(15, 11, 19, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                        }}
                         aria-label="Next event"
                     >
-                        <svg className="w-5 h-5 text-[#1196A9] group-hover:text-[#F2F2F2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-[#1196A9] group-hover:text-[#F2F2F2] group-hover:scale-110 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                         </svg>
                     </button>

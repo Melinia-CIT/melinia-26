@@ -69,7 +69,7 @@ function parseColor(color: string) {
 const DotGrid: React.FC<DotGridProps> = ({
     dotSize = 16,
     gap = 32,
-    baseColor = '#5227FF',
+    baseColor = '#34143F',
     activeColor = '#5227FF',
     proximity = 150,
     speedTrigger = 100,
@@ -79,7 +79,7 @@ const DotGrid: React.FC<DotGridProps> = ({
     resistance = 750,
     returnDuration = 1.5,
     className = '',
-    style
+    // style
 }) => {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -298,7 +298,7 @@ const DotGrid: React.FC<DotGridProps> = ({
     }, [maxSpeed, speedTrigger, proximity, resistance, returnDuration, shockRadius, shockStrength]);
 
     return (
-        <section className={`p-4 flex items-center justify-center h-full w-full relative ${className}`} style={style}>
+        <section className={`p-4 bg-gradient-to-br from-[#0F0B13] to-[#34143F] flex items-center justify-center h-full w-full relative ${className}`} >
             <div ref={wrapperRef} className="w-full h-full relative">
                 <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
             </div>

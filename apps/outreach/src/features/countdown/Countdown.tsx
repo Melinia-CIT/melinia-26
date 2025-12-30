@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import SpiderWeb from "../../components/SpiderWeb";
 
 interface TimeLeft {
@@ -6,6 +6,114 @@ interface TimeLeft {
     hours: number;
     minutes: number;
     seconds: number;
+}
+
+interface FlipCardProps {
+    value: number;
+    label: string;
+}
+
+function FlipCard({ value, label }: FlipCardProps) {
+    const [currentValue, setCurrentValue] = useState(value);
+    const [isFlipping, setIsFlipping] = useState(false);
+    const prevValueRef = useRef(value);
+
+    useEffect(() => {
+        if (value !== prevValueRef.current) {
+            setIsFlipping(true);
+
+            setTimeout(() => {
+                setCurrentValue(value);
+                setIsFlipping(false);
+            }, 300);
+
+            prevValueRef.current = value;
+        }
+    }, [value]);
+
+    const formatNumber = (num: number): string => {
+        return num.toString().padStart(2, "0");
+    };
+
+    return (
+        <div className="flex flex-col items-center gap-2">
+            {/* Flip Card Container */}
+            <div className="relative w-20 h-24 md:w-28 md:h-32 lg:w-32 lg:h-36" style={{ perspective: '1000px' }}>
+
+
+                {/* Full Card - Static (shows current value) */}
+                <div className="absolute inset-0 overflow-hidden">
+                    <div
+                        className="w-full h-full rounded-xl border-2 border-white/20 backdrop-blur-xl flex items-center justify-center"
+                        style={{
+                            background: 'linear-gradient(180deg, rgba(42, 22, 54, 0.9) 0%, rgba(15, 11, 19, 0.9) 100%)',
+                            boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.6)'
+                        }}
+                    >
+                        <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
+                            {formatNumber(currentValue)[0]}
+                        </span>
+                        <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
+                            {formatNumber(currentValue)[1]}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Flipping Top Half */}
+                {isFlipping && (
+                    <div
+                        className="absolute top-0 left-0 right-0 h-1/2 overflow-hidden origin-bottom"
+                        style={{
+                            animation: 'flipTop 0.6s ease-in-out',
+                            transformStyle: 'preserve-3d',
+                            zIndex: 10
+                        }}
+                    >
+                        <div
+                            className="w-full h-full rounded-t-xl border-2 border-b border-white/20 backdrop-blur-xl flex items-end justify-center pb-1"
+                            style={{
+                                background: 'linear-gradient(180deg, rgba(42, 22, 54, 0.9) 0%, rgba(26, 13, 36, 0.95) 100%)',
+                                boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.5)'
+                            }}
+                        >
+                            <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
+                                {formatNumber(currentValue)[0]}
+                            </span>
+                            <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
+                                {formatNumber(currentValue)[1]}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Center Line */}
+                <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-black/50 z-20" style={{ transform: 'translateY(-1px)' }} />
+
+                {/* Shine Effect */}
+                <div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent" />
+                </div>
+            </div>
+
+            {/* Label */}
+            <span className="text-[10px] md:text-xs lg:text-sm font-semibold uppercase tracking-widest text-[#f5a850]">
+                {label}
+            </span>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                    @keyframes flipTop {
+                        0% {
+                            transform: rotateX(0deg);
+                        }
+                        100% {
+                            transform: rotateX(-180deg);
+                        }
+                    }
+                `
+            }} />
+        </div>
+    );
 }
 
 function Countdown() {
@@ -38,21 +146,13 @@ function Countdown() {
         return () => clearInterval(timer);
     }, []);
 
-    const formatNumber = (num: number): string => {
-        return num.toString().padStart(2, "0");
-    };
-
     return (
         <>
             <div
-                className="w-full min-h-[180px] md:min-h-[200px] bg-cover bg-center flex items-center justify-center gap-3 md:gap-6 lg:gap-8 text-white px-4 py-8 md:py-12"
-                // style={{ background: "url('/countdown-bg.png') no-repeat center/cover" }}
+                className="w-full min-h-[200px] md:min-h-[240px] bg-cover bg-center flex items-center justify-center gap-4 md:gap-6 lg:gap-8 text-white px-4 py-8 md:py-12"
             >
                 {/* Days */}
-                <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-lg md:rounded-xl w-20 h-20 md:w-25 md:h-25 lg:w-30 lg:h-30 flex flex-col items-center justify-center">
-                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold leading-none">{formatNumber(timeLeft.days)}</span>
-                    <span className="text-[8px] md:text-[10px] lg:text-xs font-semibold uppercase tracking-widest text-white/60 md:mt-1">Days</span>
-                </div>
+                <FlipCard value={timeLeft.days} label="Days" />
 
                 {/* Spider Web Separator */}
                 <div className="hidden sm:block scale-[0.3] md:scale-50">
@@ -60,10 +160,7 @@ function Countdown() {
                 </div>
 
                 {/* Hours */}
-                <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-lg md:rounded-xl w-20 h-20 md:w-25 md:h-25 lg:w-30 lg:h-30 flex flex-col items-center justify-center">
-                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold leading-none">{formatNumber(timeLeft.hours)}</span>
-                    <span className="text-[8px] md:text-[10px] lg:text-xs font-semibold uppercase tracking-widest text-white/60 md:mt-1">Hours</span>
-                </div>
+                <FlipCard value={timeLeft.hours} label="Hours" />
 
                 {/* Spider Web Separator */}
                 <div className="hidden md:block scale-[0.3] md:scale-50">
@@ -71,10 +168,7 @@ function Countdown() {
                 </div>
 
                 {/* Minutes */}
-                <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-lg md:rounded-xl w-20 h-20 md:w-25 md:h-25 lg:w-30 lg:h-30 flex flex-col items-center justify-center">
-                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold leading-none">{formatNumber(timeLeft.minutes)}</span>
-                    <span className="text-[8px] md:text-[10px] lg:text-xs font-semibold uppercase tracking-widest text-white/60 md:mt-1">Minutes</span>
-                </div>
+                <FlipCard value={timeLeft.minutes} label="Minutes" />
 
                 {/* Spider Web Separator */}
                 <div className="hidden sm:block scale-[0.3] md:scale-50">
@@ -82,10 +176,7 @@ function Countdown() {
                 </div>
 
                 {/* Seconds */}
-                <div className="bg-black/80 backdrop-blur-sm border-2 border-white/20 rounded-lg md:rounded-xl w-20 h-20 md:w-25 md:h-25 lg:w-30 lg:h-30 flex flex-col items-center justify-center">
-                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold leading-none">{formatNumber(timeLeft.seconds)}</span>
-                    <span className="text-[8px] md:text-[10px] lg:text-xs font-semibold uppercase tracking-widest text-white/60 md:mt-1">Seconds</span>
-                </div>
+                <FlipCard value={timeLeft.seconds} label="Seconds" />
             </div>
         </>
     );
