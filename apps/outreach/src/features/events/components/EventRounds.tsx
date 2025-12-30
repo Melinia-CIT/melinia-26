@@ -8,30 +8,29 @@ export const EventRounds = ({ event }: EventRoundsProps) => {
     return (
         <div className="relative group animate-fadeIn">
             <div
-                className="rounded-xl p-5 md:p-6 border-2 border-white/20 shadow-lg relative backdrop-blur-lg bg-gradient-to-br from-[#2A1636]/85 to-[#1a0d24]/80 hover:scale-[1.02] transition-all duration-500 hover:shadow-[0_0_40px_rgba(230,126,34,0.5)] group-hover:border-[#e67e22]/50"
+                className="rounded-xl p-5 md:p-6 border-2 border-white/20 shadow-lg relative backdrop-blur-lg bg-gradient-to-br from-[#2A1636]/85 to-[#1a0d24]/80"
                 style={{
                     boxShadow: '0 4px 24px rgba(15, 11, 19, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
                 }}
             >
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#e67e22]/0 via-[#e67e22]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                <h4 className="text-[#f5a850] text-base md:text-lg font-bold mb-4 md:mb-5 group-hover:scale-105 transition-transform duration-300">Competition Rounds</h4>
+                <h4 className="text-[#f5a850] text-base md:text-lg font-bold mb-4 md:mb-5">Competition Rounds</h4>
                 {event.rounds ? (
                     <div className="space-y-4 md:space-y-5">
                         {event.rounds.map((round, index) => (
-                            <div key={index} className="relative pl-6 md:pl-7 hover:translate-x-1 transition-transform duration-300">
+                            <div key={index} className="relative pl-6 md:pl-7 transition-transform duration-300">
                                 <div
-                                    className="absolute left-0 top-1.5 md:top-2 w-2.5 h-2.5 md:w-3.5 md:h-3.5 rounded-full animate-pulse-slow"
+                                    className="absolute left-0 top-1.5 md:top-2 w-2.5 h-2.5 md:w-3.5 md:h-3.5 rounded-full"
                                     style={{
                                         background: 'linear-gradient(135deg, #e67e22 0%, #f5a850 100%)',
-                                        boxShadow: '0 0 16px rgba(230, 126, 34, 1), 0 0 32px rgba(245, 168, 80, 0.6)'
+                                        border: '1px solid rgba(255, 255, 255, 0.2)'
                                     }}
                                 ></div>
                                 {index !== event.rounds!.length - 1 && (
                                     <div className="absolute left-[4px] md:left-[6px] top-5 md:top-6 w-[2px] h-full bg-gradient-to-b from-[#e67e22]/60 to-transparent"></div>
                                 )}
                                 <div>
-                                    <h5 className="text-[#F2F2F2] font-bold text-sm md:text-base mb-1 md:mb-1.5 group-hover:text-[#f5a850] transition-colors duration-300">{round.title}</h5>
-                                    <p className="text-[#F2F2F2]/75 text-xs md:text-sm group-hover:text-[#F2F2F2]/95 transition-colors duration-300">{round.description}</p>
+                                    <h5 className="text-[#F2F2F2] font-bold text-sm md:text-base mb-1 md:mb-1.5 transition-colors duration-300">{round.title}</h5>
+                                    <p className="text-[#F2F2F2]/75 text-xs md:text-sm transition-colors duration-300">{round.description}</p>
                                 </div>
                             </div>
                         ))}

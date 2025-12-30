@@ -9,6 +9,7 @@ function Hero({ isVisible = true }: HeroProps) {
 
     useEffect(() => {
         if (videoRef.current && isVisible) {
+            videoRef.current.playbackRate = 0.9;
             videoRef.current.currentTime = 0;
             videoRef.current.play().catch(error => {
                 console.error("Video auto-play failed:", error);
@@ -19,7 +20,7 @@ function Hero({ isVisible = true }: HeroProps) {
     return (
         /* Added 'flex items-center justify-center' to center the child elements */
         <div className={`relative h-[100dvh] w-full bg-black overflow-hidden flex items-center justify-center transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-            
+
             <video
                 ref={videoRef}
                 src="/hero-bg.mp4"
