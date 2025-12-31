@@ -9,7 +9,7 @@ export async function checkUserExists(email: string): Promise<boolean> {
     return user.length > 0;
 }
 
-export async function checkProfileCompleted(id:string) : Promise<boolean> {
+export async function checkProfileCompleted(id: string): Promise<boolean> {
     const userWithProfile = await sql`
         SELECT 1 from users where id = ${id} and profile_completed = true
     `
@@ -37,4 +37,15 @@ export async function insertUser(email: string, passwdHash: string): Promise<cre
     `;
 
     return createUserSchema.parse(row);
+}
+
+export async function updatePasswd(email: string, newPasswdHash: string): Promise<boolean> {
+    const rows = await sql`
+        UPDATE users
+        SET passwd_hash = ${newPasswdHash}
+        WHERE email = ${email}
+        RETURNING id;
+    `
+
+    return rows.length > 0;
 }

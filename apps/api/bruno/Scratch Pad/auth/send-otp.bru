@@ -1,0 +1,32 @@
+meta {
+  name: /send-otp
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{BASE_URL}}/auth/send-otp
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  User-Agent: insomnia/12.1.0
+  X-Forwarded-For: 3.32.2.2
+}
+
+body:json {
+  {
+    "email": "71762231050@cit.edu.in"
+  }
+}
+
+vars:pre-request {
+  BASE_URL: http://localhost:3000/api/v1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

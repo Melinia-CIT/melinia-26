@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "bun --watch run src/index.ts & tsc --watch",
+    "dev": "bun --watch run src/index.ts && tsc --watch",
     "worker": "bun --watch run src/workers/email/worker.ts",
     "dev:all": "concurrently -n \"API,WORKER\" -c \"blue,green\" \"bun run dev\" \"bun run worker\"",
     "db:migrate": "bun run src/db/migrations.ts"
@@ -14,9 +14,9 @@
     "@aws-sdk/client-ses": "^3.958.0",
     "@hono/zod-validator": "^0.7.6",
     "@melinia/shared": "workspace:*",
-    "bullmq": "^5.66.3",
+    "bullmq": "^5.66.4",
     "crypto": "^1.0.1",
-    "hono": "^4.10.8",
+    "hono": "^4.11.3",
     "ioredis": "^5.8.2",
     "postgres": "^3.4.7"
   },

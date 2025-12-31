@@ -1,0 +1,23 @@
+meta {
+  name: /user/profile
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/users/profile
+  body: none
+  auth: bearer
+}
+
+headers {
+  User-Agent: insomnia/12.1.0
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik1MTlVVMloxMEgiLCJyb2xlIjoiUEFSVElDSVBBTlQiLCJpc3MiOiJtZWxpbmlhIiwiaWF0IjoxNzY2NzM4NDU1LCJleHAiOjE3NjY3MzkzNTV9.lLf5_WaSZhRivkFSHRWhZppzuLkMJl3rTJf8YnbHdEM
+}
+
+settings {
+  encodeUrl: true
+}
