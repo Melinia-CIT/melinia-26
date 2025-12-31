@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import SpiderWeb from "../../components/SpiderWeb";
+import SpiderWeb from "../../common/SpiderWeb";
 
 interface TimeLeft {
     days: number;

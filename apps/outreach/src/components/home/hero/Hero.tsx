@@ -9,7 +9,6 @@ function Hero({ isVisible = true }: HeroProps) {
 
     useEffect(() => {
         if (videoRef.current && isVisible) {
-            videoRef.current.playbackRate = 0.9;
             videoRef.current.currentTime = 0;
             videoRef.current.play().catch(error => {
                 console.error("Video auto-play failed:", error);

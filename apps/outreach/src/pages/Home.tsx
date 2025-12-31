@@ -1,13 +1,13 @@
 import { useState } from "react";
-import Hero from "../features/hero/Hero";
-import Countdown from "../features/countdown/Countdown";
-import Events from "../features/events/Events";
-import Footer from "../components/Footer";
-import IntroVideo from "../features/intro/IntroVideo";
-import PrizePool from "../features/prize-pool/PrizePool";
-import Sponsors from "../features/sponsors/Sponsors";
-import People from "../features/people/People";
-import DotGrid from "../components/DotGrid";
+import Hero from "../components/home/hero/Hero";
+import Countdown from "../components/home/countdown/Countdown";
+import Events from "../components/home/events/Events";
+import Footer from "../components/common/Footer";
+import IntroVideo from "../components/home/intro/IntroVideo";
+import PrizePool from "../components/home/prize-pool/PrizePool";
+import Sponsors from "../components/home/sponsors/Sponsors";
+import People from "../components/home/people/People";
+import DotGrid from "../components/common/DotGrid";
 
 function Home() {
 	const [showIntro, setShowIntro] = useState(true);
