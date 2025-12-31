@@ -3,28 +3,33 @@
 @import "tailwindcss";
 
 @theme {
-    --font-inst: "Instrument Serif", serif;
-    --font-geist: "Geist", sans-serif;
-    --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --font-inst: "Instrument Serif", serif;
+  --font-geist: "Geist", sans-serif;
+  --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
-    @keyframes pulse-slow {
+  @keyframes pulse-slow {
 
-        0%,
-        100% {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        50% {
-            opacity: 0.8;
-            transform: scale(1.05);
-        }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
     }
+
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
 }
 
 @layer base {
   body {
     @apply bg-zinc-950 text-white;
+  }
+
+  button,
+  a {
+    @apply cursor-pointer;
   }
 
   @keyframes bounce-subtle {

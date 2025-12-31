@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { eventsData } from './data';
 import { useEventCarousel } from './useEventCarousel';
 import { EventCard } from './components/EventCard';
@@ -8,6 +9,7 @@ import { EventPrizes } from './components/EventPrizes';
 
 
 function Events() {
+    const navigate = useNavigate();
     const {
         currentIndex,
         incomingIndex,
@@ -38,6 +40,7 @@ function Events() {
                         {/* Register Button */}
                         <div className="relative w-full md:w-auto group">
                             <button
+                                onClick={() => navigate('/login')}
                                 className="relative w-full md:w-auto px-6 py-2.5 rounded-xl font-semibold text-[#0F0B13] border border-white/20 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(210,70,35,0.6)] hover:-translate-y-1 whitespace-nowrap flex-shrink-0 backdrop-blur-sm"
                                 style={{
                                     background: 'linear-gradient(135deg, #D24623 0%, #EA8427 100%)',

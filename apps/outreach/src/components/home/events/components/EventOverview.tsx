@@ -78,19 +78,25 @@ export const EventOverview = ({ event }: EventOverviewProps) => {
                     }}
                 >
                     <h4 className="text-[#F2F2F2] text-base md:text-lg font-bold mb-3 md:mb-4 transition-colors duration-300">Event Coordinators</h4>
-                    <div className="space-y-2 md:space-y-3">
+                    <div className="flex flex-wrap gap-3">
                         {event.coordinators.map((coordinator, index) => (
-                            <div key={index} className="flex items-center py-2 border-b border-white/10 last:border-0 gap-3 transition-all duration-300">
-                                <div className="flex items-center gap-2.5 min-w-0 overflow-hidden">
-                                    <div className="flex flex-col">
-                                        <span className="text-[#F2F2F2] font-semibold text-xs md:text-sm truncate">{coordinator.name}</span>
-                                        <a
-                                            href={`tel:${coordinator.phone}`}
-                                            className="text-[#3db8cc] transition-all duration-300 font-mono text-[10px] md:text-xs flex-shrink-0 inline-block"
-                                        >
-                                            {coordinator.phone}
-                                        </a>
-                                    </div>
+                            <div
+                                key={index}
+                                className="flex-1 min-w-[240px] flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 group/coord transition-all duration-300 hover:bg-white/[0.08] hover:border-[#3db8cc]/30"
+                            >
+                                <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 group-hover/coord:border-[#3db8cc]/50 transition-colors">
+                                    <svg className="w-5 h-5 text-[#3db8cc]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                    </svg>
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-[#F2F2F2] font-bold text-sm md:text-base truncate">{coordinator.name}</span>
+                                    <a
+                                        href={`tel:${coordinator.phone}`}
+                                        className="text-[#3db8cc] transition-all duration-300 font-mono text-xs md:text-sm hover:text-[#3db8cc]/80"
+                                    >
+                                        {coordinator.phone}
+                                    </a>
                                 </div>
                             </div>
                         ))}
