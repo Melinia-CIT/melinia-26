@@ -73,8 +73,7 @@ function Events() {
                 {/* Section Header */}
                 <Reveal direction="down" delay={0.1}>
                     <div className="text-center mb-8 md:mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold mb-2 md:mb-3 tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-b from-white to-[#5227FF]">Events</h2>
-                        <p className="text-[#F2F2F2]/70 text-sm md:text-lg px-4">Discover our flagship competitions and workshops</p>
+                        <h2 className="text-3xl md:text-5xl font-bold mb-2 md:mb-3 tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-b from-white to-[#5227FF]">Events</h2>
                     </div>
                 </Reveal>
 

@@ -9,7 +9,7 @@ export const TabBar = ({ activeTab, onTabChange }: TabBarProps) => {
     const tabs: { id: TabType; label: string }[] = [
         { id: 'overview', label: 'Overview' },
         { id: 'rounds', label: 'Rounds' },
-        { id: 'prizes', label: 'Prizes & Team' },
+        { id: 'prizes', label: 'Prizes' },
     ];
 
     return (

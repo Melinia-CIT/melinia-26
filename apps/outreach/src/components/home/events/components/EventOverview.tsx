@@ -62,7 +62,7 @@ export const EventOverview = ({ event }: EventOverviewProps) => {
                         boxShadow: '0 4px 24px rgba(15, 11, 19, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
                     }}
                 >
-                    <h4 className="text-[#f5a850] text-base md:text-lg font-bold mb-2 md:mb-3">About the Event</h4>
+                    <h4 className="text-[#f5a850] text-base md:text-lg font-bold mb-2 md:mb-3">About</h4>
                     <p className="text-[#F2F2F2]/75 leading-relaxed text-xs md:text-sm transition-colors duration-300">
                         {event.about}
                     </p>

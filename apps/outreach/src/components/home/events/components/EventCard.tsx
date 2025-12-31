@@ -9,8 +9,6 @@ export const EventCard = ({ event }: EventCardProps) => {
     return (
         <motion.div
             className="relative group"
-            whileHover={{ y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
         >
             {/* Glassmorphic Main Card */}
             <div
@@ -27,7 +25,6 @@ export const EventCard = ({ event }: EventCardProps) => {
                         background: 'linear-gradient(135deg, #8a3575 0%, #6b35d4 100%)',
                         border: '3px solid rgba(242, 242, 242, 0.3)'
                     }}
-                    whileHover={{ scale: 1.1 }}
                 >
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-transparent opacity-60" />
                     <span className="text-4xl md:text-6xl relative z-10" role="img" aria-label="Event icon">{event.logo}</span>
