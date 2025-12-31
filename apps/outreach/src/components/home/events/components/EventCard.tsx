@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import { Event } from '../types';
 
 interface EventCardProps {
@@ -6,7 +7,11 @@ interface EventCardProps {
 
 export const EventCard = ({ event }: EventCardProps) => {
     return (
-        <div className="relative group">
+        <motion.div
+            className="relative group"
+            whileHover={{ y: -5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+        >
             {/* Glassmorphic Main Card */}
             <div
                 className="rounded-2xl p-6 md:p-10 shadow-2xl border-2 border-white/20 relative backdrop-blur-xl bg-gradient-to-br from-[#2A1636]/80 via-[#34143F]/70 to-[#1a0d24]/80"
@@ -16,16 +21,24 @@ export const EventCard = ({ event }: EventCardProps) => {
             >
 
                 {/* Logo Circle with pulse animation */}
-                <div
+                <motion.div
                     className="w-24 h-24 md:w-36 md:h-36 rounded-full flex items-center justify-center mb-4 md:mb-6 mx-auto relative"
                     style={{
                         background: 'linear-gradient(135deg, #8a3575 0%, #6b35d4 100%)',
                         border: '3px solid rgba(242, 242, 242, 0.3)'
                     }}
+                    whileHover={{ scale: 1.1 }}
                 >
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-transparent opacity-60" />
                     <span className="text-4xl md:text-6xl relative z-10" role="img" aria-label="Event icon">{event.logo}</span>
-                </div>
+
+                    {/* Pulsing ring */}
+                    <motion.div
+                        className="absolute inset-0 rounded-full border-2 border-[#3db8cc]/30"
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                    />
+                </motion.div>
 
                 {/* Event Title with gradient */}
                 <h3 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#F2F2F2] via-[#d4d4d4] to-[#3db8cc] text-center mb-1 md:mb-2 tracking-tight">
@@ -49,6 +62,6 @@ export const EventCard = ({ event }: EventCardProps) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
