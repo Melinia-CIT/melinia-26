@@ -47,7 +47,9 @@ export const resetPasswordSchema = z.object({
 export type Login = z.infer<typeof loginSchema>;
 export type ResetPassword = z.infer<typeof resetPasswordSchema>;
 export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
-
+export type RegisterationType = z.infer<typeof registrationSchema>;
+export type VerifyOTPType = z.infer<typeof verifyOTPSchema>;
+export type GenerateOTPFormData = z.infer<typeof generateOTPSchema>;
 
 export interface LoginResponse {
     message: string;

@@ -1,31 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { EmailStep, OTPStep, PasswordStep, ProfileStep, ProgressBar, Step } from '../components/registration';
-import { authClient } from '../lib/api/auth.api'; 
+import { EmailStep, OTPStep, PasswordStep, ProgressBar, Step } from '../components/registration';
+import { registration } from '../services/registration';
 import toast from "react-hot-toast";
 import {
     registrationSchema,
-    profileSchema,
     generateOTPSchema,
     type GenerateOTPFormData,
     verifyOTPSchema,
     type VerifyOTPType,
     type RegisterationType,
-    createProfileSchema,
-    type createProfileType,
 } from '@melinia/shared';
 import { AxiosError } from 'axios';
 import { useNavigate } from 'react-router';
 import { ZodError } from 'zod';
-import { useMutation } from '@tanstack/react-query'; // 1. Import useMutation
+import { useMutation } from '@tanstack/react-query';
 
 const Register: React.FC = () => {
     const router = useNavigate();
 
-    // 2. Initialize state from localStorage to sustain on refresh
-   const [currentStep, setCurrentStep] = useState<number>(1);
+    const [currentStep, setCurrentStep] = useState<number>(1);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Restore email if it exists, otherwise null
     const [emailID, setEmailID] = useState<GenerateOTPFormData | null>();
     
     const [otp, setOTP] = useState<VerifyOTPType | null>(null);
@@ -35,25 +30,13 @@ const Register: React.FC = () => {
         confirmPasswd: '',
     });
 
-    const [profileFormData, setProfileFormData] = useState<createProfileType>({
-        firstName: '',
-        lastName: '',
-        college: '',
-        degree: '',
-        otherDegree: null,
-        year: 0,
-        ph_no: '',
-    });
-
     const steps: Step[] = [
         { number: 1, label: 'Email' },
         { number: 2, label: 'OTP' },
         { number: 3, label: 'Password' },
-        { number: 4, label: 'Profile' },
     ];
 
-    // 3. Sync currentStep to localStorage
-   // Helper: Handle Backend Errors
+    // Helper: Handle Backend Errors
     const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
         if (error instanceof AxiosError) {
             const data = error.response?.data;
@@ -94,11 +77,9 @@ const Register: React.FC = () => {
         setErrors(formattedErrors);
     };
 
-    // 4. Setup Mutations
-
     // Email Mutation
     const emailMutation = useMutation({
-        mutationFn: (data: GenerateOTPFormData) => authClient.sendOTP(data),
+        mutationFn: (data: GenerateOTPFormData) => registration.sendOTP(data),
         onSuccess: (response, variables) => {
             setEmailID(variables);
             setCurrentStep(2);
@@ -109,7 +90,7 @@ const Register: React.FC = () => {
 
     // OTP Mutation
     const otpMutation = useMutation({
-        mutationFn: (data: VerifyOTPType) => authClient.verifyOTP(data),
+        mutationFn: (data: VerifyOTPType) => registration.verifyOTP(data),
         onSuccess: (data, variables) => {
             setOTP(variables);
             setCurrentStep(3);
@@ -120,30 +101,8 @@ const Register: React.FC = () => {
 
     // Password Mutation
     const passwordMutation = useMutation({
-        mutationFn: (data: RegisterationType) => authClient.setPassword(data),
+        mutationFn: (data: RegisterationType) => registration.setPassword(data),
         onSuccess: () => {
-            setCurrentStep(4);
-
-            toast.success("Password Saved!")
-        },
-        onError: (error) => getBackendErrorMessage(error, 'form'),
-    });
-
-    // Profile Mutation
-    const profileMutation = useMutation({
-        mutationFn: (data: createProfileType) => authClient.setUpProfile(data),
-        onSuccess: () => {
-            
-            // Reset form data
-            setProfileFormData({
-                firstName: '',
-                lastName: '',
-                college: '',
-                degree: '',
-                otherDegree: '',
-                year: 0,
-                ph_no: '',
-            });
             setEmailID(null);
             setOTP(null);
             setPasswordFormData({ passwd: '', confirmPasswd: '' });
@@ -187,27 +146,6 @@ const Register: React.FC = () => {
         }
     };
 
-    const handleProfileSubmit = async (data: createProfileType): Promise<void> => {
-        try {
-            setErrors({});
-            const validatedData = await createProfileSchema.parse(data);
-
-            const fullProfileData: createProfileType = {
-                ph_no: validatedData.ph_no,
-                firstName: validatedData.firstName,
-                lastName: validatedData.lastName,
-                college: validatedData.college,
-                degree: validatedData.degree,
-                otherDegree: validatedData.otherDegree,
-                year: validatedData.year,
-            };
-            
-            profileMutation.mutate(fullProfileData);
-        } catch (error: unknown) {
-            if (error instanceof ZodError) handleZodError(error);
-        }
-    };
-
     return (
         <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center px-2 py-3 items-center">
             <div className="w-full max-w-md flex flex-col items-center">
@@ -240,22 +178,6 @@ const Register: React.FC = () => {
                             onSubmit={handlePasswordSubmit}
                             errors={errors}
                             isLoading={passwordMutation.isPending}
-                        />
-                    )}
-
-                    {currentStep === 4 && (
-                        <ProfileStep
-                            formData={profileFormData}
-                            onInputChange={(name: string, value: string) => {
-                                if (name === 'year') {
-                                    setProfileFormData((prev) => ({ ...prev, [name]: parseInt(value) }));
-                                } else {
-                                    setProfileFormData((prev) => ({ ...prev, [name]: value }));
-                                }
-                            }}
-                            onSubmit={handleProfileSubmit}
-                            errors={errors}
-                            isLoading={profileMutation.isPending}
                         />
                     )}
                 </div>
