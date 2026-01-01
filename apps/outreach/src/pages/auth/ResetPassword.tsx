@@ -2,8 +2,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import axios from "axios";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import api from "../../services/api";
 import { Eye, EyeClosed, Lock } from "iconoir-react";
 import toast from "react-hot-toast";
 import { z } from "zod";
@@ -12,23 +12,17 @@ import { resetPasswordSchema as baseResetPasswordSchema } from "@melinia/shared"
 const resetPasswordSchema = baseResetPasswordSchema.omit({ token: true })
 type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 
-const api = axios.create({
-    baseURL: "http://localhost:3000/api/v1",
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
-
 const ResetPassword = () => {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [searchParams] = useSearchParams();
 
     const token = searchParams.get("token");
 
     const {
-        register,
-        handleSubmit,
-        formState: { errors, isValid },
+            register,
+            handleSubmit,
+            formState: { errors, isValid },
     } = useForm<ResetPasswordForm>({
         resolver: zodResolver(resetPasswordSchema),
         mode: "onChange",
@@ -51,12 +45,12 @@ const ResetPassword = () => {
         onSuccess: () => {
             toast.success("Password has been reset successfully!");
             setTimeout(() => {
-                window.location.href = "/login";
+                navigate("/login", { replace: true });
             }, 2000);
         },
         onError: (error: any) => {
             console.error(error);
-            const message = error.response?.data || error.message || "Failed to reset password.";
+            const message = error.response?.data?.message || error.message || "Failed to reset password.";
             toast.error(message);
         },
     });

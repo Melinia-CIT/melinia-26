@@ -338,4 +338,53 @@ await runMigration("create event registrations", async () => {
     `;
 });
 
+await runMigration("add fk in degrees", async () => {
+    //TODO: add NOT NULL constraint
+    await sql`
+        ALTER TABLE degrees
+        ADD COLUMN college_id INTEGER REFERENCES colleges(id);
+    `;
+});
+
+await runMigration("update profile schema for degrees and colleges", async () => {
+    await sql.begin(async (tx) => {
+        await tx`
+            ALTER TABLE profile
+            DROP COLUMN other_degree;
+        `;
+
+        await tx`
+            ALTER TABLE colleges
+            ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT false;
+        `;
+
+        await tx`
+            ALTER TABLE degrees 
+            ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT false;
+        `;
+    });
+});
+
+await runMigration("update degrees unique constraint", async () => {
+    await sql.begin(async (tx) => {
+        await tx`
+            ALTER TABLE degrees
+            DROP CONSTRAINT degrees_name_key;
+        `;
+
+        await tx`
+            ALTER TABLE degrees
+            ADD CONSTRAINT degrees_name_college_key UNIQUE(name, college_id);
+        `;
+    });
+})
+
+await runMigration("add unique constraint on the user_id in profile", async () => {
+    await sql`
+        ALTER TABLE profile
+        ADD CONSTRAINT profile_user_id_key UNIQUE(user_id);
+    `;
+});
+
+
 await sql.end();

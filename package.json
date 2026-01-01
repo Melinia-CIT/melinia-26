@@ -28,8 +28,9 @@
   "dependencies": {
     "gsap": "^3.14.2",
     "hono": "^4.11.1",
-    "motion": "^12.23.26",
     "ioredis": "^5.8.2",
+    "motion": "^12.23.26",
+    "qr-code-styling": "^1.9.2",
     "zod": "^4.2.1"
   }
 }

@@ -1,21 +1,16 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
 import { useState } from "react";
 import { loginSchema, type Login } from "@melinia/shared";
 import { Eye, EyeClosed, Mail, Lock } from "iconoir-react";
 import toast from "react-hot-toast";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { login } from "../../services/auth";
 
-const api = axios.create({
-    baseURL: "http://localhost:3000/api/v1",
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
 
 const Login = () => {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
 
     const {
@@ -27,22 +22,16 @@ const Login = () => {
     });
 
     const loginMutation = useMutation({
-        mutationFn: async (data: Login) => {
-            const response = await api.post("/auth/login", data);
-            return response.data;
-        },
-        onSuccess: (data) => {
+        mutationFn: async (data: Login) => await login(data),
+        onSuccess: () => {
             toast.success("Login successful!");
-
-            if (data.accessToken) {
-                localStorage.setItem("accessToken", data.accessToken);
-            }
-
-            window.location.href = "/app";
+            setTimeout(() => {
+                navigate("/app", { replace: true });
+            }, 1000);
         },
         onError: (error: any) => {
             console.error(error);
-            const message = error.response?.data || "Login failed. Please try again.";
+            const message = error.response?.data?.message || "Login failed. Please try again.";
             toast.error(message);
         },
     });
@@ -59,7 +48,7 @@ const Login = () => {
     return (
         <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center px-4 py-6 items-center font-geist text-base">
             <div className="w-full max-w-md flex flex-col items-center">
-                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('/melinia-alt.jpg')] bg-cover bg-center mb-10 shadow-lg shadow-zinc-900/50" />
+                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('https://cdn.melinia.dev/melinia-alt.webp')] bg-cover bg-center mb-10 shadow-lg shadow-zinc-900/50" />
                 <p className="font-inst font-bold text-2xl self-start mb-6">Login</p>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-4">

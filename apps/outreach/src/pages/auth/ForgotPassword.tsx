@@ -2,17 +2,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { forgotPasswordSchema, type ForgotPassword } from "@melinia/shared";
 import { Mail } from "iconoir-react";
+import api from "../../services/api";
 
-const api = axios.create({
-    baseURL: "http://localhost:3000/api/v1",
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
 
 const ForgotPassword = () => {
     const {
@@ -21,10 +15,9 @@ const ForgotPassword = () => {
         formState: { errors, isValid },
     } = useForm<ForgotPassword>({
         resolver: zodResolver(forgotPasswordSchema),
-        mode: "onChange", // Validate as user types
+        mode: "onChange",
     });
 
-    // 2. Mutation to send the email
     const forgotMutation = useMutation({
         mutationFn: async (data: ForgotPassword) => {
             const response = await api.post("/auth/forgot-password", data);
@@ -35,7 +28,7 @@ const ForgotPassword = () => {
         },
         onError: (error: any) => {
             console.error(error);
-            const message = error.response?.data || "Failed to send reset link. Please try again.";
+            const message = error.response?.data?.message || "Failed to send reset link. Please try again.";
             toast.error(message);
         },
     });
