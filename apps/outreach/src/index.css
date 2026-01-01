@@ -3,10 +3,10 @@
 @import "tailwindcss";
 
 @theme {
-  --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
     --font-inst: "Instrument Serif", serif;
     --font-geist: "Geist", sans-serif;
+    --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
 
     @keyframes pulse-slow {
 
@@ -50,12 +50,4 @@
 
 body {
   font-family: "Geist", sans-serif;
-<<<<<<< HEAD
 }
-=======
-<<<<<<< HEAD
-}
-=======
-}
->>>>>>> f02ef15 (chore: remote typo (wrong column))
->>>>>>> 3a9d7a9 (chore: resolve merge conflicts with master)
