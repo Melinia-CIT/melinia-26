@@ -6,6 +6,7 @@
     --font-inst: "Instrument Serif", serif;
     --font-geist: "Geist", sans-serif;
     --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
 
     @keyframes pulse-slow {
 
