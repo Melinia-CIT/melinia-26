@@ -5,7 +5,7 @@ import { generateOTPSchema, type GenerateOTPFormData } from "@melinia/shared";
 
 interface EmailStepProps {
 	onSubmit: (data: GenerateOTPFormData) => Promise<void>;
-	errors: Record<string, string>;
+	errors?: Record<string, string>;
 	isLoading: boolean;
 }
 
@@ -42,7 +42,7 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 				{formErrors.email && (
 					<p className="text-red-500 text-sm mt-1">{String(formErrors.email.message)}</p>
 				)}
-				{errors.email && (
+				{errors?.email && (
 					<p className="text-red-500 text-sm mt-1">{errors.email}</p>
 				)}
 			</div>

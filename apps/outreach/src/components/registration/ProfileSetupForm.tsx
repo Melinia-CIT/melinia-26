@@ -7,7 +7,7 @@ interface ProfileStepProps {
 	formData: createProfileType;
 	onInputChange: (name: string, value: string) => void;
 	onSubmit: (data: createProfileType) => Promise<void>;
-	errors: Record<string, string>;
+	errors?: Record<string, string>;
 	isLoading: boolean;
 }
 
@@ -213,7 +213,7 @@ export const ProfileStep: React.FC<ProfileStepProps> = ({
 			</div>
 
 			{/* Form-level error */}
-			{errors.form && (
+			{errors?.form && (
 				<div className="bg-red-500/10 border border-red-500 rounded-md p-3 mt-4">
 					<p className="text-red-500 text-sm">{errors.form}</p>
 				</div>

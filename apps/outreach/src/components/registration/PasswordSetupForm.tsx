@@ -6,7 +6,7 @@ import { registrationSchema, type RegisterationType } from "@melinia/shared";
 
 interface PasswordStepProps {
 	onSubmit: (data: RegisterationType) => Promise<void>;
-	errors: Record<string, string>;
+	errors?: Record<string, string>;
 	isLoading: boolean;
 }
 
@@ -67,7 +67,7 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 						{String(formErrors.passwd.message)}
 					</p>
 				)}
-				{errors.passwd && !formErrors.passwd && (
+				{errors?.passwd && !formErrors.passwd && (
 					<p className="text-red-500 text-sm mt-1">{errors.passwd}</p>
 				)}
 			</div>
@@ -105,7 +105,7 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 						{String(formErrors.confirmPasswd.message)}
 					</p>
 				)}
-				{errors.confirmPasswd && !formErrors.confirmPasswd && (
+				{errors?.confirmPasswd && !formErrors.confirmPasswd && (
 					<p className="text-red-500 text-sm mt-1">{errors.confirmPasswd}</p>
 				)}
 			</div>

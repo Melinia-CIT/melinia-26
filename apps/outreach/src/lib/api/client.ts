@@ -25,7 +25,7 @@ class ApiClient {
             headers: {
                 "Content-Type": "application/json",
                 ...(this.authData?.accessToken && {
-                    Authorization: `Bearer ${this.authData.accessToken}`,
+                    "Authorization": `Bearer ${this.authData.accessToken}`,
                 }),
             },
             withCredentials: true
@@ -109,7 +109,9 @@ class ApiClient {
                 await localStorage.clear();
                 localStorage.setItem("authData", JSON.stringify(authData));
                 // Update axios headers with new token
+                console.log("Before:", this.axiosInstance.defaults.headers.common.Authorization);
                 this.axiosInstance.defaults.headers.common.Authorization = await `Bearer ${authData.accessToken}`;
+                console.log("after:",this.axiosInstance.defaults.headers.common.Authorization);
             } else {
                 localStorage.removeItem("authData");
                 delete this.axiosInstance.defaults.headers.common.Authorization;

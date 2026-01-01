@@ -5,7 +5,7 @@ import { verifyOTPSchema, type VerifyOTPType } from "@melinia/shared";
 
 interface OTPStepProps {
 	onSubmit: (data: VerifyOTPType) => Promise<void>;
-	errors: Record<string, string>;
+	errors?: Record<string, string>;
 	email: string;
 	isLoading: boolean;
 }
@@ -60,7 +60,7 @@ export const OTPStep: React.FC<OTPStepProps> = ({
 						{String(formErrors.otp.message)}
 					</p>
 				)}
-				{errors.otp && !formErrors.otp && (
+				{errors?.otp && !formErrors.otp && (
 					<p className="text-red-500 text-sm mt-1">{errors.otp}</p>
 				)}
 			</div>
