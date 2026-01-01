@@ -23,6 +23,7 @@ user.get("/profile", authMiddleware, async (c: Context) => {
 	const profileExists = await checkProfileExists(userId);
 	if (!profileExists) {
 		throw new HTTPException(409, { message: "Profile already exists" });
+
 	}
 
 	const profile = await getProfileById(userId);

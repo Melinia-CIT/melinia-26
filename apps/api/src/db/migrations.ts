@@ -412,6 +412,43 @@ await runMigration("add unique constraint on the user_id in profile", async () =
 });
 
 
+await runMigration("create event registrations", async () => {
+    await sql`
+        CREATE TABLE IF NOT EXISTS event_registrations (
+            id SERIAL PRIMARY KEY,
+            event_id TEXT NOT NULL REFERENCES events(id),
+            team_id TEXT REFERENCES teams(id),
+            user_id TEXT NOT NULL REFERENCES users(id),
+            registered_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(event_id, team_id, user_id)
+        );
+    `;
+})
+
+await runMigration("create payments table", async () => {
+    await sql`
+  CREATE TABLE IF NOT EXISTS payments (
+    id SERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    order_id TEXT NOT NULL,
+    payment_id TEXT,
+
+    email TEXT NOT NULL,
+    payment_status TEXT NOT NULL CHECK(payment_status IN ('CREATED', 'PAID', 'FAILED', 'REFUNDED')),
+    payment_method VARCHAR(50),
+
+    amount DECIMAL(10, 2) NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    paid_at TIMESTAMP,
+
+    gateway_response JSONB
+  )
+
+  `
+})
+
 await runMigration("add razorpay timestamps to payments table", async () => {
     await sql`
     ALTER TABLE payments

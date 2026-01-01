@@ -194,3 +194,29 @@ export async function setProfileCompleted(userId: string) {
 
     return result;
 }
+
+export async function getFullInformation(id : string) {
+    const user_details = await sql`
+        SELECT p.first_name as "firstName",
+               p.last_name as "lastName",
+	       u.email,
+	       u.ph_no,
+	       u.id,
+               c.name as college,
+               CASE 
+                   WHEN p.other_degree IS NOT NULL THEN 'other'
+                   ELSE d.name
+               END as degree,
+               p.other_degree as "otherDegree",
+               p.year
+        FROM profile p
+        LEFT JOIN colleges c ON p.college_id = c.id
+        LEFT JOIN degrees d ON p.degree_id = d.id
+        INNER JOIN users u ON p.user_id = u.id
+        WHERE u.id = ${id}
+    `
+    return user_details.length > 0 ? (user_details[0] as FullProfile) : null
+}
+
+
+
