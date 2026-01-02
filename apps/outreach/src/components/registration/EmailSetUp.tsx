@@ -25,13 +25,14 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 
 	return (
 		<form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-			<h2 className="text-xl font-semibold mb-6">Enter Your Email</h2>
+			<h2 className="font-inst font-bold text-2xl self-start mb-6">
+				Enter Email
+			</h2>
 
 			<div>
-				<label className="block text-sm font-medium mb-2">Email</label>
 				<input
 					type="email"
-					placeholder="you@example.com"
+					placeholder="eg: peterparker@tuta.com"
 					disabled={isLoading}
 					{...register("email")}
 					className={`w-full px-4 py-2 rounded bg-zinc-800 text-zinc-100 placeholder-zinc-500 border transition focus:outline-none ${formErrors.email

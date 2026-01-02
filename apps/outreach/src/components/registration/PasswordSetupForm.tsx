@@ -28,8 +28,8 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 	});
 
 	return (
-		<form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-			<h2 className="text-xl font-semibold mb-6">Set Your Password</h2>
+		<form className="space-y-4 font-geist" onSubmit={handleSubmit(onSubmit)}>
+			<h2 className="font-inst font-bold text-2xl self-start mb-6">Set Your Password</h2>
 
 			{/* Password Field */}
 			<div>

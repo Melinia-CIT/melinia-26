@@ -40,7 +40,6 @@ const Register: React.FC = () => {
 const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
     if (error instanceof AxiosError) {
         const data = error.response?.data;
-        console.error("ERROR AXIOS: ", data)
         if (data?.error && typeof data.error === 'object' && 'message' in data.error) {
             const errorObj = data.error as { message?: string; name?: string };
             if (errorObj.name === 'ZodError' && errorObj.message) {
@@ -51,6 +50,7 @@ const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
                         zodErrors.forEach((err: any) => {
                             const fieldKey = err.path?.[0] || fieldName;
                             formattedErrors[fieldKey] = err.message;
+                            toast.error(err.message);
                         });
                         setErrors(formattedErrors);
                         return;
@@ -61,7 +61,6 @@ const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
             }
         }
         
-        // ✅ Extract the message string properly
         let message: string = 'An error occurred';
         if (data?.message && typeof data.message === 'string') {
             message = data.message;
@@ -70,6 +69,7 @@ const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
         }
         
         setErrors({ [fieldName]: message });
+        toast.error(message);
     } else if (error instanceof Error) {
         setErrors({ [fieldName]: error.message });
     } else {
@@ -155,9 +155,9 @@ const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
     };
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center px-2 py-3 items-center">
+        <div className="min-h-screen bg-zinc-950 font-geist text-zinc-100 flex justify-center px-2 py-3 items-center">
             <div className="w-full max-w-md flex flex-col items-center">
-                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('/melinia-alt.jpg')] bg-cover bg-center mb-10" />
+                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('https://cdn.melinia.dev/melinia-alt.webp')] bg-cover bg-center mb-10" />
 
                 <div className="w-full px-10">
                     <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />

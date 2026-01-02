@@ -35,8 +35,8 @@ export const OTPStep: React.FC<OTPStepProps> = ({
 	};
 
 	return (
-		<form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-			<h2 className="text-xl font-semibold mb-6">Verify OTP</h2>
+		<form className="space-y-4 font-geist" onSubmit={handleSubmit(onSubmit)}>
+			<h2 className="font-inst font-bold text-2xl self-start mb-6">Verify OTP</h2>
 			<p className="text-zinc-400 text-sm mb-4">
 				Enter the 6-digit OTP sent to {email}
 			</p>
