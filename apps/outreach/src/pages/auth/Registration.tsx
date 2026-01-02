@@ -1,6 +1,6 @@
-import React, { useState} from 'react';
-import { EmailStep, OTPStep, PasswordStep, ProgressBar, Step } from '../components/registration';
-import { registration } from '../services/registration';
+import React, { useState } from 'react';
+import { EmailStep, OTPStep, PasswordStep, ProgressBar, Step } from '../../components/registration';
+import { registration } from '../../services/registration';
 import toast from "react-hot-toast";
 import {
     registrationSchema,
@@ -22,7 +22,7 @@ const Register: React.FC = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [emailID, setEmailID] = useState<GenerateOTPFormData | null>();
-    
+
     const [_otp, setOTP] = useState<VerifyOTPType | null>(null);
 
     const [_password, setPasswordFormData] = useState<RegisterationType>({
@@ -37,45 +37,45 @@ const Register: React.FC = () => {
     ];
 
     // Helper: Handle Backend Errors
-const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
-    if (error instanceof AxiosError) {
-        const data = error.response?.data;
-        if (data?.error && typeof data.error === 'object' && 'message' in data.error) {
-            const errorObj = data.error as { message?: string; name?: string };
-            if (errorObj.name === 'ZodError' && errorObj.message) {
-                try {
-                    const zodErrors = JSON.parse(errorObj.message);
-                    if (Array.isArray(zodErrors)) {
-                        const formattedErrors: Record<string, string> = {};
-                        zodErrors.forEach((err: any) => {
-                            const fieldKey = err.path?.[0] || fieldName;
-                            formattedErrors[fieldKey] = err.message;
-                            toast.error(err.message);
-                        });
-                        setErrors(formattedErrors);
-                        return;
+    const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
+        if (error instanceof AxiosError) {
+            const data = error.response?.data;
+            if (data?.error && typeof data.error === 'object' && 'message' in data.error) {
+                const errorObj = data.error as { message?: string; name?: string };
+                if (errorObj.name === 'ZodError' && errorObj.message) {
+                    try {
+                        const zodErrors = JSON.parse(errorObj.message);
+                        if (Array.isArray(zodErrors)) {
+                            const formattedErrors: Record<string, string> = {};
+                            zodErrors.forEach((err: any) => {
+                                const fieldKey = err.path?.[0] || fieldName;
+                                formattedErrors[fieldKey] = err.message;
+                                toast.error(err.message);
+                            });
+                            setErrors(formattedErrors);
+                            return;
+                        }
+                    } catch (e) {
+                        // Ignore parse error
                     }
-                } catch (e) {
-                    // Ignore parse error
                 }
             }
+
+            let message: string = 'An error occurred';
+            if (data?.message && typeof data.message === 'string') {
+                message = data.message;
+            } else if (typeof data === 'string') {
+                message = data;
+            }
+
+            setErrors({ [fieldName]: message });
+            toast.error(message);
+        } else if (error instanceof Error) {
+            setErrors({ [fieldName]: error.message });
+        } else {
+            setErrors({ [fieldName]: 'An unexpected error occurred' });
         }
-        
-        let message: string = 'An error occurred';
-        if (data?.message && typeof data.message === 'string') {
-            message = data.message;
-        } else if (typeof data === 'string') {
-            message = data;
-        }
-        
-        setErrors({ [fieldName]: message });
-        toast.error(message);
-    } else if (error instanceof Error) {
-        setErrors({ [fieldName]: error.message });
-    } else {
-        setErrors({ [fieldName]: 'An unexpected error occurred' });
-    }
-};
+    };
     const handleZodError = (error: ZodError): void => {
         const formattedErrors: Record<string, string> = {};
         error.issues.forEach((issue) => {

@@ -8,7 +8,7 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import AppLayout from "./pages/userland/Layout";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Main from "./pages/userland/Main";
-import Register from "./pages/Registration";
+import Register from "./pages/auth/Registration";
 
 function App() {
 	return (
@@ -29,7 +29,7 @@ function App() {
 						<Route path="teams" />
 					</Route>
 				</Route>
-				<Route path="/register" element={<Register/>}/>
+				<Route path="/register" element={<Register />} />
 			</Routes>
 		</BrowserRouter>
 	);
