@@ -1,7 +1,4 @@
 import React from "react";
-import { Errors } from "./types";
-
-
 
 interface Step {
     number: number;

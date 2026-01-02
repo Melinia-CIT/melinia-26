@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import { EmailStep, OTPStep, PasswordStep, ProgressBar, Step } from '../components/registration';
 import { registration } from '../services/registration';
 import toast from "react-hot-toast";
@@ -10,7 +10,7 @@ import {
     type VerifyOTPType,
     type RegisterationType,
 } from '@melinia/shared';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import { useNavigate } from 'react-router';
 import { ZodError } from 'zod';
 import { useMutation } from '@tanstack/react-query';
@@ -23,9 +23,9 @@ const Register: React.FC = () => {
 
     const [emailID, setEmailID] = useState<GenerateOTPFormData | null>();
     
-    const [otp, setOTP] = useState<VerifyOTPType | null>(null);
+    const [_otp, setOTP] = useState<VerifyOTPType | null>(null);
 
-    const [passwordFormData, setPasswordFormData] = useState<RegisterationType>({
+    const [_password, setPasswordFormData] = useState<RegisterationType>({
         passwd: '',
         confirmPasswd: '',
     });
@@ -88,7 +88,7 @@ const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
     // Email Mutation
     const emailMutation = useMutation({
         mutationFn: (data: GenerateOTPFormData) => registration.sendOTP(data),
-        onSuccess: (response, variables) => {
+        onSuccess: (_, variables) => {
             setEmailID(variables);
             setCurrentStep(2);
             toast.success("OTP sent to email")
@@ -99,7 +99,7 @@ const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
     // OTP Mutation
     const otpMutation = useMutation({
         mutationFn: (data: VerifyOTPType) => registration.verifyOTP(data),
-        onSuccess: (data, variables) => {
+        onSuccess: (_, variables) => {
             setOTP(variables);
             setCurrentStep(3);
             toast.success("OTP verified")
@@ -157,7 +157,7 @@ const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
     return (
         <div className="min-h-screen bg-zinc-950 font-geist text-zinc-100 flex justify-center px-2 py-3 items-center">
             <div className="w-full max-w-md flex flex-col items-center">
-                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('https://cdn.melinia.dev/melinia-alt.webp')] bg-cover bg-center mb-10" />
+                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[url('https://cdn.melinia.dev/melinia-alt.webp')] bg-cover bg-center mb-10" />
 
                 <div className="w-full px-10">
                     <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />
