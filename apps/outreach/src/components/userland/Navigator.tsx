@@ -27,7 +27,7 @@ export default function Navigator() {
     return (
         <>
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex fixed top-6 left-6 rounded-2xl border border-white/10 bg-zinc-900/80 backdrop-blur-md shadow-xl z-50">
+            <nav className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-12 rounded-2xl border border-white/10 bg-zinc-900/80 backdrop-blur-md shadow-xl z-50">
                 <div className="flex flex-col gap-2 p-2">
                     {navItems.map(({ to, Icon, end }) => (
                         <NavLink

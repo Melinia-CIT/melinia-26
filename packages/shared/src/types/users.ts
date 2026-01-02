@@ -23,11 +23,11 @@ export const userSchema = baseUserSchema.omit({ passwd_hash: true });
 export const baseProfileSchema = z.object({
     id: z.number(),
     user_id: z.string(),
-    first_name: z.string().min(1).max(80).trim(),
+    first_name: z.string().min(1, { error: "Firstname can't be empty" }).max(80).trim(),
     last_name: z.string().max(80).trim().optional(),
-    college: z.string().min(1).trim(),
-    degree: z.string().min(1).trim(),
-    year: z.number().min(1).max(5),
+    college: z.string().min(1, { error: "College is required" }).trim(),
+    degree: z.string().min(1, { error: "Degree is required" }).trim(),
+    year: z.number({ error: "Year of study is required" }).min(1).max(5),
 
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
@@ -39,9 +39,11 @@ export const createProfileSchema = baseProfileSchema.omit({
     created_at: true,
     updated_at: true
 }).extend({
-    ph_no: z.string().regex(/^\d{10}$/, {
-        message: "Mobile number must be exactly 10 digits",
-    }),
+    ph_no: z.string()
+        .min(1, { error: "Phone Number is required" })
+        .regex(/^\d{10}$/, {
+            error: "Mobile number must be exactly 10 digits",
+        }),
 });
 
 export const profileSchema = baseProfileSchema.omit({
