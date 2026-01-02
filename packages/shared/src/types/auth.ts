@@ -19,7 +19,10 @@ export const registrationSchema = z.object({
         .regex(/[a-z]/, "Must contain at least one lowercase letter")
         .regex(/[0-9]/, "Must contain at least one number"),
     confirmPasswd: z.string(),
-})
+}).refine((data) => data.passwd === data.confirmPasswd, {
+    message: "Passwords don't match",
+    path: ["confirmPasswd"]
+  });
 
 
 export const loginSchema = z.object({
@@ -44,7 +47,9 @@ export const resetPasswordSchema = z.object({
 export type Login = z.infer<typeof loginSchema>;
 export type ResetPassword = z.infer<typeof resetPasswordSchema>;
 export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
-
+export type RegisterationType = z.infer<typeof registrationSchema>;
+export type VerifyOTPType = z.infer<typeof verifyOTPSchema>;
+export type GenerateOTPFormData = z.infer<typeof generateOTPSchema>;
 
 export interface LoginResponse {
     message: string;
