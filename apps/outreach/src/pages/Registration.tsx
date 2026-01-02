@@ -10,7 +10,7 @@ import {
     type VerifyOTPType,
     type RegisterationType,
 } from '@melinia/shared';
-import { AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useNavigate } from 'react-router';
 import { ZodError } from 'zod';
 import { useMutation } from '@tanstack/react-query';
@@ -37,37 +37,45 @@ const Register: React.FC = () => {
     ];
 
     // Helper: Handle Backend Errors
-    const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
-        if (error instanceof AxiosError) {
-            const data = error.response?.data;
-            if (data?.error && typeof data.error === 'object' && 'message' in data.error) {
-                const errorObj = data.error as { message?: string; name?: string };
-                if (errorObj.name === 'ZodError' && errorObj.message) {
-                    try {
-                        const zodErrors = JSON.parse(errorObj.message);
-                        if (Array.isArray(zodErrors)) {
-                            const formattedErrors: Record<string, string> = {};
-                            zodErrors.forEach((err: any) => {
-                                const fieldKey = err.path?.[0] || fieldName;
-                                formattedErrors[fieldKey] = err.message;
-                            });
-                            setErrors(formattedErrors);
-                            return;
-                        }
-                    } catch (e) {
-                        // Ignore parse error
+const getBackendErrorMessage = (error: unknown, fieldName: string): void => {
+    if (error instanceof AxiosError) {
+        const data = error.response?.data;
+        console.error("ERROR AXIOS: ", data)
+        if (data?.error && typeof data.error === 'object' && 'message' in data.error) {
+            const errorObj = data.error as { message?: string; name?: string };
+            if (errorObj.name === 'ZodError' && errorObj.message) {
+                try {
+                    const zodErrors = JSON.parse(errorObj.message);
+                    if (Array.isArray(zodErrors)) {
+                        const formattedErrors: Record<string, string> = {};
+                        zodErrors.forEach((err: any) => {
+                            const fieldKey = err.path?.[0] || fieldName;
+                            formattedErrors[fieldKey] = err.message;
+                        });
+                        setErrors(formattedErrors);
+                        return;
                     }
+                } catch (e) {
+                    // Ignore parse error
                 }
             }
-            const message = data ? data : 'An error occurred';
-            setErrors({ [fieldName]: message });
-        } else if (error instanceof Error) {
-            setErrors({ [fieldName]: error.message });
-        } else {
-            setErrors({ [fieldName]: 'An unexpected error occurred' });
         }
-    };
-
+        
+        // ✅ Extract the message string properly
+        let message: string = 'An error occurred';
+        if (data?.message && typeof data.message === 'string') {
+            message = data.message;
+        } else if (typeof data === 'string') {
+            message = data;
+        }
+        
+        setErrors({ [fieldName]: message });
+    } else if (error instanceof Error) {
+        setErrors({ [fieldName]: error.message });
+    } else {
+        setErrors({ [fieldName]: 'An unexpected error occurred' });
+    }
+};
     const handleZodError = (error: ZodError): void => {
         const formattedErrors: Record<string, string> = {};
         error.issues.forEach((issue) => {
