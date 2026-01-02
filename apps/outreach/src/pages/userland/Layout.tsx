@@ -18,10 +18,10 @@ const AppLayout = () => {
     const showProfileModal = !isLoading && userData && !userData.profile_completed;
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
+        <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden inset-0 fixed">
             <Navigator />
 
-            <main className="px-6 sm:pl-24 md:pr-8 pb-8 pt-16 pb-4 transition-all duration-300 relative z-0">
+            <main className="px-6 md:pl-48 md:pr-8 pb-8 pt-20 md:pt-6 pb-4 transition-all duration-300 relative z-0">
                 <Outlet />
             </main>
 

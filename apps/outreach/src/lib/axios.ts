@@ -1,4 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import { logout } from '../services/auth';
+import { useNavigate } from 'react-router';
 
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1',
@@ -59,8 +61,9 @@ apiClient.interceptors.response.use(
         }
 
         if (originalRequest.url === '/auth/refresh') {
-            localStorage.removeItem('accessToken');
-            window.location.href = "/login"
+            await logout();
+            const navigate = useNavigate();
+            navigate("/login", { replace: true });
             return Promise.reject(error);
         }
 
