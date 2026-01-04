@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { type CreateTeam, createTeamSchema} from "@melinia/shared";
 import api from "../../services/api";
+import { team_management } from "../../services/teams";
 
 // Validation schema
 interface Team {
@@ -78,11 +79,13 @@ const Teams = () => {
   // Create team mutation
   const createTeamMutation = useMutation({
     mutationFn: async (values: CreateTeam) => {
-      await api.post("/teams", {
+      const formData:CreateTeam = {
         name: values.name,
-        member_emails: values.member_emails,
-      });
-    },
+        member_emails: values.member_emails
+      }
+
+      await team_management.createTeam(formData);
+   },
     onSuccess: () => {
       toast.success("Team created successfully!");
       queryClient.invalidateQueries({ queryKey: ["teams"] });
@@ -97,7 +100,7 @@ const Teams = () => {
   // Delete team mutation
   const deleteTeamMutation = useMutation({
     mutationFn: async (teamId: string) => {
-      await api.delete(`/teams/${teamId}`);
+      await team_management.deleteTeam(teamId);
     },
     onSuccess: () => {
       toast.success("Team deleted successfully!");
