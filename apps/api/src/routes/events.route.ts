@@ -5,7 +5,7 @@ import {
     getEventDetailsSchema,
     updateEventDetailsSchema,
     eventRegistrationSchema
-} from "@packages/shared/dist";
+} from "@packages/shared";
 import {
     createEvent, 
     getEvents, 

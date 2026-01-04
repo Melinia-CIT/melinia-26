@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { generateOTPSchema, verifyOTPSchema, registrationSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@packages/shared/dist";
+import { generateOTPSchema, verifyOTPSchema, registrationSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@packages/shared";
 import { checkUserExists, getUserByMail, insertUser, updatePasswd } from "../db/queries";
 import { redis } from "../utils/redis";
 import { generateOTP, getEnv } from "../utils/lib";
@@ -29,7 +29,7 @@ auth.post("/send-otp",
         const OTP = generateOTP();
         const otpHash = createHash("sha256").update(OTP).digest("hex");
 
-        console.log(`${email}:${OTP}`);
+        // console.log(`${email}:${OTP}`);
         const jobId = await sendOTP(email, OTP);
         console.log(jobId);
         if (!jobId) {
