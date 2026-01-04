@@ -4,7 +4,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "bun build src/index.ts --outdir ./dist --target bun",
+    "build:worker": "bun build src/workers/email/worker.ts --outdir ./dist --target bun",
+    "build:migrate": "bun build src/db/migrations.ts --outfile ./dist/migrate.js --target bun",
     "dev": "bun --watch run src/index.ts && tsc --watch",
     "worker": "bun --watch run src/workers/email/worker.ts",
     "dev:all": "concurrently -n \"API,WORKER\" -c \"blue,green\" \"bun run dev\" \"bun run worker\"",

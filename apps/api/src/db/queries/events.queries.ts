@@ -6,7 +6,7 @@ import {
     type DeleteEventInput,
     type UpdateEventDetailsInput, updateEventDetailsSchema,
     type EventRegistrationInput,eventRegistrationSchema
-} from "@melinia/shared/dist";
+} from "@melinia/shared";
 
 const dbRoundToCamel = (r: any) => ({
     roundNo: r.round_no,

@@ -3,16 +3,13 @@ import {
     type CreateTeam,
     type RespondInvitationRequest,
     type DeleteTeamMemberRequest,
-    type DeleteTeamRequest,
     type UpdateTeamRequest,
     type addNewMemberRequest,
-    addNewMemberSchema,
     createTeamSchema,
     respondInvitationSchema,
     deleteTeamMemberSchema,
-    deleteTeamSchema,
     updateTeamSchema,
-} from "@melinia/shared/dist/";
+} from "@melinia/shared/";
 
 // Create Team with Member Invitations (Same College Only)
 export async function createTeam(input: CreateTeam, leader_id: string) {
@@ -300,7 +297,7 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
 // Accept Team Invitation
 export async function acceptTeamInvitation(input: RespondInvitationRequest) {
     const data = respondInvitationSchema.parse(input);
-    
+
     try {
         const { invitation_id, user_id } = data;
 
@@ -359,7 +356,7 @@ export async function acceptTeamInvitation(input: RespondInvitationRequest) {
 // Decline Team Invitation
 export async function declineTeamInvitation(input: RespondInvitationRequest) {
     const data = respondInvitationSchema.parse(input);
-    
+
     try {
         const { invitation_id, user_id } = data;
 
@@ -372,7 +369,7 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
                 status: false,
                 statusCode: 404,
                 message: 'Invitation not found',
-                data:{}
+                data: {}
             };
         }
 
@@ -381,7 +378,7 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
                 status: false,
                 statusCode: 403,
                 message: 'This invitation is not for you',
-                data:{}
+                data: {}
             };
         }
 
@@ -390,7 +387,7 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
                 status: false,
                 statusCode: 400,
                 message: `Invitation already ${invitation.status}`,
-                data:{}
+                data: {}
             };
         }
 
@@ -402,7 +399,7 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
             status: true,
             statusCode: 200,
             message: 'Invitation declined',
-            data:{}
+            data: {}
         };
     } catch (error) {
         throw error;
@@ -524,7 +521,7 @@ export async function getPendingInvitationsForTeam(team_id: string) {
 // Delete Team Member (only leader can delete)
 export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
     const data = deleteTeamMemberSchema.parse(input);
-    
+
     try {
         const { team_id, member_id, requester_id } = data;
 
@@ -538,7 +535,7 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
                 status: false,
                 statusCode: 404,
                 message: 'Team not found',
-                data:{}
+                data: {}
             };
         }
 
@@ -547,7 +544,7 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
                 status: false,
                 statusCode: 403,
                 message: 'Only team leader can remove members',
-                data:{}
+                data: {}
             };
         }
 
@@ -556,7 +553,7 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
                 status: false,
                 statusCode: 400,
                 message: 'Cannot remove team leader',
-                data:{}
+                data: {}
             };
         }
 
@@ -570,7 +567,7 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
                 status: false,
                 statusCode: 404,
                 message: 'Member not found in this team',
-                data:{}
+                data: {}
             };
         }
 
@@ -591,11 +588,11 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
 
 
 // Update Team (name, event_id)
-export async function updateTeam(input: UpdateTeamRequest, requester_id:string, team_id:string) {
+export async function updateTeam(input: UpdateTeamRequest, requester_id: string, team_id: string) {
     const formData = updateTeamSchema.parse(input);
-    
+
     try {
-        const {  name, event_id } = formData;
+        const { name, event_id } = formData;
 
         // Verify requester is the team leader
         const [team] = await sql`
@@ -629,7 +626,7 @@ export async function updateTeam(input: UpdateTeamRequest, requester_id:string, 
                     status: false,
                     statusCode: 409,
                     message: 'Team name already taken',
-                    data:{}
+                    data: {}
                 };
             }
         }
@@ -658,7 +655,7 @@ export async function updateTeam(input: UpdateTeamRequest, requester_id:string, 
                 status: false,
                 statusCode: 400,
                 message: 'No fields to update',
-                data:{}
+                data: {}
             };
         }
 
@@ -666,7 +663,7 @@ export async function updateTeam(input: UpdateTeamRequest, requester_id:string, 
             status: true,
             statusCode: 200,
             message: 'Team updated successfully',
-            data:{}
+            data: {}
         };
     } catch (error) {
         throw error;
@@ -732,8 +729,8 @@ export async function deleteInvitation(input: { invitation_id: number; requester
 }
 
 // Delete Team (only leader can delete)
-export async function deleteTeam(requester_id:string, team_id:string) {
-    
+export async function deleteTeam(requester_id: string, team_id: string) {
+
     try {
 
         const [team] = await sql`
@@ -745,7 +742,7 @@ export async function deleteTeam(requester_id:string, team_id:string) {
                 status: false,
                 statusCode: 404,
                 message: 'Team not found',
-                data:{}
+                data: {}
             };
         }
 
@@ -754,7 +751,7 @@ export async function deleteTeam(requester_id:string, team_id:string) {
                 status: false,
                 statusCode: 403,
                 message: 'Only team leader can delete team',
-                data:{}
+                data: {}
             };
         }
 
@@ -768,7 +765,7 @@ export async function deleteTeam(requester_id:string, team_id:string) {
             status: true,
             statusCode: 200,
             message: 'Team deleted successfully',
-            data:{}
+            data: {}
         };
     } catch (error) {
         throw error;
@@ -776,7 +773,7 @@ export async function deleteTeam(requester_id:string, team_id:string) {
 }
 
 export async function getPendingInvitationsForUser(user_id: string) {
-        const invitations = await sql`
+    const invitations = await sql`
             SELECT
                 i.id AS invitation_id,
                 i.team_id,
@@ -795,6 +792,6 @@ export async function getPendingInvitationsForUser(user_id: string) {
             ORDER BY i.id DESC
         `;
 
-        return invitations
+    return invitations
 }
 
