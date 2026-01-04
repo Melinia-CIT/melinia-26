@@ -90,19 +90,13 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
         // 4. Create team - handle optional event_id
         let teamRow: { id: string } | undefined;
 
-        if (data.event_id) {
-            [teamRow] = await sql`
-                INSERT INTO teams (name, leader_id, event_id)
-                VALUES (${data.name}, ${leader_id}, ${data.event_id})
-                RETURNING id
-            `;
-        } else {
+        if (data) {
             [teamRow] = await sql`
                 INSERT INTO teams (name, leader_id)
                 VALUES (${data.name}, ${leader_id})
                 RETURNING id
             `;
-        }
+        } 
 
         if (!teamRow) throw new Error('Team creation failed');
         const team_id = teamRow.id;
@@ -153,9 +147,9 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
 }
 
 // Invite Team Member (Same College Only)
-export async function inviteTeamMember(input: addNewMemberRequest, requester_id: string) {
+export async function inviteTeamMember(input: addNewMemberRequest, requester_id: string, team_id:string) {
     try {
-        const { team_id, email } = input;
+        const { email } = input;
 
         // 1. Verify team exists
         const [team] = await sql`

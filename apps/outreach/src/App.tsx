@@ -9,6 +9,7 @@ import AppLayout from "./pages/userland/Layout";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Main from "./pages/userland/Main";
 import Register from "./pages/auth/Registration";
+import Teams from "./pages/userland/Teams";
 
 function App() {
 	return (
@@ -27,7 +28,7 @@ function App() {
 						<Route index element={<Main />} />
 						<Route path="events" />
 						<Route path="leaderboard" />
-						<Route path="teams" />
+						<Route path="teams" element={<Teams/>}/>
 					</Route>
 				</Route>
 			</Routes>
