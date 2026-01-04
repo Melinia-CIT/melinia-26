@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { events, auth, user, teamRouter , payment } from "./routes";
+import adminAuth from "./routes/adminAuth.route";
 import college from "./routes/colleges.route";
 import { HTTPException } from "hono/http-exception";
 
@@ -35,6 +36,7 @@ v1.route("/events", events);
 v1.route("/teams", teamRouter);
 v1.route("/colleges", college);
 v1.route("/payment",payment);
+v1.route("/admin/auth",adminAuth);
 
 app.route("/api/v1", v1);
 
