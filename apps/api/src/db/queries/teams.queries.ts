@@ -9,7 +9,7 @@ import {
     respondInvitationSchema,
     deleteTeamMemberSchema,
     updateTeamSchema,
-} from "@melinia/shared/";
+} from "@melinia/shared";
 
 // Create Team with Member Invitations (Same College Only)
 export async function createTeam(input: CreateTeam, leader_id: string) {
