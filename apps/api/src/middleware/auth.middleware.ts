@@ -54,6 +54,11 @@ export const adminAndOrganizerMiddleware = createRoleMiddleware({
     errorMessage: "Admin or organizer access required"
 });
 
+export const adminOrganizerAndVolunteerMiddleware = createRoleMiddleware({
+    allowedRoles: ["ADMIN", "ORGANIZER", "VOLUNTEER"],
+    errorMessage: "Admin or organizer access required"
+});
+
 export const participantOnlyMiddleware = createRoleMiddleware({
     allowedRoles: ["PARTICIPANT"],
     errorMessage: "Participant access required"
