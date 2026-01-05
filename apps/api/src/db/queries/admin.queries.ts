@@ -18,17 +18,21 @@ export async function adminLogin(input: AdminLoginInput, c: any) {
             };
         }
 
+        // Check if user has admin/organizer/volunteer role
+        if (!["ADMIN", "ORGANIZER", "VOLUNTEER"].includes(user.role)) {
+            return {
+                status: false,
+                statusCode: 403,
+                message: "Access denied. Admin privileges required.",
+                data: {}
+            };
+        }
+
         // Generate access token
         const accessToken = await createAccessToken(user.id, user.role);
         const refreshToken = await createRefreshToken(user.id, user.role);
 
         await redis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
-
-        c.set("user_id", user.id);
-        c.set("role", user.role);
-
-        await adminOrganizerAndVolunteerMiddleware(c, async () => {
-        });
 
         return {
             status: true,

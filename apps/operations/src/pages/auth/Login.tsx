@@ -1,25 +1,41 @@
 import { useState } from "react";
 import { Eye, EyeClosed, Mail, Lock } from "iconoir-react";
 import { useNavigate } from "react-router";
-import toast from "react-hot-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { adminLoginSchema, type AdminLoginInput } from "@melinia/shared";
+import { adminLogin } from "../../services/auth";
 
 const Login = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [apiError, setApiError] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (email === "admin" && password === "123") {
-            toast.success("Login successful!");
-            setTimeout(() => {
-                navigate("/dashboard");
-            }, 500);
-        } else {
-            toast.error("Invalid credentials!");
-        }
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<AdminLoginInput>({
+        resolver: zodResolver(adminLoginSchema),
+    });
+
+    const loginMutation = useMutation({
+        mutationFn: async (data: AdminLoginInput) => await adminLogin(data),
+        onSuccess: () => {
+            setApiError(null);
+            navigate("/dashboard", { replace: true });
+        },
+        onError: (error: any) => {
+            console.error(error);
+            const message = error.response?.data?.message || "Incorrect email or password";
+            setApiError(message);
+        },
+    });
+
+    const onSubmit = (data: AdminLoginInput) => {
+        setApiError(null);
+        loginMutation.mutate(data);
     };
 
     return (
@@ -28,19 +44,26 @@ const Login = () => {
                 <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('https://cdn.melinia.dev/melinia-alt.webp')] bg-cover bg-center mb-10 shadow-lg shadow-zinc-900/50" />
                 <p className="font-inst font-bold text-2xl self-start mb-6">Admin Login</p>
 
-                <form onSubmit={handleSubmit} className="w-full flex flex-col items-center gap-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-4">
+                    {apiError && (
+                        <div className="w-full rounded-lg bg-red-900/40 border border-red-700 px-3 py-2 text-sm text-red-200">
+                            {apiError}
+                        </div>
+                    )}
                     {/* Email Input */}
                     <div className="w-full">
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" strokeWidth={1.5} width={20} height={20} />
                             <input
-                                type="text"
+                                type="email"
                                 placeholder="Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                {...register("email")}
                                 className="w-full rounded-lg bg-zinc-900 border border-zinc-800 pl-10 pr-4 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-colors duration-200"
                             />
                         </div>
+                        {errors.email && (
+                            <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                        )}
                     </div>
 
                     {/* Password Input */}
@@ -50,8 +73,7 @@ const Login = () => {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                {...register("passwd")}
                                 className="w-full rounded-lg bg-zinc-900 border border-zinc-800 pl-10 pr-10 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-colors duration-200"
                             />
                             <button
@@ -62,6 +84,9 @@ const Login = () => {
                                 {showPassword ? <EyeClosed strokeWidth={1.5} width={20} height={20} /> : <Eye strokeWidth={1.5} width={20} height={20} />}
                             </button>
                         </div>
+                        {errors.passwd && (
+                            <p className="text-red-500 text-xs mt-1">{errors.passwd.message}</p>
+                        )}
                     </div>
 
                     <div className="self-end -mt-2">
@@ -71,9 +96,10 @@ const Login = () => {
                     </div>
                     <button
                         type="submit"
-                        className="w-full rounded-lg bg-white py-2 text-sm text-zinc-900 font-semibold hover:bg-zinc-200 transition flex justify-center items-center gap-2 mt-2"
+                        disabled={loginMutation.isPending}
+                        className="w-full rounded-lg bg-white py-2 text-sm text-zinc-900 font-semibold hover:bg-zinc-200 transition flex justify-center items-center gap-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Continue
+                        {loginMutation.isPending ? "Logging in..." : "Continue"}
                     </button>
                 </form>
             </div>

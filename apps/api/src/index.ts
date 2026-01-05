@@ -35,19 +35,9 @@ app.use(requestLogger)
 
 setupLogRotation()
 
-<<<<<<< HEAD
 v1.get("/ping", async c => {
     return c.json("pong")
 })
-=======
-v1.route("/auth", auth);
-v1.route("/users", user);
-v1.route("/events", events);
-v1.route("/teams", teamRouter);
-v1.route("/colleges", college);
-v1.route("/payment",payment);
-v1.route("/admin/auth",adminAuth);
->>>>>>> 82cd92e (Included the backend files on operations module for auth operations)
 
 v1.route("/auth", auth)
 v1.route("/users", user)
