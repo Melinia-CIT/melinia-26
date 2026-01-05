@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { motion } from "motion/react";
 
 interface HeroProps {
     isVisible?: boolean;
@@ -9,19 +9,6 @@ interface HeroProps {
 function Hero({ isVisible = true }: HeroProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const navigate = useNavigate();
-
-    // Parallax values
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
-
-    // Smooth springs for parallax - more responsive
-    const springConfig = { damping: 20, stiffness: 2000 };
-    const mouseXSpring = useSpring(x, springConfig);
-    const mouseYSpring = useSpring(y, springConfig);
-
-    // Map mouse position to movement range
-    const moveX = useTransform(mouseXSpring, [-0.5, 0.5], ["-30px", "30px"]);
-    const moveY = useTransform(mouseYSpring, [-0.5, 0.5], ["-30px", "30px"]);
 
     useEffect(() => {
         if (videoRef.current && isVisible) {
@@ -32,18 +19,9 @@ function Hero({ isVisible = true }: HeroProps) {
         }
     }, [isVisible]);
 
-    const handleMouseMove = (e: React.MouseEvent) => {
-        const { innerWidth, innerHeight } = window;
-        const xPct = (e.clientX / innerWidth) - 0.5;
-        const yPct = (e.clientY / innerHeight) - 0.5;
-        x.set(xPct);
-        y.set(yPct);
-    };
-
     return (
         <div
             className={`relative h-[100dvh] w-full bg-black overflow-hidden flex items-center justify-center transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-            onMouseMove={handleMouseMove}
         >
             {/* Background Video */}
             <video
@@ -74,21 +52,17 @@ function Hero({ isVisible = true }: HeroProps) {
                     Login
                 </button>
                 <button
+                    onClick={() => navigate("/register")}
                     className="px-5 md:px-7 py-2 md:py-2.5 text-sm md:text-base rounded-md bg-white text-black font-bold hover:bg-gray-200 transition-all"
-                // #E1062C
                 >
-                    Sign Up
+                    Register
                 </button>
             </div>
 
-            {/* Main Logo with Parallax */}
+            {/* Main Logo (Static) */}
             <motion.img
                 src="https://cdn.melinia.dev/melinia-26.png"
                 alt="Melinia 26 Logo"
-                style={{
-                    x: moveX,
-                    y: moveY,
-                }}
                 className={`relative z-10 w-[20rem] sm:w-[25rem] md:w-[40rem] lg:w-[60rem] object-contain transition-all duration-1000 delay-500 ${isVisible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'} drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]`}
             />
 

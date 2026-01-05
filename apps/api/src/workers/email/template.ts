@@ -92,7 +92,7 @@ export const OTPTemplate = (otp: string) => ({
                                 <!-- Banner -->
                                 <tr>
                                     <td style="padding:0;background-color:#87CEEB;">
-                                        <img src="https://cdn.melinia.dev/mln-e-bnr.jpg"
+                                        <img src="https://cdn.melinia.in/mln-e-bnr.jpg"
                                              alt="Melinia'26"
                                              width="600"
                                              style="display:block;width:100%;height:auto;max-height:200px;object-fit:cover;">
@@ -304,7 +304,7 @@ export const forgotPasswordTemplate = (resetLink: string) => ({
                                 <!-- Banner -->
                                 <tr>
                                     <td style="padding:0;background-color:#87CEEB;">
-                                        <img src="https://cdn.melinia.dev/mln-e-bnr.jpg"
+                                        <img src="https://cdn.melinia.in/mln-e-bnr.jpg"
                                              alt="Melinia'26"
                                              width="600"
                                              style="display:block;width:100%;height:auto;max-height:200px;object-fit:cover;">
