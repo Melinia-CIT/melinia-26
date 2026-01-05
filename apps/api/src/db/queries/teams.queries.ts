@@ -1,3 +1,4 @@
+import { HTTPException } from "hono/http-exception";
 import sql from "../connection";
 import {
     type CreateTeam,
@@ -9,8 +10,20 @@ import {
     respondInvitationSchema,
     deleteTeamMemberSchema,
     updateTeamSchema,
-} from "@melinia/shared/";
+    teamDetailsSchema
+} from "@melinia/shared";
 
+export const isPaymentDone = async (email_id:string)=>{
+   try{
+    const is_paid = await sql`
+        SELECT 1 FROM payments WHERE email=${email_id} AND payment_status="PAID";
+    `;
+
+   }
+   catch(error:unknown){
+    throw new HTTPException(500, {message:"Internal Server Error"})
+   } 
+};
 // Create Team with Member Invitations (Same College Only)
 export async function createTeam(input: CreateTeam, leader_id: string) {
     const data = createTeamSchema.parse(input);
@@ -431,55 +444,113 @@ export async function getAllTeamsForUser(userId: string) {
 
 // Get Team Details with Members
 export async function getTeamDetails(teamId: string) {
-    try {
-        const [team] = await sql`
-            SELECT
-                t.id,
-                t.name,
-                t.leader_id,
-                t.event_id,
-                e.name AS event_name
-            FROM teams AS t
-            LEFT JOIN events AS e ON e.id = t.event_id
-            WHERE t.id = ${teamId}
-        `;
+  try {
+    // Get team basic info and leader details
+    const [team] = await sql`
+      SELECT
+        t.id,
+        t.name,
+        t.leader_id,
+        u.email AS leader_email,
+        p.first_name AS leader_first_name,
+        p.last_name AS leader_last_name
+      FROM teams AS t
+      JOIN users AS u ON u.id = t.leader_id
+      LEFT JOIN profile AS p ON p.user_id = u.id
+      WHERE t.id = ${teamId}
+    `;
 
-        if (!team) {
-            return {
-                status: false,
-                statusCode: 404,
-                message: 'Team not found'
-            };
-        }
-
-        const members = await sql`
-            SELECT
-                u.id,
-                u.email,
-                p.first_name,
-                p.last_name,
-                tm.joined_at
-            FROM team_members AS tm
-            JOIN users AS u ON u.id = tm.user_id
-            LEFT JOIN profile AS p ON p.user_id = u.id
-            WHERE tm.team_id = ${teamId}
-            ORDER BY tm.joined_at ASC
-        `;
-
-        return {
-            status: true,
-            statusCode: 200,
-            message: 'Team details retrieved successfully',
-            data: {
-                ...team,
-                members
-            }
-        };
-    } catch (error) {
-        throw error;
+    if (!team) {
+      return {
+        status: false,
+        statusCode: 404,
+        message: 'Team not found',
+      };
     }
-}
 
+    // Get all members (excluding leader)
+    const members = await sql`
+      SELECT
+        u.id AS user_id,
+        p.first_name,
+        p.last_name,
+        u.email
+      FROM team_members AS tm
+      JOIN users AS u ON u.id = tm.user_id
+      LEFT JOIN profile AS p ON p.user_id = u.id
+      WHERE tm.team_id = ${teamId} AND u.id != ${team.leader_id}
+      ORDER BY tm.joined_at ASC
+    `;
+
+    // Get pending invitations
+    const pendingInvites = await sql`
+      SELECT
+        i.id AS invitation_id,
+        i.invitee_id AS user_id,
+        p.first_name,
+        p.last_name,
+        u.email
+      FROM invitations AS i
+      JOIN users AS u ON u.id = i.invitee_id
+      LEFT JOIN profile AS p ON p.user_id = u.id
+      WHERE i.team_id = ${teamId} AND i.status = 'pending'
+      ORDER BY i.id ASC
+    `;
+
+    // Get events registered for this team
+    const eventsRegistered = await sql`
+      SELECT DISTINCT
+        e.id AS event_id,
+        e.name AS event_name
+      FROM event_registrations AS er
+      JOIN events AS e ON e.id = er.event_id
+      WHERE er.team_id = ${teamId}
+      ORDER BY e.name ASC
+    `;
+
+    // Calculate team size (leader + members)
+    const teamSize = members.length + 1;
+
+    const teamData = {
+      id: team.id,
+      name: team.name,
+      leader_id: team.leader_id,
+      leader_first_name: team.leader_first_name,
+      leader_last_name: team.leader_last_name || "",
+      leader_email: team.leader_email,
+      members: members.map((m: any) => ({
+        user_id: m.user_id,
+        first_name: m.first_name,
+        last_name: m.last_name || "",
+        email: m.email,
+      })),
+      pending_invites: pendingInvites.map((pi: any) => ({
+        invitation_id: pi.invitation_id,
+        user_id: pi.user_id,
+        first_name: pi.first_name,
+        last_name: pi.last_name || "",
+        email: pi.email,
+      })),
+      events_registered: eventsRegistered.map((er: any) => ({
+        event_id: er.event_id,
+        event_name: er.event_name,
+      })),
+      team_size: teamSize,
+    };
+
+    // Validate response against schema
+   const validatedData = teamDetailsSchema.parse(teamData);
+
+    return {
+      status: true,
+      statusCode: 200,
+      message: 'Team details retrieved successfully',
+      data: teamData,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
 // Get Pending Invitations for Team
 export async function getPendingInvitationsForTeam(team_id: string) {
     try {

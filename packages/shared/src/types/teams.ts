@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { invitationStatusSchema } from '.';
 
 export const teamSchema = z.object({
   id: z.string().min(1, "Team ID is required"),
@@ -42,6 +43,42 @@ export const updateTeamSchema = z.object({
 export const addNewMemberSchema = z.object({
   email: z.string().email("Invalid email format"),
 });
+
+const memberSchema = z.object({
+  user_id: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+  email: z.string().email(),
+});
+const pendingInviteSchema = z.object({
+  invitation_id: z.number().int().positive(),
+  user_id: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+  email: z.string().email(),
+});
+
+const eventSchema = z.object({
+  event_id: z.string(),
+  event_name: z.string(),
+});
+
+export const teamDetailsSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+
+  leader_id: z.string(),
+  leader_first_name: z.string(),
+  leader_last_name: z.string(),
+  leader_email: z.string().email(),
+
+  members: z.array(memberSchema),
+  pending_invites: z.array(pendingInviteSchema),
+
+  events_registered: z.array(eventSchema),
+
+  team_size: z.number().int().nonnegative(),
+});
 // Type exports
 export type Team = z.infer<typeof teamSchema>;
 export type CreateTeam = z.infer<typeof createTeamSchema>;
@@ -50,6 +87,7 @@ export type DeleteTeamRequest = z.infer<typeof deleteTeamSchema>;
 export type DeleteTeamMemberRequest = z.infer<typeof deleteTeamMemberSchema>;
 export type UpdateTeamRequest = z.infer<typeof updateTeamSchema>;
 export type addNewMemberRequest = z.infer<typeof addNewMemberSchema>
+export type TeamDetails = z.infer<typeof teamDetailsSchema>;
 
 // Optional: Additional useful schemas
 
