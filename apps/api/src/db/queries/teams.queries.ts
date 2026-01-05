@@ -13,23 +13,70 @@ import {
     teamDetailsSchema
 } from "@melinia/shared";
 
-export const isPaymentDone = async (email_id:string)=>{
-   try{
-    const is_paid = await sql`
-        SELECT 1 FROM payments WHERE email=${email_id} AND payment_status="PAID";
-    `;
+// Helper functions
+export async function isPaymentDone(email_id: string): Promise<boolean> {
+    try {
+        const result = await sql`
+            SELECT 1 FROM payments WHERE email = ${email_id} AND payment_status = 'PAID'
+        `;
+        return result.length > 0;
+    } catch (error: unknown) {
+        throw new HTTPException(500, { message: "Internal Server Error" });
+    }
+}
 
-   }
-   catch(error:unknown){
-    throw new HTTPException(500, {message:"Internal Server Error"})
-   } 
-};
+export async function checkProfileExists(id: string): Promise<boolean> {
+    try {
+        const user = await sql`
+            SELECT 1 FROM users WHERE id = ${id} AND profile_completed = true
+        `;
+        return user.length > 0;
+    } catch (error: unknown) {
+        throw new HTTPException(500, { message: "Internal Server Error" });
+    }
+}
+
 // Create Team with Member Invitations (Same College Only)
 export async function createTeam(input: CreateTeam, leader_id: string) {
     const data = createTeamSchema.parse(input);
 
     try {
-        // 1. Get leader's college_id from profile
+        // 1. Check if leader has completed payment
+        const [leaderUser] = await sql`
+            SELECT email FROM users WHERE id = ${leader_id}
+        `;
+
+        if (!leaderUser) {
+            return {
+                status: false,
+                statusCode: 404,
+                message: 'Leader user not found',
+                data: {}
+            };
+        }
+
+        const leaderPaymentDone = await isPaymentDone(leaderUser.email);
+        if (!leaderPaymentDone) {
+            return {
+                status: false,
+                statusCode: 402,
+                message: 'Payment not completed. Please complete payment before creating a team.',
+                data: {}
+            };
+        }
+
+        // 2. Check if leader has completed profile
+        const leaderProfileCompleted = await checkProfileExists(leader_id);
+        if (!leaderProfileCompleted) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: 'Leader profile not completed. Please complete your profile before creating a team.',
+                data: {}
+            };
+        }
+
+        // 3. Get leader's college_id from profile
         const [leaderProfile] = await sql`
             SELECT college_id FROM profile WHERE user_id = ${leader_id}
         `;
@@ -45,7 +92,7 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
 
         const leader_college_id = leaderProfile.college_id;
 
-        // 2. Check if team name is unique
+        // 4. Check if team name is unique
         const [existingTeam] = await sql`
             SELECT id FROM teams WHERE name = ${data.name}
         `;
@@ -59,7 +106,8 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
             };
         }
 
-        // 3. Validate all email ids exist in users table AND belong to same college
+        // 5. Validate all email ids exist in users table AND belong to same college
+        // AND have completed payment AND profile
         if (data.member_emails && data.member_emails.length > 0) {
             const validUsers = await sql`
                 SELECT u.id, u.email, p.college_id 
@@ -70,14 +118,35 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
 
             const invalidEmails: string[] = [];
             const differentCollegeEmails: string[] = [];
+            const paymentNotDoneEmails: string[] = [];
+            const profileNotCompletedEmails: string[] = [];
 
             for (const email of data.member_emails) {
                 const user = validUsers.find(u => u.email === email);
 
+                // Check if user exists
                 if (!user) {
                     invalidEmails.push(email);
-                } else if (user.college_id !== leader_college_id) {
+                    continue;
+                }
+
+                // Check if user belongs to same college
+                if (user.college_id !== leader_college_id) {
                     differentCollegeEmails.push(email);
+                    continue;
+                }
+
+                // Check if user has completed payment
+                const paymentDone = await isPaymentDone(email);
+                if (!paymentDone) {
+                    paymentNotDoneEmails.push(email);
+                    continue;
+                }
+
+                // Check if user has completed profile
+                const profileCompleted = await checkProfileExists(user.id);
+                if (!profileCompleted) {
+                    profileNotCompletedEmails.push(email);
                 }
             }
 
@@ -89,7 +158,24 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
                     data: { invalid_emails: invalidEmails }
                 };
             }
+            if (paymentNotDoneEmails.length > 0) {
+                return {
+                    status: false,
+                    statusCode: 402,
+                    message: `Payment not completed for these user(s): ${paymentNotDoneEmails.join(', ')}. They must complete payment before joining a team.`,
+                    data: { payment_not_done_emails: paymentNotDoneEmails }
+                };
+            }
 
+            if (profileNotCompletedEmails.length > 0) {
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: `Profile not completed for these user(s): ${profileNotCompletedEmails.join(', ')}. They must complete their profile before joining a team.`,
+                    data: { profile_not_completed_emails: profileNotCompletedEmails }
+                };
+            }
+ 
             if (differentCollegeEmails.length > 0) {
                 return {
                     status: false,
@@ -98,29 +184,26 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
                     data: { different_college_emails: differentCollegeEmails }
                 };
             }
-        }
 
-        // 4. Create team - handle optional event_id
-        let teamRow: { id: string } | undefined;
+       }
 
-        if (data) {
-            [teamRow] = await sql`
-                INSERT INTO teams (name, leader_id)
-                VALUES (${data.name}, ${leader_id})
-                RETURNING id
-            `;
-        } 
+        // 6. Create team
+        const [teamRow] = await sql`
+            INSERT INTO teams (name, leader_id)
+            VALUES (${data.name}, ${leader_id})
+            RETURNING id
+        `;
 
         if (!teamRow) throw new Error('Team creation failed');
         const team_id = teamRow.id;
 
-        // 5. Add leader as team member
+        // 7. Add leader as team member
         await sql`
             INSERT INTO team_members (team_id, user_id)
             VALUES (${team_id}, ${leader_id})
         `;
 
-        // 6. Get user IDs for invitees and create invitations
+        // 8. Get user IDs for invitees and create invitations
         let invitation_ids: number[] = [];
         if (data.member_emails && data.member_emails.length > 0) {
             const invitees = await sql`
@@ -160,11 +243,11 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
 }
 
 // Invite Team Member (Same College Only)
-export async function inviteTeamMember(input: addNewMemberRequest, requester_id: string, team_id:string) {
+export async function inviteTeamMember(input: addNewMemberRequest, requester_id: string, team_id: string) {
     try {
         const { email } = input;
 
-        // 1. Verify team exists
+        // 1. Verify team exists and get leader
         const [team] = await sql`
             SELECT leader_id FROM teams WHERE id = ${team_id}
         `;
@@ -243,7 +326,29 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
             };
         }
 
-        // 7. Check if user is already a member of the team
+        // 7. Check if user has completed payment
+        const paymentDone = await isPaymentDone(email);
+        if (!paymentDone) {
+            return {
+                status: false,
+                statusCode: 402,
+                message: `User "${email}" has not completed payment. They must complete payment before joining a team.`,
+                data: {}
+            };
+        }
+
+        // 8. Check if user has completed profile
+        const profileCompleted = await checkProfileExists(invitee_id);
+        if (!profileCompleted) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: `User "${email}" has not completed their profile. They must complete their profile before joining a team.`,
+                data: {}
+            };
+        }
+
+        // 9. Check if user is already a member of the team
         const [existingMember] = await sql`
             SELECT user_id FROM team_members 
             WHERE team_id = ${team_id} AND user_id = ${invitee_id}
@@ -258,7 +363,7 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
             };
         }
 
-        // 8. Check if user already has a pending invitation
+        // 10. Check if user already has a pending invitation
         const [existingInvitation] = await sql`
             SELECT id, status FROM invitations 
             WHERE team_id = ${team_id} 
@@ -275,7 +380,7 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
             };
         }
 
-        // 9. Create new invitation
+        // 11. Create new invitation
         const [invitationRow] = await sql`
             INSERT INTO invitations (team_id, invitee_id, inviter_id, status)
             VALUES (${team_id}, ${invitee_id}, ${requester_id}, 'pending')
