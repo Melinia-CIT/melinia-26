@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-export const userSchema = z.object({
+export const baseUserSchema = z.object({
     id: z.string(),
-    email: z.email(),
+    email: z.email("Invalid email address"),
 
     ph_no: z
         .string()
@@ -15,10 +15,44 @@ export const userSchema = z.object({
 
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
+    profile_completed: z.boolean()
 });
 
-export const createUserSchema = userSchema.omit({ passwd_hash: true });
+export const userSchema = baseUserSchema.omit({ passwd_hash: true });
 
+export const baseProfileSchema = z.object({
+    id: z.number(),
+    user_id: z.string(),
+    first_name: z.string().min(1, { error: "Firstname can't be empty" }).max(80).trim(),
+    last_name: z.string().max(80).trim().optional(),
+    college: z.string().min(1, { error: "College is required" }).trim(),
+    degree: z.string().min(1, { error: "Degree is required" }).trim(),
+    year: z.number({ error: "Year of study is required" }).min(1).max(5),
+
+    created_at: z.coerce.date(),
+    updated_at: z.coerce.date(),
+});
+
+export const createProfileSchema = baseProfileSchema.omit({
+    id: true,
+    user_id: true,
+    created_at: true,
+    updated_at: true
+}).extend({
+    ph_no: z.string()
+        .min(1, { error: "Phone Number is required" })
+        .regex(/^\d{10}$/, {
+            error: "Mobile number must be exactly 10 digits",
+        }),
+});
+
+export const profileSchema = baseProfileSchema.omit({
+    user_id: true, id: true
+});
+
+export type BaseUser = z.infer<typeof baseUserSchema>;
 export type User = z.infer<typeof userSchema>;
-export type createUser = z.infer<typeof createUserSchema>;
 
+export type BaseProfile = z.infer<typeof baseProfileSchema>;
+export type CreateProfile = z.infer<typeof createProfileSchema>;
+export type Profile = z.infer<typeof profileSchema>;

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { generateOTPSchema, verifyOTPSchema, registrationSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@packages/shared/dist";
-import { checkUserExists, getUser, insertUser, updatePasswd } from "../db/queries";
+import { checkUserExists, getUserByMail, insertUser, updatePasswd } from "../db/queries";
 import { redis } from "../utils/redis";
 import { generateOTP, getEnv } from "../utils/lib";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
@@ -29,7 +29,7 @@ auth.post("/send-otp",
         const OTP = generateOTP();
         const otpHash = createHash("sha256").update(OTP).digest("hex");
 
-        // console.log(`${email}:${otp}`);
+        console.log(`${email}:${OTP}`);
         const jobId = await sendOTP(email, OTP);
         console.log(jobId);
         if (!jobId) {
@@ -70,7 +70,7 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
     const otpHash = createHash("sha256").update(otp).digest("hex");
 
     if (otpHash !== storedOtpHash) {
-        throw new HTTPException(401, { message: "Invalid OTP" });
+        throw new HTTPException(403, { message: "Invalid OTP" });
     }
 
     await redis.del(`otp:${email}`);
@@ -139,14 +139,10 @@ auth.post("/register", zValidator("json", registrationSchema), async (c) => {
 auth.post("/login", zValidator("json", loginSchema), async (c) => {
     const { email, passwd } = c.req.valid("json");
 
-    const user = await getUser(email);
+    const user = await getUserByMail(email);
 
-    if (!user) {
-        throw new HTTPException(401, { message: "User does not exists" });
-    }
-
-    if (!await Bun.password.verify(passwd, user.passwd_hash)) {
-        throw new HTTPException(401, { message: "Invalid password" });
+    if (!user || !await Bun.password.verify(passwd, user.passwd_hash)) {
+        throw new HTTPException(401, { message: "Invalid email or password." });
     }
 
     const accessToken = await createAccessToken(user.id, user.role);

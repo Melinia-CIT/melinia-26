@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
     Home,
     Group,
@@ -9,8 +9,10 @@ import {
     Xmark,
     Medal1st
 } from 'iconoir-react';
+import { logout } from '../../services/auth';
 
 export default function Navigator() {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
 
     const navItems = [
@@ -25,7 +27,7 @@ export default function Navigator() {
     return (
         <>
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex fixed top-6 left-6 rounded-2xl border border-white/10 bg-zinc-900/80 backdrop-blur-md shadow-xl z-50">
+            <nav className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-12 rounded-2xl border border-white/10 bg-zinc-900/80 backdrop-blur-md shadow-xl z-50">
                 <div className="flex flex-col gap-2 p-2">
                     {navItems.map(({ to, Icon, end }) => (
                         <NavLink
@@ -50,8 +52,9 @@ export default function Navigator() {
                     <div className="border-t border-white/10 my-1 w-full" />
 
                     <div
-                        onClick={() => {
-                            window.location.href = "/login";
+                        onClick={async () => {
+                            await logout(); 
+                            navigate("/login", { replace: true });
                         }}
                         className="group flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
                     >
@@ -95,9 +98,9 @@ export default function Navigator() {
                             <div className="border-t border-white/10 my-1" />
 
                             <div
-                                onClick={() => {
-                                    setIsOpen(false);
-                                    window.location.href = "/login";
+                                onClick={async () => {
+                                    await logout();
+                                    navigate("/login", { replace: true });
                                 }}
                                 className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                             >
@@ -107,7 +110,7 @@ export default function Navigator() {
                         </div>
                     </div>
                 )}
-            </div>
+            </div >
         </>
     );
 }
