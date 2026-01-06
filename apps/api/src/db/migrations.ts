@@ -1,5 +1,7 @@
 import sql from "./connection"
 
+
+
 await sql`
     CREATE TABLE IF NOT EXISTS migrations (
         id SERIAL PRIMARY KEY,
@@ -223,7 +225,7 @@ await runMigration("melinia db init", async () => {
     `
 
     // check-in
-    await sql`apps/api/src/db/migrations.ts
+    await sql`
         CREATE TABLE IF NOT EXISTS checkin (
             id SERIAL PRIMARY KEY,
             tag_id TEXT UNIQUE NOT NULL REFERENCES tags(id),
