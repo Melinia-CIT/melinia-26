@@ -13,10 +13,6 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: apps/api
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,9 +26,10 @@ jobs:
         run: bun install
 
       - name: Build all targets
-        run: bun run build
+        run: bun run build:api
 
       - name: Prepare deployment package
+        working-directory: apps/api
         run: |
           mkdir -p deploy-package
           cp dist/index.js deploy-package/
