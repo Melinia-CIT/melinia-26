@@ -1,5 +1,5 @@
 import api from './api';
-import {type CreateTeam} from "@melinia/shared";
+import {TeamDetails, type CreateTeam, Team} from "@melinia/shared";
 
 export class TeamManagementService{
     private static instance: TeamManagementService;
@@ -18,13 +18,19 @@ export class TeamManagementService{
     
     public getTeamDetails = async (team_id:string)=>{
         const response = await api.get(`/teams/${team_id}`);
-        return response;
+        return response.data;
     };
 
     public deleteTeam = async (team_id:string)=>{
         const response = await api.delete(`/teams/${team_id}`);
         return response;
     };
+
+    public teamList = async ()=>{
+        const response = await api.get(`/teams`);
+        return response.data;
+    }
+    
 
 };
 

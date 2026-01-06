@@ -3,7 +3,7 @@ import { invitationStatusSchema } from '.';
 
 export const teamSchema = z.object({
   id: z.string().min(1, "Team ID is required"),
-  name: z.string().min(1, "Team name is required").max(255, "Team name is too long"),
+  team_name: z.string().min(1, "Team name is required").max(255, "Team name is too long"),
   leader_id: z.string().min(1, "Leader ID is required"),
 });
 
@@ -43,7 +43,7 @@ export const addNewMemberSchema = z.object({
   email: z.string().email("Invalid email format"),
 });
 
-const memberSchema = z.object({
+export const memberSchema = z.object({
   user_id: z.string(),
   first_name: z.string(),
   last_name: z.string(),
@@ -87,6 +87,8 @@ export type DeleteTeamMemberRequest = z.infer<typeof deleteTeamMemberSchema>;
 export type UpdateTeamRequest = z.infer<typeof updateTeamSchema>;
 export type addNewMemberRequest = z.infer<typeof addNewMemberSchema>
 export type TeamDetails = z.infer<typeof teamDetailsSchema>;
+export type TeamMember = z.infer<typeof memberSchema>;
+export type RegisteredEvents = z.infer<typeof eventSchema>;
 
 // Optional: Additional useful schemas
 
