@@ -58,6 +58,8 @@ jobs:
           envs: ENV_CONTENT
           script: |
             set -e
+
+            source ${HOME}/.bashrc
             
             echo "$ENV_CONTENT" > /app/melinia-api-temp/.env
             
