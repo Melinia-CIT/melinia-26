@@ -63,6 +63,10 @@ jobs:
             export PATH=$PATH:~/.bun/bin/bun
 
             echo "$ENV_CONTENT" > /app/melinia-api-temp/.env
+  
+            echo "Debug: Checking if .env exists..."
+            ls -la /app/melinia-api-temp/.env || echo ".env not found!"
+            cat /app/melinia-api-temp/.env | head -5
 
             echo "Running database migrations..."
             cd /app/melinia-api-temp
