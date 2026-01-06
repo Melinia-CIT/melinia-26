@@ -1,466 +1,363 @@
-import { useEffect, useState, useRef } from "react";
-import { Plus, Xmark, Mail, User, Trash, Check, Clock } from "iconoir-react";
-import toast from "react-hot-toast";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { type CreateTeam, createTeamSchema} from "@melinia/shared";
-import api from "../../services/api";
-import { team_management } from "../../services/teams";
+'use strict';
 
-// Validation schema
-interface Team {
+import { useState, useCallback, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ChevronRight, Users, Trash2, X, AlertCircle, Loader } from 'lucide-react';
+import { z } from 'zod';
+import type {
+  TeamDetails,
+  Team,
+  DeleteTeamRequest,
+  RespondInvitationRequest,
+  DeleteTeamMemberRequest,
+} from '@melinia/shared';
+
+interface TeamListResponse {
   id: string;
   team_name: string;
-  event_id: string | null;
-  event_name: string | null;
   leader_id: string;
   member_count: string;
 }
 
-interface PendingInvite {
-  invitation_id: number;
-  team_id: string;
-  invitee_id: string;
-  invitee_email: string;
-  invitee_first_name: string;
-  invitee_last_name: string;
-  inviter_id: string;
-  inviter_email: string;
-  status: string;
+interface ApiResponse<T> {
+  status: boolean;
+  statusCode: number;
+  message: string;
+  data: T;
 }
 
-const Teams = () => {
+// Mock API - Replace with actual API instance
+const api = {
+  get: async (url: string): Promise<ApiResponse<TeamListResponse[] | TeamDetails>> => {
+    if (url === '/teams') {
+      return {
+        status: true,
+        statusCode: 200,
+        message: 'Teams fetched',
+        data: [
+          {
+            id: 'MLNT7IJ97H',
+            team_name: 'Testing for team creation',
+            leader_id: 'MLNUSC875X',
+            member_count: '1',
+          },
+          {
+            id: 'MLNT7IJ97I',
+            team_name: 'Code Warriors',
+            leader_id: 'MLNUSC875Y',
+            member_count: '3',
+          },
+        ] as TeamListResponse[],
+      };
+    }
+    if (url.includes('/teams/')) {
+      const teamId = url.split('/').pop();
+      return {
+        status: true,
+        statusCode: 200,
+        message: 'Team details fetched',
+        data: {
+          id: teamId || 'team_1',
+          name: 'Code Warriors',
+          leader_id: 'user_101',
+          leader_first_name: 'Vishal',
+          leader_last_name: 'Kumar',
+          leader_email: 'vishal.kumar@example.com',
+          members: [
+            {
+              user_id: 'user_102',
+              first_name: 'Ananya',
+              last_name: 'Rao',
+              email: 'ananya.rao@example.com',
+            },
+            {
+              user_id: 'user_103',
+              first_name: 'Ana',
+              last_name: 'Dora',
+              email: 'ananya.rao@example.com',
+            },
+             {
+              user_id: 'user_104',
+              first_name: 'A',
+              last_name: 'nush',
+              email: 'ananya.rao@example.com',
+            },
+ 
+          ],
+          pending_invites: [
+            {
+              invitation_id: 45,
+              user_id: 'user_104',
+              first_name: 'Sneha',
+              last_name: 'Iyer',
+              email: 'sneha.iyer@example.com',
+            },
+          ],
+          events_registered: [
+            {
+              event_id: 'event_501',
+              event_name: 'Hackathon 2025',
+            },
+          ],
+          team_size: 5,
+        } as TeamDetails,
+      };
+    }
+    throw new Error('Not found');
+  },
+  delete: async (url: string): Promise<ApiResponse<{ success: boolean }>> => {
+    return {
+      status: true,
+      statusCode: 200,
+      message: 'Deleted successfully',
+      data: { success: true },
+    };
+  },
+};
+
+interface TeamDetailsPanelProps {
+  teamId: string;
+  onDelete?: () => void;
+  onClose?: () => void;
+}
+
+interface DeleteConfirmState {
+  type: 'team' | 'invitation';
+  id: string | number;
+}
+
+// Team Details Component - Reusable
+// Team Details Component - Reusable
+const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDelete, onClose }) => {
+  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null);
   const queryClient = useQueryClient();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  const [emailInput, setEmailInput] = useState("");
-  const modalRef = useRef<HTMLDivElement>(null);
-  const detailsModalRef = useRef<HTMLDivElement>(null);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<CreateTeam>({
-    resolver: zodResolver(createTeamSchema),
-    defaultValues: {
-      name: "",
-      member_emails: [],
-    },
-  });
-
-  const watchedEmails = watch("member_emails");
-
-  // Fetch teams
-  const { data: teams = [], isLoading: teamsLoading } = useQuery<Team[]>({
-    queryKey: ["teams"],
+  const { data: response, isLoading, error } = useQuery<ApiResponse<TeamDetails>>({
+    queryKey: ['team', teamId],
     queryFn: async () => {
-      const response = await api.get("/teams");
-      return response.data.data || [];
+      const res = await api.get(`/teams/${teamId}`);
+      return res as ApiResponse<TeamDetails>;
     },
   });
 
-  // Fetch pending invites for selected team
-  const { data: pendingInvites = [] } = useQuery<PendingInvite[]>({
-    queryKey: ["pending-invites", selectedTeamId],
-    queryFn: async () => {
-      if (!selectedTeamId) return [];
-      const response = await api.get(`/teams/${selectedTeamId}/pending-invites`);
-      return response.data.data || [];
-    },
-    enabled: !!selectedTeamId,
-  });
+  const teamData = response?.data;
 
-  // Create team mutation
-  const createTeamMutation = useMutation({
-    mutationFn: async (values: CreateTeam) => {
-      const formData:CreateTeam = {
-        name: values.name,
-        member_emails: values.member_emails
+  const deleteMutation = useMutation({
+    mutationFn: async (url: string) => api.delete(url),
+    onSuccess: () => {
+      if (deleteConfirm?.type === 'team') {
+        onDelete?.();
+        queryClient.invalidateQueries({ queryKey: ['teams'] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['team', teamId] });
       }
-
-      await team_management.createTeam(formData);
-   },
-    onSuccess: () => {
-      toast.success("Team created successfully!");
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
-      reset();
-      setIsCreateModalOpen(false);
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to create team.");
+      setDeleteConfirm(null);
     },
   });
 
-  // Delete team mutation
-  const deleteTeamMutation = useMutation({
-    mutationFn: async (teamId: string) => {
-      await team_management.deleteTeam(teamId);
-    },
-    onSuccess: () => {
-      toast.success("Team deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
-      setSelectedTeamId(null);
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to delete team.");
-    },
-  });
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteConfirm) return;
 
-  // Add member mutation
-  const addMemberMutation = useMutation({
-    mutationFn: async (data: { teamId: string; email: string }) => {
-      await api.post(`/teams/${data.teamId}/members`, { email: data.email });
-    },
-    onSuccess: () => {
-      toast.success("Member added successfully!");
-      queryClient.invalidateQueries({ queryKey: ["pending-invites", selectedTeamId] });
-      setEmailInput("");
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to add member.");
-    },
-  });
-
-  // Remove pending invite mutation
-  const removePendingInviteMutation = useMutation({
-    mutationFn: async (invitationId: number) => {
-      await api.delete(`/teams/invitations/${invitationId}`);
-    },
-    onSuccess: () => {
-      toast.success("Invitation removed!");
-      queryClient.invalidateQueries({ queryKey: ["pending-invites", selectedTeamId] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to remove invitation.");
-    },
-  });
-
-  // Handle adding email
-  const handleAddEmail = () => {
-    if (!emailInput.trim()) {
-      toast.error("Please enter an email");
-      return;
+    if (deleteConfirm.type === 'team') {
+      deleteMutation.mutate(`/teams/${teamId}`);
+    } else {
+      deleteMutation.mutate(`/invitations/${deleteConfirm.id}`);
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
-      toast.error("Please enter a valid email");
-      return;
-    }
-    if (watchedEmails.includes(emailInput)) {
-      toast.error("Email already added");
-      return;
-    }
-    setValue("member_emails", [...watchedEmails, emailInput]);
-    setEmailInput("");
-  };
+  }, [deleteConfirm, deleteMutation, teamId]);
 
-  // Handle removing email
-  const handleRemoveEmail = (email: string) => {
-    setValue("member_emails", watchedEmails.filter((e) => e !== email));
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
-  // Handle form submission
-  const onSubmit = (data: CreateTeam) => {
-    createTeamMutation.mutate(data);
-  };
+  if (error || !response?.status) {
+    return (
+      <div className="p-6 text-center">
+        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+        <p className="text-red-400">Failed to load team details</p>
+      </div>
+    );
+  }
 
-  // Handle click outside modal
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        setIsCreateModalOpen(false);
-      }
-    };
-    if (isCreateModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [isCreateModalOpen]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (detailsModalRef.current && !detailsModalRef.current.contains(event.target as Node)) {
-        setSelectedTeamId(null);
-      }
-    };
-    if (selectedTeamId) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [selectedTeamId]);
-
-  const selectedTeam = teams.find((t) => t.id === selectedTeamId);
-
-  const getInputClass = (hasError: boolean = false) => {
-    const base = "w-full rounded-lg bg-zinc-950 border px-4 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 transition-colors duration-200";
-    const errorClass = hasError ? "border-red-500 focus:ring-red-500/50" : "border-zinc-800 focus:ring-zinc-600";
-    return `${base} ${errorClass}`;
-  };
+  if (!teamData) return null;
 
   return (
-    <div className="w-full font-geist text-base text-zinc-100 p-6">
+    <div className="md:h-full overflow-y-auto custom-scrollbar bg-zinc-950">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Teams</h1>
+      <div className="sticky top-0 z-10 bg-zinc-900/80 backdrop-blur border-b border-zinc-800 p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold font-inst text-white mb-1">{teamData.name}</h2>
+            <p className="text-zinc-400 text-sm">Team ID: {teamData.id}</p>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              aria-label="Close team details"
+            >
+              <X className="h-5 w-5 text-zinc-400" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="p-5 space-y-5">
+        {/* Team Stats */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-zinc-900 border border-zinc-800 rounded p-3">
+            <p className="text-zinc-400 text-xs uppercase tracking-wide mb-1">Size</p>
+            <p className="text-xl font-bold text-white">{teamData.team_size}</p>
+          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded p-3">
+            <p className="text-zinc-400 text-xs uppercase tracking-wide mb-1">Members</p>
+            <p className="text-xl font-bold text-white">{teamData.members.length + 1}</p>
+          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded p-3">
+            <p className="text-zinc-400 text-xs uppercase tracking-wide mb-1">Events</p>
+            <p className="text-xl font-bold text-white">{teamData.events_registered.length}</p>
+          </div>
+        </div>
+
+        {/* Team Leader */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded p-3">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Leader</p>
+          <p className="font-semibold text-white text-sm">
+            {teamData.leader_first_name} {teamData.leader_last_name}
+          </p>
+          <p className="text-xs text-zinc-400">{teamData.leader_email}</p>
+        </div>
+
+        {/* Members & Pending Invites in 2 columns */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Members */}
+          <section>
+            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2">
+              Members ({teamData.members.length})
+            </h3>
+            <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+              {teamData.members.length > 0 ? (
+                teamData.members.map((member) => (
+                  <div
+                    key={member.user_id}
+                    className="bg-zinc-900 border border-zinc-800 rounded p-2 hover:border-zinc-700 transition-colors"
+                  >
+                    <p className="font-semibold text-white text-xs mb-1">
+                      {member.first_name} {member.last_name}
+                    </p>
+                    <p className="text-xs text-zinc-400">{member.email}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-zinc-500 text-xs">No members</p>
+              )}
+            </div>
+          </section>
+
+          {/* Pending Invitations */}
+          <section>
+            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2">
+              Pending ({teamData.pending_invites.length})
+            </h3>
+            <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+              {teamData.pending_invites.length > 0 ? (
+                teamData.pending_invites.map((invite) => (
+                  <div
+                    key={invite.invitation_id}
+                    className="bg-zinc-900 border border-zinc-800 rounded p-2 hover:border-zinc-700 transition-colors flex items-start justify-between gap-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white text-xs mb-1 truncate">
+                        {invite.first_name} {invite.last_name}
+                      </p>
+                      <p className="text-xs text-zinc-400 truncate">{invite.email}</p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setDeleteConfirm({ type: 'invitation', id: invite.invitation_id })
+                      }
+                      className="p-1 hover:bg-red-900/20 text-red-400 rounded transition-colors flex-shrink-0"
+                      title="Remove"
+                      aria-label={`Remove invitation for ${invite.first_name}`}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-zinc-500 text-xs">No invitations</p>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* Events Registered */}
+        <section>
+          <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2">
+            Events ({teamData.events_registered.length})
+          </h3>
+          <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
+            {teamData.events_registered.length > 0 ? (
+              teamData.events_registered.map((event) => (
+                <div
+                  key={event.event_id}
+                  className="bg-zinc-900 border border-zinc-800 rounded p-2 hover:border-zinc-700 transition-colors"
+                >
+                  <p className="font-semibold text-white text-xs">{event.event_name}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-zinc-500 text-xs">No events</p>
+            )}
+          </div>
+        </section>
+
+        {/* Delete Team Section */}
         <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2.5 text-sm text-zinc-900 font-semibold hover:bg-white transition"
+          onClick={() => setDeleteConfirm({ type: 'team', id: teamId })}
+          className="w-full px-3 py-2 bg-red-900/20 border border-red-900 text-red-400 rounded hover:bg-red-900/30 transition-colors font-medium text-xs"
         >
-          <Plus width={18} height={18} />
-          New Team
+          Delete Team
         </button>
       </div>
 
-      {/* Teams List */}
-      {teamsLoading ? (
-        <div className="text-center py-8 text-zinc-400">Loading teams...</div>
-      ) : teams.length === 0 ? (
-        <div className="text-center py-12">
-          <User width={48} height={48} className="mx-auto text-zinc-600 mb-3" />
-          <p className="text-zinc-400 mb-4">No teams yet. Create one to get started!</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {teams.map((team) => (
-            <div
-              key={team.id}
-              onClick={() => setSelectedTeamId(team.id)}
-              className="p-4 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 cursor-pointer transition-all hover:shadow-lg"
-            >
-              <h3 className="font-semibold text-zinc-100 mb-2">{team.team_name}</h3>
-              <div className="space-y-1 text-xs text-zinc-400">
-                {team.event_name && <p>Event: {team.event_name}</p>}
-                <p>Members: {team.member_count}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Create Team Modal */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            ref={modalRef}
-            className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-lg p-6"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Create New Team</h2>
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setDeleteConfirm(null)}
+          />
+          <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl max-w-sm w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              <h3 className="text-lg font-semibold text-white">Confirm Deletion</h3>
+            </div>
+            <p className="text-zinc-300 mb-6">
+              {deleteConfirm.type === 'team'
+                ? 'Are you sure you want to delete this team? This action cannot be undone.'
+                : 'Are you sure you want to remove this pending invitation?'}
+            </p>
+            <div className="flex gap-3">
               <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="text-zinc-500 hover:text-zinc-300"
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors text-white font-medium disabled:opacity-50"
+                disabled={deleteMutation.isPending}
               >
-                <Xmark width={20} height={20} />
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleteMutation.isPending}
+                className="flex-1 px-4 py-2 bg-red-900/30 hover:bg-red-900/50 border border-red-900 text-red-400 rounded-lg transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleteMutation.isPending && <Loader className="h-4 w-4 animate-spin" />}
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
               </button>
             </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* Team Name */}
-              <div>
-                <label className={`block text-xs font-medium mb-1 ${errors.name ? "text-red-400" : "text-zinc-400"}`}>
-                  Team Name *
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter team name"
-                  {...register("name")}
-                  className={getInputClass(!!errors.name)}
-                />
-                {errors.name && (
-                  <p className="text-red-400 text-[10px] mt-1">{errors.name.message}</p>
-                )}
-              </div>
-
-              {/* Team Members */}
-              <div>
-                <label className="block text-xs font-medium mb-1 text-zinc-400">
-                  Add Team Members (Optional)
-                </label>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      placeholder="Enter email address"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddEmail())}
-                      className={getInputClass()}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddEmail}
-                      className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-medium transition"
-                    >
-                      Add
-                    </button>
-                  </div>
-
-                  {/* Added Emails */}
-                  {watchedEmails.length > 0 && (
-                    <div className="space-y-2">
-                      {watchedEmails.map((email) => (
-                        <div
-                          key={email}
-                          className="flex items-center justify-between bg-zinc-800 rounded-lg px-3 py-2"
-                        >
-                          <span className="text-sm text-zinc-300">{email}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveEmail(email)}
-                            className="text-zinc-500 hover:text-red-400 transition"
-                          >
-                            <Xmark width={16} height={16} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={createTeamMutation.isPending}
-                className="w-full rounded-lg bg-zinc-100 py-2.5 text-sm text-zinc-900 font-semibold hover:bg-white transition disabled:opacity-70 mt-6"
-              >
-                {createTeamMutation.isPending ? "Creating..." : "Create Team"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Team Details Modal */}
-      {selectedTeamId && selectedTeam && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div
-            ref={detailsModalRef}
-            className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-lg p-6 max-h-96 overflow-y-auto"
-          >
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-1">{selectedTeam.team_name}</h2>
-                <p className="text-xs text-zinc-400">Team ID: {selectedTeam.id}</p>
-              </div>
-              <button
-                onClick={() => setSelectedTeamId(null)}
-                className="text-zinc-500 hover:text-zinc-300"
-              >
-                <Xmark width={20} height={20} />
-              </button>
-            </div>
-
-            {/* Team Stats */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-zinc-800 rounded-lg p-3">
-                <p className="text-xs text-zinc-400 mb-1">Members</p>
-                <p className="text-lg font-semibold">{selectedTeam.member_count}</p>
-              </div>
-              {selectedTeam.event_name && (
-                <div className="bg-zinc-800 rounded-lg p-3">
-                  <p className="text-xs text-zinc-400 mb-1">Event</p>
-                  <p className="text-sm font-semibold truncate">{selectedTeam.event_name}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Add Member Section */}
-            <div className="mb-6 pb-6 border-b border-zinc-800">
-              <h3 className="text-sm font-semibold mb-3 text-zinc-100">Add Team Member</h3>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Enter member email"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  onKeyPress={(e) =>
-                    e.key === "Enter" &&
-                    (e.preventDefault(),
-                    addMemberMutation.mutate({ teamId: selectedTeamId, email: emailInput }))
-                  }
-                  className={getInputClass()}
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    addMemberMutation.mutate({ teamId: selectedTeamId, email: emailInput })
-                  }
-                  disabled={addMemberMutation.isPending || !emailInput.trim()}
-                  className="px-4 py-2 rounded-lg bg-zinc-100 text-zinc-900 font-medium hover:bg-white transition disabled:opacity-70"
-                >
-                  <Plus width={18} height={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Pending Invitations */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <Clock width={16} height={16} />
-                Pending Invitations ({pendingInvites.length})
-              </h3>
-              {pendingInvites.length === 0 ? (
-                <p className="text-xs text-zinc-500 text-center py-4">No pending invitations</p>
-              ) : (
-                <div className="space-y-2">
-                  {pendingInvites.map((invite) => (
-                    <div
-                      key={invite.invitation_id}
-                      className="flex items-center justify-between bg-zinc-800 rounded-lg p-3"
-                    >
-                      <div className="flex items-center gap-3 flex-1">
-                        <Mail width={16} height={16} className="text-zinc-500" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-zinc-100 truncate">
-                            {invite.invitee_first_name} {invite.invitee_last_name}
-                          </p>
-                          <p className="text-xs text-zinc-500 truncate">
-                            {invite.invitee_email}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-400 flex items-center gap-1">
-                          <Clock width={14} height={14} />
-                          Pending
-                        </span>
-                        <button
-                          onClick={() =>
-                            removePendingInviteMutation.mutate(invite.invitation_id)
-                          }
-                          disabled={removePendingInviteMutation.isPending}
-                          className="text-zinc-500 hover:text-red-400 transition"
-                        >
-                          <Trash width={16} height={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Delete Team Button */}
-            <button
-              onClick={() => {
-                if (
-                  window.confirm(
-                    "Are you sure you want to delete this team? This action cannot be undone."
-                  )
-                ) {
-                  deleteTeamMutation.mutate(selectedTeamId);
-                }
-              }}
-              disabled={deleteTeamMutation.isPending}
-              className="w-full mt-6 rounded-lg bg-red-600 hover:bg-red-700 px-4 py-2.5 text-sm text-white font-semibold transition disabled:opacity-70"
-            >
-              {deleteTeamMutation.isPending ? "Deleting..." : "Delete Team"}
-            </button>
           </div>
         </div>
       )}
@@ -468,4 +365,195 @@ const Teams = () => {
   );
 };
 
-export default Teams;
+
+interface TeamModalProps {
+  teamId: string;
+  onClose: () => void;
+}
+
+// Mobile Modal
+const TeamModal: React.FC<TeamModalProps> = ({ teamId, onClose }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative h-full w-full bg-zinc-950 rounded-t-2xl shadow-2xl overflow-hidden">
+        <TeamDetailsPanel teamId={teamId} onClose={onClose} />
+      </div>
+    </div>
+  );
+};
+
+interface TeamListItemProps {
+  team: TeamListResponse;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+// Team List Item
+const TeamListItem: React.FC<TeamListItemProps> = ({ team, isSelected, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full text-left px-4 py-4 border border-zinc-800 rounded-lg transition-all duration-200 ${
+        isSelected
+          ? 'bg-blue-900/20 border-blue-600/50 shadow-lg shadow-blue-500/10'
+          : 'bg-zinc-900 hover:bg-zinc-800 hover:border-zinc-700'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-white truncate mb-2">{team.team_name}</h3>
+          <div className="flex items-center gap-4 text-xs text-zinc-400">
+            <span>Leader: {team.leader_id}</span>
+            <span className="flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              {team.member_count} member(s)
+            </span>
+          </div>
+        </div>
+        <ChevronRight
+          className={`h-5 w-5 flex-shrink-0 transition-transform ${
+            isSelected ? 'text-blue-400' : 'text-zinc-500'
+          }`}
+        />
+      </div>
+    </button>
+  );
+};
+
+// Main Teams Page
+const TeamsPage: React.FC = () => {
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [mobileModalOpen, setMobileModalOpen] = useState<boolean>(false);
+  const [mobileSelectedId, setMobileSelectedId] = useState<string | null>(null);
+
+  const { data: response, isLoading } = useQuery<ApiResponse<TeamListResponse[]>>({
+    queryKey: ['teams'],
+    queryFn: async () => {
+      const res = await api.get('/teams');
+      return res as ApiResponse<TeamListResponse[]>;
+    },
+  });
+
+  const teams: TeamListResponse[] = useMemo(() => {
+    if (!response?.status || !Array.isArray(response.data)) {
+      return [];
+    }
+    return response.data;
+  }, [response]);
+
+  const handleMobileTeamSelect = useCallback((teamId: string) => {
+    setMobileSelectedId(teamId);
+    setMobileModalOpen(true);
+  }, []);
+
+  const handleMobileModalClose = useCallback(() => {
+    setMobileModalOpen(false);
+    setMobileSelectedId(null);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-white">
+      {/* Desktop & Tablet Layout */}
+      <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 h-[calc(100vh-120px)] p-6">
+        {/* Left Side - Teams List */}
+        <div className="md:col-span-1 flex flex-col border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50">
+          <div className="p-6 border-b border-zinc-800">
+            <h2 className="text-2xl font-inst font-bold text-white">Teams</h2>
+            <p className="text-xs text-zinc-400 mt-1">{teams.length} team(s)</p>
+          </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader className="h-6 w-6 animate-spin text-blue-500" />
+              </div>
+            ) : teams.length > 0 ? (
+              teams.map((team) => (
+                <TeamListItem
+                  key={team.id}
+                  team={team}
+                  isSelected={selectedTeamId === team.id}
+                  onClick={() => setSelectedTeamId(team.id)}
+                />
+              ))
+            ) : (
+              <div className="flex items-center justify-center h-full text-center">
+                <div>
+                  <Users className="h-8 w-8 text-zinc-600 mx-auto mb-2" />
+                  <p className="text-sm text-zinc-500">No teams yet</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Side - Team Details */}
+        <div className="md:col-span-2 lg:col-span-3 border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50">
+          {selectedTeamId ? (
+            <TeamDetailsPanel teamId={selectedTeamId} />
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <Users className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
+                <p className="text-zinc-400">Select a team to view details</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="md:hidden p-4">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-1">Your Teams</h2>
+          <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
+        </div>
+
+        <div className="space-y-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader className="h-6 w-6 animate-spin text-blue-500" />
+            </div>
+          ) : teams.length > 0 ? (
+            teams.map((team) => (
+              <button
+                key={team.id}
+                onClick={() => handleMobileTeamSelect(team.id)}
+                className="w-full text-left px-4 py-4 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-zinc-700 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-white mb-2">{team.team_name}</h3>
+                    <div className="flex items-center gap-4 text-xs text-zinc-400">
+                      <span>Leader: {team.leader_id}</span>
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {team.member_count} member(s)
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-zinc-500 flex-shrink-0" />
+                </div>
+              </button>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <Users className="h-10 w-10 text-zinc-600 mx-auto mb-2" />
+              <p className="text-sm text-zinc-500">No teams yet</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Modal */}
+      {mobileModalOpen && mobileSelectedId && (
+        <TeamModal teamId={mobileSelectedId} onClose={handleMobileModalClose} />
+      )}
+    </div>
+  );
+};
+
+export default TeamsPage;
