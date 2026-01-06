@@ -60,11 +60,9 @@ jobs:
           script: |
             set -e
 
-            export PATH=$PATH:~/.bun/bin/bun
+            source ~/.bashrc
 
             echo "$ENV_CONTENT" > /app/melinia-api-temp/.env
-
-            bun run 
 
             echo "Running database migrations..."
             cd /app/melinia-api-temp
