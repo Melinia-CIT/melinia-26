@@ -59,7 +59,7 @@ jobs:
           script: |
             set -e
 
-            source ${HOME}/.bashrc
+            export PATH=$PATH:~/.bun/bin/bun
             
             echo "$ENV_CONTENT" > /app/melinia-api-temp/.env
             
