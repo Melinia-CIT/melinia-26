@@ -60,7 +60,6 @@ jobs:
           script: |
             set -e
 
-            tty
             source /home/deployer/.bashrc
             echo $PATH
             export PATH=$PATH:/home/deployer/.bun/bin/bun
