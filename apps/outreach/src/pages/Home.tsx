@@ -8,6 +8,7 @@ import PrizePool from "../components/home/prize-pool/PrizePool";
 import Sponsors from "../components/home/sponsors/Sponsors";
 import People from "../components/home/people/People";
 import DotGrid from "../components/common/DotGrid";
+import Reveal from "../components/common/Reveal";
 
 function Home() {
 	const [showIntro, setShowIntro] = useState(true);
@@ -42,11 +43,12 @@ function Home() {
 							/>
 						</div>
 
-						{/* Sections */}
 						<div className="relative z-10 flex flex-col w-full">
 							<Events />
 							<div className="h-[15px] bg-black" />
-							<PrizePool />
+							<Reveal>
+								<PrizePool />
+							</Reveal>
 							<div className="h-[15px] bg-black" />
 							<Sponsors />
 							<div className="h-[15px] bg-black" />

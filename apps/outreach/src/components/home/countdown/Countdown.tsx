@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import SpiderWeb from "../../common/SpiderWeb";
+import Reveal from "../../common/Reveal";
 
 interface TimeLeft {
     days: number;
@@ -38,7 +39,7 @@ function FlipCard({ value, label }: FlipCardProps) {
     return (
         <div className="flex flex-col items-center gap-2">
             {/* Flip Card Container */}
-            <div className="relative w-20 h-24 md:w-28 md:h-32 lg:w-32 lg:h-36" style={{ perspective: '1000px' }}>
+            <div className="relative w-24 h-28 md:w-32 md:h-36" style={{ perspective: '1000px' }}>
 
 
                 {/* Full Card - Static (shows current value) */}
@@ -50,10 +51,10 @@ function FlipCard({ value, label }: FlipCardProps) {
                             boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.6)'
                         }}
                     >
-                        <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
+                        <span className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
                             {formatNumber(currentValue)[0]}
                         </span>
-                        <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
+                        <span className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
                             {formatNumber(currentValue)[1]}
                         </span>
                     </div>
@@ -76,10 +77,10 @@ function FlipCard({ value, label }: FlipCardProps) {
                                 boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.5)'
                             }}
                         >
-                            <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
+                            <span className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
                                 {formatNumber(currentValue)[0]}
                             </span>
-                            <span className="text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
+                            <span className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#F2F2F2] to-[#3db8cc] leading-none">
                                 {formatNumber(currentValue)[1]}
                             </span>
                         </div>
@@ -147,38 +148,52 @@ function Countdown() {
     }, []);
 
     return (
-        <>
+        <div className="w-full flex items-center justify-center bg-black/20 backdrop-blur-sm py-12">
             <div
-                className="w-full min-h-[200px] md:min-h-[240px] bg-cover bg-center flex items-center justify-center gap-4 md:gap-6 lg:gap-8 text-white px-4 py-8 md:py-12"
+                className="flex flex-wrap items-center justify-center gap-6 md:gap-12 text-white px-4"
             >
                 {/* Days */}
-                <FlipCard value={timeLeft.days} label="Days" />
+                <Reveal delay={0.1} direction="down" width="fit-content">
+                    <FlipCard value={timeLeft.days} label="Days" />
+                </Reveal>
 
                 {/* Spider Web Separator */}
-                <div className="hidden sm:block scale-[0.3] md:scale-50">
-                    <SpiderWeb />
+                <div className="hidden sm:block scale-[0.4] md:scale-75">
+                    <Reveal delay={0.2} direction="down" width="fit-content">
+                        <SpiderWeb />
+                    </Reveal>
                 </div>
 
                 {/* Hours */}
-                <FlipCard value={timeLeft.hours} label="Hours" />
+                <Reveal delay={0.3} direction="down" width="fit-content">
+                    <FlipCard value={timeLeft.hours} label="Hours" />
+                </Reveal>
 
                 {/* Spider Web Separator */}
-                <div className="hidden md:block scale-[0.3] md:scale-50">
-                    <SpiderWeb />
+                <div className="hidden md:block scale-[0.4] md:scale-75">
+                    <Reveal delay={0.4} direction="down" width="fit-content">
+                        <SpiderWeb />
+                    </Reveal>
                 </div>
 
                 {/* Minutes */}
-                <FlipCard value={timeLeft.minutes} label="Minutes" />
+                <Reveal delay={0.5} direction="down" width="fit-content">
+                    <FlipCard value={timeLeft.minutes} label="Minutes" />
+                </Reveal>
 
                 {/* Spider Web Separator */}
-                <div className="hidden sm:block scale-[0.3] md:scale-50">
-                    <SpiderWeb />
+                <div className="hidden sm:block scale-[0.4] md:scale-75">
+                    <Reveal delay={0.6} direction="down" width="fit-content">
+                        <SpiderWeb />
+                    </Reveal>
                 </div>
 
                 {/* Seconds */}
-                <FlipCard value={timeLeft.seconds} label="Seconds" />
+                <Reveal delay={0.7} direction="down" width="fit-content">
+                    <FlipCard value={timeLeft.seconds} label="Seconds" />
+                </Reveal>
             </div>
-        </>
+        </div>
     );
 }
 

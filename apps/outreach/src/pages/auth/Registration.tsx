@@ -157,7 +157,7 @@ const Register: React.FC = () => {
     return (
         <div className="min-h-screen bg-zinc-950 font-geist text-zinc-100 flex justify-center px-2 py-3 items-center">
             <div className="w-full max-w-md flex flex-col items-center">
-                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[url('https://cdn.melinia.dev/melinia-alt.webp')] bg-cover bg-center mb-10" />
+                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[url('https://cdn.melinia.in/melinia-alt.webp')] bg-cover bg-center mb-10" />
 
                 <div className="w-full px-10">
                     <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />
