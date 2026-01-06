@@ -48,7 +48,7 @@ const Login = () => {
     return (
         <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center px-4 py-6 items-center font-geist text-base">
             <div className="w-full max-w-md flex flex-col items-center">
-                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('https://cdn.melinia.dev/melinia-alt.webp')] bg-cover bg-center mb-10 shadow-lg shadow-zinc-900/50" />
+                <div className="w-full h-36 sm:h-40 rounded-2xl bg-[image:url('https://cdn.melinia.in/melinia-alt.webp')] bg-cover bg-center mb-10 shadow-lg shadow-zinc-900/50" />
                 <p className="font-inst font-bold text-2xl self-start mb-6">Login</p>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-4">
