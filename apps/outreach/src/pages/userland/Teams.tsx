@@ -1,25 +1,28 @@
 'use strict';
 
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronRight, Users, Loader } from 'lucide-react';
+import { ChevronRight, Users, Plus } from 'lucide-react'; // Added Plus icon
 import { useQuery } from '@tanstack/react-query';
 import { TeamDetailsPanel } from '../../components/userland/teams/TeamDetailsPanel';
 import { TeamListItem } from '../../components/userland/teams/TeamList';
 import { TeamModal } from '../../components/userland/teams/TeamModel';
+import { Spinner } from '@melinia/outreach/src/components/common/Spinner';
+import { CreateTeamForm } from '../../components/userland/teams/TeamForm';
 import type { Team } from '@melinia/shared';
 import { team_management } from '../../services/teams';
 
 // Main Teams Page
+
 const TeamsPage: React.FC = () => {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [mobileModalOpen, setMobileModalOpen] = useState<boolean>(false);
   const [mobileSelectedId, setMobileSelectedId] = useState<string | null>(null);
+  const [isTeamCreation, setIsTeamCreation] = useState<boolean>(false);
 
   const { data: response, isLoading } = useQuery<Team[]>({
     queryKey: ['teams'],
     queryFn: async () => {
       const res = await team_management.teamList();
-      console.log(res);
       return res.data;
     },
   });
@@ -42,19 +45,29 @@ const TeamsPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="h-full bg-zinc-950 text-white">
       {/* Desktop & Tablet Layout */}
       <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 h-[calc(100vh-120px)] p-6">
         {/* Left Side - Teams List */}
         <div className="md:col-span-1 flex flex-col border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50">
-          <div className="p-6 border-b border-zinc-800">
-            <h2 className="text-2xl font-inst font-bold text-white">Teams</h2>
-            <p className="text-xs text-zinc-400 mt-1">{teams.length} team(s)</p>
+          <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-inst font-bold text-white">Teams</h2>
+              <p className="text-xs text-zinc-400 mt-1">{teams.length} team(s)</p>
+            </div>
+            
+            <button
+              onClick={() => { setIsTeamCreation(true); }}
+              className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs rounded-md transition-colors border border-zinc-700"
+            >
+              <Plus size={14} /> New Team
+            </button>
           </div>
+        
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
-                <Loader className="h-6 w-6 animate-spin text-blue-500" />
+                <Spinner/>
               </div>
             ) : teams.length > 0 ? (
               teams.map((team) => (
@@ -92,16 +105,24 @@ const TeamsPage: React.FC = () => {
       </div>
 
       {/* Mobile Layout */}
-      <div className="md:hidden p-4">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-1">Your Teams</h2>
-          <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
+      <div className="md:hidden p-4 space-y-4">
+        <div className="flex justify-between items-center mb-2">
+            <div>
+                <h2 className="text-2xl font-bold text-white">Teams</h2>
+                <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
+            </div>
+            <button 
+                onClick={() => setIsTeamCreation(true)}
+                className="p-2 bg-zinc-800 rounded-full text-zinc-200 border border-zinc-700"
+            >
+                <Plus size={20} />
+            </button>
         </div>
 
         <div className="space-y-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader className="h-6 w-6 animate-spin text-blue-500" />
+              <Spinner/>
             </div>
           ) : teams.length > 0 ? (
             teams.map((team) => (
@@ -137,6 +158,11 @@ const TeamsPage: React.FC = () => {
       {/* Mobile Modal */}
       {mobileModalOpen && mobileSelectedId && (
         <TeamModal teamId={mobileSelectedId} onClose={handleMobileModalClose} />
+      )}
+
+      {/* Create Team Modal - Updated here */}
+      {isTeamCreation && (
+        <CreateTeamForm onClose={() => setIsTeamCreation(false)} />
       )}
     </div>
   );

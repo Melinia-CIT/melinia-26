@@ -2,9 +2,10 @@
 
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, X, AlertCircle, Loader } from 'lucide-react';
+import { Trash2, X, AlertCircle, Users, Calendar, User } from 'lucide-react';
 import api from '../../../services/api';
 import type { TeamDetails } from '@melinia/shared';
+import { Spinner } from '../../common/Spinner';
 import { team_management } from '../../../services/teams';
 
 interface TeamDetailsPanelProps {
@@ -18,13 +19,6 @@ interface DeleteConfirmState {
   id: string | number;
 }
 
-interface TeamApiResponse {
-  status: boolean;
-  message: string;
-  data: TeamDetails;
-}
-
-// Team Details Component - Reusable
 export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDelete, onClose }) => {
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null);
   const queryClient = useQueryClient();
@@ -64,8 +58,8 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader className="h-8 w-8 animate-spin text-blue-500" />
+      <div className="flex flex-col items-center justify-center h-full p-6">
+        <Spinner/>
       </div>
     );
   }
@@ -82,159 +76,148 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
   if (!teamData) return null;
 
   return (
-    <div className="h-full overflow-y-auto custom-scrollbar bg-zinc-950">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-zinc-900/80 backdrop-blur border-b border-zinc-800 p-4 sm:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl font-bold font-inst text-white mb-1">{teamData.name}</h2>
-            <p className="text-zinc-400 text-xs sm:text-sm">ID: {teamData.id}</p>
-          </div>
-
-          {/* Team Stats */}
-          <div className="hidden sm:grid grid-cols-3 gap-2">
-            <div className="bg-zinc-900 border border-zinc-800 rounded p-2">
-              <p className="text-zinc-400 text-xs uppercase tracking-wide mb-1">Size</p>
-              <p className="text-lg font-bold text-white">{teamData.team_size}</p>
-            </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded p-2">
-              <p className="text-zinc-400 text-xs uppercase tracking-wide mb-1">Members</p>
-              <p className="text-lg font-bold text-white">{(teamData.members?.length ?? 0) + 1}</p>
-            </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded p-2">
-              <p className="text-zinc-400 text-xs uppercase tracking-wide mb-1">Events</p>
-              <p className="text-lg font-bold text-white">{teamData.events_registered?.length ?? 0}</p>
-            </div>
-          </div>
-
+    <div className="flex flex-col h-full bg-zinc-950">
+      {/* HEADER SECTION - Static (Does not scroll) */}
+      <div className="flex-none bg-zinc-900 border-b border-zinc-800">
+        {/* Title Row */}
+        <div className="flex items-center justify-between p-3">
+          <h2 className="text-lg font-inst font-bold text-white truncate pr-2">{teamData.name}</h2>
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors flex-shrink-0"
-              aria-label="Close team details"
+              className="p-1.5 hover:bg-zinc-800 rounded-md transition-colors shrink-0"
+              aria-label="Close"
             >
               <X className="h-5 w-5 text-zinc-400" />
             </button>
           )}
         </div>
 
-        {/* Mobile Stats */}
-        <div className="grid sm:hidden grid-cols-3 gap-2 mt-3">
-          <div className="bg-zinc-900 rounded p-2">
-            <p className="text-zinc-400 text-xs uppercase tracking-wide mb-1">Size</p>
-            <p className="font-bold text-white">{teamData.team_size}</p>
+        {/* Compact Stats Row - Mobile Friendly */}
+        {/* <div className="grid grid-cols-3 border-t border-zinc-800/50">
+          <div className="flex flex-col items-center py-2 border-r border-zinc-800/50">
+             <span className="text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Size</span>
+             <span className="text-sm font-bold text-white">{teamData.team_size}</span>
           </div>
-          <div className="bg-zinc-900 rounded p-2">
-            <p className="text-zinc-400 text-xs uppercase tracking-wide mb-1">Members</p>
-            <p className="font-bold text-white">{(teamData.members?.length ?? 0) + 1}</p>
+          <div className="flex flex-col items-center py-2 border-r border-zinc-800/50">
+             <span className="text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Members</span>
+             <span className="text-sm font-bold text-white">{(teamData.members?.length ?? 0) + 1}</span>
           </div>
-          <div className="bg-zinc-900 rounded p-2">
-            <p className="text-zinc-400 text-xs uppercase tracking-wide mb-1">Events</p>
-            <p className="font-bold text-white">{teamData.events_registered?.length ?? 0}</p>
+          <div className="flex flex-col items-center py-2">
+             <span className="text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Events</span>
+             <span className="text-sm font-bold text-white">{teamData.events_registered?.length ?? 0}</span>
           </div>
-        </div>
+        </div> */}
       </div>
 
-      <div className="p-4 sm:p-5 space-y-4 sm:space-y-5">
-        {/* Team Leader */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded p-3">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Leader</p>
-          <p className="font-semibold text-white text-sm">
-            {teamData.leader_first_name} {teamData.leader_last_name}
-          </p>
-          <p className="text-xs text-zinc-400">{teamData.leader_email}</p>
+      {/* SCROLLABLE CONTENT SECTION */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
+        
+        {/* Leader Info */}
+        <div className="flex items-center gap-3 bg-zinc-900/50 border border-zinc-800 rounded-lg p-2.5">
+          <div className="h-8 w-8 rounded-full bg-blue-900/30 text-blue-400 flex items-center justify-center shrink-0">
+            <User className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] text-zinc-500 uppercase font-semibold">Team Leader</p>
+            <p className="text-sm font-semibold text-white truncate">
+              {teamData.leader_first_name} {teamData.leader_last_name}
+            </p>
+            <p className="text-xs text-zinc-400 truncate">{teamData.leader_email}</p>
+          </div>
         </div>
 
-        {/* Members & Pending Invites in 2 columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Members */}
-          <section>
-            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2">
-              Members ({teamData.members?.length ?? 0})
-            </h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-              {teamData.members && teamData.members.length > 0 ? (
-                teamData.members.map((member) => (
-                  <div
-                    key={member.user_id}
-                    className="bg-zinc-900 border border-zinc-800 rounded p-2 hover:border-zinc-700 transition-colors"
-                  >
-                    <p className="font-semibold text-white text-xs mb-1">
+        {/* Members List */}
+        <section>
+          <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <Users className="h-3 w-3" /> Members
+          </h3>
+          <div className="space-y-1.5">
+            {teamData.members && teamData.members.length > 0 ? (
+              teamData.members.map((member) => (
+                <div
+                  key={member.user_id}
+                  className="bg-zinc-900 border border-zinc-800 rounded px-2.5 py-2 flex justify-between items-center"
+                >
+                  <div className="min-w-0 pr-2">
+                    <p className="text-sm font-medium text-white truncate">
                       {member.first_name} {member.last_name}
                     </p>
-                    <p className="text-xs text-zinc-400">{member.email}</p>
+                    <p className="text-[11px] text-zinc-400 truncate">{member.email}</p>
                   </div>
-                ))
-              ) : (
-                <p className="text-zinc-500 text-xs">No members</p>
-              )}
-            </div>
-          </section>
-
-          {/* Pending Invitations */}
-          <section>
-            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2">
-              Pending ({teamData.pending_invites?.length ?? 0})
-            </h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-              {teamData.pending_invites && teamData.pending_invites.length > 0 ? (
-                teamData.pending_invites.map((invite) => (
-                  <div
-                    key={invite.invitation_id}
-                    className="bg-zinc-900 border border-zinc-800 rounded p-2 hover:border-zinc-700 transition-colors flex items-start justify-between gap-2"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white text-xs mb-1 truncate">
-                        {invite.first_name} {invite.last_name}
-                      </p>
-                      <p className="text-xs text-zinc-400 truncate">{invite.email}</p>
-                    </div>
-                    <button
-                      onClick={() =>
-                        setDeleteConfirm({ type: 'invitation', id: invite.invitation_id })
-                      }
-                      className="p-1 hover:bg-red-900/20 text-red-400 rounded transition-colors flex-shrink-0"
-                      title="Remove"
-                      aria-label={`Remove invitation for ${invite.first_name}`}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-zinc-500 text-xs">No invitations</p>
-              )}
-            </div>
-          </section>
-        </div>
-
-        {/* Events Registered */}
-        <section>
-          <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2">
-            Events ({teamData.events_registered?.length ?? 0})
-          </h3>
-          <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
-            {teamData.events_registered && teamData.events_registered.length > 0 ? (
-              teamData.events_registered.map((event) => (
-                <div
-                  key={event.event_id}
-                  className="bg-zinc-900 border border-zinc-800 rounded p-2 hover:border-zinc-700 transition-colors"
-                >
-                  <p className="font-semibold text-white text-xs">{event.event_name}</p>
                 </div>
               ))
             ) : (
-              <p className="text-zinc-500 text-xs">No events</p>
+              <p className="text-xs text-zinc-600 italic">No additional members.</p>
             )}
           </div>
         </section>
 
-        {/* Delete Team Section */}
+        {/* Pending Invitations */}
+        {teamData.pending_invites && teamData.pending_invites.length > 0 && (
+          <section>
+            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+              <AlertCircle className="h-3 w-3" /> Pending
+            </h3>
+            <div className="space-y-1.5">
+              {teamData.pending_invites.map((invite) => (
+                <div
+                  key={invite.invitation_id}
+                  className="bg-zinc-900 border border-zinc-800/80 rounded px-2.5 py-2 flex items-start justify-between gap-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      {invite.first_name} {invite.last_name}
+                    </p>
+                    <p className="text-[11px] text-zinc-400 truncate">{invite.email}</p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setDeleteConfirm({ type: 'invitation', id: invite.invitation_id })
+                    }
+                    className="p-1.5 hover:bg-red-900/20 text-red-400 rounded transition-colors shrink-0"
+                    aria-label={`Remove invitation for ${invite.first_name}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Events Registered */}
+        <section>
+          <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <Calendar className="h-3 w-3" /> Events
+          </h3>
+          <div className="space-y-1.5">
+            {teamData.events_registered && teamData.events_registered.length > 0 ? (
+              teamData.events_registered.map((event) => (
+                <div
+                  key={event.event_id}
+                  className="bg-zinc-900 border border-zinc-800 rounded px-2.5 py-2"
+                >
+                  <p className="text-sm font-medium text-white">{event.event_name}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-zinc-600 italic">No events registered.</p>
+            )}
+          </div>
+        </section>
+        
+        {/* Extra space at bottom for scroll comfort */}
+        <div className="h-4" />
+      </div>
+
+      {/* FOOTER - Delete Button - Static at bottom */}
+      <div className="flex-none p-3 border-t border-zinc-800 bg-zinc-900">
         <button
           onClick={() => setDeleteConfirm({ type: 'team', id: teamId })}
-          className="w-full px-3 py-2 bg-red-900/20 border border-red-900 text-red-400 rounded hover:bg-red-900/30 transition-colors font-medium text-xs"
+          className="w-full px-3 py-2.5 bg-red-900/10 hover:bg-red-900/20 border border-red-900/50 text-red-400 rounded-lg transition-colors font-medium text-xs flex items-center justify-center gap-2"
         >
-          Delete Team
+          <Trash2 className="h-3.5 w-3.5" /> Delete Team
         </button>
       </div>
 
@@ -245,20 +228,20 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setDeleteConfirm(null)}
           />
-          <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl max-w-sm w-full p-6">
-            <div className="flex items-center gap-3 mb-4">
+          <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl max-w-xs w-full p-5">
+            <div className="flex items-center gap-3 mb-3">
               <AlertCircle className="h-5 w-5 text-red-500" />
-              <h3 className="text-lg font-semibold text-white">Confirm Deletion</h3>
+              <h3 className="text-base font-semibold text-white">Confirm Deletion</h3>
             </div>
-            <p className="text-zinc-300 mb-6">
+            <p className="text-sm text-zinc-300 mb-5 leading-relaxed">
               {deleteConfirm.type === 'team'
-                ? 'Are you sure you want to delete this team? This action cannot be undone.'
-                : 'Are you sure you want to remove this pending invitation?'}
+                ? 'Are you sure? This will permanently delete the team and cannot be undone.'
+                : 'Remove this pending invitation?'}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors text-white font-medium disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors text-white text-sm font-medium"
                 disabled={deleteMutation.isPending}
               >
                 Cancel
@@ -266,10 +249,10 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
               <button
                 onClick={handleDeleteConfirm}
                 disabled={deleteMutation.isPending}
-                className="flex-1 px-4 py-2 bg-red-900/30 hover:bg-red-900/50 border border-red-900 text-red-400 rounded-lg transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
               >
-                {deleteMutation.isPending && <Loader className="h-4 w-4 animate-spin" />}
-                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                {deleteMutation.isPending && <Spinner  />}
+                Delete
               </button>
             </div>
           </div>

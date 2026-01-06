@@ -12,7 +12,7 @@ export const createTeamSchema = z.object({
   name: z.string().min(1, "Team name is required").max(255, "Team name is too long"),
   member_emails: z.array(
     z.string().email("Invalid email format")
-  ).default([])
+  )
 });
 
 // Delete team schema

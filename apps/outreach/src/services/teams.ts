@@ -1,5 +1,5 @@
 import api from './api';
-import {TeamDetails, type CreateTeam, Team} from "@melinia/shared";
+import {type CreateTeam} from "@melinia/shared";
 
 export class TeamManagementService{
     private static instance: TeamManagementService;
@@ -12,6 +12,7 @@ export class TeamManagementService{
     }
 
     public createTeam = async(formData: CreateTeam)=>{
+        console.log("form data:", formData)
         const response =await api.post("/teams", formData);
         return response;
     };
