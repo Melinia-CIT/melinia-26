@@ -44,7 +44,7 @@ jobs:
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_PVT_KEY }}
           source: "apps/api/deploy-package/*"
-          target: "/opt/melinia-api-temp"
+          target: "/app/melinia-api-temp"
           strip_components: 3
 
       - name: Deploy and restart services
@@ -59,26 +59,26 @@ jobs:
           script: |
             set -e
             
-            echo "$ENV_CONTENT" > /opt/melinia-api-temp/.env
+            echo "$ENV_CONTENT" > /app/melinia-api-temp/.env
             
             echo "Running database migrations..."
-            cd /opt/melinia-api-temp
-            if ! bun migrate.js; then
+            cd /app/melinia-api-temp
+            if ! bun run migrate.js; then
               echo "Migration failed! Aborting deployment."
-              rm -rf /opt/melinia-api-temp
+              rm -rf /app/melinia-api-temp
               exit 1
             fi
             echo "Migrations completed successfully."
             
-            if [ -d /opt/melinia-api ]; then
-              BACKUP_DIR="/opt/melinia-api-backup-$(date +%Y%m%d-%H%M%S)"
+            if [ -d /app/melinia-api ]; then
+              BACKUP_DIR="/app/melinia-api-backup-$(date +%Y%m%d-%H%M%S)"
               echo "Creating backup at $BACKUP_DIR"
-              mv /opt/melinia-api $BACKUP_DIR
+              mv /app/melinia-api $BACKUP_DIR
             fi
             
-            mv /opt/melinia-api-temp /opt/melinia-api
+            mv /app/melinia-api-temp /app/melinia-api
             
-            cd /opt/melinia-api
+            cd /app/melinia-api
             
             pm2 delete melinia-api 2>/dev/null || true
             pm2 delete melinia-worker 2>/dev/null || true
@@ -89,7 +89,7 @@ jobs:
             echo "Deployment completed successfully!"
             pm2 status
             
-            cd /opt
+            cd /app
             ls -dt melinia-api-backup-* 2>/dev/null | tail -n +4 | xargs rm -rf || true
             
             echo "Old backups cleaned up."
