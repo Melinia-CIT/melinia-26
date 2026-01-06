@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - master
+      - ci-pipeline
     paths:
-      - 'apps/api/**'
-      - 'packages/shared/**'
-      - '.github/workflows/deploy-api.yaml'
+      - "apps/api/**"
+      - "packages/shared/**"
+      - ".github/workflows/deploy-api.yaml"
 
 jobs:
   build-and-deploy:
@@ -60,9 +61,9 @@ jobs:
             set -e
 
             export PATH=$PATH:~/.bun/bin/bun
-            
+
             echo "$ENV_CONTENT" > /app/melinia-api-temp/.env
-            
+
             echo "Running database migrations..."
             cd /app/melinia-api-temp
             if ! bun run migrate.js; then
@@ -71,28 +72,27 @@ jobs:
               exit 1
             fi
             echo "Migrations completed successfully."
-            
+
             if [ -d /app/melinia-api ]; then
               BACKUP_DIR="/app/melinia-api-backup-$(date +%Y%m%d-%H%M%S)"
               echo "Creating backup at $BACKUP_DIR"
               mv /app/melinia-api $BACKUP_DIR
             fi
-            
+
             mv /app/melinia-api-temp /app/melinia-api
-            
+
             cd /app/melinia-api
-            
+
             pm2 delete melinia-api 2>/dev/null || true
             pm2 delete melinia-worker 2>/dev/null || true
-            
+
             pm2 start pm2.config.js
             pm2 save
-            
+
             echo "Deployment completed successfully!"
             pm2 status
-            
+
             cd /app
             ls -dt melinia-api-backup-* 2>/dev/null | tail -n +4 | xargs rm -rf || true
-            
-            echo "Old backups cleaned up."
 
+            echo "Old backups cleaned up."
