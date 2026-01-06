@@ -5,9 +5,9 @@ on:
     branches:
       - master
     paths:
-      - 'apps/outreach/**'
-      - 'packages/shared/**'
-      - '.github/workflows/deploy-outreach.yaml'
+      - "apps/outreach/**"
+      - "packages/shared/**"
+      - ".github/workflows/deploy-outreach.yaml"
 
 jobs:
   build-and-deploy:
@@ -26,7 +26,7 @@ jobs:
 
       - name: Load Environment Variables
         run: |
-          echo "${{ secrets.OUTREACH_ENVS }}" > .env
+          echo "${{ secrets.OUTREACH_ENVS }}" > apps/outreach/.env
 
       - name: Build
         run: bun run build --filter=@melinia/outreach
@@ -45,4 +45,3 @@ jobs:
 
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
-
