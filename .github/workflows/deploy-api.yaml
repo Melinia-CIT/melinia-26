@@ -60,10 +60,7 @@ jobs:
           script: |
             set -e
 
-            source /home/deployer/.bashrc
-            echo $PATH
-            export PATH=$PATH:/home/deployer/.bun/bin/bun
-            echo $PATH
+            export PATH="/home/${{ secrets.DO_USER }}/.bun/bin:/home/${{ secrets.DO_USER }}/.cache/.bun/bin:$PATH"
 
             echo "$ENV_CONTENT" > /app/melinia-api-temp/.env
 
