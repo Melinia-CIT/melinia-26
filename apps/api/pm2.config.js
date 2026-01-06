@@ -5,8 +5,8 @@ module.exports = {
 			script: "index.js",
 			interpreter: "bun",
 			cwd: "/app/melinia-api",
-			instances: 2,
-			exec_mode: "cluster",
+			instances: 1,
+			exec_mode: "fork",
 			env_file: "/app/melinia-api/.env",
 			autorestart: true,
 			watch: false,
@@ -16,7 +16,10 @@ module.exports = {
 			log_date_format: "YYYY-MM-DD HH:mm:ss Z",
 			merge_logs: true,
 			min_uptime: "10s",
-			max_restarts: 10
+			max_restarts: 10,
+			env: {
+				PATH: `${process.env.HOME}/.bun/bin:${process.env.PATH}`,
+			}
 		},
 		{
 			name: "melinia-worker",
@@ -33,7 +36,10 @@ module.exports = {
 			out_file: "/app/log/pm2/melinia-worker-out.log",
 			log_date_format: "YYYY-MM-DD HH:mm:ss Z",
 			min_uptime: "10s",
-			max_restarts: 10
+			max_restarts: 10,
+			env: {
+				PATH: `${process.env.HOME}/.bun/bin:${process.env.PATH}`,
+			}
 		}
 	]
 }

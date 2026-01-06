@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { events, auth, user, teamRouter , payment } from "./routes";
+import { events, auth, user, teamRouter, payment } from "./routes";
 import college from "./routes/colleges.route";
 import { HTTPException } from "hono/http-exception";
 
@@ -34,8 +34,11 @@ v1.route("/users", user);
 v1.route("/events", events);
 v1.route("/teams", teamRouter);
 v1.route("/colleges", college);
-v1.route("/payment",payment);
+v1.route("/payment", payment);
 
 app.route("/api/v1", v1);
 
-export default app;
+export default {
+    port: 3000,
+    fetch: app.fetch
+};
