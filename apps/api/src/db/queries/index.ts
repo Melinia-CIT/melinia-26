@@ -1,3 +1,4 @@
-export * from "./events.queries";
-export * from "./users.queries";
-export * from "./profile.queries";
+export * from "./events.queries"
+export * from "./users.queries"
+export * from "./profile.queries"
+export * from "./payments.queries"

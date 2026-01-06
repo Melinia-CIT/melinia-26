@@ -43,7 +43,7 @@ auth.post("/send-otp",
         setCookie(c, "registration_token", token, {
             httpOnly: true,
             secure: true,
-            sameSite: "Lax",
+            sameSite: "None",
             path: "/api/v1/auth",
             maxAge: 600,
         });
@@ -79,7 +79,7 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
     setCookie(c, "registration_token", regToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "Lax",
+        sameSite: "None",
         path: "/api/v1/auth",
         maxAge: 600,
     });
@@ -117,7 +117,7 @@ auth.post("/register", zValidator("json", registrationSchema), async (c) => {
         path: "/api/v1/auth",
         httpOnly: true,
         secure: true,
-        sameSite: "Lax",
+        sameSite: "None",
     });
 
     const accessToken = await createAccessToken(user.id, user.role);
@@ -128,7 +128,7 @@ auth.post("/register", zValidator("json", registrationSchema), async (c) => {
     setCookie(c, "refresh_token", refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "Strict",
+        sameSite: "None",
         path: "/api/v1/auth",
         maxAge: 60 * 60 * 24 * 7,
     });
@@ -153,7 +153,7 @@ auth.post("/login", zValidator("json", loginSchema), async (c) => {
     setCookie(c, "refresh_token", refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "Strict",
+        sameSite: "None",
         path: "/api/v1/auth",
         maxAge: 60 * 60 * 24 * 7,
     });

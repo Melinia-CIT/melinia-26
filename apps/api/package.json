@@ -14,14 +14,14 @@
     "db:migrate": "bun run src/db/migrations.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.958.0",
+    "@aws-sdk/client-ses": "^3.965.0",
     "@hono/zod-validator": "^0.7.6",
     "@melinia/shared": "workspace:*",
     "bullmq": "^5.66.4",
     "crypto": "^1.0.1",
     "hono": "^4.11.3",
-    "ioredis": "^5.8.2",
-    "postgres": "^3.4.7",
+    "ioredis": "^5.9.1",
+    "postgres": "^3.4.8",
     "razorpay": "^2.9.6"
   },
   "devDependencies": {
