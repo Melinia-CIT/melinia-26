@@ -19,6 +19,7 @@ function App() {
 					<Route path="/login" element={<Login />} />
 					<Route path="/forgot-password" element={<ForgotPassword />} />
 					<Route path="/reset-password" element={<ResetPassword />} />
+					<Route path="/register" element={<Register />} />
 				</Route>
 
 				<Route element={<ProtectedRoute />}>
@@ -29,7 +30,6 @@ function App() {
 						<Route path="teams" />
 					</Route>
 				</Route>
-				<Route path="/register" element={<Register />} />
 			</Routes>
 		</BrowserRouter>
 	);

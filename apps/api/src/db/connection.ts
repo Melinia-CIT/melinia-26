@@ -7,7 +7,7 @@ const sql = postgres({
     database: getEnv('DB_NAME'),
     username: getEnv('DB_USERNAME'),
     password: getEnv('DB_PASSWORD'),
-    max: 50,
+    max: 20,
     ssl: "require"
 });
 
