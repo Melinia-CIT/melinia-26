@@ -10,6 +10,8 @@ const app = new Hono();
 const v1 = new Hono();
 
 app.onError((err, c) => {
+    console.error(err);
+
     if (err instanceof HTTPException) {
         return c.json({ message: err.message }, err.status);
     }
