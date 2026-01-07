@@ -11,6 +11,7 @@ import Main from "./pages/userland/Main"
 import Register from "./pages/auth/Registration"
 import Teams from "./pages/userland/Teams"
 import Leaderboard from "./pages/userland/Leaderboard"
+import Events from "./components/home/events"
 
 function App() {
     return (
@@ -27,7 +28,7 @@ function App() {
                 <Route element={<ProtectedRoute />}>
                     <Route path="/app" element={<AppLayout />}>
                         <Route index element={<Main />} />
-                        <Route path="events" element={<Main />} />
+                        <Route path="events" element={<Events />} />
                         <Route path="leaderboard" element={<Leaderboard />} />
                         <Route path="teams" element={<Teams />} />
                     </Route>
