@@ -7,6 +7,7 @@ import Login from "./pages/auth/Login";
 import ResetPassword from "./pages/auth/ResetPassword";
 import AppLayout from "./pages/userland/Layout";
 import ForgotPassword from "./pages/auth/ForgotPassword";
+//import Events from "./pages/userland/Events";
 import Main from "./pages/userland/Main";
 import Register from "./pages/auth/Registration";
 
@@ -24,7 +25,7 @@ function App() {
 				<Route element={<ProtectedRoute />}>
 					<Route path="/app" element={<AppLayout />}>
 						<Route index element={<Main />} />
-						<Route path="events" />
+						{/* <Route path="events" {Events /} /> */}
 						<Route path="leaderboard" />
 						<Route path="teams" />
 					</Route>
