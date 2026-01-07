@@ -31,6 +31,16 @@ export const eventRuleSchema = z.object({
     updatedAt: z.coerce.date().optional(),
 });
 
+export const eventRuleSchema = z.object({
+    id: z.number().int().optional(), 
+    eventId: z.string().optional(), 
+    roundNo: z.number().int().nullable().optional(), 
+    ruleNumber: z.number().int().min(1, "Rule number must be positive"),
+    ruleDescription: z.string().min(1, "Rule description is required"),
+    createdAt: z.coerce.date().optional(),
+    updatedAt: z.coerce.date().optional(),
+});
+
 const baseEventObject = {
     id: z.string(),
     name: z.string().min(1, "Event name is required"),

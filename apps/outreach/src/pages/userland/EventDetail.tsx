@@ -309,6 +309,23 @@ const EventDetail = () => {
                             <p className="text-sm text-zinc-500 italic text-center">No specific rules listed for this round.</p>
                           )}
                         </div>
+
+                        {/* Round Specific Rules */}
+                        {roundRules.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-zinc-700/50">
+                            <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                              <ListChecks className="w-4 h-4" /> Round Rules
+                            </h4>
+                            <ul className="space-y-2">
+                              {roundRules.map((rule) => (
+                                <li key={rule.id} className="text-sm text-zinc-300 flex gap-2">
+                                  <span className="text-purple-500/50 font-medium">{rule.ruleNumber}.</span>
+                                  {rule.ruleDescription}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
