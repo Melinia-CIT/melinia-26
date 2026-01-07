@@ -38,7 +38,7 @@ v1.route("/payment", payment);
 
 app.route("/api/v1", v1);
 
-export default {
-    port: 3000,
-    fetch: app.fetch
-};
+Bun.serve({
+    fetch: app.fetch,
+    reusePort: true
+})
