@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash, X, MessageAlert, Community, Calendar, User, UserPlus, Xmark } from 'iconoir-react';
+import { Trash, MessageAlert, Community, Calendar, User, UserPlus, Xmark } from 'iconoir-react';
 import toast from 'react-hot-toast';
 import { type TeamDetails, type AddNewMemberRequest, addNewMemberSchema } from '@melinia/shared';
 import { Spinner } from '../../common/Spinner';
@@ -311,7 +311,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                 className="text-zinc-500 hover:text-zinc-300"
                 disabled={addMemberMutation.isPending}
               >
-                <X width={20} height={20} />
+                <Xmark width={20} height={20} />
               </button>
             </div>
 
