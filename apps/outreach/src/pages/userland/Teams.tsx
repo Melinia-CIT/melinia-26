@@ -169,4 +169,3 @@ const TeamsPage: React.FC = () => {
 };
 
 export default TeamsPage;
-
