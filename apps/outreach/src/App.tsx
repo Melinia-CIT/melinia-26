@@ -29,6 +29,7 @@ function App() {
 						<Route index element={<Main />} />
 						<Route path="events" element={<EventLayout />} /> 
 						<Route path="events/:id" element={<EventDetail />} />
+						{/* <Route path="events" {Events /} /> */}
 						<Route path="leaderboard" />
 						<Route path="teams" />
 					</Route>
