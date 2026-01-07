@@ -2,16 +2,6 @@ import { BrowserRouter, Routes, Route } from "react-router"
 
 import { PublicRoute, ProtectedRoute } from "./components/Router"
 
-<<<<<<< HEAD
-import Home from "./pages/Home";
-import Login from "./pages/auth/Login";
-import ResetPassword from "./pages/auth/ResetPassword";
-import AppLayout from "./pages/userland/Layout";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import Main from "./pages/userland/Main";
-import Register from "./pages/auth/Registration";
-import Teams from "./pages/userland/Teams";
-=======
 import Home from "./pages/Home"
 import Login from "./pages/auth/Login"
 import ResetPassword from "./pages/auth/ResetPassword"
@@ -34,18 +24,20 @@ function App() {
                     <Route path="/register" element={<Register />} />
                 </Route>
 
-				<Route element={<ProtectedRoute />}>
-					<Route path="/app" element={<AppLayout />}>
-						<Route index element={<Main />} />
-						<Route path="events" />
-						<Route path="leaderboard" element={<Leaderboard />} />
-						<Route path="leaderboard" />
-						<Route path="teams" element={<Teams/>}/>
-					</Route>
-				</Route>
-			</Routes>
-		</BrowserRouter>
+		<Route element={<ProtectedRoute />}>
+			<Route path="/app" element={<AppLayout />}>
+				<Route index element={<Main />} />
+				<Route path="events" />
+				<Route path="leaderboard" element={<Leaderboard />} />
+				<Route path="leaderboard" />
+				<Route path="teams" element={<Teams/>}/>
+			</Route>
+		</Route>
+	    </Routes>
+
+ 	</BrowserRouter>
 	);
+
 
 }
 
