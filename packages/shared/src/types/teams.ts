@@ -5,6 +5,7 @@ export const teamSchema = z.object({
   id: z.string().min(1, "Team ID is required"),
   team_name: z.string().min(1, "Team name is required").max(255, "Team name is too long"),
   leader_id: z.string().min(1, "Leader ID is required"),
+  member_count: z.number().nonnegative()
 });
 
 // Create team schema - member_emails should be optional or have validation

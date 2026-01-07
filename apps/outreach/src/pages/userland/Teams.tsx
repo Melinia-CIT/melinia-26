@@ -1,7 +1,7 @@
 'use strict';
 
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronRight, Users, Plus } from 'lucide-react'; // Added Plus icon
+import { ChevronRight, Users, Plus } from 'lucide-react'; 
 import { useQuery } from '@tanstack/react-query';
 import { TeamDetailsPanel } from '../../components/userland/teams/TeamDetailsPanel';
 import { TeamListItem } from '../../components/userland/teams/TeamList';
@@ -58,7 +58,7 @@ const TeamsPage: React.FC = () => {
             
             <button
               onClick={() => { setIsTeamCreation(true); }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs rounded-md transition-colors border border-zinc-700"
+              className="flex items-center gap-2 p-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-semibold rounded-md transition-colors border border-zinc-700"
             >
               <Plus size={14} /> New Team
             </button>
@@ -108,7 +108,7 @@ const TeamsPage: React.FC = () => {
       <div className="md:hidden p-4 space-y-4">
         <div className="flex justify-between items-center mb-2">
             <div>
-                <h2 className="text-2xl font-bold text-white">Teams</h2>
+                <h2 className="text-2xl font-bold font-inst text-white">Teams</h2>
                 <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
             </div>
             <button 

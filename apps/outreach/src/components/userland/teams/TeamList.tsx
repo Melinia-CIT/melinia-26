@@ -1,4 +1,4 @@
-import { ChevronRight, Users } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import type {Team} from '@melinia/shared';
 
 
@@ -24,10 +24,10 @@ export const TeamListItem: React.FC<TeamListItemProps> = ({ team, isSelected, on
           <h3 className="font-semibold text-white truncate mb-2">{team.team_name}</h3>
           <div className="flex items-center gap-4 text-xs text-zinc-400">
             <span>Leader: {team.leader_id}</span>
-            <span className="flex items-center gap-1">
+            {/* <span className="flex items-center gap-1">
               <Users className="h-3 w-3" />
-              {"Member count"} member(s)
-            </span>
+              {team.member_count} member(s)
+            </span> */}
           </div>
         </div>
         <ChevronRight

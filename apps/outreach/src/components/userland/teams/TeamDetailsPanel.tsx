@@ -4,13 +4,12 @@ import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, X, AlertCircle, Users, Calendar, User, Loader2, UserPlus } from 'lucide-react';
+import { Trash, X, MessageAlert, Community, Calendar, User, UserPlus, Xmark } from 'iconoir-react';
 import toast from 'react-hot-toast';
 import { type TeamDetails, type AddNewMemberRequest, addNewMemberSchema } from '@melinia/shared';
 import { Spinner } from '../../common/Spinner';
 import { team_management } from '../../../services/teams';
 
-// --- Types ---
 interface TeamDetailsPanelProps {
   teamId: string;
   onDelete?: () => void;
@@ -22,11 +21,9 @@ interface DeleteConfirmState {
   id: string | number;
 }
 
-// --- Main Component ---
 export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDelete, onClose }) => {
   const queryClient = useQueryClient();
   
-  // States
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
@@ -42,7 +39,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     mode: "onSubmit"
   });
 
-  // --- Queries ---
+  
   const { data: response, isLoading, error } = useQuery<TeamDetails>({
     queryKey: ['team', teamId],
     queryFn: async () => {
@@ -53,7 +50,6 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
   const teamData = response;
 
-  // --- Mutations ---
   
   const deleteTeamMutation = useMutation({
     mutationFn: team_management.deleteTeam,
@@ -93,7 +89,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     }
   });
 
-  // --- Handlers ---
+  
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteConfirm) return;
     if (deleteConfirm.type === 'team') {
@@ -107,7 +103,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     addMemberMutation.mutate(data);
   };
 
-  // --- Render ---
+  
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6">
@@ -119,7 +115,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
   if (error) {
     return (
       <div className="p-8 text-center">
-        <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+        <MessageAlert className="h-16 w-16 text-red-500 mx-auto mb-4" />
         <p className="text-red-400 font-medium">Failed to load team details</p>
       </div>
     );
@@ -129,19 +125,16 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
   return (
     <div className="flex flex-col h-full bg-zinc-950">
-      {/* HEADER SECTION - Reduced padding (p-5 -> p-4) */}
       <div className="flex-none bg-zinc-900 border-b border-zinc-800 shrink-0">
         <div className="flex items-center justify-between p-4">
           <h2 className="text-xl font-inst font-bold text-white truncate pr-4">{teamData.name}</h2>
           {onClose && (
             <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-md transition-colors shrink-0">
-              <X className="h-6 w-6 text-zinc-400" />
+              <Xmark className="h-6 w-6" />
             </button>
           )}
         </div>
       </div>
-
-      {/* SCROLLABLE CONTENT - Added min-h-0 to fix flex overflow issue */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 min-h-0">
         
         {/* Leader Info */}
@@ -161,7 +154,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
         {/* Members List */}
         <section>
           <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-3 flex items-center gap-2">
-            <Users className="h-4 w-4" /> Members
+            <Community className="h-4 w-4" /> Members
           </h3>
           
           <div className="space-y-2">
@@ -189,7 +182,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
         {teamData.pending_invites && teamData.pending_invites.length > 0 && (
           <section>
             <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-3 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" /> Pending Invitations
+              <MessageAlert className="h-4 w-4" /> Pending Invitations
             </h3>
             <div className="space-y-2">
               {teamData.pending_invites.map((invite) => (
@@ -207,7 +200,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                     onClick={() => setDeleteConfirm({ type: 'invitation', id: invite.invitation_id })}
                     className="p-2 hover:bg-red-900/20 text-red-400 rounded-md transition-colors shrink-0"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                   </button>
                 </div>
               ))}
@@ -235,12 +228,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
             )}
           </div>
         </section>
-        
-        {/* Spacer to ensure last item isn't covered by footer shadow or similar */}
         <div className="h-4" />
       </div>
 
-      {/* FOOTER - Buttons - Reduced padding (p-5 -> p-4) & smaller button height (py-3 -> py-2.5) */}
       <div className="flex-none p-4 border-t border-zinc-800 bg-zinc-900 shrink-0 z-10 relative">
         <div className="flex flex-col sm:flex-row gap-3">
           
@@ -257,13 +247,12 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
             onClick={() => setDeleteConfirm({ type: 'team', id: teamId })}
             className="flex-1 px-4 py-2.5 bg-red-900/10 hover:bg-red-900/20 border border-red-900/50 text-red-400 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
           >
-            <Trash2 className="h-4 w-4" /> Delete Team
+            <Trash className="h-4 w-4" /> Delete Team
           </button>
 
         </div>
       </div>
 
-      {/* --- MODALS --- */}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
@@ -274,7 +263,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
           />
           <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl max-w-sm w-full p-6">
             <div className="flex items-center gap-3 mb-4">
-              <AlertCircle className="h-6 w-6 text-red-500" />
+              <MessageAlert className="h-6 w-6 text-red-500" />
               <h3 className="text-lg font-semibold text-white">Confirm Deletion</h3>
             </div>
             <p className="text-sm text-zinc-300 mb-6 leading-relaxed">
@@ -296,9 +285,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                 className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
               >
                 {(deleteTeamMutation.isPending || deleteInvitationMutation.isPending) ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Spinner h={4} w={4} />
                 ) : (
-                    <Trash2 className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                 )}
                 Delete
               </button>
@@ -307,7 +296,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
         </div>
       )}
 
-      {/* Add Member Modal (Merged) */}
+      {/* Add Member Modal */}
       {isAddMemberOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -353,7 +342,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
               >
                 {addMemberMutation.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Sending Invite...
+                    <Spinner w={4} h={4} /> Sending Invite...
                   </>
                 ) : (
                   'Send Invitation'
