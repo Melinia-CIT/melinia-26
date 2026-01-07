@@ -16,6 +16,13 @@ interface Organizer {
   assignedBy: string;
 }
 
+interface Rule {
+  id: number;
+  roundNo: number | null;
+  ruleNumber: number;
+  ruleDescription: string;
+}
+
 interface Event {
   id: string;
   name: string;
@@ -36,6 +43,7 @@ interface Event {
   rounds: Round[];
   prizes: Prize[];
   organizers: Organizer[];
+  rules: Rule[];
 }
 
 interface EventsCardProps {
@@ -114,7 +122,6 @@ const EventsCard = ({ event }: EventsCardProps) => {
   return (
     <Link to={`/app/events/${event.id}`}>
       <div className="group relative bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-700 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10 h-full flex flex-col">
-        {/* Header with gradient background */}
         <div className="relative h-32 overflow-hidden bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-pink-500/20">
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
           <div className="absolute top-4 right-4 flex gap-2">
@@ -124,31 +131,24 @@ const EventsCard = ({ event }: EventsCardProps) => {
           </div>
         </div>
 
-        {/* Content Section */}
         <div className="p-6 flex-1 flex flex-col">
-          {/* Status Badge */}
           <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border mb-4 w-fit ${getStatusColor(event)}`}>
             {getStatusText(event)}
           </span>
 
-          {/* Event Name */}
           <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors">
             {event.name}
           </h3>
 
-          {/* Participation Type Badge */}
           <span className="inline-block px-2 py-1 bg-zinc-800 text-zinc-400 text-xs rounded mb-3 w-fit">
             {event.participationType === "solo" ? "Solo Event" : `Team Event (${event.minTeamSize}-${event.maxTeamSize} members)`}
           </span>
 
-          {/* Description */}
           <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
             {event.description}
           </p>
 
-          {/* Event Details */}
           <div className="space-y-3 mt-auto">
-            {/* Date & Time */}
             <div className="flex items-center gap-2 text-sm text-zinc-400">
               <Calendar className="w-4 h-4 text-purple-400" />
               <span>{formatDate(event.startTime)}</span>
@@ -156,19 +156,16 @@ const EventsCard = ({ event }: EventsCardProps) => {
               <span>{formatTime(event.startTime)}</span>
             </div>
 
-            {/* Venue */}
             <div className="flex items-center gap-2 text-sm text-zinc-400">
               <MapPin className="w-4 h-4 text-purple-400" />
               <span>{event.venue}</span>
             </div>
 
-            {/* Max Participants */}
             <div className="flex items-center gap-2 text-sm text-zinc-400">
               <Users className="w-4 h-4 text-purple-400" />
               <span>Max {event.maxAllowed} {event.participationType === "team" ? "teams" : "participants"}</span>
             </div>
 
-            {/* Prize Pool */}
             {totalPrizePool > 0 && (
               <div className="flex items-center gap-2 text-sm">
                 <Trophy className="w-4 h-4 text-yellow-500" />
@@ -178,7 +175,6 @@ const EventsCard = ({ event }: EventsCardProps) => {
               </div>
             )}
 
-            {/* Rounds Count */}
             {event.rounds && event.rounds.length > 0 && (
               <div className="flex items-center gap-2 text-sm text-zinc-400">
                 <Target className="w-4 h-4 text-purple-400" />
@@ -187,7 +183,6 @@ const EventsCard = ({ event }: EventsCardProps) => {
             )}
           </div>
 
-          {/* Registration Deadline */}
           <div className="mt-4 pt-4 border-t border-zinc-800">
             <p className="text-xs text-zinc-500">
               Registration: {formatDate(event.registrationStart)} - {formatDate(event.registrationEnd)}
@@ -195,7 +190,6 @@ const EventsCard = ({ event }: EventsCardProps) => {
           </div>
         </div>
 
-        {/* Hover Effect Overlay */}
         <div className="absolute inset-0 border-2 border-transparent group-hover:border-purple-500/20 rounded-2xl transition-all duration-300 pointer-events-none" />
       </div>
     </Link>

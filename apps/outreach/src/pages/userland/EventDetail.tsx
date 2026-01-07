@@ -8,7 +8,9 @@ import {
   Trophy, 
   Target, 
   ArrowLeft,
-  AlertCircle
+  AlertCircle,
+  ShieldCheck, // Added for Rules icon
+  ListChecks   // Added for sub-rules icon
 } from "lucide-react";
 import api from "../../services/api";
 import Navigator from "../../components/userland/Navigator";
@@ -26,6 +28,14 @@ interface Prize {
 interface Organizer {
   userId: string;
   assignedBy: string;
+}
+
+// Added Rule Interface
+interface Rule {
+  id: number;
+  roundNo: number | null; // null means General Rule
+  ruleNumber: number;
+  ruleDescription: string;
 }
 
 interface Event {
@@ -48,6 +58,7 @@ interface Event {
   rounds: Round[];
   prizes: Prize[];
   organizers: Organizer[];
+  rules: Rule[]; // Added rules to Event interface
 }
 
 const EventDetail = () => {
@@ -157,6 +168,10 @@ const EventDetail = () => {
 
   const status = getStatusInfo(event);
 
+  // Logic to separate general rules from round rules
+  const generalRules = event.rules?.filter((r) => r.roundNo === null) || [];
+  const getRoundRules = (roundNo: number) => event.rules?.filter((r) => r.roundNo === roundNo) || [];
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <Navigator />
@@ -199,7 +214,7 @@ const EventDetail = () => {
                 <Calendar className="w-6 h-6 text-purple-400" />
                 Event Details
               </h2>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-purple-400 mt-1" />
                   <div>
@@ -240,6 +255,24 @@ const EventDetail = () => {
               </div>
             </div>
 
+            {/* General Guidelines */}
+            {generalRules.length > 0 && (
+              <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <ShieldCheck className="w-6 h-6 text-purple-400" />
+                  General Guidelines
+                </h2>
+                <div className="space-y-3">
+                  {generalRules.map((rule) => (
+                    <div key={rule.id} className="flex gap-3 text-zinc-300 bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/50">
+                      <span className="text-purple-500 font-bold">•</span>
+                      <p className="text-sm leading-relaxed">{rule.ruleDescription}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Rounds */}
             {event.rounds && event.rounds.length > 0 && (
               <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6">
@@ -247,23 +280,43 @@ const EventDetail = () => {
                   <Target className="w-6 h-6 text-purple-400" />
                   Event Rounds
                 </h2>
-                <div className="space-y-4">
-                  {event.rounds.map((round) => (
-                    <div
-                      key={round.roundNo}
-                      className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 font-bold">
-                          {round.roundNo}
+                <div className="space-y-6">
+                  {event.rounds.map((round) => {
+                    const roundRules = getRoundRules(round.roundNo);
+                    return (
+                      <div
+                        key={round.roundNo}
+                        className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-5"
+                      >
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 font-bold">
+                            {round.roundNo}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-white text-lg">Round {round.roundNo}</h3>
+                            <p className="text-sm text-zinc-400">{round.roundDescription}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-white">Round {round.roundNo}</h3>
-                          <p className="text-sm text-zinc-400">{round.roundDescription}</p>
-                        </div>
+
+                        {/* Round Specific Rules */}
+                        {roundRules.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-zinc-700/50">
+                            <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                              <ListChecks className="w-4 h-4" /> Round Rules
+                            </h4>
+                            <ul className="space-y-2">
+                              {roundRules.map((rule) => (
+                                <li key={rule.id} className="text-sm text-zinc-300 flex gap-2">
+                                  <span className="text-purple-500/50 font-medium">{rule.ruleNumber}.</span>
+                                  {rule.ruleDescription}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -320,7 +373,7 @@ const EventDetail = () => {
                   <p className="text-white font-medium">{formatDate(event.registrationEnd)}</p>
                 </div>
               </div>
-              <button className="w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors">
+              <button className="w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors shadow-lg shadow-purple-500/20">
                 Register Now
               </button>
             </div>

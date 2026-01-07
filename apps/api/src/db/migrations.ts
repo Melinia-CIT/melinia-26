@@ -99,6 +99,7 @@ await runMigration("melinia db init", async () => {
             updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
     `
+    
 
     await sql`
         CREATE TABLE IF NOT EXISTS profile (
@@ -453,4 +454,19 @@ await runMigration("add razorpay timestamps to payments table", async () => {
   `
 })
 
+await runMigration("add event rules table ", async () => {
+
+    await sql`
+    CREATE TABLE IF NOT EXISTS event_rules (
+        id SERIAL PRIMARY KEY,
+        event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        round_no INTEGER,
+        rule_number INTEGER NOT NULL,
+        rule_description TEXT NOT NULL,
+        
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
+})
 await sql.end();
