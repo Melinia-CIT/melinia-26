@@ -19,7 +19,7 @@ app.onError((err, c) => {
 
 app.use(
     cors({
-        origin: ["http://localhost:5173", "https://d2ects9rfqf4lr.cloudfront.net"],
+        origin: ["http://localhost:5173", "https://d2ects9rfqf4lr.cloudfront.net", "https://melinia.in"],
         credentials: true
     })
 );
