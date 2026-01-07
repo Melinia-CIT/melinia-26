@@ -67,7 +67,7 @@ const TeamsPage: React.FC = () => {
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
-                <Spinner/>
+                <Spinner w={20} h={20}/>
               </div>
             ) : teams.length > 0 ? (
               teams.map((team) => (
@@ -122,7 +122,7 @@ const TeamsPage: React.FC = () => {
         <div className="space-y-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Spinner/>
+              <Spinner w={20} h={20}/>
             </div>
           ) : teams.length > 0 ? (
             teams.map((team) => (

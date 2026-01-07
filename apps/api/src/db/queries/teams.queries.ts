@@ -336,15 +336,15 @@ export async function inviteTeamMember(input: AddNewMemberRequest, requester_id:
         }
 
         // 7. Check if user has completed payment
-        const paymentDone = await isPaymentDone(email);
-        if (!paymentDone) {
-            return {
-                status: false,
-                statusCode: 402,
-                message: `User "${email}" has not completed payment. They must complete payment before joining a team.`,
-                data: {}
-            };
-        }
+        // const paymentDone = await isPaymentDone(email);
+        // if (!paymentDone) {
+        //     return {
+        //         status: false,
+        //         statusCode: 402,
+        //         message: `User "${email}" has not completed payment. They must complete payment before joining a team.`,
+        //         data: {}
+        //     };
+        // }
 
         // 8. Check if user has completed profile
         const profileCompleted = await checkProfileExists(invitee_id);
