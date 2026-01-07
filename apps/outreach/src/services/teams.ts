@@ -1,5 +1,5 @@
 import api from './api';
-import {type CreateTeam} from "@melinia/shared";
+import {type CreateTeam, type AddNewMemberRequest} from "@melinia/shared";
 
 export class TeamManagementService{
     private static instance: TeamManagementService;
@@ -31,7 +31,20 @@ export class TeamManagementService{
         const response = await api.get(`/teams`);
         return response.data;
     }
-    
+  
+    public getInvitations = async (invitationID:number)=>{
+        const response = await api.get(`/teams/pending_invitations/${invitationID}`);
+        return response.data;
+    }
+    public deleteInvitation = async (teamID:string, invitationID:string)=>{
+        const response = await api.delete(`/teams/${teamID}/pending_invitations/${invitationID}`);
+        return response;
+    }
+
+    public addMember = async (emailID:AddNewMemberRequest, teamID:string)=>{
+        const response = await api.post(`/teams/${teamID}/members`, emailID);
+        return response;
+    }
 
 };
 

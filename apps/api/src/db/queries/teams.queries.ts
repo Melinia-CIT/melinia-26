@@ -5,7 +5,9 @@ import {
     type RespondInvitationRequest,
     type DeleteTeamMemberRequest,
     type UpdateTeamRequest,
-    type addNewMemberRequest,
+    type AddNewMemberRequest,
+    type TeamDetails,
+    addNewMemberSchema,
     createTeamSchema,
     respondInvitationSchema,
     deleteTeamMemberSchema,
@@ -57,13 +59,14 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
 
         const leaderPaymentDone = await isPaymentDone(leaderUser.email);
         if (!leaderPaymentDone) {
-            return {
-                status: false,
-                statusCode: 402,
-                message: 'Payment not completed. Please complete payment before creating a team.',
-                data: {}
-            };
-        }
+            //throw new HTTPException(402, {message:"Payment not done"});
+        //     return {
+        //         status: false,
+        //         statusCode: 402,
+        //         message: 'Payment not completed. Please complete payment before creating a team.',
+        //         data: {}
+        //     };
+         }
 
         // 2. Check if leader has completed profile
         const leaderProfileCompleted = await checkProfileExists(leader_id);
@@ -130,12 +133,12 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
                     continue;
                 }
 
-                // Check if user belongs to same college
-                if (user.college_id !== leader_college_id) {
-                    differentCollegeEmails.push(email);
-                    continue;
+                // Check if user has completed profile
+                const profileCompleted = await checkProfileExists(user.id);
+                if (!profileCompleted) {
+                    profileNotCompletedEmails.push(email);
                 }
-
+ 
                 // Check if user has completed payment
                 const paymentDone = await isPaymentDone(email);
                 if (!paymentDone) {
@@ -143,12 +146,13 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
                     continue;
                 }
 
-                // Check if user has completed profile
-                const profileCompleted = await checkProfileExists(user.id);
-                if (!profileCompleted) {
-                    profileNotCompletedEmails.push(email);
-                }
-            }
+                // Check if user belongs to same college
+                if (user.college_id !== leader_college_id) {
+                    differentCollegeEmails.push(email);
+                    continue;
+                }    
+
+           }
 
             if (invalidEmails.length > 0) {
                 return {
@@ -158,6 +162,17 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
                     data: { invalid_emails: invalidEmails }
                 };
             }
+            if (profileNotCompletedEmails.length > 0) {
+                console.log(profileNotCompletedEmails.length);
+                
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: `Profile not completed for these user(s): ${profileNotCompletedEmails.join(', ')}. They must complete their profile before joining a team.`,
+                    data: { profile_not_completed_emails: profileNotCompletedEmails }
+                };
+            }
+
             if (paymentNotDoneEmails.length > 0) {
                 return {
                     status: false,
@@ -167,16 +182,10 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
                 };
             }
 
-            if (profileNotCompletedEmails.length > 0) {
-                return {
-                    status: false,
-                    statusCode: 400,
-                    message: `Profile not completed for these user(s): ${profileNotCompletedEmails.join(', ')}. They must complete their profile before joining a team.`,
-                    data: { profile_not_completed_emails: profileNotCompletedEmails }
-                };
-            }
- 
+
             if (differentCollegeEmails.length > 0) {
+                console.log(differentCollegeEmails.length);
+                
                 return {
                     status: false,
                     statusCode: 400,
@@ -243,7 +252,7 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
 }
 
 // Invite Team Member (Same College Only)
-export async function inviteTeamMember(input: addNewMemberRequest, requester_id: string, team_id: string) {
+export async function inviteTeamMember(input: AddNewMemberRequest, requester_id: string, team_id: string) {
     try {
         const { email } = input;
 

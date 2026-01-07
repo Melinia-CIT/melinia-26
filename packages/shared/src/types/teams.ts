@@ -85,10 +85,11 @@ export type RespondInvitationRequest = z.infer<typeof respondInvitationSchema>;
 export type DeleteTeamRequest = z.infer<typeof deleteTeamSchema>;
 export type DeleteTeamMemberRequest = z.infer<typeof deleteTeamMemberSchema>;
 export type UpdateTeamRequest = z.infer<typeof updateTeamSchema>;
-export type addNewMemberRequest = z.infer<typeof addNewMemberSchema>
+export type AddNewMemberRequest = z.infer<typeof addNewMemberSchema>
 export type TeamDetails = z.infer<typeof teamDetailsSchema>;
 export type TeamMember = z.infer<typeof memberSchema>;
 export type RegisteredEvents = z.infer<typeof eventSchema>;
+
 
 // Optional: Additional useful schemas
 
