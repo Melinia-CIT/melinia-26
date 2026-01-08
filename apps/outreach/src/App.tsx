@@ -24,21 +24,17 @@ function App() {
                     <Route path="/register" element={<Register />} />
                 </Route>
 
-		<Route element={<ProtectedRoute />}>
-			<Route path="/app" element={<AppLayout />}>
-				<Route index element={<Main />} />
-				<Route path="events" />
-				<Route path="leaderboard" element={<Leaderboard />} />
-				<Route path="leaderboard" />
-				<Route path="teams" element={<Teams/>}/>
-			</Route>
-		</Route>
-	    </Routes>
-
- 	</BrowserRouter>
-	);
-
-
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/app" element={<AppLayout />}>
+                        <Route index element={<Main />} />
+                        <Route path="events" element={<Main />} />
+                        <Route path="leaderboard" element={<Leaderboard />} />
+                        <Route path="teams" element={<Teams />} />
+                    </Route>
+                </Route>
+            </Routes>
+        </BrowserRouter>
+    )
 }
 
 export default App
