@@ -16,6 +16,9 @@ export const prizeSchema = z.object({
 export const organizerSchema = z.object({
     userId: z.string().min(1, "User ID is required"),
     assignedBy: z.string().nullable().optional(),
+    firstName: z.string().nullable().optional(),
+    lastName: z.string().nullable().optional(),
+    phoneNo: z.string().nullable().optional()
 });
 
 export const eventRuleSchema = z.object({
