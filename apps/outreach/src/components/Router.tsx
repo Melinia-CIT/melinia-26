@@ -18,7 +18,7 @@ export const ProtectedRoute = () => {
     useEffect(() => {
         // Handler for when connection is lost
         const handleOffline = () => {
-            toast.error("You gone Offline, Kindly check your internet connection", {
+            toast.error("Kindly check your internet connection", {
                 id: 'network-status', // Unique ID to prevent duplicates
                 duration: Infinity,   // Keeps the toast visible until fixed
             });

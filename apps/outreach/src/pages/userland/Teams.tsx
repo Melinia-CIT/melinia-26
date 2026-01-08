@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { TeamDetailsPanel } from '../../components/userland/teams/TeamDetailsPanel';
 import { TeamListItem } from '../../components/userland/teams/TeamList';
 import { TeamModal } from '../../components/userland/teams/TeamModel';
-import { Spinner } from '@melinia/outreach/src/components/common/Spinner';
+import { Spinner } from '../../components/common/Spinner';
 import { CreateTeamForm } from '../../components/userland/teams/TeamForm';
 import type { Team } from '@melinia/shared';
 import { team_management } from '../../services/teams';
