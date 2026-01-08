@@ -1,47 +1,159 @@
 import { useState } from "react";
 import { Plus, Edit, Trash2, X } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import {
+    fetchEvents,
+    createEvent as createEventRequest,
+    updateEvent as updateEventRequest,
+    deleteEvent as deleteEventRequest,
+} from "../../services/events";
+import { type Event as ApiEvent } from "@melinia/shared";
 
-interface Event {
-    id: string;
-    eventName: string;
+type FormState = {
+    name: string;
     description: string;
-    participantType: "solo" | "team";
-    eventType: "tech" | "non-tech";
-    maxPeopleAllowed: number;
-    minTeamSize: number;
-    maxTeamSize: number;
+    participationType: "solo" | "team";
+    eventType: "technical" | "non-technical" | "flagship";
+    maxAllowed: number;
+    minTeamSize: number | null;
+    maxTeamSize: number | null;
     venue: string;
-    registrationStartTime: string;
-    registrationEndTime: string;
-    eventStartTime: string;
-    eventEndTime: string;
-}
+    startTime: string;
+    endTime: string;
+    registrationStart: string;
+    registrationEnd: string;
+};
+
+const emptyForm: FormState = {
+    name: "",
+    description: "",
+    participationType: "solo",
+    eventType: "technical",
+    maxAllowed: 0,
+    minTeamSize: 1,
+    maxTeamSize: 1,
+    venue: "",
+    startTime: "",
+    endTime: "",
+    registrationStart: "",
+    registrationEnd: "",
+};
+
+const formatDateTimeLocal = (value: string | Date) => {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 16);
+};
 
 const EventManagement = () => {
-    const [events, setEvents] = useState<Event[]>([]);
+    const queryClient = useQueryClient();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-    const [formData, setFormData] = useState<Omit<Event, "id">>({
-        eventName: "",
-        description: "",
-        participantType: "solo",
-        eventType: "tech",
-        maxPeopleAllowed: 0,
-        minTeamSize: 1,
-        maxTeamSize: 1,
-        venue: "",
-        registrationStartTime: "",
-        registrationEndTime: "",
-        eventStartTime: "",
-        eventEndTime: "",
+    const [editingEvent, setEditingEvent] = useState<ApiEvent | null>(null);
+    const [formData, setFormData] = useState<FormState>(emptyForm);
+
+    const getUserRole = () => localStorage.getItem("userRole");
+
+    const ensureAdminAuth = () => {
+        const token = localStorage.getItem("accessToken");
+        const role = getUserRole();
+        if (!token || role !== "admin") {
+            toast.error("Admin access required. Please log in with admin credentials.");
+            return false;
+        }
+        return true;
+    };
+
+    const ensureOrganizerOrAdminAuth = () => {
+        const token = localStorage.getItem("accessToken");
+        const role = getUserRole();
+        if (!token) {
+            toast.error("Please log in to perform this action.");
+            return false;
+        }
+        if (role !== "admin" && role !== "organizer") {
+            toast.error("You must be an admin or organizer to edit events.");
+            return false;
+        }
+        return true;
+    };
+
+    const { data: events = [], isLoading: isEventsLoading } = useQuery({
+        queryKey: ["events"],
+        queryFn: fetchEvents,
+    });
+
+    const normalizePayload = (payload: FormState, includeCreatedBy: boolean = false) => {
+        const normalized = {
+            name: payload.name,
+            description: payload.description,
+            participationType: payload.participationType,
+            eventType: payload.eventType,
+            maxAllowed: Number(payload.maxAllowed),
+            minTeamSize: payload.minTeamSize ? Number(payload.minTeamSize) : null,
+            maxTeamSize: payload.maxTeamSize ? Number(payload.maxTeamSize) : null,
+            venue: payload.venue,
+            startTime: new Date(payload.startTime).toISOString(),
+            endTime: new Date(payload.endTime).toISOString(),
+            registrationStart: new Date(payload.registrationStart).toISOString(),
+            registrationEnd: new Date(payload.registrationEnd).toISOString(),
+        };
+        
+        if (includeCreatedBy) {
+            const userEmail = localStorage.getItem('userEmail');
+            return { ...normalized, createdBy: userEmail };
+        }
+        
+        return normalized;
+    };
+
+    const createMutation = useMutation({
+        mutationFn: createEventRequest,
+        onSuccess: () => {
+            toast.success("Event created successfully");
+            queryClient.invalidateQueries({ queryKey: ["events"] });
+            closeModal();
+        },
+        onError: (err: any) => {
+            console.error("Create event failed", err);
+            const message = err?.response?.data?.message ?? "Failed to create event";
+            toast.error(message);
+        },
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: FormState }) =>
+            updateEventRequest(id, normalizePayload(payload)),
+        onSuccess: () => {
+            toast.success("Event updated successfully");
+            queryClient.invalidateQueries({ queryKey: ["events"] });
+            closeModal();
+        },
+        onError: (err: any) => {
+            console.error("Update event failed", err);
+            const message = err?.response?.data?.message ?? "Failed to update event";
+            toast.error(message);
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteEventRequest,
+        onSuccess: () => {
+            toast.success("Event deleted successfully");
+            queryClient.invalidateQueries({ queryKey: ["events"] });
+        },
+        onError: (err: any) => {
+            console.error("Delete event failed", err);
+            const message = err?.response?.data?.message ?? "Failed to delete event";
+            toast.error(message);
+        },
     });
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        const numericFields = ["maxAllowed", "minTeamSize", "maxTeamSize"];
         setFormData((prev) => ({
             ...prev,
-            [name]: name.includes("Size") || name === "maxPeopleAllowed" ? Number(value) : value,
+            [name]: numericFields.includes(name) ? (value === "" ? null : Number(value)) : value,
         }));
     };
 
@@ -49,47 +161,47 @@ const EventManagement = () => {
         e.preventDefault();
         
         if (editingEvent) {
-            setEvents(events.map((event) => (event.id === editingEvent.id ? { ...formData, id: editingEvent.id } : event)));
-            toast.success("Event updated successfully!");
+            // Edit requires admin or organizer
+            if (!ensureOrganizerOrAdminAuth()) return;
+            updateMutation.mutate({ id: editingEvent.id, payload: normalizePayload(formData, false) });
         } else {
-            const newEvent = { ...formData, id: Date.now().toString() };
-            setEvents([...events, newEvent]);
-            toast.success("Event created successfully!");
+            // Create requires admin only
+            if (!ensureAdminAuth()) return;
+            createMutation.mutate(normalizePayload(formData, true));
         }
-        
-        closeModal();
     };
 
-    const handleEdit = (event: Event) => {
+    const handleEdit = (event: ApiEvent) => {
         setEditingEvent(event);
-        setFormData(event);
+        setFormData({
+            name: event.name,
+            description: event.description,
+            participationType: event.participationType,
+            eventType: event.eventType,
+            maxAllowed: event.maxAllowed,
+            minTeamSize: event.minTeamSize ?? null,
+            maxTeamSize: event.maxTeamSize ?? null,
+            venue: event.venue,
+            startTime: formatDateTimeLocal(event.startTime),
+            endTime: formatDateTimeLocal(event.endTime),
+            registrationStart: formatDateTimeLocal(event.registrationStart),
+            registrationEnd: formatDateTimeLocal(event.registrationEnd),
+        });
         setIsModalOpen(true);
     };
 
     const handleDelete = (id: string) => {
+        // Delete requires admin only
+        if (!ensureAdminAuth()) return;
         if (confirm("Are you sure you want to delete this event?")) {
-            setEvents(events.filter((event) => event.id !== id));
-            toast.success("Event deleted successfully!");
+            deleteMutation.mutate(id);
         }
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
         setEditingEvent(null);
-        setFormData({
-            eventName: "",
-            description: "",
-            participantType: "solo",
-            eventType: "tech",
-            maxPeopleAllowed: 0,
-            minTeamSize: 1,
-            maxTeamSize: 1,
-            venue: "",
-            registrationStartTime: "",
-            registrationEndTime: "",
-            eventStartTime: "",
-            eventEndTime: "",
-        });
+        setFormData(emptyForm);
     };
 
     return (
@@ -119,7 +231,13 @@ const EventManagement = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-800">
-                            {events.length === 0 ? (
+                            {isEventsLoading ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">
+                                        Loading events...
+                                    </td>
+                                </tr>
+                            ) : events.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">
                                         No events found. Click "Add Event" to create one.
@@ -128,15 +246,15 @@ const EventManagement = () => {
                             ) : (
                                 events.map((event) => (
                                     <tr key={event.id} className="hover:bg-zinc-800/50">
-                                        <td className="px-6 py-4 text-sm">{event.eventName}</td>
+                                        <td className="px-6 py-4 text-sm">{event.name}</td>
                                         <td className="px-6 py-4 text-sm">
-                                            <span className="px-2 py-1 bg-zinc-800 rounded text-xs">
-                                                {event.eventType}
+                                            <span className="px-2 py-1 bg-zinc-800 rounded text-xs capitalize">
+                                                {event.eventType.replace("-", " ")}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm">
-                                            <span className="px-2 py-1 bg-zinc-800 rounded text-xs">
-                                                {event.participantType}
+                                            <span className="px-2 py-1 bg-zinc-800 rounded text-xs capitalize">
+                                                {event.participationType}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm">{event.venue}</td>
@@ -145,12 +263,14 @@ const EventManagement = () => {
                                                 <button
                                                     onClick={() => handleEdit(event)}
                                                     className="p-2 hover:bg-zinc-700 rounded transition"
+                                                    disabled={deleteMutation.isPending}
                                                 >
                                                     <Edit size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(event.id)}
-                                                    className="p-2 hover:bg-red-900/20 text-red-400 rounded transition"
+                                                    className="p-2 hover:bg-red-900/20 text-red-400 rounded transition disabled:opacity-50"
+                                                    disabled={deleteMutation.isPending}
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
@@ -181,8 +301,8 @@ const EventManagement = () => {
                                 <label className="block text-sm font-medium mb-2">Event Name</label>
                                 <input
                                     type="text"
-                                    name="eventName"
-                                    value={formData.eventName}
+                                    name="name"
+                                    value={formData.name}
                                     onChange={handleInputChange}
                                     required
                                     className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-600"
@@ -205,8 +325,8 @@ const EventManagement = () => {
                                 <div>
                                     <label className="block text-sm font-medium mb-2">Participant Type</label>
                                     <select
-                                        name="participantType"
-                                        value={formData.participantType}
+                                        name="participationType"
+                                        value={formData.participationType}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-600"
                                     >
@@ -223,8 +343,9 @@ const EventManagement = () => {
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-600"
                                     >
-                                        <option value="tech">Tech</option>
-                                        <option value="non-tech">Non-Tech</option>
+                                        <option value="technical">Technical</option>
+                                        <option value="non-technical">Non-Technical</option>
+                                        <option value="flagship">Flagship</option>
                                     </select>
                                 </div>
                             </div>
@@ -234,8 +355,8 @@ const EventManagement = () => {
                                     <label className="block text-sm font-medium mb-2">Max People</label>
                                     <input
                                         type="number"
-                                        name="maxPeopleAllowed"
-                                        value={formData.maxPeopleAllowed}
+                                        name="maxAllowed"
+                                        value={formData.maxAllowed ?? ""}
                                         onChange={handleInputChange}
                                         required
                                         min="1"
@@ -248,9 +369,8 @@ const EventManagement = () => {
                                     <input
                                         type="number"
                                         name="minTeamSize"
-                                        value={formData.minTeamSize}
+                                        value={formData.minTeamSize ?? ""}
                                         onChange={handleInputChange}
-                                        required
                                         min="1"
                                         className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-600"
                                     />
@@ -261,9 +381,8 @@ const EventManagement = () => {
                                     <input
                                         type="number"
                                         name="maxTeamSize"
-                                        value={formData.maxTeamSize}
+                                        value={formData.maxTeamSize ?? ""}
                                         onChange={handleInputChange}
-                                        required
                                         min="1"
                                         className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-600"
                                     />
@@ -287,8 +406,8 @@ const EventManagement = () => {
                                     <label className="block text-sm font-medium mb-2">Registration Start</label>
                                     <input
                                         type="datetime-local"
-                                        name="registrationStartTime"
-                                        value={formData.registrationStartTime}
+                                        name="registrationStart"
+                                        value={formData.registrationStart}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-600"
@@ -299,8 +418,8 @@ const EventManagement = () => {
                                     <label className="block text-sm font-medium mb-2">Registration End</label>
                                     <input
                                         type="datetime-local"
-                                        name="registrationEndTime"
-                                        value={formData.registrationEndTime}
+                                        name="registrationEnd"
+                                        value={formData.registrationEnd}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-600"
@@ -313,8 +432,8 @@ const EventManagement = () => {
                                     <label className="block text-sm font-medium mb-2">Event Start</label>
                                     <input
                                         type="datetime-local"
-                                        name="eventStartTime"
-                                        value={formData.eventStartTime}
+                                        name="startTime"
+                                        value={formData.startTime}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-600"
@@ -325,8 +444,8 @@ const EventManagement = () => {
                                     <label className="block text-sm font-medium mb-2">Event End</label>
                                     <input
                                         type="datetime-local"
-                                        name="eventEndTime"
-                                        value={formData.eventEndTime}
+                                        name="endTime"
+                                        value={formData.endTime}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-600"
@@ -337,9 +456,16 @@ const EventManagement = () => {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-white text-zinc-900 rounded-lg hover:bg-zinc-200 transition font-semibold"
+                                    disabled={createMutation.isPending || updateMutation.isPending}
+                                    className="flex-1 px-4 py-2 bg-white text-zinc-900 rounded-lg hover:bg-zinc-200 transition font-semibold disabled:opacity-60"
                                 >
-                                    {editingEvent ? "Update Event" : "Create Event"}
+                                    {editingEvent
+                                        ? updateMutation.isPending
+                                            ? "Updating..."
+                                            : "Update Event"
+                                        : createMutation.isPending
+                                            ? "Creating..."
+                                            : "Create Event"}
                                 </button>
                                 <button
                                     type="button"

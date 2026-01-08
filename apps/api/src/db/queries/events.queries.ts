@@ -237,7 +237,6 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
     const eventId = input.id;
     const minTeamSize = data.minTeamSize ?? 1;
     const maxTeamSize = data.maxTeamSize ?? null;
-    const createdBy = data.createdBy ?? null;
 
     try {
         if (data.organizers && data.organizers.length > 0) {
@@ -260,7 +259,7 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
                 max_team_size = ${maxTeamSize}, venue = ${data.venue},
                 start_time = ${data.startTime}, end_time = ${data.endTime},
                 registration_start = ${data.registrationStart}, registration_end = ${data.registrationEnd},
-                created_by = ${createdBy}, updated_at = NOW()
+                updated_at = NOW()
             WHERE id = ${eventId} RETURNING *;
         `;
 
