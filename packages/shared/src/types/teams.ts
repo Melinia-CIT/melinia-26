@@ -1,19 +1,19 @@
 import { z } from 'zod';
+import { invitationStatusSchema } from '.';
 
 export const teamSchema = z.object({
   id: z.string().min(1, "Team ID is required"),
-  name: z.string().min(1, "Team name is required").max(255, "Team name is too long"),
+  team_name: z.string().min(1, "Team name is required").max(255, "Team name is too long"),
   leader_id: z.string().min(1, "Leader ID is required"),
-  event_id: z.string().min(1, "Event ID is required")
+  member_count: z.number().nonnegative()
 });
 
 // Create team schema - member_emails should be optional or have validation
 export const createTeamSchema = z.object({
   name: z.string().min(1, "Team name is required").max(255, "Team name is too long"),
-  event_id: z.string().min(1, "Event ID is required").nullable().optional(),
   member_emails: z.array(
     z.string().email("Invalid email format")
-  ).optional().default([])
+  )
 });
 
 // Delete team schema
@@ -42,8 +42,43 @@ export const updateTeamSchema = z.object({
 });
 export const addNewMemberSchema = z.object({
   email: z.string().email("Invalid email format"),
-  team_id: z.string().min(1, "Invalid Team ID")
-})
+});
+
+export const memberSchema = z.object({
+  user_id: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+  email: z.string().email(),
+});
+const pendingInviteSchema = z.object({
+  invitation_id: z.number().int().positive(),
+  user_id: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+  email: z.string().email(),
+});
+
+const eventSchema = z.object({
+  event_id: z.string(),
+  event_name: z.string(),
+});
+
+export const teamDetailsSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+
+  leader_id: z.string(),
+  leader_first_name: z.string(),
+  leader_last_name: z.string(),
+  leader_email: z.string().email(),
+
+  members: z.array(memberSchema),
+  pending_invites: z.array(pendingInviteSchema),
+
+  events_registered: z.array(eventSchema),
+
+  team_size: z.number().int().nonnegative(),
+});
 // Type exports
 export type Team = z.infer<typeof teamSchema>;
 export type CreateTeam = z.infer<typeof createTeamSchema>;
@@ -51,7 +86,11 @@ export type RespondInvitationRequest = z.infer<typeof respondInvitationSchema>;
 export type DeleteTeamRequest = z.infer<typeof deleteTeamSchema>;
 export type DeleteTeamMemberRequest = z.infer<typeof deleteTeamMemberSchema>;
 export type UpdateTeamRequest = z.infer<typeof updateTeamSchema>;
-export type addNewMemberRequest = z.infer<typeof addNewMemberSchema>
+export type AddNewMemberRequest = z.infer<typeof addNewMemberSchema>
+export type TeamDetails = z.infer<typeof teamDetailsSchema>;
+export type TeamMember = z.infer<typeof memberSchema>;
+export type RegisteredEvents = z.infer<typeof eventSchema>;
+
 
 // Optional: Additional useful schemas
 

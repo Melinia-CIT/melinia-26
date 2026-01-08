@@ -192,12 +192,13 @@ teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: 
     }
 })
 // Add a new member //
-teamRouter.post("/add_member", authMiddleware, zValidator("json", addNewMemberSchema), async (c) => {
+teamRouter.post("/:team_id/members", authMiddleware, zValidator("json", addNewMemberSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
+        const teamID = c.req.param('team_id');
         const formData = await c.req.valid('json');
 
-        const { statusCode, status, data, message } = await inviteTeamMember(formData, user_id);
+        const { statusCode, status, data, message } = await inviteTeamMember(formData, user_id, teamID);
 
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
