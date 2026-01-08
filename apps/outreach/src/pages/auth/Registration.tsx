@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { sendOTP, verifyOTP, register } from "../../services/auth";
@@ -15,6 +15,24 @@ const Registration = () => {
     const [timer, setTimer] = useState(60);
     const [canResend, setCanResend] = useState(true);
     const [isOtpVerified, setIsOtpVerified] = useState(false);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+
+        // If timer is greater than 0 and we are waiting, start the interval
+        if (timer > 0 && !canResend) {
+            interval = setInterval(() => {
+                setTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        // If timer hits 0, allow resending
+        else if (timer === 0) {
+            setCanResend(true);
+        }
+
+        // Cleanup interval on unmount or when dependency changes
+        return () => clearInterval(interval);
+    }, [timer, canResend]);
 
 
     // 1. Send OTP Mutation
@@ -68,6 +86,10 @@ const Registration = () => {
     // Called by EmailForm on success
     const handleEmailSuccess = (data: { email: string }) => {
         setUserEmail(data.email);
+
+        setTimer(60);
+        setCanResend(false);
+
         setCurrentStep(2);
     };
 
