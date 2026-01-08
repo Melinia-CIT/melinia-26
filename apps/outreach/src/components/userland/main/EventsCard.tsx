@@ -122,7 +122,7 @@ const EventsCard = ({ event }: EventsCardProps) => {
   return (
     <Link to={`/app/events/${event.id}`}>
       <div className="group relative bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-700 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10 h-full flex flex-col">
-        <div className="relative h-32 overflow-hidden bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-pink-500/20">
+        <div className="relative h-25 overflow-hidden bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-pink-500/20">
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
           <div className="absolute top-4 right-4 flex gap-2">
             <span className={`px-2 py-1 rounded text-xs font-semibold ${getEventTypeColor(event.eventType)}`}>
@@ -131,7 +131,7 @@ const EventsCard = ({ event }: EventsCardProps) => {
           </div>
         </div>
 
-        <div className="p-6 flex-1 flex flex-col">
+        <div className="p-3 flex-1 flex flex-col">
           <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border mb-4 w-fit ${getStatusColor(event)}`}>
             {getStatusText(event)}
           </span>

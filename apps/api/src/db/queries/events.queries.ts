@@ -171,8 +171,7 @@ export async function getEvents() {
                 organizers: organizersByEvent[id] ?? [],
                 rules: rulesByEvent[id] ?? [],
             };
-            // Sorting rules logic here...
-            return eventSchema.parse(eventObj); // Correct Parsing
+            return eventSchema.parse(eventObj);
         });
 
         return { status: true, statusCode: 200, message: "Events fetched successfully", data: fullEvents };
