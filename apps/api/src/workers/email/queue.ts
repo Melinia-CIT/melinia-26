@@ -1,8 +1,8 @@
 import { Queue } from "bullmq";
-import { redis } from "bun";
+import { ioredis } from "../../utils/redis";
 
 export const emailQueue = new Queue("email-queue", {
-    connection: redis,
+    connection: ioredis,
     defaultJobOptions: {
         attempts: 2,
         backoff: {

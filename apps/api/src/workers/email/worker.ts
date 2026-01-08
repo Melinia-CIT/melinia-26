@@ -2,7 +2,7 @@ import { Worker } from "bullmq";
 import { ses } from "../../utils/ses";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 import { getEnv } from "../../utils/lib";
-import { redis } from "../../utils/redis";
+import { ioredis } from "../../utils/redis";
 
 const RATE_LIMIT = {
     max: 10,
@@ -59,7 +59,7 @@ const emailWorker = new Worker(
         return { messageId: result.MessageId };
     },
     {
-        connection: redis,
+        connection: ioredis,
         concurrency: 5,
         limiter: RATE_LIMIT
     }
