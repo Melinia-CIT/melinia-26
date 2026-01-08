@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -12,7 +13,8 @@ import {
   ShieldCheck,
   ListChecks,
   Phone,
-  User2 
+  User2,
+  ChevronDown // Added for dropdown icon
 } from "lucide-react";
 import api from "../../services/api";
 
@@ -64,6 +66,9 @@ interface Event {
 const EventDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  
+  // State to track which round's rules are expanded
+  const [expandedRound, setExpandedRound] = useState<number | null>(null);
 
   const { data: event, isLoading, error } = useQuery<Event>({
     queryKey: ["event", id],
@@ -123,6 +128,10 @@ const EventDetail = () => {
     } else {
       return { text: "Registration Closed", color: "bg-red-500/10 text-red-400 border-red-500/20" };
     }
+  };
+
+  const toggleRound = (roundNo: number) => {
+    setExpandedRound(expandedRound === roundNo ? null : roundNo);
   };
 
   if (isLoading) {
@@ -246,45 +255,106 @@ const EventDetail = () => {
             </div>
           )}
 
-          {/* Rounds */}
+          {/* Rounds with Dropdown Accordion */}
           {event.rounds && event.rounds.length > 0 && (
             <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6">
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <Target className="w-6 h-6 text-purple-400" />
                 Event Rounds
               </h2>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {event.rounds.map((round) => {
                   const roundRules = getRoundRules(round.roundNo);
+                  const isExpanded = expandedRound === round.roundNo;
+                  
                   return (
-                    <div key={round.roundNo} className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-5">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 font-bold">
-                          {round.roundNo}
+                    <div key={round.roundNo} className="bg-zinc-800/50 border border-zinc-700 rounded-2xl overflow-hidden">
+                      {/* Clickable Header */}
+                      <button 
+                        onClick={() => toggleRound(round.roundNo)}
+                        className="w-full flex items-center justify-between p-5 text-left hover:bg-zinc-800/80 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 font-bold">
+                            {round.roundNo}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-white text-lg">Round {round.roundNo}</h3>
+                            <p className="text-sm text-zinc-400">{round.roundDescription}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-white text-lg">Round {round.roundNo}</h3>
-                          <p className="text-sm text-zinc-400">{round.roundDescription}</p>
+                        <ChevronDown 
+                          className={`w-6 h-6 text-zinc-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} 
+                        />
+                      </button>
+
+                      {/* Dropdown Content */}
+                      <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[500px] border-t border-zinc-700/50' : 'max-h-0'}`}>
+                        <div className="p-5 bg-zinc-900/30">
+                          {roundRules.length > 0 ? (
+                            <div className="space-y-4">
+                              <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                                <ListChecks className="w-4 h-4" /> Round Rules
+                              </h4>
+                              <ul className="space-y-2">
+                                {roundRules.map((rule) => (
+                                  <li key={rule.id} className="text-sm text-zinc-300 flex gap-2">
+                                    <span className="text-purple-500/50 font-medium">{rule.ruleNumber}.</span>
+                                    {rule.ruleDescription}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-zinc-500 italic text-center">No specific rules listed for this round.</p>
+                          )}
                         </div>
                       </div>
-                      {roundRules.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-zinc-700/50">
-                          <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <ListChecks className="w-4 h-4" /> Round Rules
-                          </h4>
-                          <ul className="space-y-2">
-                            {roundRules.map((rule) => (
-                              <li key={rule.id} className="text-sm text-zinc-300 flex gap-2">
-                                <span className="text-purple-500/50 font-medium">{rule.ruleNumber}.</span>
-                                {rule.ruleDescription}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+          {/* Prizes Section */}
+          {event.prizes && event.prizes.length > 0 && (
+            <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-yellow-500" />
+                Prize Pool
+              </h2>
+              <div className="mb-6">
+                <p className="text-3xl font-bold text-yellow-500">
+                  ₹{totalPrizePool.toLocaleString()}
+                </p>
+                <p className="text-sm text-zinc-400">Total Prize Money</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Specifically filter and display 1st and 2nd for emphasis */}
+                {event.prizes
+                  .sort((a, b) => a.position - b.position)
+                  .slice(0, 2)
+                  .map((prize) => (
+                    <div
+                      key={prize.position}
+                      className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700 rounded-xl p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`flex items-center justify-center w-10 h-10 rounded-full font-bold ${
+                          prize.position === 1 ? "bg-yellow-500/20 text-yellow-500" : "bg-zinc-400/20 text-zinc-400"
+                        }`}>
+                          {prize.position}
+                        </div>
+                        <span className="font-medium text-white">
+                          {prize.position === 1 ? "First Prize" : "Second Prize"}
+                        </span>
+                      </div>
+                      <span className="text-xl font-bold text-yellow-500">
+                        ₹{prize.rewardValue.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
           )}
@@ -292,7 +362,6 @@ const EventDetail = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Registration Card */}
           <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6 sticky top-6">
             <h3 className="text-xl font-bold mb-4">Registration</h3>
             <div className="space-y-4 mb-6">
@@ -310,26 +379,6 @@ const EventDetail = () => {
             </button>
           </div>
 
-          {/* Quick Stats */}
-          <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6">
-            <h3 className="text-xl font-bold mb-4">Quick Stats</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-400">Event Type</span>
-                <span className="text-white font-medium capitalize">{event.eventType}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-400">Format</span>
-                <span className="text-white font-medium capitalize">{event.participationType}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-400">Total Prize Pool</span>
-                <span className="text-yellow-500 font-bold">₹{totalPrizePool.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Organizers Section - Now maps directly from event.organizers */}
           {event.organizers && event.organizers.length > 0 && (
             <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
