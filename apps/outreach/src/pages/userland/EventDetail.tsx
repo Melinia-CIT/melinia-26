@@ -13,8 +13,12 @@ import {
   ShieldCheck,
   ListChecks,
   Phone,
+<<<<<<< HEAD
   User2,
   ChevronDown // Added for dropdown icon
+=======
+  User2 
+>>>>>>> be7eadf (Adjusted the layout for displaying the events)
 } from "lucide-react";
 import api from "../../services/api";
 
@@ -367,8 +371,11 @@ const EventDetail = () => {
                           {prize.position === 1 ? "First Prize" : "Second Prize"}
                         </span>
                       </div>
-                      <span className="text-xl font-bold text-yellow-500">
-                        ₹{prize.rewardValue.toLocaleString()}
+                    </div>
+                    <div className="flex items-center gap-2 pt-2 border-t border-zinc-700/50">
+                      <Phone className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <span className="text-sm text-zinc-300 font-medium">
+                        {organizer.phoneNo}
                       </span>
                     </div>
                   ))}
