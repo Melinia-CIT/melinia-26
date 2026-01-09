@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   AlertCircle,
   ShieldCheck,
-  ListChecks,
   Phone,
   User2,
   ChevronDown 
