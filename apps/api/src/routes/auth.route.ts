@@ -11,8 +11,22 @@ import { createAccessToken, createRefreshToken, verifyToken } from "../utils/jwt
 import { createHash } from "crypto";
 import { sendOTP, sendResetLink } from "../workers/email/service";
 import { createRateLimiter } from "../middleware/ratelimiter.middleware";
+import type { CookieOptions } from "hono/utils/cookie";
 
 export const auth = new Hono();
+
+const getCookieOptions = (maxAge: number, path: string = "/") => {
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    return {
+        httpOnly: true,
+        secure: !isDev,
+        sameSite: isDev ? "Lax" : "Strict" as const,
+        path: path,
+        maxAge,
+        domain: isDev ? undefined : ".melinia.in"
+    } as CookieOptions;
+};
 
 auth.post("/send-otp",
     zValidator("json", generateOTPSchema),
@@ -31,7 +45,6 @@ auth.post("/send-otp",
 
         // console.log(`${email}:${OTP}`);
         const jobId = await sendOTP(email, OTP);
-        console.log(jobId);
         if (!jobId) {
             console.error(`Failed to send OTP to ${email}`);
             throw new HTTPException(500, { message: "Failed to send OTP, Please try again" });
@@ -40,13 +53,7 @@ auth.post("/send-otp",
         await redis.set(`otp:${email}`, otpHash, "EX", 600);
 
         const token = await sign({ email, exp: Math.floor(Date.now() / 1000) + 10 * 60 }, getEnv("JWT_SECRET_KEY"));
-        setCookie(c, "registration_token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None",
-            path: "/api/v1/auth",
-            maxAge: 600,
-        });
+        setCookie(c, "registration_token", token, getCookieOptions(600, "/api/v1/auth"));
 
         return c.json({ "msg": "OTP sent" }, 200);
     }
@@ -76,13 +83,7 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
     await redis.del(`otp:${email}`);
 
     const regToken = await sign({ email, otpVerified: true, exp: Math.floor(Date.now() / 1000) + 10 * 60 }, getEnv("JWT_SECRET_KEY"));
-    setCookie(c, "registration_token", regToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        path: "/api/v1/auth",
-        maxAge: 600,
-    });
+    setCookie(c, "registration_token", regToken, getCookieOptions(600, "/api/v1/auth"));
 
     return c.json({ message: "OTP verified successfully" }, 200);
 });
@@ -113,25 +114,14 @@ auth.post("/register", zValidator("json", registrationSchema), async (c) => {
     const passwdHash = await Bun.password.hash(passwd);
     const user = await insertUser(email as string, passwdHash);
 
-    deleteCookie(c, "registration_token", {
-        path: "/api/v1/auth",
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-    });
+    deleteCookie(c, "registration_token", getCookieOptions(0, "/api/v1/auth"));
 
     const accessToken = await createAccessToken(user.id, user.role);
     const refreshToken = await createRefreshToken(user.id, user.role);
 
     await redis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
 
-    setCookie(c, "refresh_token", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        path: "/api/v1/auth",
-        maxAge: 60 * 60 * 24 * 7,
-    });
+    setCookie(c, "refresh_token", refreshToken, getCookieOptions(7 * 24 * 60 * 60, "/api/v1/auth"));
 
     return c.json({ message: "User created", data: user, accessToken }, 201);
 });
@@ -150,13 +140,7 @@ auth.post("/login", zValidator("json", loginSchema), async (c) => {
 
     await redis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
 
-    setCookie(c, "refresh_token", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        path: "/api/v1/auth",
-        maxAge: 60 * 60 * 24 * 7,
-    });
+    setCookie(c, "refresh_token", refreshToken, getCookieOptions(7 * 24 * 60 * 60, "/api/v1/auth"));
 
     return c.json({ message: "Ok", accessToken }, 200);
 });
@@ -169,7 +153,7 @@ auth.post("/logout", async (c) => {
         await redis.del(`refresh:${id}`);
     }
 
-    deleteCookie(c, "refresh_token", { path: "/api/v1/auth", httpOnly: true, secure: true, sameSite: "Strict" });
+    deleteCookie(c, "refresh_token", getCookieOptions(0, "/api/v1/auth"));
 
     return c.json({ message: "Ok" }, 200);
 });

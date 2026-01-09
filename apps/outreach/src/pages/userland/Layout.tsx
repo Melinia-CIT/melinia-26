@@ -5,6 +5,7 @@ import Profile from "./Profile"
 import PaymentModal from "../../components/payment/PaymentModal"
 import api from "../../services/api"
 import { paymentService } from "../../services/payment"
+import { motion, AnimatePresence } from "framer-motion"
 
 const restrictedRoutes = ["/teams", "/events"]
 
@@ -18,7 +19,7 @@ const AppLayout = () => {
             const response = await api.get("/users/me")
             return response.data
         },
-        staleTime: 5 * 60 * 1000,
+        staleTime: 5 * 60 * 1000
     })
 
     const { data: paymentStatus, isLoading: paymentLoading } = useQuery({
@@ -39,41 +40,70 @@ const AppLayout = () => {
         isRestrictedRoute && !paymentLoading && paymentStatus && !paymentStatus.paid
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden inset-0 fixed">
+        <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
             <Navigator />
 
-            <main className="px-6 md:pl-48 md:pr-8 pb-8 pt-20 md:pt-6 pb-4 transition-all duration-300 relative z-0">
+            {/* Desktop: Main content with left padding for dock */}
+            <main className="hidden md:block md:pl-32 md:pr-8 md:pt-6 pb-8 transition-all duration-300 relative z-0 min-h-screen">
                 <Outlet />
             </main>
 
-            {showProfileModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-geist">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-                    <div className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/50">
-                            <h2 className="text-lg font-semibold text-white font-inst">
-                                Complete Your Profile
-                            </h2>
-                            <span className="text-xs text-zinc-400">Required</span>
-                        </div>
+            {/* Mobile: Main content with bottom padding for mobile nav */}
+            <main className="md:hidden px-4 pt-6 pb-32 transition-all duration-300 relative z-0 min-h-screen">
+                <Outlet />
+            </main>
 
-                        <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
-                            <Profile initialData={userData} />
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Profile Modal */}
+            <AnimatePresence>
+                {showProfileModal && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 font-geist"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={() => { }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                        />
 
-            {showPaymentModal && (
-                <PaymentModal
-                    isOpen={true}
-                    onClose={() => {}}
-                    userName={userData?.name || ""}
-                    userEmail={userData?.email || ""}
-                    onPaymentSuccess={() => {}}
-                    isRequired={true}
-                />
-            )}
+                        <motion.div
+                            className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                        >
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/50">
+                                <h2 className="text-lg font-semibold text-white font-inst">
+                                    Complete Your Profile
+                                </h2>
+                                <span className="text-xs text-zinc-400">Required</span>
+                            </div>
+                            <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                                <Profile initialData={userData} />
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Payment Modal */}
+            <AnimatePresence>
+                {showPaymentModal && (
+                    <PaymentModal
+                        isOpen={true}
+                        onClose={() => { }}
+                        userName={userData?.name || ""}
+                        userEmail={userData?.email || ""}
+                        onPaymentSuccess={() => { }}
+                        isRequired={true}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     )
 }
