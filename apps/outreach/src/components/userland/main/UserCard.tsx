@@ -1,15 +1,51 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import QRCode from "./QRCode";
-import { SystemRestart, User, Mail, Phone, OpenBook, GraduationCap, Building, Xmark } from "iconoir-react";
+import {
+    User,
+    Mail,
+    Phone,
+    OpenBook,
+    GraduationCap,
+    Building,
+    Xmark,
+} from "iconoir-react";
+import { ChevronDown } from "lucide-react";
 import api from "../../../services/api";
 
-const Spinner = () => (
-    <div className="flex flex-col items-center justify-center gap-4">
-        <SystemRestart className="animate-spin text-zinc-500" width={48} height={48} strokeWidth={1.5} />
-        <p className="text-zinc-500 animate-pulse">Loading profile...</p>
-    </div>
-);
+const PreloaderCard = () => {
+    return (
+        <div className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 relative overflow-hidden p-6 sm:p-10">
+            {/* Ambient background glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-800/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+
+            <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
+                <div className="flex flex-col items-center shrink-0 w-full md:w-auto md:pr-8 gap-6">
+                    {/* Shining Image Placeholder */}
+                    <div className="relative w-[60vw] h-[60vw] max-w-[256px] max-h-[256px] bg-zinc-800/50 rounded-lg overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+
+                    <div className="relative w-3/4 h-6 bg-zinc-800/50 rounded md:hidden overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                </div>
+
+                <div className="hidden md:flex flex-1 flex-col space-y-8 border-l border-zinc-800/50 pl-8 w-full">
+                    <div className="border-b border-zinc-800 pb-6 space-y-4">
+                        <div className="relative w-1/2 h-8 bg-zinc-800/50 rounded overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                        <div className="relative w-1/3 h-4 bg-zinc-800/30 rounded overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className={`flex flex-col gap-2 ${i === 4 ? 'sm:col-span-2' : ''}`}>
+                                <div className="relative w-12 h-3 bg-zinc-800/30 rounded overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                                <div className="relative w-full h-5 bg-zinc-800/50 rounded overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const fetchUserMe = async () => {
     const { data } = await api.get("/users/me");
@@ -20,10 +56,11 @@ const UserCard = () => {
     const { data: user, isLoading, isError, error } = useQuery({
         queryKey: ["userMe"],
         queryFn: fetchUserMe,
-        retry: 1,
+        staleTime: 5 * 60 * 1000
     });
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -33,21 +70,13 @@ const UserCard = () => {
         return () => window.removeEventListener("keydown", handleEscape);
     }, []);
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center items-center font-geist">
-                <Spinner />
-            </div>
-        );
-    }
+    if (isLoading) return <PreloaderCard />;
 
     if (isError) {
         return (
-            <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center items-center px-4 font-geist">
-                <div className="text-center">
-                    <p className="text-red-400 font-medium mb-2">Failed to load profile</p>
-                    <p className="text-zinc-500 text-sm">{(error as Error).message}</p>
-                </div>
+            <div className="text-center p-10 max-w-md mx-auto">
+                <p className="text-red-400 font-medium mb-2">Failed to load profile</p>
+                <p className="text-zinc-500 text-sm">{(error as Error).message}</p>
             </div>
         );
     }
@@ -91,55 +120,98 @@ const UserCard = () => {
             )}
 
             {/* Main Card */}
-            <div className={`bg-zinc-950 text-zinc-100 flex items-center justify-center px-4 font-geist transition-all duration-300 ${isModalOpen ? 'blur-[2px] pointer-events-none' : ''}`}>
-                <div className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 p-6 sm:p-10 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-800/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                    <div className="flex flex-col md:flex-row gap-8 items-center justify-center relative z-10">
-                        <div className="flex flex-col items-center justify-center shrink-0 w-full md:w-auto">
-                            <div
-                                onClick={() => setIsModalOpen(true)}
-                                className="group p-1 bg-zinc-800/50 rounded-xl border border-zinc-700 shadow-inner cursor-pointer hover:border-zinc-500 hover:bg-zinc-800 transition-all duration-300"
-                            >
-                                <div className="w-[60vw] h-[60vw] max-w-[256px] max-h-[256px] flex items-center justify-center bg-zinc-950 rounded-lg overflow-hidden relative">
-                                    {/* Hint Overlay */}
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
-                                        <span className="text-white text-xs font-medium uppercase tracking-widest border border-white/20 px-3 py-1 rounded-full backdrop-blur-md">
-                                            Tap to Scan
-                                        </span>
-                                    </div>
+            <div className={`text-zinc-100 w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 relative overflow-hidden transition-all duration-300 ${isModalOpen ? 'blur-[2px] pointer-events-none' : ''}`}>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-800/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-                                    <QRCode
-                                        userId={user.id}
-                                        userName={`${user.profile?.first_name} ${user.profile?.last_name}`}
-                                        logoUrl="https://cdn.melinia.in/melinia-qr-embed.png"
-                                        size={256}
-                                    />
+                <div className="flex flex-col md:flex-row p-6 sm:p-10 relative z-10">
+
+                    {/* Left Column: QR Code & Mobile Name */}
+                    <div className="flex flex-col items-center justify-center shrink-0 w-full md:w-auto md:pr-8">
+                        <div
+                            onClick={() => setIsModalOpen(true)}
+                            className="group p-1 bg-zinc-800/50 rounded-xl border border-zinc-700 shadow-inner cursor-pointer hover:border-zinc-500 hover:bg-zinc-800 transition-all duration-300"
+                        >
+                            <div className="w-[60vw] h-[60vw] max-w-[256px] max-h-[256px] flex items-center justify-center bg-zinc-950 rounded-lg overflow-hidden relative">
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                                    <span className="text-white text-xs font-medium uppercase tracking-widest border border-white/20 px-3 py-1 rounded-full backdrop-blur-md">
+                                        Tap to Scan
+                                    </span>
                                 </div>
+
+                                <QRCode
+                                    userId={user.id}
+                                    userName={`${user.profile?.first_name} ${user.profile?.last_name}`}
+                                    logoUrl="https://cdn.melinia.in/melinia-qr-embed.png"
+                                    size={256}
+                                />
                             </div>
                         </div>
 
-                        <div className="flex-1 w-full space-y-8">
-                            <div className="border-b border-zinc-800 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                                <div>
-                                    <h1 className="text-3xl font-bold text-white tracking-tight font-inst">
-                                        {user.profile?.first_name} {user.profile?.last_name}
-                                    </h1>
-                                    <p className="text-zinc-400 mt-1 text-sm flex items-center gap-1">
-                                        <User width={14} height={14} /> {user.role}
-                                    </p>
-                                </div>
-                            </div>
+                        {/* Mobile Name Section (Always Visible) */}
+                        <div className="w-full text-center mt-6 md:hidden">
+                            <h1 className="text-3xl font-bold text-white tracking-tight font-inst leading-tight">
+                                {user.profile?.first_name} {user.profile?.last_name}
+                            </h1>
+                            <p className="text-zinc-500 text-xs flex items-center justify-center gap-1 mt-1">
+                                <User width={12} height={12} /> {user.role}
+                            </p>
+                        </div>
+                    </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6">
-                                <DetailRow icon={<Building />} label="College" value={user.profile?.college || "N/A"} />
-                                <DetailRow icon={<OpenBook />} label="Degree" value={user.profile?.degree || "N/A"} />
-                                <DetailRow icon={<GraduationCap />} label="Year" value={user.profile?.year?.toString() || "N/A"} />
-                                <DetailRow icon={<Phone />} label="Phone Number" value={user.ph_no || "N/A"} />
-                                <div className="sm:col-span-2">
-                                    <DetailRow icon={<Mail />} label="Email" value={user.email} />
-                                </div>
+                    {/* Right Column: Desktop Details */}
+                    <div className="hidden md:flex flex-1 flex-col space-y-8 border-l border-zinc-800/50 pl-8 w-full">
+                        <div className="border-b border-zinc-800 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold text-white tracking-tight font-inst">
+                                    {user.profile?.first_name} {user.profile?.last_name}
+                                </h1>
+                                <p className="text-zinc-400 mt-1 text-sm flex items-center gap-1">
+                                    <User width={14} height={14} /> {user.role}
+                                </p>
                             </div>
                         </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6">
+                            <DetailRow icon={<Building strokeWidth={2} />} label="College" value={user.profile?.college || "N/A"} />
+                            <DetailRow icon={<OpenBook strokeWidth={2} />} label="Degree" value={user.profile?.degree || "N/A"} />
+                            <DetailRow icon={<GraduationCap strokeWidth={2} />} label="Year" value={user.profile?.year?.toString() || "N/A"} />
+                            <DetailRow icon={<Phone strokeWidth={2} />} label="Phone Number" value={user.ph_no || "N/A"} />
+                            <div className="sm:col-span-2">
+                                <DetailRow icon={<Mail strokeWidth={2} />} label="Email" value={user.email} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Mobile Toggle Section */}
+                <div className="md:hidden w-full border-t border-zinc-800/50 bg-zinc-900/50 relative">
+                    {/* Expandable Content Wrapper */}
+                    <div
+                        className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${isDetailsOpen ? 'max-h-[500px]' : 'max-h-0'
+                            }`}
+                    >
+                        <div className="px-6 pb-6 pt-4 grid grid-cols-1 gap-y-6 gap-x-6">
+                            <DetailRow icon={<Building strokeWidth={2} />} label="College" value={user.profile?.college || "N/A"} />
+                            <DetailRow icon={<OpenBook strokeWidth={2} />} label="Degree" value={user.profile?.degree || "N/A"} />
+                            <DetailRow icon={<GraduationCap strokeWidth={2} />} label="Year" value={user.profile?.year?.toString() || "N/A"} />
+                            <DetailRow icon={<Phone strokeWidth={2} />} label="Phone Number" value={user.ph_no || "N/A"} />
+                            <DetailRow icon={<Mail strokeWidth={2} />} label="Email" value={user.email} />
+                        </div>
+                    </div>
+
+                    {/* Toggle Button Area */}
+                    <div className="w-full flex justify-center py-3 bg-zinc-900 border-t border-zinc-800/30">
+                        <button
+                            onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+                            className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm font-medium active:scale-95 transform duration-150"
+                        >
+                            <span>{isDetailsOpen ? "Hide Details" : "View Details"}</span>
+                            <ChevronDown
+                                className={`transition-transform duration-300 ${isDetailsOpen ? 'rotate-180' : ''}`}
+                                width={18}
+                                height={18}
+                            />
+                        </button>
                     </div>
                 </div>
             </div>
