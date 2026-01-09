@@ -59,7 +59,7 @@ const Events = () => {
   const { data: eventsData, isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["events"],
     queryFn: async () => {
-      const response = await api.get("/events/events");
+      const response = await api.get("/events");
       return response.data.data;
     },
     staleTime: 5 * 60 * 1000,

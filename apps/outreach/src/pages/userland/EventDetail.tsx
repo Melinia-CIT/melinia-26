@@ -73,7 +73,7 @@ const EventDetail = () => {
   const { data: event, isLoading, error } = useQuery<Event>({
     queryKey: ["event", id],
     queryFn: async () => {
-      const response = await api.get(`/events/events/${id}`);
+      const response = await api.get(`/events/${id}`);
       return response.data.data;
     },
     enabled: !!id,
