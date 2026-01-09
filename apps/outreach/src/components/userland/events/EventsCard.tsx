@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Users, Trophy, MapPin, Clock, Target } from "lucide-react";
+import { Calendar, MapPin, Clock, } from "lucide-react";
 
 interface Round {
     roundNo: number;
@@ -67,42 +67,6 @@ const EventsCard = ({ event }: EventsCardProps) => {
             hour: "2-digit",
             minute: "2-digit",
         });
-    };
-
-    const getStatusColor = (event: Event) => {
-        const now = new Date();
-        const regStart = new Date(event.registrationStart);
-        const regEnd = new Date(event.registrationEnd);
-        const eventStart = new Date(event.startTime);
-        const eventEnd = new Date(event.endTime);
-
-        if (now >= eventStart && now <= eventEnd) {
-            return "bg-green-500/10 text-green-400 border-green-500/20";
-        } else if (now > eventEnd) {
-            return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
-        } else if (now >= regStart && now <= regEnd) {
-            return "bg-blue-500/10 text-blue-400 border-blue-500/20";
-        } else {
-            return "bg-purple-500/10 text-purple-400 border-purple-500/20";
-        }
-    };
-
-    const getStatusText = (event: Event) => {
-        const now = new Date();
-        const regStart = new Date(event.registrationStart);
-        const regEnd = new Date(event.registrationEnd);
-        const eventStart = new Date(event.startTime);
-        const eventEnd = new Date(event.endTime);
-
-        if (now >= eventStart && now <= eventEnd) {
-            return "ONGOING";
-        } else if (now > eventEnd) {
-            return "COMPLETED";
-        } else if (now >= regStart && now <= regEnd) {
-            return "REGISTRATION OPEN";
-        } else {
-            return "UPCOMING";
-        }
     };
 
     const getEventTypeColor = (type: string) => {
