@@ -16,6 +16,19 @@ export const prizeSchema = z.object({
 export const organizerSchema = z.object({
     userId: z.string().min(1, "User ID is required"),
     assignedBy: z.string().nullable().optional(),
+    firstName: z.string().nullable().optional(),
+    lastName: z.string().nullable().optional(),
+    phoneNo: z.string().nullable().optional()
+});
+
+export const eventRuleSchema = z.object({
+    id: z.number().int().optional(), 
+    eventId: z.string().optional(), 
+    roundNo: z.number().int().nullable().optional(), 
+    ruleNumber: z.number().int().min(1, "Rule number must be positive"),
+    ruleDescription: z.string().min(1, "Rule description is required"),
+    createdAt: z.coerce.date().optional(),
+    updatedAt: z.coerce.date().optional(),
 });
 
 const baseEventObject = {
@@ -82,6 +95,7 @@ export const eventSchema = withRefinements(
         rounds: z.array(roundSchema).optional(),
         prizes: z.array(prizeSchema).optional(),
         organizers: z.array(organizerSchema).optional(),
+        rules: z.array(eventRuleSchema).optional(), // Added rules
     })
 );
 
@@ -96,12 +110,12 @@ export const createEventSchema = withRefinements(
             rounds: z.array(roundSchema).optional(),
             prizes: z.array(prizeSchema).optional(),
             organizers: z.array(organizerSchema).optional(),
+            rules: z.array(eventRuleSchema.omit({ id: true, eventId: true, createdAt: true, updatedAt: true })).optional(), // Added rules for creation
         })
 );
 
 export const updateEventDetailsSchema = withRefinements(
     z.object({
-        //eventId: z.string().min(1, "Event id is required"),
         name: z.string().min(1, "Event name is required"),
         description: z.string().min(1, "Description is required"),
         participationType: ParticipationType.default("solo"),
@@ -123,6 +137,7 @@ export const updateEventDetailsSchema = withRefinements(
         rounds: z.array(roundSchema).optional(),
         prizes: z.array(prizeSchema).optional(),
         organizers: z.array(organizerSchema).optional(),
+        rules: z.array(eventRuleSchema.omit({ id: true, eventId: true, createdAt: true, updatedAt: true })).optional(), 
     })
 );
 
@@ -138,9 +153,31 @@ export const getEventDetailsSchema = z.object({
     id: z.string().min(1, "Event id is required"),
 });
 
+export const createEventRuleSchema = z.object({
+    eventId: z.string().min(1, "Event ID is required"),
+    roundNo: z.number().int().nullable().optional(),
+    ruleNumber: z.number().int().min(1, "Rule number must be positive"),
+    ruleDescription: z.string().min(1, "Rule description is required"),
+});
+
+export const updateEventRuleSchema = z.object({
+    id: z.number().int().min(1, "Rule ID is required"),
+    roundNo: z.number().int().nullable().optional(),
+    ruleNumber: z.number().int().min(1, "Rule number must be positive"),
+    ruleDescription: z.string().min(1, "Rule description is required"),
+});
+
+export const deleteEventRuleSchema = z.object({
+    id: z.number().int().min(1, "Rule ID is required"),
+});
+
 export type DeleteEventInput = z.infer<typeof deleteEventSchema>;
 export type EventRegistrationInput = z.infer<typeof eventRegistrationSchema>;
 export type GetEventDetailsInput = z.infer<typeof getEventDetailsSchema>;
 export type Event = z.infer<typeof eventSchema>;
 export type CreateEvent = z.infer<typeof createEventSchema>;
 export type UpdateEventDetailsInput = z.infer<typeof updateEventDetailsSchema>;
+export type EventRule = z.infer<typeof eventRuleSchema>;
+export type CreateEventRule = z.infer<typeof createEventRuleSchema>;
+export type UpdateEventRule = z.infer<typeof updateEventRuleSchema>;
+export type DeleteEventRule = z.infer<typeof deleteEventRuleSchema>;
