@@ -22,7 +22,11 @@ const AppLayout = () => {
         staleTime: 5 * 60 * 1000
     })
 
-    const { data: paymentStatus, isLoading: paymentLoading } = useQuery({
+    const {
+        data: paymentStatus,
+        isLoading: paymentLoading,
+        isError: paymentError,
+    } = useQuery({
         queryKey: ["paymentStatus"],
         queryFn: async () => {
             const response = await paymentService.getPaymentStatus()
@@ -33,11 +37,12 @@ const AppLayout = () => {
         refetchOnWindowFocus: isRestrictedRoute ? "always" : true,
         refetchOnMount: "always",
         enabled: (!!userData && userData.profile_completed) || isRestrictedRoute,
+        retry: false,
     })
 
     const showProfileModal = !userLoading && userData && !userData.profile_completed
     const showPaymentModal =
-        isRestrictedRoute && !paymentLoading && paymentStatus && !paymentStatus.paid
+        isRestrictedRoute && !paymentLoading && (!paymentStatus || !paymentStatus.paid)
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
