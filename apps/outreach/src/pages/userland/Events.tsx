@@ -138,8 +138,4 @@ const Events = () => {
   );
 };
 
-<<<<<<< HEAD
 export default Events;
-=======
-export default Events;
->>>>>>> be7eadf (Adjusted the layout for displaying the events)
