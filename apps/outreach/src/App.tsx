@@ -11,6 +11,7 @@ import EventLayout from "./pages/userland/Events";
 import EventDetail from "./pages/userland/EventDetail";
 import Main from "./pages/userland/Main";
 import Register from "./pages/auth/Registration";
+import Teams from "./pages/userland/Teams";
 
 function App() {
     return (
@@ -30,7 +31,7 @@ function App() {
 						<Route path="events" element={<EventLayout />} /> 
 						<Route path="events/:id" element={<EventDetail />} />
 						<Route path="leaderboard" />
-						<Route path="teams" />
+						<Route path="teams" element={<Teams />}/>
 					</Route>
 				</Route>
 				<Route path="/register" element={<Register />} />
