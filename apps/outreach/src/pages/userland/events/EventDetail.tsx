@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Calendar,
@@ -14,9 +14,11 @@ import {
     ShieldCheck,
     Phone,
     User2,
-    ChevronDown
+    ChevronDown,
+    CheckCircle2
 } from "lucide-react";
 import api from "../../../services/api";
+import EventRegister from "./EventRegister";
 
 interface Round { roundNo: number; roundDescription: string; }
 interface Prize { position: number; rewardValue: number; }
@@ -33,8 +35,11 @@ interface Event {
 const EventDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [expandedRound, setExpandedRound] = useState<number | null>(null);
+    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
+    // Fetch Event Details
     const { data: event, isLoading, error } = useQuery<Event>({
         queryKey: ["event", id],
         queryFn: async () => {
@@ -43,6 +48,18 @@ const EventDetail = () => {
         },
         enabled: !!id,
     });
+
+    // Check Registration Status
+    const { data: registrationStatus } = useQuery({
+        queryKey: ["event-status", id],
+        queryFn: async () => {
+            const response = await api.get(`/events/${id}/status`);
+            return response.data.data;
+        },
+        enabled: !!id,
+    });
+
+    const isRegistered = registrationStatus?.registration_status === "registered";
 
     const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
     const formatTime = (dateString: string) => new Date(dateString).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
@@ -54,7 +71,7 @@ const EventDetail = () => {
             badge: "bg-orange-500/10 text-orange-400 border-orange-500/20",
             accent: "text-orange-400",
             button: "border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-white",
-            icon: "text-orange-500", // Fixed: Added missing property
+            icon: "text-orange-500",
             shadow: "rgba(251, 146, 60, 0.4)"
         };
         if (typeLower === "non-technical") return {
@@ -62,7 +79,7 @@ const EventDetail = () => {
             badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
             accent: "text-emerald-400",
             button: "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white",
-            icon: "text-emerald-500", // Fixed: Added missing property
+            icon: "text-emerald-500",
             shadow: "rgba(52, 211, 153, 0.4)"
         };
         if (typeLower === "flagship") return {
@@ -70,7 +87,7 @@ const EventDetail = () => {
             badge: "bg-blue-500/10 text-blue-400 border-blue-500/20",
             accent: "text-blue-400",
             button: "border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white",
-            icon: "text-blue-500", // Fixed: Added missing property
+            icon: "text-blue-500",
             shadow: "rgba(96, 165, 250, 0.4)"
         };
         return {
@@ -78,9 +95,16 @@ const EventDetail = () => {
             badge: "bg-zinc-800 text-zinc-400 border-zinc-700",
             accent: "text-zinc-400",
             button: "border-white/20 text-white hover:bg-white hover:text-black",
-            icon: "text-zinc-500", // Fixed: Added missing property
+            icon: "text-zinc-500",
             shadow: "rgba(255, 255, 255, 0.1)"
         };
+    };
+
+    const getParticipationStyles = (type: string) => {
+        const typeLower = type?.toLowerCase();
+        return typeLower === "solo" 
+            ? "bg-purple-500/10 text-purple-400 border-purple-500/20" 
+            : "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
     };
 
     const getStatusInfo = (event: Event) => {
@@ -96,20 +120,27 @@ const EventDetail = () => {
 
     const status = getStatusInfo(event);
     const theme = getThemeStyles(event.eventType);
+    const partStyle = getParticipationStyles(event.participationType);
     const totalPrizePool = event.prizes?.reduce((sum, prize) => sum + prize.rewardValue, 0) || 0;
     const generalRules = event.rules?.filter((r) => r.roundNo === null) || [];
 
     return (
         <main className="flex-1 w-full p-4 md:px-8 md:py-6">
-            <motion.button
-                onClick={() => navigate("/app/events")}
-                className="flex items-center gap-1.5 text-zinc-500 hover:text-white mb-4 transition-colors"
-                whileHover={{ x: -2 }}
-            >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Back</span>
-            </motion.button>
+            <div className="fixed top-0 left-0 right-0 z-[100] p-4 md:px-8 pointer-events-none">
+                <div className="max-w-7xl mx-auto flex items-center h-12">
+                    <motion.button
+                        onClick={() => navigate("/app/events")}
+                        className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900/80 backdrop-blur-xl border border-white/10 text-zinc-400 hover:text-white transition-all shadow-2xl"
+                        whileHover={{ x: -3 }}
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Back to events</span>
+                    </motion.button>
+                </div>
+            </div>
 
+            <div className="h-12" />
+            {/* Hero Section */}
             <motion.div
                 className={`relative bg-gradient-to-br ${theme.banner} rounded-xl p-6 md:p-8 mb-6 overflow-hidden border border-white/10`}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -119,6 +150,7 @@ const EventDetail = () => {
                     <div className="flex flex-wrap gap-2 mb-3">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${status.color}`}>{status.text}</span>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${theme.badge}`}>{event.eventType.toUpperCase()}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${partStyle}`}>{event.participationType.toUpperCase()} EVENT</span>
                     </div>
                     <h1 className="text-2xl md:text-3xl font-bold mb-2 text-white">{event.name}</h1>
                     <p className="text-sm text-zinc-400 max-w-2xl leading-relaxed">{event.description}</p>
@@ -140,10 +172,12 @@ const EventDetail = () => {
                             <MapPin className={`w-4 h-4 ${theme.icon} mt-0.5`} />
                             <div><p className="text-[10px] font-bold text-zinc-500 uppercase">Venue</p><p className="text-xs text-white font-medium truncate w-24 md:w-auto">{event.venue}</p></div>
                         </div>
-                        <div className="flex items-start gap-2">
-                            <Users className={`w-4 h-4 ${theme.icon} mt-0.5`} />
-                            <div><p className="text-[10px] font-bold text-zinc-500 uppercase">Size</p><p className="text-xs text-white font-medium">{event.maxTeamSize} Max</p></div>
-                        </div>
+                        {event.participationType.toLowerCase() === "team" && (
+                            <div className="flex items-start gap-2">
+                                <Users className={`w-4 h-4 ${theme.icon} mt-0.5`} />
+                                <div><p className="text-[10px] font-bold text-zinc-500 uppercase">Size</p><p className="text-xs text-white font-medium">{event.minTeamSize} - {event.maxTeamSize} per team</p></div>
+                            </div>
+                        )}
                     </div>
 
                     {generalRules.length > 0 && (
@@ -245,7 +279,7 @@ const EventDetail = () => {
                 </div>
 
                 <div className="space-y-4">
-                    <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sticky top-6">
+                    <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sticky top-20">
                         <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Registration</h3>
                         <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 mb-4">
                             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
@@ -257,9 +291,30 @@ const EventDetail = () => {
                                 <p className="text-xs text-white font-medium">{formatDate(event.registrationEnd)}</p>
                             </div>
                         </div>
-                        <button className={`w-full py-2.5 rounded-lg font-bold border text-[10px] uppercase tracking-widest transition-colors duration-300 bg-transparent ${theme.button}`}>
-                            Register Now
+                        
+                        <button 
+                            onClick={() => !isRegistered && setIsRegisterModalOpen(true)}
+                            disabled={isRegistered}
+                            className={`w-full py-2.5 rounded-lg font-bold border text-[10px] uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-2 
+                                ${isRegistered 
+                                    ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" 
+                                    : `bg-transparent ${theme.button}`}`}
+                        >
+                            {isRegistered ? (
+                                <>
+                                    <CheckCircle2 className="w-5 h-5" />
+                                    Registered
+                                </>
+                            ) : (
+                                "Register Now"
+                            )}
                         </button>
+                        
+                        {isRegistered && registrationStatus?.team_name && (
+                            <p className="mt-4 text-[12px] text-center text-zinc-500 uppercase font-semibold tracking-tighter">
+                                Registered via <span className="text-zinc-200 font-semibold">{registrationStatus.team_name}</span> Team
+                            </p>
+                        )}
                     </div>
 
                     {event.organizers?.length > 0 && (
@@ -271,7 +326,12 @@ const EventDetail = () => {
                                         <p className="font-bold text-white text-[11px] uppercase tracking-tight">{org.firstName} {org.lastName}</p>
                                         <div className="flex items-center gap-2 mt-1.5 pt-1.5 border-t border-white/5">
                                             <Phone className="w-3 h-3 text-zinc-500" />
-                                            <span className="text-[10px] text-zinc-400 font-medium">{org.phoneNo}</span>
+                                            <a 
+                                                href={`tel:${org.phoneNo}`} 
+                                                className="text-[10px] text-zinc-400 font-medium hover:text-white transition-colors cursor-pointer select-all"
+                                            >
+                                                {org.phoneNo}
+                                            </a>
                                         </div>
                                     </div>
                                 ))}
@@ -280,6 +340,18 @@ const EventDetail = () => {
                     )}
                 </div>
             </div>
+
+            <AnimatePresence>
+                {isRegisterModalOpen && (
+                    <EventRegister 
+                        event={event} 
+                        onClose={() => setIsRegisterModalOpen(false)}
+                        onSuccess={() => {
+                            queryClient.invalidateQueries({ queryKey: ["event-status", id] });
+                        }}
+                    />
+                )}
+            </AnimatePresence>
         </main>
     );
 };

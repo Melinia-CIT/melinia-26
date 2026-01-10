@@ -191,7 +191,7 @@ teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: 
         return sendError(c);
     }
 })
-// Add a new member //
+// Add a new member
 teamRouter.post("/:team_id/members", authMiddleware, zValidator("json", addNewMemberSchema), async (c) => {
     try {
         const user_id = c.get('user_id');

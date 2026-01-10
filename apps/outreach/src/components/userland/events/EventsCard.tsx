@@ -85,7 +85,6 @@ const EventsCard = ({ event }: EventsCardProps) => {
                 whileHover="hover"
                 initial="initial"
             >
-                {/* --- VIDEO EFFECT: UNBROKEN BORDER WITH ROTATING SWEEP --- */}
                 <div className="absolute inset-0 z-50 pointer-events-none">
                     <svg className="w-full h-full" fill="none" preserveAspectRatio="none">
                         <defs>
@@ -100,7 +99,6 @@ const EventsCard = ({ event }: EventsCardProps) => {
                             </filter>
                         </defs>
                         
-                        {/* Layer 1: Static Base Border ( Dimly visible, never breaks ) */}
                         <motion.rect
                             x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="16"
                             stroke={theme.accent}
@@ -110,7 +108,6 @@ const EventsCard = ({ event }: EventsCardProps) => {
                             }}
                         />
 
-                        {/* Layer 2: The Rotating Sweep ( The thick part that fades out/in ) */}
                         <motion.rect
                             x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="16"
                             stroke={theme.accent}
