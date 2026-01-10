@@ -78,7 +78,7 @@ teamRouter.put("/:team_id", authMiddleware, zValidator("json", updateTeamSchema)
     }
 })
 
-// Get Team details by team_id
+// Delete Team team_id
 teamRouter.delete("/:team_id", authMiddleware, async (c) => {
     try {
         const teamID = c.req.param('team_id');
@@ -207,13 +207,23 @@ teamRouter.post("/:team_id/members", authMiddleware, zValidator("json", addNewMe
     }
 })
 
-teamRouter.get("/", authMiddleware, async (c) => {
+ teamRouter.get('/', authMiddleware, async (c) => {
     try {
-        const user_id = c.get("user_id");
-        const { statusCode, status, data, message } = await getAllTeamsForUser(user_id);
+        const user_id = c.get('user_id');
+        const filter = c.req.query('filter') as 'led' | 'member' | 'all' | undefined;
+
+        // Validate filter param
+
+        if (filter && !['led', 'member', 'all'].includes(filter)) {
+            return sendError(c, 'Invalid filter parameter', 400);
+        }
+
+        const { statusCode, status, data, message } = await getAllTeamsForUser(user_id, filter || 'all');
+
         return sendSuccess(c, data, message, status, statusCode);
-    } catch (error: unknown) {
-        console.error("Error details:", error);
+    } 
+    catch (error: unknown) {
+        console.error('Error details:', error);
         return sendError(c);
     }
 });
