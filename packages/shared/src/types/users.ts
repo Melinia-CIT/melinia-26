@@ -15,7 +15,8 @@ export const baseUserSchema = z.object({
 
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
-    profile_completed: z.boolean()
+    profile_completed: z.boolean(),
+    payment_status: z.enum(["PAID", "UNPAID", "EXEMPTED"])
 });
 
 export const userSchema = baseUserSchema.omit({ passwd_hash: true });

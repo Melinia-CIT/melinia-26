@@ -30,12 +30,18 @@ export async function getUserById(id: string): Promise<User | null> {
     return !user ? null : userSchema.parse(user);
 }
 
-export async function insertUser(email: string, passwdHash: string): Promise<User> {
-    const [row] = await sql`
-        INSERT INTO users(email, passwd_hash)
-        VALUES (${email}, ${passwdHash})
-        RETURNING  *;
-    `;
+export async function insertUser(email: string, passwdHash: string, validCoupon: boolean): Promise<User> {
+    const [row] = validCoupon
+        ? await sql`
+            INSERT INTO users (email, passwd_hash, payment_status)
+            VALUES (${email}, ${passwdHash}, 'EXEMPTED')
+            RETURNING *;
+        `
+        : await sql`
+            INSERT INTO users (email, passwd_hash)
+            VALUES (${email}, ${passwdHash})
+            RETURNING *;
+        `;
 
     return userSchema.parse(row);
 }
