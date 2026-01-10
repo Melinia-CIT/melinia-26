@@ -19,7 +19,7 @@ const AppLayout = () => {
             const response = await api.get("/users/me")
             return response.data
         },
-        staleTime: 5 * 60 * 1000
+        staleTime: 5 * 60 * 1000,
     })
 
     const { data: paymentStatus, isLoading: paymentLoading } = useQuery({
