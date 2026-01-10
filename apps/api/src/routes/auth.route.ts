@@ -20,9 +20,9 @@ const getCookieOptions = (maxAge: number, path: string = "/") => {
 
     return {
         httpOnly: true,
-        secure: !isDev,
-        sameSite: isDev ? "Lax" : "Strict" as const,
-        path: path,
+        secure: true,
+        sameSite: "None",
+        path,
         maxAge,
         domain: isDev ? undefined : ".melinia.in"
     } as CookieOptions;

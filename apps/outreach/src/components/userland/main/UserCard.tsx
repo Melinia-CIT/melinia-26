@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
-import QRCode from "./QRCode"
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import QRCode from "./QRCode";
 import {
     User,
     Mail,
@@ -139,7 +139,6 @@ const UserCard = () => {
             <div className={`text-zinc-100 w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 relative overflow-hidden transition-all duration-300 ${isModalOpen ? 'blur-[2px] pointer-events-none' : ''}`}>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-800/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-
                 <div className="flex flex-col md:flex-row p-6 sm:p-10 relative z-10">
 
                     {/* Left Column: QR Code & Mobile Name */}
@@ -171,9 +170,9 @@ const UserCard = () => {
                             </h1>
                             <p className="text-zinc-500 text-xs flex items-center justify-center gap-1 mt-1">
                                 <User width={12} height={12} /> {user.role}
-				{paymentStatus && (
-				    <PaymentStatusBadge status={paymentStatus.status} />
-				)}
+                        				{paymentStatus && (
+				                            <PaymentStatusBadge status={paymentStatus.status} />
+				                        )}
                             </p>
                         </div>
                     </div>
@@ -187,11 +186,11 @@ const UserCard = () => {
                                 </h1>
                                 <p className="text-zinc-400 mt-1 text-sm flex items-center gap-1">
                                     <User width={14} height={14} /> {user.role}
-				    {paymentStatus && (
-					<PaymentStatusBadge status={paymentStatus.status} />
-				    )}
+				                            {paymentStatus && (
+					                              <PaymentStatusBadge status={paymentStatus.status} />
+				                            )}
                                 </p>
-			   </div>
+			                      </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6">

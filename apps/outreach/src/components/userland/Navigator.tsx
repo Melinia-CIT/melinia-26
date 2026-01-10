@@ -137,8 +137,8 @@ export default function Navigator() {
 
                                     <motion.div
                                         onClick={async () => {
-                                            await logout()
-                                            navigate("/login", { replace: true })
+                                            await logout();
+                                            window.location.href = "/login";
                                         }}
                                         whileHover={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
                                         className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-red-400 cursor-pointer"
@@ -248,8 +248,8 @@ export default function Navigator() {
 
                                     <motion.div
                                         onClick={async () => {
-                                            await logout()
-                                            navigate("/login", { replace: true })
+                                            await logout();
+                                            window.location.href = "/login";
                                         }}
                                         whileHover={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
                                         className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-red-400 cursor-pointer"
