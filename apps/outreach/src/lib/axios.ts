@@ -56,7 +56,7 @@ apiClient.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        if (window.location.pathname === '/login') {
+        if (window.location.pathname === '/login' && originalRequest.url === "/auth/login") {
             return Promise.reject(error);
         }
 

@@ -1,26 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUser } from '../services/users';
+
 
 const useAuth = () => {
-    const [authState, setAuthState] = useState({
-        isAuthenticated: false,
-        isLoading: true,
+    const accessToken = localStorage.getItem("accessToken");
+
+    const { data, isLoading, isError } = useQuery({
+        queryKey: ["userMe"],
+        queryFn: fetchUser,
+        retry: 1,
+        staleTime: 5 * 60 * 1000,
+        enabled: !!accessToken, 
     });
 
-    useEffect(() => {
-        const accessToken = localStorage.getItem('accessToken');
-        const hasRefreshToken = document.cookie
-            .split('; ')
-            .some(cookie => cookie.startsWith('refresh_token='));
+    const isAuthenticated = !!accessToken && !!data && !isError;
 
-        setAuthState({
-            isAuthenticated: !!(accessToken || hasRefreshToken),
-            isLoading: false,
-        });
-    }, []);
-
-    return authState;
+    return { isAuthenticated, isLoading, user: data };
 };
 
 const useNetworkStatus = () => {
@@ -56,7 +54,7 @@ const useNetworkStatus = () => {
 
 const LoadingFallback = () => (
     <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-silver-500" />
     </div>
 );
 

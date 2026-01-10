@@ -34,7 +34,6 @@ function App() {
 						<Route path="teams" element={<Teams />} />
 					</Route>
 				</Route>
-				<Route path="/register" element={<Register />} />
 			</Routes>
 		</BrowserRouter>
 	);

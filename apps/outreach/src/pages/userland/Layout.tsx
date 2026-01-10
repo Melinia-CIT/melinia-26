@@ -3,9 +3,9 @@ import Navigator from "../../components/userland/Navigator"
 import { useQuery } from "@tanstack/react-query"
 import Profile from "./Profile"
 import PaymentModal from "../../components/payment/PaymentModal"
-import api from "../../services/api"
 import { paymentService } from "../../services/payment"
 import { motion, AnimatePresence } from "framer-motion"
+import { fetchUser } from "../../services/users"
 
 const restrictedRoutes = ["/teams", "/events"]
 
@@ -15,10 +15,7 @@ const AppLayout = () => {
 
     const { data: userData, isLoading: userLoading } = useQuery({
         queryKey: ["userMe"],
-        queryFn: async () => {
-            const response = await api.get("/users/me")
-            return response.data
-        },
+        queryFn: fetchUser,
         staleTime: 5 * 60 * 1000
     })
 
@@ -65,7 +62,7 @@ const AppLayout = () => {
                     >
                         <motion.div
                             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                            onClick={() => {}}
+                            onClick={() => { }}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -97,10 +94,10 @@ const AppLayout = () => {
                 {showPaymentModal && (
                     <PaymentModal
                         isOpen={true}
-                        onClose={() => {}}
+                        onClose={() => { }}
                         userName={userData?.name || ""}
                         userEmail={userData?.email || ""}
-                        onPaymentSuccess={() => {}}
+                        onPaymentSuccess={() => { }}
                         isRequired={true}
                     />
                 )}

@@ -15,7 +15,7 @@ import {
 } from "iconoir-react"
 import { paymentService } from "../../../services/payment"
 import { ChevronDown } from "lucide-react";
-import api from "../../../services/api";
+import { fetchUser } from "../../../services/users";
 
 const PreloaderCard = () => {
     return (
@@ -52,11 +52,6 @@ const PreloaderCard = () => {
 };
 
 
-const fetchUserMe = async () => {
-    const { data } = await api.get("/users/me")
-    return data
-}
-
 const UserCard = () => {
     const {
         data: user,
@@ -65,7 +60,7 @@ const UserCard = () => {
         error,
     } = useQuery({
         queryKey: ["userMe"],
-        queryFn: fetchUserMe,
+        queryFn: fetchUser,
         staleTime: 5 * 60 * 1000
     });
 
