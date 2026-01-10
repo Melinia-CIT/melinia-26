@@ -57,25 +57,6 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
         }
     };
 
-    const checkCoupon = async (code: string) => {
-        if (!code) {
-            setCouponValid(null);
-            return;
-        }
-
-        setIsCheckingCoupon(true);
-        try {
-            await api.get("/coupons/check", { code });
-            setCouponValid(true);
-        } catch (error: any) {
-            const message = error.response?.data?.message || "Invalid coupon code.";
-            setCouponValid(false);
-            toast.error(message);
-        } finally {
-            setIsCheckingCoupon(false);
-        }
-    };
-
     const inputClasses = (hasError?: boolean) => `
         w-full rounded-lg bg-zinc-900 border pl-10 pr-10 py-3 text-sm text-zinc-100 
         placeholder:text-zinc-600 focus:outline-none focus:ring-2 transition-colors duration-200
