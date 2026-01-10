@@ -122,22 +122,26 @@ export default function Navigator() {
                                         <Xmark strokeWidth={2} width={16} height={16} />
                                     </motion.div>
 
-                                    <motion.div
-                                        onClick={() => {
-                                            setIsMenuOpen(false)
-                                            setIsPaymentModalOpen(true)
-                                        }}
-                                        whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-white cursor-pointer"
-                                    >
-                                        <CreditCard strokeWidth={2} width={20} height={20} />
-                                        <span className="text-sm font-medium">Payment</span>
-                                    </motion.div>
+                                    {!import.meta.env.DEV && (
+                                        <motion.div
+                                            onClick={() => {
+                                                setIsMenuOpen(false)
+                                                setIsPaymentModalOpen(true)
+                                            }}
+                                            whileHover={{
+                                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                            }}
+                                            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-white cursor-pointer"
+                                        >
+                                            <CreditCard strokeWidth={2} width={20} height={20} />
+                                            <span className="text-sm font-medium">Payment</span>
+                                        </motion.div>
+                                    )}
 
                                     <motion.div
                                         onClick={async () => {
-                                            await logout();
-                                            window.location.href = "/login";
+                                            await logout()
+                                            window.location.href = "/login"
                                         }}
                                         whileHover={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
                                         className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-red-400 cursor-pointer"
@@ -233,22 +237,26 @@ export default function Navigator() {
                                         <Xmark strokeWidth={2} width={16} height={16} />
                                     </motion.div>
 
-                                    <motion.div
-                                        onClick={() => {
-                                            setIsMenuOpen(false)
-                                            setIsPaymentModalOpen(true)
-                                        }}
-                                        whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-white cursor-pointer"
-                                    >
-                                        <CreditCard strokeWidth={2} width={20} height={20} />
-                                        <span className="text-sm font-medium">Payment</span>
-                                    </motion.div>
+                                    {!import.meta.env.DEV && (
+                                        <motion.div
+                                            onClick={() => {
+                                                setIsMenuOpen(false)
+                                                setIsPaymentModalOpen(true)
+                                            }}
+                                            whileHover={{
+                                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                            }}
+                                            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-white cursor-pointer"
+                                        >
+                                            <CreditCard strokeWidth={2} width={20} height={20} />
+                                            <span className="text-sm font-medium">Payment</span>
+                                        </motion.div>
+                                    )}
 
                                     <motion.div
                                         onClick={async () => {
-                                            await logout();
-                                            window.location.href = "/login";
+                                            await logout()
+                                            window.location.href = "/login"
                                         }}
                                         whileHover={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
                                         className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-red-400 cursor-pointer"
