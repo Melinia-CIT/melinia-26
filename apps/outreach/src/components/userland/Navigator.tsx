@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
+import { NavLink } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Home, Group, Trophy, Medal1st, LogOut, Xmark, CreditCard } from "iconoir-react"
 import { logout } from "../../services/auth"
@@ -9,7 +9,6 @@ import { paymentService } from "../../services/payment"
 import { useQuery } from "@tanstack/react-query"
 
 export default function Navigator() {
-    const navigate = useNavigate()
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
