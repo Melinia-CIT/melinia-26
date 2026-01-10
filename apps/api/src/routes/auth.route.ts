@@ -44,12 +44,12 @@ auth.post("/send-otp",
         const OTP = generateOTP();
         const otpHash = createHash("sha256").update(OTP).digest("hex");
 
-        // console.log(`${email}:${OTP}`);
-        const jobId = await sendOTP(email, OTP);
-        if (!jobId) {
-            console.error(`Failed to send OTP to ${email}`);
-            throw new HTTPException(500, { message: "Failed to send OTP, Please try again" });
-        }
+        console.log(`${email}:${OTP}`);
+        // const jobId = await sendOTP(email, OTP);
+        // if (!jobId) {
+        //     console.error(`Failed to send OTP to ${email}`);
+        //     throw new HTTPException(500, { message: "Failed to send OTP, Please try again" });
+        // }
 
         await ioredis.set(`otp:${email}`, otpHash, "EX", 600);
 

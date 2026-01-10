@@ -29,7 +29,32 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
     });
 
     const onSubmit = (data: RegistrationType) => {
-        mutation.mutate(data);
+        const payload = { ...data };
+
+        if (!payload.couponCode || payload.couponCode.trim() === "") {
+            delete payload.couponCode;
+        }
+
+        mutation.mutate(payload);
+    };
+
+    const checkCoupon = async (code: string) => {
+        if (!code || code.trim() === "") {
+            setCouponValid(null);
+            return;
+        }
+
+        setIsCheckingCoupon(true);
+        try {
+            await api.get("/coupons/check", { code });
+            setCouponValid(true);
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Invalid coupon code.";
+            setCouponValid(false);
+            toast.error(message);
+        } finally {
+            setIsCheckingCoupon(false);
+        }
     };
 
     const checkCoupon = async (code: string) => {
@@ -104,7 +129,7 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
                         type="password"
                         placeholder="Confirm Password"
                         className={inputClasses(!!errors.confirmPasswd)}
-                        {...register("confirmPasswd")} // Removed onChange uppercase logic
+                        {...register("confirmPasswd")}
                     />
                 </div>
                 {errors.confirmPasswd && (
@@ -171,3 +196,4 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
 };
 
 export default PasswordForm;
+
