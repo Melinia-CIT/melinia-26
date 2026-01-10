@@ -9,7 +9,11 @@ import {
     GraduationCap,
     Building,
     Xmark,
+    CheckCircle,
+    InfoCircle,
+    Refresh,
 } from "iconoir-react";
+import { paymentService } from "../../../services/payment";
 import { ChevronDown } from "lucide-react";
 import api from "../../../services/api";
 
@@ -47,13 +51,19 @@ const PreloaderCard = () => {
     );
 };
 
+
 const fetchUserMe = async () => {
-    const { data } = await api.get("/users/me");
-    return data;
-};
+    const { data } = await api.get("/users/me")
+    return data
+}
 
 const UserCard = () => {
-    const { data: user, isLoading, isError, error } = useQuery({
+    const {
+        data: user,
+        isLoading,
+        isError,
+        error,
+    } = useQuery({
         queryKey: ["userMe"],
         queryFn: fetchUserMe,
         staleTime: 5 * 60 * 1000
@@ -62,13 +72,19 @@ const UserCard = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
+    const { data: paymentStatus } = useQuery({
+        queryKey: ["paymentStatus"],
+        queryFn: paymentService.getPaymentStatus,
+        retry: false,
+    })
+
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === "Escape") setIsModalOpen(false);
-        };
-        window.addEventListener("keydown", handleEscape);
-        return () => window.removeEventListener("keydown", handleEscape);
-    }, []);
+            if (e.key === "Escape") setIsModalOpen(false)
+        }
+        window.addEventListener("keydown", handleEscape)
+        return () => window.removeEventListener("keydown", handleEscape)
+    }, [])
 
     if (isLoading) return <PreloaderCard />;
 
@@ -78,10 +94,10 @@ const UserCard = () => {
                 <p className="text-red-400 font-medium mb-2">Failed to load profile</p>
                 <p className="text-zinc-500 text-sm">{(error as Error).message}</p>
             </div>
-        );
+        )
     }
 
-    if (!user) return null;
+    if (!user) return null
 
     return (
         <>
@@ -92,7 +108,7 @@ const UserCard = () => {
                 >
                     <div
                         className="bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl p-16 max-w-[400px] w-full flex flex-col items-center relative animate-in zoom-in-95 duration-200"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={e => e.stopPropagation()}
                     >
                         <button
                             onClick={() => setIsModalOpen(false)}
@@ -154,6 +170,9 @@ const UserCard = () => {
                             </h1>
                             <p className="text-zinc-500 text-xs flex items-center justify-center gap-1 mt-1">
                                 <User width={12} height={12} /> {user.role}
+				                        {paymentStatus && (
+				                            <PaymentStatusBadge status={paymentStatus.status} />
+			                        	)}
                             </p>
                         </div>
                     </div>
@@ -167,8 +186,11 @@ const UserCard = () => {
                                 </h1>
                                 <p className="text-zinc-400 mt-1 text-sm flex items-center gap-1">
                                     <User width={14} height={14} /> {user.role}
+				                            {paymentStatus && (
+					                              <PaymentStatusBadge status={paymentStatus.status} />
+				                             )}
                                 </p>
-                            </div>
+			                      </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6">
@@ -216,13 +238,53 @@ const UserCard = () => {
                 </div>
             </div>
         </>
-    );
-};
+    )
+}
 
 interface DetailRowProps {
-    icon: React.ReactNode;
-    label: string;
-    value: string;
+    icon: React.ReactNode
+    label: string
+    value: string
+}
+
+interface PaymentStatusBadgeProps {
+    status: "PAID" | "FAILED" | "REFUNDED" | "PENDING"
+}
+
+const PaymentStatusBadge = ({ status }: PaymentStatusBadgeProps) => {
+    const statusConfig = {
+        PAID: {
+            icon: <CheckCircle width={14} height={14} />,
+            label: "Paid",
+            className: "bg-green-500/10 text-green-400 border-green-500/20",
+        },
+        FAILED: {
+            icon: <InfoCircle width={14} height={14} />,
+            label: "Failed",
+            className: "bg-red-500/10 text-red-400 border-red-500/20",
+        },
+        REFUNDED: {
+            icon: <InfoCircle width={14} height={14} />,
+            label: "Refunded",
+            className: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+        },
+        PENDING: {
+            icon: <Refresh width={14} height={14} className="animate-spin" />,
+            label: "Pending",
+            className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+        },
+    }
+
+    const config = statusConfig[status]
+
+    return (
+        <span
+            className={`px-2 py-0.5 rounded-full text-xs font-semibold border flex items-center gap-1 ${config.className}`}
+        >
+            {config.icon}
+            {config.label}
+        </span>
+    )
 }
 
 const DetailRow = ({ icon, label, value }: DetailRowProps) => {
@@ -236,7 +298,7 @@ const DetailRow = ({ icon, label, value }: DetailRowProps) => {
                 {value}
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default UserCard;
+export default UserCard
