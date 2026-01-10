@@ -30,7 +30,7 @@ export default function Navigator() {
         { to: "/app/leaderboard", Icon: Medal1st, label: "Leaderboard" },
     ]
 
-    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+    const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
     return (
         <>
@@ -137,8 +137,8 @@ export default function Navigator() {
 
                                     <motion.div
                                         onClick={async () => {
-                                            await logout();
-                                            window.location.href = "/login";
+                                            await logout()
+                                            navigate("/login", { replace: true })
                                         }}
                                         whileHover={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
                                         className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-red-400 cursor-pointer"
@@ -248,8 +248,8 @@ export default function Navigator() {
 
                                     <motion.div
                                         onClick={async () => {
-                                            await logout();
-                                            window.location.href = "/login";
+                                            await logout()
+                                            navigate("/login", { replace: true })
                                         }}
                                         whileHover={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
                                         className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-zinc-400 hover:text-red-400 cursor-pointer"
@@ -263,6 +263,12 @@ export default function Navigator() {
                     </AnimatePresence>
                 </div>
             </div>
+
+            <PaymentModal
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                hasAlreadyPaid={paymentStatus?.paid || false}
+            />
         </>
     )
 }

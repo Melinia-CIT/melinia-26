@@ -1,78 +1,57 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-const useAuth = () => {
-    const [authState, setAuthState] = useState({
-        isAuthenticated: false,
-        isLoading: true,
-    });
+export const PublicRoute = () => {
+    const token = localStorage.getItem('accessToken');
 
-    useEffect(() => {
-        const accessToken = localStorage.getItem('accessToken');
-        const hasRefreshToken = document.cookie
-            .split('; ')
-            .some(cookie => cookie.startsWith('refresh_token='));
+    if (token) {
+        return <Navigate to="/app" replace />;
+    }
 
-        setAuthState({
-            isAuthenticated: !!(accessToken || hasRefreshToken),
-            isLoading: false,
-        });
-    }, []);
-
-    return authState;
+    return <Outlet />;
 };
 
-const useNetworkStatus = () => {
+export const ProtectedRoute = () => {
+    const token = localStorage.getItem('accessToken');
+
     useEffect(() => {
+        // Handler for when connection is lost
         const handleOffline = () => {
-            toast.error('Check your internet connection', {
-                id: 'network-status',
-                duration: Infinity,
+            toast.error("Kindly check your internet connection", {
+                id: 'network-status', // Unique ID to prevent duplicates
+                duration: Infinity,   // Keeps the toast visible until fixed
             });
         };
 
+        // Handler for when connection is restored
         const handleOnline = () => {
-            toast.success('Back online!', {
-                id: 'network-status',
+            toast.success("You are back Online!", {
+                id: 'network-status', // Same ID to replace the error toast
                 duration: 3000,
             });
         };
 
+        // 1. Check status immediately on mount (in case user loaded page offline)
         if (!navigator.onLine) {
             handleOffline();
         }
 
+        // 2. Add event listeners
         window.addEventListener('offline', handleOffline);
         window.addEventListener('online', handleOnline);
 
+        // 3. Cleanup listeners on unmount
         return () => {
             window.removeEventListener('offline', handleOffline);
             window.removeEventListener('online', handleOnline);
             toast.dismiss('network-status');
         };
     }, []);
-};
 
-const LoadingFallback = () => (
-    <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
-    </div>
-);
+    if (!token) {
+        return <Navigate to="/login" replace />;
+    }
 
-export const ProtectedRoute = () => {
-    const { isAuthenticated, isLoading } = useAuth();
-    useNetworkStatus();
-
-    if (isLoading) return <LoadingFallback />;
-
-    return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
-};
-
-export const PublicRoute = () => {
-    const { isAuthenticated, isLoading } = useAuth();
-
-    if (isLoading) return <LoadingFallback />;
-
-    return isAuthenticated ? <Navigate to="/app" replace /> : <Outlet />;
+    return <Outlet />;
 };
