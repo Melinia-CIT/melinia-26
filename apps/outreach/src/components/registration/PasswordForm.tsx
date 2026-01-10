@@ -21,6 +21,7 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
     const {
         register,
         handleSubmit,
+        setValue,
         formState: { errors },
     } = useForm<RegistrationType>({
         resolver: zodResolver(registrationSchema),
@@ -39,6 +40,25 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
 
     const checkCoupon = async (code: string) => {
         if (!code || code.trim() === "") {
+            setCouponValid(null);
+            return;
+        }
+
+        setIsCheckingCoupon(true);
+        try {
+            await api.get("/coupons/check", { code });
+            setCouponValid(true);
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Invalid coupon code.";
+            setCouponValid(false);
+            toast.error(message);
+        } finally {
+            setIsCheckingCoupon(false);
+        }
+    };
+
+    const checkCoupon = async (code: string) => {
+        if (!code) {
             setCouponValid(null);
             return;
         }
@@ -147,8 +167,9 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
                             `}
                             {...register("couponCode", {
                                 onChange: (e) => {
-                                    e.target.value = e.target.value.toUpperCase();
-                                    if (couponValid !== null) setCouponValid(null);
+                                    const uppercasedValue = e.target.value.toUpperCase();
+                                    e.target.value = uppercasedValue;
+                                    setValue("couponCode", uppercasedValue);
                                 },
                                 onBlur: (e) => checkCoupon(e.target.value),
                             })}
