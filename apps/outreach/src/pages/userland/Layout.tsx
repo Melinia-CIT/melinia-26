@@ -19,14 +19,10 @@ const AppLayout = () => {
             const response = await api.get("/users/me")
             return response.data
         },
-        staleTime: 5 * 60 * 1000
+        staleTime: 5 * 60 * 1000,
     })
 
-    const {
-        data: paymentStatus,
-        isLoading: paymentLoading,
-        isError: paymentError,
-    } = useQuery({
+    const { data: paymentStatus, isLoading: paymentLoading } = useQuery({
         queryKey: ["paymentStatus"],
         queryFn: async () => {
             const response = await paymentService.getPaymentStatus()
@@ -69,7 +65,7 @@ const AppLayout = () => {
                     >
                         <motion.div
                             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                            onClick={() => { }}
+                            onClick={() => {}}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -101,10 +97,10 @@ const AppLayout = () => {
                 {showPaymentModal && (
                     <PaymentModal
                         isOpen={true}
-                        onClose={() => { }}
+                        onClose={() => {}}
                         userName={userData?.name || ""}
                         userEmail={userData?.email || ""}
-                        onPaymentSuccess={() => { }}
+                        onPaymentSuccess={() => {}}
                         isRequired={true}
                     />
                 )}
