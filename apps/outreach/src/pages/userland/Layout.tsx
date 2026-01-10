@@ -16,7 +16,7 @@ const AppLayout = () => {
     const { data: userData, isLoading: userLoading } = useQuery({
         queryKey: ["userMe"],
         queryFn: fetchUser,
-        staleTime: 5 * 60 * 1000
+        staleTime: 5 * 60 * 1000,
     })
 
     const { data: paymentStatus, isLoading: paymentLoading } = useQuery({
@@ -35,7 +35,10 @@ const AppLayout = () => {
 
     const showProfileModal = !userLoading && userData && !userData.profile_completed
     const showPaymentModal =
-        isRestrictedRoute && !paymentLoading && (!paymentStatus || !paymentStatus.paid)
+        !import.meta.env.DEV &&
+        isRestrictedRoute &&
+        !paymentLoading &&
+        (!paymentStatus || !paymentStatus.paid)
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
@@ -62,7 +65,7 @@ const AppLayout = () => {
                     >
                         <motion.div
                             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                            onClick={() => { }}
+                            onClick={() => {}}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -94,10 +97,10 @@ const AppLayout = () => {
                 {showPaymentModal && (
                     <PaymentModal
                         isOpen={true}
-                        onClose={() => { }}
+                        onClose={() => {}}
                         userName={userData?.name || ""}
                         userEmail={userData?.email || ""}
-                        onPaymentSuccess={() => { }}
+                        onPaymentSuccess={() => {}}
                         isRequired={true}
                     />
                 )}
