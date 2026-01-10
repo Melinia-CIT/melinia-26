@@ -12,6 +12,7 @@ import { createHash } from "crypto";
 import { sendOTP, sendResetLink } from "../workers/email/service";
 import { createRateLimiter } from "../middleware/ratelimiter.middleware";
 import type { CookieOptions } from "hono/utils/cookie";
+import { couponExists, couponRedeemed, redeemCoupon } from "../db/queries/coupons.queries";
 
 export const auth = new Hono();
 
@@ -90,8 +91,9 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
 
 
 auth.post("/register", zValidator("json", registrationSchema), async (c) => {
-    const { passwd, confirmPasswd } = c.req.valid("json");
+    const { passwd, confirmPasswd, couponCode } = c.req.valid("json");
     const token = getCookie(c, "registration_token");
+    console.log(couponCode);
 
     if (!token) {
         throw new HTTPException(401, { message: "Registration token not provided" });
@@ -102,17 +104,25 @@ auth.post("/register", zValidator("json", registrationSchema), async (c) => {
         throw new HTTPException(401, { message: "Email not verified." });
     }
 
-    if (passwd !== confirmPasswd) {
-        throw new HTTPException(400, { message: "Password doesn't match" });
-    }
-
     const exists = await checkUserExists(email as string);
     if (exists) {
         throw new HTTPException(409, { message: "User already exists, try logging in." })
     }
 
+    if (passwd !== confirmPasswd) {
+        throw new HTTPException(400, { message: "Password doesn't match" });
+    }
     const passwdHash = await Bun.password.hash(passwd);
-    const user = await insertUser(email as string, passwdHash);
+
+    const validCoupon = !!couponCode && (await couponExists(couponCode) && !await couponRedeemed(couponCode));
+    if (couponCode !== undefined && !validCoupon) {
+        throw new HTTPException(400, { message: "Invalid coupon code" });
+    }
+
+    const user = await insertUser(email as string, passwdHash, validCoupon);
+    if (user && validCoupon) {
+        await redeemCoupon(user.id, couponCode);
+    }
 
     deleteCookie(c, "registration_token", getCookieOptions(0, "/api/v1/auth"));
 

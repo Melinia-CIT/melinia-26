@@ -1,8 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { events, auth, user, teamRouter, payment } from "./routes";
-import college from "./routes/colleges.route";
+import { events, auth, user, teamRouter, payment, college, coupons } from "./routes";
 import { HTTPException } from "hono/http-exception";
 
 const app = new Hono();
@@ -21,7 +20,12 @@ app.onError((err, c) => {
 
 app.use(
     cors({
-        origin: ["http://localhost:5173", "https://d2ects9rfqf4lr.cloudfront.net", "https://melinia.in", "https://mlndemo.melinia.in"],
+        origin: [
+            "http://localhost:5173",
+            "https://d2ects9rfqf4lr.cloudfront.net",
+            "https://melinia.in",
+            "https://mlndemo.melinia.in"
+        ],
         credentials: true
     })
 );
@@ -37,6 +41,7 @@ v1.route("/events", events);
 v1.route("/teams", teamRouter);
 v1.route("/colleges", college);
 v1.route("/payment", payment);
+v1.route("/coupons", coupons);
 
 app.route("/api/v1", v1);
 

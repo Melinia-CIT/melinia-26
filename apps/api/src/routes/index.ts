@@ -3,3 +3,5 @@ export * from "./auth.route";
 export * from "./team.route";
 export * from "./user.route";
 export * from "./payments.route";
+export * from "./coupons.route";
+export * from "./colleges.route";

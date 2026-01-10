@@ -19,6 +19,7 @@ export const registrationSchema = z.object({
         .regex(/[a-z]/, "Must contain at least one lowercase letter")
         .regex(/[0-9]/, "Must contain at least one number"),
     confirmPasswd: z.string(),
+    couponCode: z.string().optional()
 }).refine((data) => data.passwd === data.confirmPasswd, {
     message: "Passwords don't match",
     path: ["confirmPasswd"]
