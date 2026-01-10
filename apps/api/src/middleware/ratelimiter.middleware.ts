@@ -1,6 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
-import { redis } from "../utils/redis"
+import { ioredis } from "../utils/redis";
 
 interface Limits {
     ipLimit?: number;
@@ -41,9 +41,9 @@ export const createRateLimiter = ({
 
         const ipRateKey = `rl:${prefix}:ip:${ip}`;
 
-        const ipCount = await redis.incr(ipRateKey);
+        const ipCount = await ioredis.incr(ipRateKey);
         if (ipCount === 1) {
-            await redis.expire(ipRateKey, windowSeconds);
+            await ioredis.expire(ipRateKey, windowSeconds);
         }
 
         if (ipCount > ipLimit) {
@@ -54,7 +54,7 @@ export const createRateLimiter = ({
 
         const cooldownKey = `rl:${prefix}:cooldown:${email}`;
 
-        const isOnCooldown = await redis.get(cooldownKey);
+        const isOnCooldown = await ioredis.get(cooldownKey);
         if (isOnCooldown) {
             throw new HTTPException(429, {
                 message: "Please wait a moment before requesting again.",
@@ -63,9 +63,9 @@ export const createRateLimiter = ({
 
         const emailRateKey = `rl:${prefix}:email:${email}`;
 
-        const emailCount = await redis.incr(emailRateKey);
+        const emailCount = await ioredis.incr(emailRateKey);
         if (emailCount === 1) {
-            await redis.expire(emailRateKey, windowSeconds);
+            await ioredis.expire(emailRateKey, windowSeconds);
         }
 
         if (emailCount > emailLimit) {
@@ -74,7 +74,7 @@ export const createRateLimiter = ({
             });
         }
 
-        await redis.set(cooldownKey, "1", "EX", cooldownSeconds);
+        await ioredis.set(cooldownKey, "1", "EX", cooldownSeconds);
 
         await next();
     });
