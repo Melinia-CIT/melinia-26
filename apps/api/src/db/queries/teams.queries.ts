@@ -14,16 +14,22 @@ import {
     updateTeamSchema,
     teamDetailsSchema
 } from "@melinia/shared";
+import { getUserByMail } from "./users.queries";
 
 // Helper functions
 export async function isPaymentDone(email_id: string): Promise<boolean> {
     try {
-        const result = await sql`
-            SELECT 1 FROM payments WHERE email = ${email_id} AND payment_status = 'PAID'
-        `;
-        return result.length > 0;
+        const user = await getUserByMail(email_id);
+
+        const {payment_status} = user!;
+
+        if(payment_status==='PAID' || payment_status==='EXEMPTED'){
+            return true;
+        }
+
+        return false;
     } catch (error: unknown) {
-        throw new HTTPException(500, { message: "Internal Server Error" });
+        throw new HTTPException(500, { message: 'Internal Server Error' });
     }
 }
 
@@ -37,7 +43,21 @@ export async function checkProfileExists(id: string): Promise<boolean> {
         throw new HTTPException(500, { message: "Internal Server Error" });
     }
 }
+export async function isTeamRegistered(team_id: string): Promise<boolean> {
+    try {
+        const [team] = await sql`
+            SELECT event_id FROM teams WHERE id = ${team_id}
+        `;
 
+        // Check if team exists
+        if (!team) return false;
+
+        return team.event_id !== null && team.event_id !== undefined;
+
+    } catch (error: unknown) {
+        throw new HTTPException(500, { message: 'Internal Server Error' });
+    }
+}
 // Create Team with Member Invitations (Same College Only)
 export async function createTeam(input: CreateTeam, leader_id: string) {
     const data = createTeamSchema.parse(input);
@@ -389,7 +409,18 @@ export async function inviteTeamMember(input: AddNewMemberRequest, requester_id:
             };
         }
 
-        // 11. Create new invitation
+        // 11. Check if the team is registered
+        const isLocked = await isTeamRegistered(team_id);
+        if(isLocked){
+            return {
+                status: false,
+                statusCode: 400,
+                message: `Team is registered for an event, so new member cannot be allowed`,
+                data:{}
+            }
+        } 
+
+        // 12. Create new invitation
         const [invitationRow] = await sql`
             INSERT INTO invitations (team_id, invitee_id, inviter_id, status)
             VALUES (${team_id}, ${invitee_id}, ${requester_id}, 'pending')
