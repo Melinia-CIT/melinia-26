@@ -16,9 +16,11 @@ RUN bun run build:api
 
 FROM base AS runner
 WORKDIR /app
+RUN mkdir -p /app/logs /app/logs/archived
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=deps /app/apps/api/package.json ./package.json
+VOLUME ["/app/logs"]
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD bun run --eval "fetch('http://localhost:3000/api/v1/ping').then(r=>r.ok?0:1)"

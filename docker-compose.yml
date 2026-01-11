@@ -10,6 +10,8 @@ services:
         env_file: .env
         environment:
             - PORT=3000
+        volumes:
+            - /app/melinia/logs/api-1:/app/logs
 
     api-2:
         image: ghcr.io/melinia-cit/melinia-26/api:latest
@@ -20,6 +22,8 @@ services:
         env_file: .env
         environment:
             - PORT=3000
+        volumes:
+            - /app/melinia/logs/api-2:/app/logs
 
     api-3:
         image: ghcr.io/melinia-cit/melinia-26/api:latest
@@ -30,6 +34,8 @@ services:
         env_file: .env
         environment:
             - PORT=3000
+        volumes:
+            - /app/melinia/logs/api-3:/app/logs
 
     api-4:
         image: ghcr.io/melinia-cit/melinia-26/api:latest
@@ -40,6 +46,8 @@ services:
         env_file: .env
         environment:
             - PORT=3000
+        volumes:
+            - /app/melinia/logs/api-4:/app/logs
 
     worker:
         image: ghcr.io/melinia-cit/melinia-26/api:latest
@@ -66,9 +74,21 @@ services:
             - api-3
             - api-4
 
+    uptime-kuma:
+        image: louislam/uptime-kuma:latest
+        container_name: melinia-uptime-kuma
+        restart: unless-stopped
+        ports:
+            - "3000:3001"
+        volumes:
+            - uptime_kuma_data:/app/data
+        networks:
+            - melinia-network
+
 volumes:
     caddy_data:
     caddy_config:
+    uptime_kuma_data:
 
 networks:
     default:

@@ -17,3 +17,7 @@ api.melinia.in {
 :80 {
     redir https://{host}{uri} permanent
 }
+
+uptime.melinia.in {
+    reverse_proxy uptime-kuma:3001
+}
