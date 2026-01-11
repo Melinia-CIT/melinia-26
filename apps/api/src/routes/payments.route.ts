@@ -5,12 +5,15 @@ import Razorpay from "razorpay"
 import crypto from "crypto"
 
 import { authMiddleware } from "../middleware/auth.middleware"
+import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
 import {
     getUserEmail,
     createPaymentRecord,
     updatePaymentStatus,
     getUserLatestPaymentStatus,
     checkUserExistsById,
+    getUserIdByOrderId,
+    updateUserPaymentStatus,
 } from "../db/queries"
 
 const keyId = process.env.RAZORPAY_KEY_ID
@@ -77,44 +80,21 @@ payment.post("/webhook", async c => {
         const paidAt = status === "PAID" ? new Date(payment.created_at * 1000) : null
 
         await updatePaymentStatus(payment, status, paidAt)
+
+        if (status === "PAID") {
+            const userId = await getUserIdByOrderId(payment.order_id)
+            if (userId) {
+                await updateUserPaymentStatus(userId, "PAID")
+            }
+        }
     }
 
     return c.json({ status: "ok" })
 })
 
-payment.get("/payment-status", authMiddleware, async c => {
+payment.get("/payment-status", authMiddleware, paymentStatusMiddleware, async c => {
     try {
-        const userId = c.get("user_id")
-
-        const userExists = await checkUserExistsById(userId)
-
-        if (!userExists) {
-            return c.json({ error: "User not found" }, 404)
-        }
-
-        const payment = await getUserLatestPaymentStatus(userId)
-
-        if (!payment) {
-            return c.json({ error: "No payment record found" }, 404)
-        }
-
-        if (payment.payment_status === "PAID") {
-            return c.json({ paid: true }, 200)
-        }
-
-        if (payment.payment_status === "CREATED") {
-            return c.json({ error: "Payment pending" }, 202)
-        }
-
-        if (payment.payment_status === "FAILED") {
-            return c.json({ error: "Payment failed" }, 402)
-        }
-
-        if (payment.payment_status === "REFUNDED") {
-            return c.json({ error: "Payment refunded" }, 402)
-        }
-
-        return c.json({ error: "Invalid payment state" }, 500)
+        return c.json({ paid: true }, 200)
     } catch (err) {
         console.error("Payment status check failed:", err)
         return c.json({ error: "Internal server error" }, 500)
