@@ -12,8 +12,7 @@ on:
 
 jobs:
     build-and-deploy:
-        permissions:
-            packages: write
+        permissions: write-all
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
