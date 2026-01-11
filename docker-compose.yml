@@ -76,8 +76,6 @@ services:
         image: louislam/uptime-kuma:latest
         container_name: melinia-uptime-kuma
         restart: unless-stopped
-        ports:
-            - "3000:3001"
         volumes:
             - uptime_kuma_data:/app/data
 
