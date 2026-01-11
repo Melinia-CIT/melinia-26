@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
     api-1:
         image: ghcr.io/melinia-cit/melinia-26/api:latest
@@ -82,8 +80,6 @@ services:
             - "3000:3001"
         volumes:
             - uptime_kuma_data:/app/data
-        networks:
-            - melinia-network
 
 volumes:
     caddy_data:
