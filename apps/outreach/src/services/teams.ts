@@ -45,6 +45,19 @@ export class TeamManagementService{
         const response = await api.post(`/teams/${teamID}/members`, emailID);
         return response;
     }
+    public getInvitationsForUser = async ()=>{
+        const response = await api.get(`/me/invites`);
+        return response;
+    }
+    public acceptInvitation = async (invitationID:number)=>{
+        const response = await api.post(`/pending_invitations/:${invitationID}`);
+        return response;
+    }
+
+    public declineInviation = async (invitationID:number)=>{
+        const response = await api.put(`/pending_invitations/:${invitationID}`);
+        return response;
+    }
 
 };
 

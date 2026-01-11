@@ -24,6 +24,7 @@ import { sendError, sendSuccess } from "../utils/response";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware";
 import { HTTPException } from "hono/http-exception";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 export const teamRouter = new Hono();
 
