@@ -83,3 +83,15 @@ export async function checkUserExistsById(userId: string): Promise<boolean> {
 
     return !!user
 }
+
+export async function getUserIdByOrderId(orderId: string): Promise<string | null> {
+    const [payment] = await sql`
+        SELECT user_id FROM payments WHERE order_id = ${orderId}
+    `
+
+    if (!payment) {
+        return null
+    }
+
+    return payment.user_id
+}
