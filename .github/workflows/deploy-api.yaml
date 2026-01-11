@@ -40,6 +40,16 @@ jobs:
                   docker push ghcr.io/melinia-cit/melinia-26/api:${{ github.sha }}
                   docker push ghcr.io/melinia-cit/melinia-26/api:latest
 
+            - name: Copy deployment files
+              uses: appleboy/scp-action@master
+              with:
+                  host: ${{ secrets.DO_HOST }}
+                  username: ${{ secrets.DO_USER }}
+                  key: ${{ secrets.DO_PVT_KEY }}
+                  source: "docker-compose.yml,caddy/Caddyfile"
+                  target: "/app/melinia"
+                  strip_components: 0
+
             - name: Deploy to VPS
               uses: appleboy/ssh-action@master
               env:
@@ -60,6 +70,7 @@ jobs:
                       # Create .env file
                       echo "$ENV_CONTENT" > /app/melinia/.env
 
+                      # Login to GHCR
                       echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
                       docker pull ghcr.io/melinia-cit/melinia-26/api:latest
 
