@@ -1,97 +1,80 @@
-name: Deploy Melinia API
+name: Deploy Melinia API (Docker + GHCR)
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - "apps/api/**"
-      - "packages/shared/**"
-      - ".github/workflows/deploy-api.yaml"
+    push:
+        branches: [master]
+        paths:
+            - "apps/api/**"
+            - "packages/shared/**"
+            - "docker-compose.yml"
+            - "caddy/Caddyfile"
+            - ".github/workflows/deploy-api.yaml"
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: 1.3.4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.4
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install dependencies
-        run: bun install
+            - name: Build Docker image
+              run: |
+                  docker build -f apps/api/Dockerfile -t ghcr.io/melinia-cit/melinia-26/api:${{ github.sha }} .
+                  docker tag ghcr.io/melinia-cit/melinia-26/api:${{ github.sha }} ghcr.io/melinia-cit/melinia-26/api:latest
 
-      - name: Build all targets
-        run: bun run build:api
+            - name: Push to GHCR
+              run: |
+                  docker push ghcr.io/melinia-cit/melinia-26/api:${{ github.sha }}
+                  docker push ghcr.io/melinia-cit/melinia-26/api:latest
 
-      - name: Prepare deployment package
-        working-directory: apps/api
-        run: |
-          mkdir -p deploy-package
-          cp dist/index.js deploy-package/
-          cp dist/migrate.js deploy-package/
-          cp dist/worker.js deploy-package/
-          cp pm2.config.js deploy-package/
+            - name: Deploy to VPS
+              uses: appleboy/ssh-action@master
+              env:
+                  ENV_CONTENT: ${{ secrets.ENV }}
+              with:
+                  host: ${{ secrets.DO_HOST }}
+                  username: ${{ secrets.DO_USER }}
+                  key: ${{ secrets.DO_PVT_KEY }}
+                  envs: ENV_CONTENT
+                  script: |
+                      set -e
 
-      - name: Deploy to Droplet
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USER }}
-          key: ${{ secrets.DO_PVT_KEY }}
-          source: "apps/api/deploy-package/*"
-          target: "/app/melinia-api-temp"
-          strip_components: 3
+                      # Create directory structure
+                      mkdir -p /app/melinia/caddy
 
-      - name: Deploy and restart services
-        uses: appleboy/ssh-action@master
-        env:
-          ENV_CONTENT: ${{ secrets.ENV }}
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USER }}
-          key: ${{ secrets.DO_PVT_KEY }}
-          envs: ENV_CONTENT
-          script: |
-            set -e
+                      # Create .env file
+                      echo "$ENV_CONTENT" > /app/melinia/.env
 
-            export PATH="/home/${{ secrets.DO_USER }}/.bun/bin:/home/${{ secrets.DO_USER }}/.cache/.bun/bin:$PATH"
+                      # Pull latest image
+                      docker pull ghcr.io/melinia-cit/melinia-26/api:latest
 
-            echo "$ENV_CONTENT" > /app/melinia-api-temp/.env
+                      # Run migrations
+                      echo "Running migrations..."
+                      docker run --rm \
+                        --env-file /app/melinia/.env \
+                        ghcr.io/melinia-cit/melinia-26/api:latest \
+                        bun run dist/migrate.js
 
-            echo "Running database migrations..."
-            cd /app/melinia-api-temp
-            if ! bun run migrate.js; then
-              echo "Migration failed! Aborting deployment."
-              rm -rf /app/melinia-api-temp
-              exit 1
-            fi
-            echo "Migrations completed successfully."
+                      # Update and restart services
+                      cd /app/melinia
+                      docker compose up -d
 
-            if [ -d /app/melinia-api ]; then
-              BACKUP_DIR="/app/melinia-api-backup-$(date +%Y%m%d-%H%M%S)"
-              echo "Creating backup at $BACKUP_DIR"
-              mv /app/melinia-api $BACKUP_DIR
-            fi
+                      # Health check
+                      echo "Waiting for services to start..."
+                      sleep 15
+                      curl -f http://localhost/api/v1/ping || exit 1
 
-            mv /app/melinia-api-temp /app/melinia-api
-
-            cd /app/melinia-api
-
-            pm2 delete melinia-api 2>/dev/null || true
-            pm2 delete melinia-worker 2>/dev/null || true
-
-            pm2 start pm2.config.js
-            pm2 save
-
-            echo "Deployment completed successfully!"
-            pm2 status
-
-            cd /app
-            ls -dt melinia-api-backup-* 2>/dev/null | tail -n +4 | xargs rm -rf || true
-
-            echo "Old backups cleaned up."
+                      echo "Deployment successful!"
+                      docker ps
