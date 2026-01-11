@@ -226,10 +226,11 @@ export async function getEventById(input: GetEventDetailsInput) {
             status: true, 
             statusCode: 200, 
             message: "Event details retrieved successfully", 
-            data: eventSchema.parse(fullEvent) // Correct Parsing
+            data: eventSchema.parse(fullEvent)
         };
     } catch (error) { throw error; }
 }
+
 
 export async function updateEvent(input: UpdateEventDetailsInput & { id: string }) {
     const data = updateEventDetailsSchema.parse(input);
@@ -263,7 +264,6 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
             WHERE id = ${eventId} RETURNING *;
         `;
 
-        // FIXED: Error #2 - Checking if eventRow exists before returning
         if (!eventRow) {
             return { status: false, statusCode: 404, message: "Event not found", data: {} };
         }
@@ -337,7 +337,6 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
         `;
         const eventRow = rows[0];
 
-        // FIXED: Error #3 - Checking if eventRow exists (was causing "Object is possibly undefined" in destructuring)
         if (!eventRow) {
             return { status: false, statusCode: 404, message: "Event not found", data: {} };
         }
@@ -382,23 +381,98 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
                 }
             }
         }
+        
         const [result] = await sql`INSERT INTO event_registrations (event_id, team_id, user_id, registered_at) VALUES (${eventId}, ${teamId || null}, ${userId}, NOW()) RETURNING *`;
+        
+        if (isTeamRegistration && teamId) {
+            await sql`UPDATE teams SET event_id = ${eventId} WHERE id = ${teamId}`;
+        }
+
         return { status: true, statusCode: 201, message: "Event registration successful", data: result };
     } catch (error) {
         throw error;
     }
 }
 
-export async function getUserEventRegistrations(userId: string) {
+export async function getUserEventStatusbyEventId(userId: string, eventId: string, teamId?: string) {
     try {
-        const registrations = await sql`
-            SELECT er.*, e.name as event_name, e.participation_type
-            FROM event_registrations er
-            JOIN events e ON er.event_id = e.id
-            WHERE er.user_id = ${userId}
-            ORDER BY er.registered_at DESC
+        //Fetch event details to determine participation type
+        const [event] = await sql`
+            SELECT participation_type FROM events WHERE id = ${eventId}
         `;
-        return { status: true, statusCode: 200, message: "User registrations fetched successfully", data: registrations };
+        if (!event) {
+            return { status: false, statusCode: 404, message: "Event not found", data: {} };
+        }
+
+        const isSolo = event.participation_type.toLowerCase() === "solo";
+
+        //CHECKING FOR SOLO EVENT
+        if (isSolo) {
+            const [registration] = await sql`
+                SELECT id FROM event_registrations 
+                WHERE event_id = ${eventId} 
+                AND user_id = ${userId} 
+                AND team_id IS NULL
+            `;
+
+            if (registration) {
+                return { 
+                    status: true, 
+                    statusCode: 200, 
+                    message: "User is registered for this solo event", 
+                    data: { registration_status: "registered" } 
+                };
+            }
+        } 
+        
+        //CHECKING FOR TEAM EVENT
+        else {
+            const userTeams = await sql`
+                SELECT t.id, t.name, t.event_id, 
+                (SELECT count(*) FROM team_members tm WHERE tm.team_id = t.id) as member_count
+                FROM teams t
+                JOIN team_members tm ON t.id = tm.team_id
+                WHERE tm.user_id = ${userId}
+            `;
+
+            if (teamId) {
+                const specificTeam = userTeams.find(t => t.id === teamId);
+                if (specificTeam && specificTeam.event_id === eventId) {
+                    return {
+                        status: true,
+                        statusCode: 200,
+                        message: "The specified team is registered for this event",
+                        data: {
+                            registration_status: "registered",
+                            team_name: specificTeam.team_name,
+                            member_count: specificTeam.member_count
+                        }
+                    };
+                }
+            }
+
+            const registeredTeam = userTeams.find(t => t.event_id === eventId);
+            if (registeredTeam) {
+                return {
+                    status: true,
+                    statusCode: 200,
+                    message: "User is already registered for this event via a team",
+                    data: {
+                        registration_status: "registered",
+                        team_name: registeredTeam.name,
+                        member_count: registeredTeam.member_count
+                    }
+                };
+            }
+        }
+
+        return { 
+            status: true, 
+            statusCode: 200, 
+            message: "Not registered", 
+            data: { registration_status: "not_registered" } 
+        };
+
     } catch (error) {
         throw error;
     }

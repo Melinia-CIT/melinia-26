@@ -527,29 +527,78 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
     }
 }
 
-// Get All Teams for User
-export async function getAllTeamsForUser(userId: string) {
+// Get All Teams for User - with query param filtering
+export async function getAllTeamsForUser(userId: string, filter?: 'led' | 'member' | 'all') {
     try {
-        const rows = await sql`
-            SELECT
-                t.id,
-                t.name AS team_name,
-                t.event_id,
-                e.name AS event_name,
-                t.leader_id,
-                (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
-            FROM team_members AS tm
-            JOIN teams AS t ON t.id = tm.team_id
-            LEFT JOIN events AS e ON e.id = t.event_id
-            WHERE tm.user_id = ${userId}
-            ORDER BY t.id DESC
-        `;
+        let query;
+
+        if (filter === 'led') {
+            // Teams where user is the leader
+            query = sql`
+                SELECT
+                    t.id,
+                    t.name AS team_name,
+                    t.event_id,
+                    e.name AS event_name,
+                    t.leader_id,
+                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
+                FROM teams AS t
+                LEFT JOIN events AS e ON e.id = t.event_id
+                WHERE t.leader_id = ${userId}
+                ORDER BY t.id DESC
+            `;
+        } else if (filter === 'member') {
+            // Teams where user is a member (not leader)
+            query = sql`
+                SELECT
+                    t.id,
+                    t.name AS team_name,
+                    t.event_id,
+                    e.name AS event_name,
+                    t.leader_id,
+                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
+                FROM team_members AS tm
+                JOIN teams AS t ON t.id = tm.team_id
+                LEFT JOIN events AS e ON e.id = t.event_id
+                WHERE tm.user_id = ${userId} AND t.leader_id != ${userId}
+                ORDER BY t.id DESC
+            `;
+        } else {
+            // All teams (led + member)
+            query = sql`
+                SELECT
+                    t.id,
+                    t.name AS team_name,
+                    t.event_id,
+                    e.name AS event_name,
+                    t.leader_id,
+                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
+                FROM teams AS t
+                LEFT JOIN events AS e ON e.id = t.event_id
+                WHERE t.leader_id = ${userId}
+                UNION ALL
+                SELECT
+                    t.id,
+                    t.name AS team_name,
+                    t.event_id,
+                    e.name AS event_name,
+                    t.leader_id,
+                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
+                FROM team_members AS tm
+                JOIN teams AS t ON t.id = tm.team_id
+                LEFT JOIN events AS e ON e.id = t.event_id
+                WHERE tm.user_id = ${userId} AND t.leader_id != ${userId}
+                ORDER BY id DESC
+            `;
+        }
+
+        const rows = await query;
 
         return {
             status: true,
             statusCode: 200,
-            message: 'List of all teams for this user',
-            data: rows
+            message: `List of ${filter === 'led' ? 'teams led by' : filter === 'member' ? 'teams user is member of' : 'all'} this user`,
+            data: rows,
         };
     } catch (error) {
         throw error;

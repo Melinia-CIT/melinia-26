@@ -28,7 +28,7 @@ export class TeamManagementService{
     };
 
     public teamList = async ()=>{
-        const response = await api.get(`/teams`);
+        const response = await api.get(`/teams?filter=all`);
         return response.data;
     }
   

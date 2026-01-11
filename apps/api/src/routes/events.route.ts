@@ -13,7 +13,7 @@ import {
     deleteEvent, 
     updateEvent, 
     registerForEvent, 
-    getUserEventRegistrations
+    getUserEventStatusbyEventId
 } from "../db/queries";
 import { sendError, sendSuccess } from "../utils/response";
 import { 
@@ -111,7 +111,7 @@ events.post("/:id/register", authMiddleware, participantOnlyMiddleware, zValidat
     try {
         const userId = c.get('user_id');
         const { id } = c.req.valid('param');
-        const formData = await c.req.valid('json');  // { teamId? }
+        const formData = await c.req.valid('json');  
         
         const { statusCode, status, data, message } = await registerForEvent({ 
             ...formData, 
@@ -121,6 +121,28 @@ events.post("/:id/register", authMiddleware, participantOnlyMiddleware, zValidat
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error("Registration error:", error);
+        return sendError(c);
+    }
+});
+
+// Check Registration Status for a specific event
+events.get("/:id/status", authMiddleware, zValidator("param", getEventDetailsSchema), async (c) => {
+    try {
+        const userId = c.get('user_id'); 
+        const { id: eventId } = c.req.valid('param');
+        const teamId = c.req.query('teamId');
+
+        const result = await getUserEventStatusbyEventId(userId, eventId, teamId);
+        
+        return sendSuccess(
+            c, 
+            result.data, 
+            result.message, 
+            result.status, 
+            result.statusCode
+        );
+    } catch (error: unknown) {
+        console.error("Error fetching registration status:", error);
         return sendError(c);
     }
 });
