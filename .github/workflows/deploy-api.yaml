@@ -44,11 +44,13 @@ jobs:
               uses: appleboy/ssh-action@master
               env:
                   ENV_CONTENT: ${{ secrets.ENV }}
+                  GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GHCR_USER: ${{ github.actor }}
               with:
                   host: ${{ secrets.DO_HOST }}
                   username: ${{ secrets.DO_USER }}
                   key: ${{ secrets.DO_PVT_KEY }}
-                  envs: ENV_CONTENT
+                  envs: ENV_CONTENT, GHCR_TOKEN, GHCR_USER
                   script: |
                       set -e
 
@@ -58,7 +60,7 @@ jobs:
                       # Create .env file
                       echo "$ENV_CONTENT" > /app/melinia/.env
 
-                      # Pull latest image
+                      echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
                       docker pull ghcr.io/melinia-cit/melinia-26/api:latest
 
                       # Run migrations
