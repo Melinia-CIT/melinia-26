@@ -191,7 +191,7 @@ apps/outreach/src/
 │   │   ├── badge.tsx              (New - shadcn badge component)
 │   │   └── countdown-timer.tsx     (New - minimal countdown timer)
 │   └── outreach/
-│       ├── Hero.tsx                (Modified - main hero section)
+│       ├── Hero.tsx                (New - main hero section)
 │       ├── CountdownSection.tsx    (New - countdown section wrapper)
 │       └── FooterSection.tsx       (New - footer with map & contact)
 ├── lib/
@@ -204,7 +204,8 @@ apps/outreach/src/
 ├── pages/
 │   ├── HudButtonDemo.tsx          (New - button showcase)
 │   └── outreach/
-│       └── Home.tsx              (Modified - added FooterSection)
+│       └── Home.tsx              (New - Hero, Countdown, Footer sections)
+├── App.tsx                      (Modified - / route now shows OutreachHome)
 └── index.css                    (Modified - removed glitch CSS, added color vars)
 ```
 
@@ -221,6 +222,25 @@ apps/outreach/src/
 | Video Poster   | Canvas extraction                | No separate poster image file needed     |
 | Positioning    | Buttons relative to logo bottom  | `translate-y-[140%]` adjustable          |
 | Navigation     | react-router-dom                 | Project uses Vite, not Next.js           |
+| Route          | `/` route shows OutreachHome     | Simplified routing for landing page      |
+
+---
+
+## Recent Changes
+
+### Latest Commit (c305c6c)
+
+**Date:** January 13, 2026
+**Branch:** `rework-home`
+**Commit:** feat: redesign outreach landing page with Spider-Verse theme
+
+**Changes:**
+
+- Outreach landing page now served at `/` (no longer at `/outreach`)
+- Removed old home components (events, prize pool, sponsors, people)
+- Added AGENTS.md documentation file
+- Full Spider-Verse themed redesign complete
+- Hero, Countdown, Footer sections live at root URL
 
 ---
 
