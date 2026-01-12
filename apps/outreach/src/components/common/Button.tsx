@@ -34,7 +34,7 @@ const Button: React.FC<ButtonProps> = ({
     danger:
       "bg-red-900/10 hover:bg-red-900/20 border border-red-900/50 text-red-400 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2",
    outline:
-      "border border-border bg-darkSurface text-black hover:bg-darkSurface focus:ring-primary disabled:bg-darkSurface disabled:cursor-not-allowed",
+      "border border-border bg-black text-white hover:bg-darkSurface focus:ring-primary disabled:bg-darkSurface disabled:cursor-not-allowed",
   };
 
   const sizeClasses = {

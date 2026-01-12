@@ -14,8 +14,8 @@ function DialogBox(props: ContainerProps) {
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-background rounded-lg p-6 max-w-md w-full border shadow-lg">
-        <h3 className="text-xl font-bold text-primary mb-4">
+      <div className="bg-zinc-900 rounded-lg p-6 max-w-md w-full shadow-lg">
+        <h3 className="text-xl font-bold text-white mb-4">
           {props.heading}
         </h3>
         <p className="mb-6">

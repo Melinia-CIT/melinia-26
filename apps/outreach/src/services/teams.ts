@@ -46,16 +46,20 @@ export class TeamManagementService{
         return response;
     }
     public getInvitationsForUser = async ()=>{
-        const response = await api.get(`/me/invites`);
+        const response = await api.get(`/users/me/invites`);
         return response;
     }
     public acceptInvitation = async (invitationID:number)=>{
-        const response = await api.post(`/pending_invitations/:${invitationID}`);
+        const response = await api.post(`/teams/pending_invitations/:${invitationID}`);
         return response;
     }
 
     public declineInviation = async (invitationID:number)=>{
-        const response = await api.put(`/pending_invitations/:${invitationID}`);
+        const response = await api.put(`/teams/pending_invitations/:${invitationID}`);
+        return response;
+    }
+    public removeTeammate = async (team_id:string, member_id:string)=>{
+        const response = await api.delete(`/teams/${team_id}/team_member/${member_id}`)
         return response;
     }
 

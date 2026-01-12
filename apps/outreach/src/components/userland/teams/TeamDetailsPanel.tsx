@@ -10,6 +10,7 @@ import { type TeamDetails, type AddNewMemberRequest, addNewMemberSchema } from '
 import { Spinner } from '../../common/Spinner';
 import { team_management } from '../../../services/teams';
 import Button from '../../common/Button';
+import DialogBox from '../../common/DialogBox';
 
 interface TeamDetailsPanelProps {
   teamId: string;
@@ -27,7 +28,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-
+  const [deleteMember, setDeleteMember] = useState<boolean>(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  
   // Add Member Form
   const {
     register: registerMember,
@@ -90,6 +93,18 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     }
   });
 
+  const deleteMemberMutation = useMutation({
+    mutationFn:(member_id:string) => team_management.removeTeammate(teamId, member_id),
+    onSuccess:()=>{
+      toast.success("Team member deleted!");
+      setDeleteMember(false);
+    },
+    onError:(err:any)=>{
+      
+      toast.error(err?.response?.data?.message || 'Failed to send invitation');
+    }
+  })
+
 
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteConfirm) return;
@@ -99,6 +114,10 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
       deleteInvitationMutation.mutate(deleteConfirm.id as string);
     }
   }, [deleteConfirm, deleteTeamMutation, deleteInvitationMutation, teamId]);
+
+  const handleDeleteMember = (member_id:string)=>{
+    deleteMemberMutation.mutate(member_id);
+  }
 
   const handleAddMember = (data: AddNewMemberRequest) => {
     addMemberMutation.mutate(data);
@@ -175,6 +194,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                     variant='danger'
                     type='button'
                     size='sm'
+                    onClick={()=>{setDeleteMember(true);
+                      setSelectedMemberId(member.user_id)
+                    }}
                   >
                     Remove
                   </Button>
@@ -263,6 +285,18 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
 
       {/* Delete Confirmation Modal */}
+      {
+        deleteMember && (
+          <DialogBox
+            heading='Remove Teammate'
+            description='Are you sure to delete this member?'
+            actionButtonLabel='Remove'
+            actionButtonVariant='danger'
+            handleActionButton={()=>handleDeleteMember(selectedMemberId)}
+            handleCancelButton={()=>{setDeleteMember(false);}}
+          />
+        )
+      }
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
