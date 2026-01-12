@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { type TeamDetails, type AddNewMemberRequest, addNewMemberSchema } from '@melinia/shared';
 import { Spinner } from '../../common/Spinner';
 import { team_management } from '../../../services/teams';
+import Button from '../../common/Button';
 
 interface TeamDetailsPanelProps {
   teamId: string;
@@ -23,7 +24,7 @@ interface DeleteConfirmState {
 
 export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDelete, onClose }) => {
   const queryClient = useQueryClient();
-  
+
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
@@ -39,7 +40,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     mode: "onSubmit"
   });
 
-  
+
   const { data: response, isLoading, error } = useQuery<TeamDetails>({
     queryKey: ['team', teamId],
     queryFn: async () => {
@@ -50,7 +51,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
   const teamData = response;
 
-  
+
   const deleteTeamMutation = useMutation({
     mutationFn: team_management.deleteTeam,
     onSuccess: () => {
@@ -77,7 +78,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
   });
 
   const addMemberMutation = useMutation({
-    mutationFn: (data: { email: string }) => team_management.addMember(data, teamId), 
+    mutationFn: (data: { email: string }) => team_management.addMember(data, teamId),
     onSuccess: () => {
       toast.success('Invitation sent successfully');
       queryClient.invalidateQueries({ queryKey: ['team', teamId] });
@@ -89,7 +90,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     }
   });
 
-  
+
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteConfirm) return;
     if (deleteConfirm.type === 'team') {
@@ -103,7 +104,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     addMemberMutation.mutate(data);
   };
 
-  
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6">
@@ -136,7 +137,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
         </div>
       </div>
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 min-h-0">
-        
+
         {/* Leader Info */}
         <div className="flex items-center gap-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
           <div className="h-12 w-12 rounded-full bg-blue-900/30 text-blue-400 flex items-center justify-center shrink-0">
@@ -156,7 +157,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
           <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-3 flex items-center gap-2">
             <Community className="h-4 w-4" /> Members
           </h3>
-          
+
           <div className="space-y-2">
             {teamData.members && teamData.members.length > 0 ? (
               teamData.members.map((member) => (
@@ -170,6 +171,13 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                     </p>
                     <p className="text-xs text-zinc-400 truncate">{member.email}</p>
                   </div>
+                  <Button
+                    variant='danger'
+                    type='button'
+                    size='sm'
+                  >
+                    Remove
+                  </Button>
                 </div>
               ))
             ) : (
@@ -211,7 +219,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
         {/* Events Registered */}
         <section>
           <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-3 flex items-center gap-2">
-            <Calendar className="h-4 w-4" /> Registered Events
+            <Calendar className="h-4 w-4" /> Registered Event
           </h3>
           <div className="space-y-2">
             {teamData.events_registered && teamData.events_registered.length > 0 ? (
@@ -224,7 +232,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                 </div>
               ))
             ) : (
-              <p className="text-sm text-zinc-600 italic py-2 text-center">No events registered.</p>
+              <p className="text-sm text-zinc-600 italic py-2 text-center">No event registered.</p>
             )}
           </div>
         </section>
@@ -233,7 +241,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
       <div className="flex-none p-4 border-t border-zinc-800 bg-zinc-900 shrink-0 z-10 relative">
         <div className="flex flex-col sm:flex-row gap-3">
-          
+
           {/* Add Member Button */}
           <button
             onClick={() => setIsAddMemberOpen(true)}
@@ -285,9 +293,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                 className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
               >
                 {(deleteTeamMutation.isPending || deleteInvitationMutation.isPending) ? (
-                    <Spinner h={4} w={4} />
+                  <Spinner h={4} w={4} />
                 ) : (
-                    <Trash className="h-4 w-4" />
+                  <Trash className="h-4 w-4" />
                 )}
                 Delete
               </button>
@@ -324,11 +332,10 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                   type="email"
                   placeholder="peterparker@tuta.com"
                   {...registerMember('email')}
-                  className={`w-full bg-zinc-950 border rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors ${
-                    memberErrors.email
+                  className={`w-full bg-zinc-950 border rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors ${memberErrors.email
                       ? "border-red-500 text-red-100 placeholder-red-300/50 focus:ring-red-500"
                       : "border-zinc-700 text-white placeholder-zinc-600 focus:border-white focus:ring-white"
-                  }`}
+                    }`}
                 />
                 {memberErrors.email && (
                   <p className="text-red-400 text-xs mt-1.5">{memberErrors.email.message}</p>
