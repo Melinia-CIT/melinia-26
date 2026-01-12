@@ -1,20 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Press+Start+2P&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Instrument+Serif:ital@0;1&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Press+Start+2P&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Instrument+Serif:ital@0;1&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300..900&family=Space+Grotesk:wght@300..700&display=swap");
 @import "tailwindcss";
 
 @theme {
+    /* Color Palette - Spider-Verse Theme */
+    --color-black: #000000;
+    --color-purple: #9d00ff;
+    --color-red: #ff0066;
+    --color-blue: #0066ff;
+    --color-white: #ffffff;
+
     /* Font Variables */
     --font-inst: "Instrument Serif", serif;
     --font-geist: "Geist", sans-serif;
     --font-press: "Press Start 2P" system-ui;
     --font-jk: "Plus Jakarta Sans", sans-serif;
+    --font-heading: "Space Grotesk", sans-serif;
+    --font-body: "Inter", sans-serif;
     /* Animation Variables - Pointing to Keyframes below */
     --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
 
     /* Keyframe Definitions */
     @keyframes pulse-slow {
-
         0%,
         100% {
             opacity: 1;
@@ -28,7 +37,6 @@
     }
 
     @keyframes bounce-subtle {
-
         0%,
         100% {
             transform: translateY(0);
@@ -42,7 +50,17 @@
 
 @layer base {
     body {
-        @apply bg-zinc-950 text-white font-geist;
+        @apply bg-zinc-950 text-white;
+        font-family: var(--font-body), sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: var(--font-heading), sans-serif;
     }
 
     button,
