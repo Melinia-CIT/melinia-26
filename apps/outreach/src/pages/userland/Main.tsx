@@ -26,12 +26,19 @@ const Main = () => {
                 <UserCard />
 
                 <motion.div
-                    initial={{ x: 400, opacity: 0 }}
+                    initial={{ x: 400, opacity: 0, scale: 0.95 }}
                     animate={{
                         x: showDesktopNotifications ? 0 : 400,
                         opacity: showDesktopNotifications ? 1 : 0,
+                        scale: showDesktopNotifications ? 1 : 0.95,
                     }}
-                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                        mass: 0.8,
+                        bounce: 0.2,
+                    }}
                     className="absolute top-0 right-4 w-[418px] z-50 pointer-events-none"
                     style={{ pointerEvents: showDesktopNotifications ? "auto" : "none" }}
                 >

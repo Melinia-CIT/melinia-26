@@ -176,9 +176,15 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                     {invitations.map((invitation, index) => (
                         <motion.div
                             key={invitation.invitation_id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 25,
+                                mass: 0.5,
+                                delay: index * 0.05,
+                            }}
                             className="w-full bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 hover:border-zinc-600 transition-all"
                         >
                             <div className="flex items-center justify-between gap-4">
