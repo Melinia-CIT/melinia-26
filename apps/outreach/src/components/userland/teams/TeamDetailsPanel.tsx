@@ -43,7 +43,6 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     mode: "onSubmit"
   });
 
-
   const { data: response, isLoading, error } = useQuery<TeamDetails>({
     queryKey: ['team', teamId],
     queryFn: async () => {
@@ -54,6 +53,8 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
   const teamData = response;
 
+  // Logic: Check if team has registered events
+  const hasRegisteredEvents = teamData?.events_registered && teamData.events_registered.length > 0;
 
   const deleteTeamMutation = useMutation({
     mutationFn: team_management.deleteTeam,
@@ -100,11 +101,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
       setDeleteMember(false);
     },
     onError:(err:any)=>{
-      
-      toast.error(err?.response?.data?.message || 'Failed to send invitation');
+      toast.error(err?.response?.data?.message || 'Failed to delete member');
     }
   })
-
 
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteConfirm) return;
@@ -115,11 +114,16 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     }
   }, [deleteConfirm, deleteTeamMutation, deleteInvitationMutation, teamId]);
 
-  const handleDeleteMember = (member_id:string)=>{
+  const handleDeleteMember = (member_id:string) => {
+    if (hasRegisteredEvents) {
+      toast.error("Cannot remove member while event is registered.");
+      return;
+    }
     deleteMemberMutation.mutate(member_id);
   }
 
   const handleAddMember = (data: AddNewMemberRequest) => {
+    if (hasRegisteredEvents) return; // Should be handled by disabled button, but safety check
     addMemberMutation.mutate(data);
   };
 
@@ -155,7 +159,21 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
           )}
         </div>
       </div>
+      
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 min-h-0">
+        
+        {/* Warning Banner if Events are Registered */}
+        {hasRegisteredEvents && (
+          <div className="bg-yellow-900/10 border border-yellow-700/30 rounded-lg p-3 flex items-start gap-3">
+            <Calendar className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-yellow-200">Team Actions Locked</p>
+              <p className="text-yellow-200/70 text-xs mt-0.5">
+                Members cannot be added or removed because the team is registered for an event.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Leader Info */}
         <div className="flex items-center gap-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
@@ -194,8 +212,10 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                     variant='danger'
                     type='button'
                     size='sm'
-                    onClick={()=>{setDeleteMember(true);
-                      setSelectedMemberId(member.user_id)
+                    disabled={hasRegisteredEvents}
+                    onClick={()=>{
+                        setDeleteMember(true);
+                        setSelectedMemberId(member.user_id)
                     }}
                   >
                     Remove
@@ -267,15 +287,25 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
           {/* Add Member Button */}
           <button
             onClick={() => setIsAddMemberOpen(true)}
-            className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+            disabled={hasRegisteredEvents}
+            className={`flex-1 px-4 py-2.5 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2
+              ${hasRegisteredEvents 
+                ? "bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed" 
+                : "bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white"
+              }`}
           >
             <UserPlus className="h-4 w-4" /> Add Member
           </button>
 
           {/* Delete Team Button */}
           <button
-            onClick={() => setDeleteConfirm({ type: 'team', id: teamId })}
-            className="flex-1 px-4 py-2.5 bg-red-900/10 hover:bg-red-900/20 border border-red-900/50 text-red-400 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+            onClick={() => !hasRegisteredEvents && setDeleteConfirm({ type: 'team', id: teamId })}
+            disabled={hasRegisteredEvents}
+            className={`flex-1 px-4 py-2.5 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2
+              ${hasRegisteredEvents 
+                ? "bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed" 
+                : "bg-red-900/10 hover:bg-red-900/20 border border-red-900/50 text-red-400"
+              }`}
           >
             <Trash className="h-4 w-4" /> Delete Team
           </button>
