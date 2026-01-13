@@ -10,7 +10,11 @@ interface Invitation {
     inviter_email: string
 }
 
-const Notifications = () => {
+interface NotificationsProps {
+    isOpen: boolean
+}
+
+const Notifications = ({ isOpen }: NotificationsProps) => {
     const queryClient = useQueryClient()
 
     const {
@@ -21,15 +25,12 @@ const Notifications = () => {
         queryKey: ["userInvitations"],
         queryFn: async () => {
             const response = await team_management.getInvitationsForUser()
-            console.log("API Response:", response)
-            console.log("Invitations data:", response.data)
             return response.data.invitations
         },
         refetchInterval: 30000,
     })
 
     const invitations: Invitation[] = invitationsData || []
-    console.log("Final invitations array:", invitations)
 
     const acceptMutation = useMutation({
         mutationFn: async (invitationId: number) => {
@@ -88,8 +89,10 @@ const Notifications = () => {
         )
     }
 
+    if (!isOpen) return null
+
     return (
-        <div className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 p-6">
+        <div className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 p-6 animate-in slide-in-from-top-2 duration-300">
             <div className="flex items-center gap-3 mb-6">
                 <User className="w-6 h-6 text-indigo-400" />
                 <h2 className="text-xl font-bold text-white">Team Invitations</h2>
