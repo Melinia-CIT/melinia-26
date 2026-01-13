@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useId } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
@@ -42,6 +42,7 @@ interface Event {
 }
 
 type EventFilter = "flagship" | "technical" | "non-technical"
+
 
 const EventsSection = () => {
     const navigate = useNavigate()
@@ -227,15 +228,12 @@ const EventsSection = () => {
 
                     {/* COLUMN 1: ROUNDS (Left Sidebar) */}
                     <div className="lg:col-span-1 flex flex-col h-full order-2 lg:order-1">
-                        <div className="flex items-center justify-between w-full mb-3 md:mb-4">
-                            {/* Responsive Scale Wrapper for Header */}
-                            <div className="transform scale-[0.75] md:scale-100 origin-left w-full inline-block">
-                                <HudCardHeader
-                                    title="Rounds"
-                                    variant="purple"
-                                    icon={<Box size={18} className="text-purple-500" />}
-                                />
-                            </div>
+                        <div className="w-full mb-3 md:mb-4">
+                            <HudCardHeader
+                                title="Rounds"
+                                variant="purple"
+                                icon={<Box size={18} className="text-purple-500" />}
+                            />
                         </div>
 
                         <div className="flex flex-col gap-3 md:gap-4 w-full">
@@ -467,15 +465,12 @@ const EventsSection = () => {
 
                         {/* Prizes Section */}
                         <div className="flex flex-col gap-2 md:gap-3 w-full">
-                            <div className="flex items-center justify-between w-full">
-                                {/* Responsive Scale Wrapper for Header */}
-                                <div className="transform scale-[0.75] md:scale-100 origin-left w-full inline-block">
-                                    <HudCardHeader
-                                        title="Prize Pool"
-                                        variant="red"
-                                        icon={<Trophy size={18} className="text-yellow-400" />}
-                                    />
-                                </div>
+                            <div className="w-full">
+                                <HudCardHeader
+                                    title="Prize Pool"
+                                    variant="red"
+                                    icon={<Trophy size={18} className="text-yellow-400" />}
+                                />
                             </div>
                             <div className="space-y-2 md:space-y-3 w-full">
                                 {currentEvent?.prizes?.map(prize => (
@@ -510,15 +505,12 @@ const EventsSection = () => {
 
                         {/* Organizers Section */}
                         <div className="flex flex-col gap-2 md:gap-3 w-full">
-                            <div className="flex items-center justify-between w-full">
-                                {/* Responsive Scale Wrapper for Header */}
-                                <div className="transform scale-[0.75] md:scale-100 origin-left w-full inline-block">
-                                    <HudCardHeader
-                                        title="Organizers"
-                                        variant="pink"
-                                        icon={<User size={18} />}
-                                    />
-                                </div>
+                            <div className="w-full">
+                                <HudCardHeader
+                                    title="Organizers"
+                                    variant="pink"
+                                    icon={<User size={18} />}
+                                />
                             </div>
                             <div className="space-y-2 md:space-y-3 w-full">
                                 {currentEvent?.organizers?.map((org, i) => (
@@ -602,7 +594,6 @@ const EventsSection = () => {
                                         )
                                     })}
                                 </div>
-
                                 {/* Divider between categories (except last) */}
                                 {catIdx < categoryOrder.length - 1 && (
                                     <div className="w-px h-6 md:h-8 bg-white/10 mx-1 md:mx-2 hidden sm:block" />
