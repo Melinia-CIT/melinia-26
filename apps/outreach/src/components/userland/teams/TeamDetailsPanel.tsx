@@ -9,6 +9,8 @@ import toast from 'react-hot-toast';
 import { type TeamDetails, type AddNewMemberRequest, addNewMemberSchema } from '@melinia/shared';
 import { Spinner } from '../../common/Spinner';
 import { team_management } from '../../../services/teams';
+import Button from '../../common/Button';
+import DialogBox from '../../common/DialogBox';
 
 interface TeamDetailsPanelProps {
   teamId: string;
@@ -23,10 +25,12 @@ interface DeleteConfirmState {
 
 export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDelete, onClose }) => {
   const queryClient = useQueryClient();
-  
+
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-
+  const [deleteMember, setDeleteMember] = useState<boolean>(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  
   // Add Member Form
   const {
     register: registerMember,
@@ -39,7 +43,6 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     mode: "onSubmit"
   });
 
-  
   const { data: response, isLoading, error } = useQuery<TeamDetails>({
     queryKey: ['team', teamId],
     queryFn: async () => {
@@ -50,7 +53,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
   const teamData = response;
 
-  
+  // Logic: Check if team has registered events
+  const hasRegisteredEvents = teamData?.events_registered && teamData.events_registered.length > 0;
+
   const deleteTeamMutation = useMutation({
     mutationFn: team_management.deleteTeam,
     onSuccess: () => {
@@ -77,7 +82,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
   });
 
   const addMemberMutation = useMutation({
-    mutationFn: (data: { email: string }) => team_management.addMember(data, teamId), 
+    mutationFn: (data: { email: string }) => team_management.addMember(data, teamId),
     onSuccess: () => {
       toast.success('Invitation sent successfully');
       queryClient.invalidateQueries({ queryKey: ['team', teamId] });
@@ -89,7 +94,17 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     }
   });
 
-  
+  const deleteMemberMutation = useMutation({
+    mutationFn:(member_id:string) => team_management.removeTeammate(teamId, member_id),
+    onSuccess:()=>{
+      toast.success("Team member deleted!");
+      setDeleteMember(false);
+    },
+    onError:(err:any)=>{
+      toast.error(err?.response?.data?.message || 'Failed to delete member');
+    }
+  })
+
   const handleDeleteConfirm = useCallback(() => {
     if (!deleteConfirm) return;
     if (deleteConfirm.type === 'team') {
@@ -99,11 +114,20 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     }
   }, [deleteConfirm, deleteTeamMutation, deleteInvitationMutation, teamId]);
 
+  const handleDeleteMember = (member_id:string) => {
+    if (hasRegisteredEvents) {
+      toast.error("Cannot remove member while event is registered.");
+      return;
+    }
+    deleteMemberMutation.mutate(member_id);
+  }
+
   const handleAddMember = (data: AddNewMemberRequest) => {
+    if (hasRegisteredEvents) return; // Should be handled by disabled button, but safety check
     addMemberMutation.mutate(data);
   };
 
-  
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6">
@@ -135,8 +159,22 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
           )}
         </div>
       </div>
+      
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 min-h-0">
         
+        {/* Warning Banner if Events are Registered */}
+        {hasRegisteredEvents && (
+          <div className="bg-yellow-900/10 border border-yellow-700/30 rounded-lg p-3 flex items-start gap-3">
+            <Calendar className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-yellow-200">Team Actions Locked</p>
+              <p className="text-yellow-200/70 text-xs mt-0.5">
+                Members cannot be added or removed because the team is registered for an event.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Leader Info */}
         <div className="flex items-center gap-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
           <div className="h-12 w-12 rounded-full bg-blue-900/30 text-blue-400 flex items-center justify-center shrink-0">
@@ -156,7 +194,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
           <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-3 flex items-center gap-2">
             <Community className="h-4 w-4" /> Members
           </h3>
-          
+
           <div className="space-y-2">
             {teamData.members && teamData.members.length > 0 ? (
               teamData.members.map((member) => (
@@ -170,6 +208,18 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                     </p>
                     <p className="text-xs text-zinc-400 truncate">{member.email}</p>
                   </div>
+                  <Button
+                    variant='danger'
+                    type='button'
+                    size='sm'
+                    disabled={hasRegisteredEvents}
+                    onClick={()=>{
+                        setDeleteMember(true);
+                        setSelectedMemberId(member.user_id)
+                    }}
+                  >
+                    Remove
+                  </Button>
                 </div>
               ))
             ) : (
@@ -211,7 +261,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
         {/* Events Registered */}
         <section>
           <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-3 flex items-center gap-2">
-            <Calendar className="h-4 w-4" /> Registered Events
+            <Calendar className="h-4 w-4" /> Registered Event
           </h3>
           <div className="space-y-2">
             {teamData.events_registered && teamData.events_registered.length > 0 ? (
@@ -224,7 +274,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                 </div>
               ))
             ) : (
-              <p className="text-sm text-zinc-600 italic py-2 text-center">No events registered.</p>
+              <p className="text-sm text-zinc-600 italic py-2 text-center">No event registered.</p>
             )}
           </div>
         </section>
@@ -233,19 +283,29 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
       <div className="flex-none p-4 border-t border-zinc-800 bg-zinc-900 shrink-0 z-10 relative">
         <div className="flex flex-col sm:flex-row gap-3">
-          
+
           {/* Add Member Button */}
           <button
             onClick={() => setIsAddMemberOpen(true)}
-            className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+            disabled={hasRegisteredEvents}
+            className={`flex-1 px-4 py-2.5 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2
+              ${hasRegisteredEvents 
+                ? "bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed" 
+                : "bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white"
+              }`}
           >
             <UserPlus className="h-4 w-4" /> Add Member
           </button>
 
           {/* Delete Team Button */}
           <button
-            onClick={() => setDeleteConfirm({ type: 'team', id: teamId })}
-            className="flex-1 px-4 py-2.5 bg-red-900/10 hover:bg-red-900/20 border border-red-900/50 text-red-400 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+            onClick={() => !hasRegisteredEvents && setDeleteConfirm({ type: 'team', id: teamId })}
+            disabled={hasRegisteredEvents}
+            className={`flex-1 px-4 py-2.5 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2
+              ${hasRegisteredEvents 
+                ? "bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed" 
+                : "bg-red-900/10 hover:bg-red-900/20 border border-red-900/50 text-red-400"
+              }`}
           >
             <Trash className="h-4 w-4" /> Delete Team
           </button>
@@ -255,6 +315,18 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
 
 
       {/* Delete Confirmation Modal */}
+      {
+        deleteMember && (
+          <DialogBox
+            heading='Remove Teammate'
+            description='Are you sure to delete this member?'
+            actionButtonLabel='Remove'
+            actionButtonVariant='danger'
+            handleActionButton={()=>handleDeleteMember(selectedMemberId)}
+            handleCancelButton={()=>{setDeleteMember(false);}}
+          />
+        )
+      }
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -285,9 +357,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                 className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
               >
                 {(deleteTeamMutation.isPending || deleteInvitationMutation.isPending) ? (
-                    <Spinner h={4} w={4} />
+                  <Spinner h={4} w={4} />
                 ) : (
-                    <Trash className="h-4 w-4" />
+                  <Trash className="h-4 w-4" />
                 )}
                 Delete
               </button>
@@ -324,11 +396,10 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                   type="email"
                   placeholder="peterparker@tuta.com"
                   {...registerMember('email')}
-                  className={`w-full bg-zinc-950 border rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors ${
-                    memberErrors.email
+                  className={`w-full bg-zinc-950 border rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors ${memberErrors.email
                       ? "border-red-500 text-red-100 placeholder-red-300/50 focus:ring-red-500"
                       : "border-zinc-700 text-white placeholder-zinc-600 focus:border-white focus:ring-white"
-                  }`}
+                    }`}
                 />
                 {memberErrors.email && (
                   <p className="text-red-400 text-xs mt-1.5">{memberErrors.email.message}</p>

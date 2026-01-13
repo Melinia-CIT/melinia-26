@@ -506,4 +506,18 @@ await runMigration("create single use coupon redemptions table", async () => {
     `;
 })
 
+await runMigration('cascade event_registration when team is deleted', async () => {
+    await sql.begin(async (tx) => {
+        await tx`
+            ALTER TABLE event_registrations
+            DROP CONSTRAINT IF EXISTS event_registrations_team_id_fkey
+        `;
+
+        await tx`
+            ALTER TABLE event_registrations
+            ADD CONSTRAINT event_registrations_team_id_fkey 
+            FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+        `;
+    });
+});
 await sql.end();

@@ -58,7 +58,7 @@ const TeamsPage: React.FC = () => {
             
             <button
               onClick={() => { setIsTeamCreation(true); }}
-              className="flex items-center gap-2 p-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-semibold rounded-md transition-colors border border-zinc-700"
+              className="flex items-center gap-2 p-3 bg-zinc-200 text-zinc-800 text-sm font-semibold rounded-md transition-colors border border-zinc-700"
             >
               <Plus size={14} /> New Team
             </button>
@@ -138,7 +138,7 @@ const TeamsPage: React.FC = () => {
                       <span>Leader: {team.leader_id}</span>
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {team.leader_id} member(s)
+                        {team.member_count} member(s)
                       </span>
                     </div>
                   </div>

@@ -22,12 +22,14 @@ import {
 } from "../db/queries/teams.queries";
 import { sendError, sendSuccess } from "../utils/response";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware";
 import { HTTPException } from "hono/http-exception";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 export const teamRouter = new Hono();
 
 // Create Team //
-teamRouter.post("/", authMiddleware, zValidator("json", createTeamSchema), async (c) => {
+teamRouter.post("/", authMiddleware, paymentStatusMiddleware,zValidator("json", createTeamSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
         const formData = await c.req.valid('json');
@@ -192,7 +194,7 @@ teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: 
     }
 })
 // Add a new member
-teamRouter.post("/:team_id/members", authMiddleware, zValidator("json", addNewMemberSchema), async (c) => {
+teamRouter.post("/:team_id/members", authMiddleware, paymentStatusMiddleware,zValidator("json", addNewMemberSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
         const teamID = c.req.param('team_id');

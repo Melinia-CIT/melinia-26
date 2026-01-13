@@ -42,9 +42,9 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                 // 1. Check Payment Status
                 const payRes = await api.get("/payment/payment-status");
                 if (!isSubscribed) return;
-                const paymentStatus = payRes.data.data?.status?.toLowerCase(); 
+                const paymentStatus = payRes.data.paid; 
 
-                if (paymentStatus !== "paid" && paymentStatus !== "exempted") {
+                if (!paymentStatus) {
                     setStep("payment_needed");
                     return;
                 }

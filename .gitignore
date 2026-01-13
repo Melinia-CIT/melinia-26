@@ -44,3 +44,6 @@ bun.lockb
 # Load testing
 load-test/test-credentials.json
 load-test/*.html
+
+# log files
+log.txt

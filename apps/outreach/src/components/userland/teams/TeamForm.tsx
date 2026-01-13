@@ -1,9 +1,9 @@
 'use strict';
-import { useState } from "react"; // Import useState
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Xmark, Plus,XmarkCircle} from "iconoir-react"; 
+import { Xmark, Plus, XmarkCircle } from "iconoir-react"; 
 import toast from "react-hot-toast";
 import { CreateTeam, createTeamSchema } from "@melinia/shared";
 import { team_management } from "../../../services/teams";
@@ -53,7 +53,13 @@ export const CreateTeamForm: React.FC<CreateTeamFormProps> = ({ onClose }) => {
   });
 
   const onSubmit = (data: CreateTeam) => {
-    createTeamMutation.mutate(data);
+    // Create a sanitized version of the data
+    const sanitizedData = {
+      ...data,
+      name: data.name.trim(), // Trim leading and trailing spaces from the name
+    };
+
+    createTeamMutation.mutate(sanitizedData);
   };
 
   // Handler to add an email
