@@ -256,7 +256,7 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                         damping: 25,
                         mass: 0.5,
                     }}
-                    className="fixed top-16 right-4 w-80 max-h-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-50"
+                    className="absolute top-12 right-0 w-80 max-h-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-50"
                 >
                     <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-900/50">
                         <div className="flex items-center gap-2">
@@ -268,7 +268,7 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                         </div>
                         <button
                             onClick={onClose}
-                            className="text-zinc-400 hover:text-white transition-colors p-1"
+                            className="text-zinc-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-zinc-800"
                         >
                             <Xmark width={16} height={16} />
                         </button>
