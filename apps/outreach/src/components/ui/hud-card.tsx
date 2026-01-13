@@ -91,15 +91,15 @@ export function HudCard({
         hover:
             shouldAnimate && glitchOnHover
                 ? {
-                      x: "150%",
-                      opacity: [0, 0.5, 0],
-                      transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          repeatDelay: 1,
-                          ease: "easeInOut",
-                      },
-                  }
+                    x: "150%",
+                    opacity: [0, 0.5, 0],
+                    transition: {
+                        duration: 1.5,
+                        repeat: Infinity,
+                        repeatDelay: 1,
+                        ease: "easeInOut",
+                    },
+                }
                 : { opacity: 0 },
     }
 
@@ -107,10 +107,10 @@ export function HudCard({
         hover:
             shouldAnimate && glitchOnHover
                 ? {
-                      x: [0, -2, 2, -1, 1, 0],
-                      y: [0, 1, -1, 0.5, -0.5, 0],
-                      transition: { duration: 0.3, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
-                  }
+                    x: [0, -2, 2, -1, 1, 0],
+                    y: [0, 1, -1, 0.5, -0.5, 0],
+                    transition: { duration: 0.3, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+                }
                 : {},
     }
 
@@ -226,16 +226,18 @@ export function HudCardHeader({
 }: HudCardHeaderProps) {
     const uniqueId = useId()
     const gradientId = `hud-header-gradient-${uniqueId}`
-
     const colors = {
         purple: { main: "#9D00FF" },
         red: { main: "#FF0066" },
         pink: { main: "#FF69B4" },
     }[variant]
-
     return (
         <div className={`relative mb-4 min-h-[32px] ${className}`}>
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 32">
+            <svg
+                className="absolute inset-0 w-full h-full"
+                viewBox="0 0 200 32"
+                preserveAspectRatio="none"
+            >
                 <defs>
                     <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor={colors.main} stopOpacity="0.2" />
@@ -248,6 +250,7 @@ export function HudCardHeader({
                     fill={`url(#${gradientId})`}
                     stroke={colors.main}
                     strokeWidth="0.5"
+                    vectorEffect="non-scaling-stroke"
                 />
                 <circle cx="8" cy="16" r="2" fill={colors.main} />
                 <circle cx="192" cy="16" r="2" fill={colors.main} />
@@ -255,7 +258,7 @@ export function HudCardHeader({
             <div className="relative z-10 flex items-center gap-2 px-6 py-3">
                 {icon && <span className="text-white">{icon}</span>}
                 <h3
-                    className="font-heading text-sm font-bold uppercase tracking-widest"
+                    className="font-heading text-sm font-bold uppercase tracking-widest whitespace-nowrap"
                     style={{ color: colors.main }}
                 >
                     {title}
@@ -299,10 +302,10 @@ export function HudTag({
         show: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 400, damping: 25 } },
         hover: shouldAnimate
             ? {
-                  scale: 1.05,
-                  boxShadow: `0 0 15px ${colors.glow}`,
-                  transition: { type: "spring", stiffness: 400, damping: 25 },
-              }
+                scale: 1.05,
+                boxShadow: `0 0 15px ${colors.glow}`,
+                transition: { type: "spring", stiffness: 400, damping: 25 },
+            }
             : {},
     }
 
