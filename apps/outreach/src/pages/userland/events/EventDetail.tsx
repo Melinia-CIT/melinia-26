@@ -20,7 +20,11 @@ import {
 import api from "../../../services/api";
 import EventRegister from "./EventRegister";
 
-interface Round { roundNo: number; roundDescription: string; }
+interface Round { 
+    roundNo: number; 
+    roundName?: string; // Added roundName to interface
+    roundDescription: string; 
+}
 interface Prize { position: number; rewardValue: number; }
 interface Organizer { userId: string; assignedBy: string; firstName: string; lastName: string; phoneNo: string; }
 interface Rule { id: number; roundNo: number | null; ruleNumber: number; ruleDescription: string; }
@@ -201,7 +205,7 @@ const EventDetail = () => {
                                 <Target className={`w-4 h-4 ${theme.icon}`} /> Timeline
                             </h2>
                             <div className="space-y-3">
-                                {event.rounds.map((round) => {
+                                {event.rounds.sort((a,b) => a.roundNo - b.roundNo).map((round) => {
                                     const roundRules = event.rules?.filter(r => r.roundNo === round.roundNo) || [];
                                     const isExpanded = expandedRound === round.roundNo;
                                     return (
@@ -210,11 +214,15 @@ const EventDetail = () => {
                                                 onClick={() => setExpandedRound(isExpanded ? null : round.roundNo)}
                                                 className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
                                             >
-                                                <div className="flex items-center gap-3 pointer-events-none">
+                                                <div className="flex items-center gap-4 pointer-events-none">
                                                     <div className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold text-xs border border-white/10 bg-white/5 text-white`}>{round.roundNo}</div>
                                                     <div>
-                                                        <h3 className="text-xs font-bold text-white uppercase tracking-tight">Round {round.roundNo}</h3>
-                                                        <p className="text-[10px] text-zinc-500 uppercase">{round.roundDescription}</p>
+                                                        {/* Displaying roundName as the primary title, fallback to Round No if empty */}
+                                                        <h3 className="text-xs font-bold text-white uppercase tracking-tight">
+                                                            {round.roundName || `Round ${round.roundNo}`}
+                                                        </h3>
+                                                        {/* Displaying roundDescription below the name */}
+                                                        <p className="text-[10px] text-zinc-500 uppercase mt-0.5">{round.roundDescription}</p>
                                                     </div>
                                                 </div>
                                                 <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.3, ease: "easeInOut" }}>
@@ -231,15 +239,16 @@ const EventDetail = () => {
                                                         className="overflow-hidden bg-black/20"
                                                     >
                                                         <div className="px-4 pb-4 pt-3 border-t border-white/5 space-y-2">
+                                                            <p className="text-[9px] font-bold text-zinc-500 uppercase mb-2 tracking-widest">Round Specific Rules:</p>
                                                             {roundRules.length > 0 ? (
                                                                 roundRules.map(rule => (
-                                                                    <div key={rule.id} className="text-[11px] text-zinc-400 flex gap-2">
+                                                                    <div key={rule.id} className="text-[11px] text-zinc-300 flex gap-2 bg-white/5 p-2 rounded border border-white/5">
                                                                         <span className={`${theme.accent} font-bold`}>{rule.ruleNumber}.</span>
                                                                         {rule.ruleDescription}
                                                                     </div>
                                                                 ))
                                                             ) : (
-                                                                <p className="text-[10px] text-zinc-600 italic">No specific rules listed.</p>
+                                                                <p className="text-[10px] text-zinc-600 italic px-2">No specific rules listed for this round.</p>
                                                             )}
                                                         </div>
                                                     </motion.div>

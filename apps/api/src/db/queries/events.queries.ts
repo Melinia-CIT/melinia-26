@@ -56,6 +56,7 @@ const dbEventToCamel = (e: any) => ({
     updatedAt: e.updated_at,
 });
 
+// 1. Create Event
 export async function createEvent(input: CreateEvent) {
     const data = createEventSchema.parse(input);
     const minTeamSize = data.minTeamSize ?? 1;
@@ -91,7 +92,7 @@ export async function createEvent(input: CreateEvent) {
                 ${data.maxAllowed}, ${minTeamSize}, ${maxTeamSize}, ${data.venue},
                 ${data.startTime}, ${data.endTime}, ${data.registrationStart}, ${data.registrationEnd}, ${createdBy}
             )
-            RETURNING *;
+            RETURNING id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at;
         `;
 
         if (!eventRow) {
@@ -134,7 +135,9 @@ export async function createEvent(input: CreateEvent) {
 export async function getEvents() {
     try {
         const events = await sql`
-            SELECT * FROM events ORDER BY created_at DESC;
+            SELECT id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at 
+            FROM events 
+            ORDER BY created_at DESC;
         `;
 
         if (!events || events.length === 0) {
@@ -142,11 +145,13 @@ export async function getEvents() {
         }
 
         const eventIds = events.map((e) => e.id as string);
-        const rounds = await sql`SELECT * FROM event_rounds WHERE event_id = ANY(${eventIds}::text[]);`;
-        const prizes = await sql`SELECT * FROM event_prizes WHERE event_id = ANY(${eventIds}::text[]);`;
-        const rules = await sql`SELECT * FROM event_rules WHERE event_id = ANY(${eventIds}::text[]);`;
+        
+        const rounds = await sql`SELECT event_id, round_no, round_name, round_description FROM event_rounds WHERE event_id = ANY(${eventIds}::text[]);`;
+        const prizes = await sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ANY(${eventIds}::text[]);`;
+        const rules = await sql`SELECT id, event_id, round_no, rule_number, rule_description, created_at, updated_at FROM event_rules WHERE event_id = ANY(${eventIds}::text[]);`;
+        
         const organizers = await sql`
-            SELECT eo.*, p.first_name, p.last_name, u.ph_no 
+            SELECT eo.event_id, eo.user_id, eo.assigned_by, p.first_name, p.last_name, u.ph_no 
             FROM event_organizers eo
             JOIN profile p ON eo.user_id = p.user_id
             JOIN users u ON eo.user_id = u.id
@@ -184,7 +189,11 @@ export async function getEventById(input: GetEventDetailsInput) {
     const { id } = getEventDetailsSchema.parse(input);
 
     try {
-        const events = await sql`SELECT * FROM events WHERE id = ${id};`;
+        const events = await sql`
+            SELECT id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at 
+            FROM events 
+            WHERE id = ${id};
+        `;
 
         if (!events || events.length === 0) {
             return { status: false, statusCode: 404, message: "Event not found", data: {} };
@@ -195,17 +204,16 @@ export async function getEventById(input: GetEventDetailsInput) {
             throw new Error("Event not found");
         }
         const eventId = eventRow.id as string;
-        const eventIds = [eventId];
 
-        const rounds = await sql`SELECT * FROM event_rounds WHERE event_id = ANY(${eventIds}::text[]);`;
-        const prizes = await sql`SELECT * FROM event_prizes WHERE event_id = ANY(${eventIds}::text[]);`;
-        const rules = await sql`SELECT * FROM event_rules WHERE event_id = ANY(${eventIds}::text[]);`;
+        const rounds = await sql`SELECT event_id, round_no, round_name, round_description FROM event_rounds WHERE event_id = ${eventId};`;
+        const prizes = await sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ${eventId};`;
+        const rules = await sql`SELECT id, event_id, round_no, rule_number, rule_description, created_at, updated_at FROM event_rules WHERE event_id = ${eventId};`;
         const organizers = await sql`
-            SELECT eo.*, p.first_name, p.last_name, u.ph_no 
+            SELECT eo.event_id, eo.user_id, eo.assigned_by, p.first_name, p.last_name, u.ph_no 
             FROM event_organizers eo
             JOIN profile p ON eo.user_id = p.user_id
             JOIN users u ON eo.user_id = u.id
-            WHERE eo.event_id = ANY(${eventIds}::text[]);
+            WHERE eo.event_id = ${eventId};
         `;
 
         const roundsByEvent: Record<string, any[]> = {};
@@ -235,7 +243,7 @@ export async function getEventById(input: GetEventDetailsInput) {
     } catch (error) { throw error; }
 }
 
-
+// 4. Update Event
 export async function updateEvent(input: UpdateEventDetailsInput & { id: string }) {
     const data = updateEventDetailsSchema.parse(input);
     const eventId = input.id;
@@ -265,7 +273,8 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
                 start_time = ${data.startTime}, end_time = ${data.endTime},
                 registration_start = ${data.registrationStart}, registration_end = ${data.registrationEnd},
                 created_by = ${createdBy}, updated_at = NOW()
-            WHERE id = ${eventId} RETURNING *;
+            WHERE id = ${eventId} 
+            RETURNING id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at;
         `;
 
         if (!eventRow) {
@@ -307,6 +316,7 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
     }
 }
 
+// 5. Delete Event
 export async function deleteEvent(input: DeleteEventInput) {
     const { id } = input;
     try {
@@ -326,6 +336,7 @@ export async function deleteEvent(input: DeleteEventInput) {
     }
 }
 
+// 6. Register for Event
 export async function registerForEvent(input: EventRegistrationInput & { userId: string; id: string }) {
     const { id: eventId, teamId, userId } = input;
     try {
@@ -349,9 +360,11 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
         const now = new Date();
         const regStart = new Date(registration_start);
         const regEnd = new Date(registration_end);
+        
         if (!(now >= regStart && now <= regEnd)) {
             return { status: false, statusCode: 400, message: "Registration is not open for this event", data: {} };
         }
+        
         const isTeamRegistration = participation_type === "team";
         if (!isTeamRegistration) {
             if (teamId) {
@@ -386,7 +399,11 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
             }
         }
         
-        const [result] = await sql`INSERT INTO event_registrations (event_id, team_id, user_id, registered_at) VALUES (${eventId}, ${teamId || null}, ${userId}, NOW()) RETURNING *`;
+        const [result] = await sql`
+            INSERT INTO event_registrations (event_id, team_id, user_id, registered_at) 
+            VALUES (${eventId}, ${teamId || null}, ${userId}, NOW()) 
+            RETURNING id, event_id, team_id, user_id, registered_at
+        `;
         
         if (isTeamRegistration && teamId) {
             await sql`UPDATE teams SET event_id = ${eventId} WHERE id = ${teamId}`;
@@ -398,9 +415,9 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
     }
 }
 
+// 7. Get User Status
 export async function getUserEventStatusbyEventId(userId: string, eventId: string, teamId?: string) {
     try {
-        //Fetch event details to determine participation type
         const [event] = await sql`
             SELECT participation_type FROM events WHERE id = ${eventId}
         `;
@@ -410,7 +427,6 @@ export async function getUserEventStatusbyEventId(userId: string, eventId: strin
 
         const isSolo = event.participation_type.toLowerCase() === "solo";
 
-        //CHECKING FOR SOLO EVENT
         if (isSolo) {
             const [registration] = await sql`
                 SELECT id FROM event_registrations 
@@ -428,12 +444,10 @@ export async function getUserEventStatusbyEventId(userId: string, eventId: strin
                 };
             }
         } 
-        
-        //CHECKING FOR TEAM EVENT
         else {
             const userTeams = await sql`
                 SELECT t.id, t.name, t.event_id, 
-                (SELECT count(*) FROM team_members tm WHERE tm.team_id = t.id) as member_count
+                (SELECT count(user_id) FROM team_members tm WHERE tm.team_id = t.id) as member_count
                 FROM teams t
                 JOIN team_members tm ON t.id = tm.team_id
                 WHERE tm.user_id = ${userId}
@@ -448,7 +462,7 @@ export async function getUserEventStatusbyEventId(userId: string, eventId: strin
                         message: "The specified team is registered for this event",
                         data: {
                             registration_status: "registered",
-                            team_name: specificTeam.team_name,
+                            team_name: specificTeam.name,
                             member_count: specificTeam.member_count
                         }
                     };
