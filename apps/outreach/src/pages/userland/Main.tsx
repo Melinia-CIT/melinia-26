@@ -62,6 +62,14 @@ const Main = () => {
 
             {/* Mobile Layout */}
             <div className="lg:hidden w-full">
+                {/* Mobile Notification Backdrop */}
+                {showNotifications && (
+                    <div
+                        className="fixed inset-0 bg-black/30 z-40"
+                        onClick={() => setShowNotifications(false)}
+                    />
+                )}
+
                 <div className="flex justify-end relative mb-6">
                     <NotificationIcon
                         onClick={() => setShowNotifications(!showNotifications)}
