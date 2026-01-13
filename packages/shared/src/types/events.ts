@@ -6,6 +6,7 @@ export const EventType = z.enum(["technical", "non-technical", "flagship"]);
 export const roundSchema = z.object({
     roundNo: z.number().int().min(1, "Round number must be positive"),
     roundDescription: z.string().min(1, "Round description is required"),
+    roundName:z.string().nullish()
 });
 
 export const prizeSchema = z.object({
@@ -26,7 +27,7 @@ export const eventRuleSchema = z.object({
     eventId: z.string().optional(), 
     roundNo: z.number().int().nullable().optional(), 
     ruleNumber: z.number().int().min(1, "Rule number must be positive"),
-    ruleDescription: z.string().min(1, "Rule description is required"),
+    ruleDescription: z.string().optional(),
     createdAt: z.coerce.date().optional(),
     updatedAt: z.coerce.date().optional(),
 });

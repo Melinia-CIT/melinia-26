@@ -11,6 +11,7 @@ import {
 const dbRoundToCamel = (r: any) => ({
     roundNo: r.round_no,
     roundDescription: r.round_description,
+    roundName: r.round_name
 });
 
 const dbPrizeToCamel = (p: any) => ({
@@ -101,7 +102,7 @@ export async function createEvent(input: CreateEvent) {
 
         if (data.rounds && data.rounds.length > 0) {
             for (const r of data.rounds) {
-                await sql`INSERT INTO event_rounds (event_id, round_no, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundDescription});`;
+                await sql`INSERT INTO event_rounds (event_id, round_no, round_name, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundName}, ${r.roundDescription});`;
             }
         }
 
@@ -275,7 +276,7 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
 
         if (data.rounds && data.rounds.length > 0) {
             for (const r of data.rounds) {
-                await sql`INSERT INTO event_rounds (event_id, round_no, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundDescription});`;
+                await sql`INSERT INTO event_rounds (event_id, round_no, round_name, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundName}, ${r.roundDescription});`;
             }
         }
 
