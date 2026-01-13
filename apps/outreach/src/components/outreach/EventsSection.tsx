@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useId } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
@@ -42,7 +42,6 @@ interface Event {
 }
 
 type EventFilter = "flagship" | "technical" | "non-technical"
-
 
 const EventsSection = () => {
     const navigate = useNavigate()
@@ -225,7 +224,6 @@ const EventsSection = () => {
 
                 {/* Main Grid Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-12 items-stretch">
-
                     {/* COLUMN 1: ROUNDS (Left Sidebar) */}
                     <div className="lg:col-span-1 flex flex-col h-full order-2 lg:order-1">
                         <div className="w-full mb-3 md:mb-4">
@@ -264,9 +262,15 @@ const EventsSection = () => {
                                                 </div>
                                                 <div className="p-1 rounded bg-white/10">
                                                     {expandedRounds.has(round.roundNo) ? (
-                                                        <Minus size={14} className="text-[#FF0066]" />
+                                                        <Minus
+                                                            size={14}
+                                                            className="text-[#FF0066]"
+                                                        />
                                                     ) : (
-                                                        <Plus size={14} className="text-[#FF0066]" />
+                                                        <Plus
+                                                            size={14}
+                                                            className="text-[#FF0066]"
+                                                        />
                                                     )}
                                                 </div>
                                             </button>
@@ -462,7 +466,6 @@ const EventsSection = () => {
 
                     {/* COLUMN 3: RIGHT SIDE (Prizes + Organizers) */}
                     <div className="lg:col-span-1 flex flex-col gap-4 md:gap-6 order-3 lg:order-3 h-full">
-
                         {/* Prizes Section */}
                         <div className="flex flex-col gap-2 md:gap-3 w-full">
                             <div className="w-full">
@@ -607,4 +610,4 @@ const EventsSection = () => {
     )
 }
 
-export default EventsSection;
+export default EventsSection
