@@ -83,10 +83,15 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
         return (
             <AnimatePresence>
                 <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    initial={{ opacity: 0, y: -10, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 25,
+                        mass: 0.5,
+                    }}
                     className="absolute top-12 right-0 w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-4 animate-pulse z-50"
                 >
                     <div className="h-6 bg-zinc-800 rounded w-1/2 mb-3"></div>
@@ -112,10 +117,15 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
         return (
             <AnimatePresence>
                 <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    initial={{ opacity: 0, y: -10, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 25,
+                        mass: 0.5,
+                    }}
                     className="absolute top-12 right-0 w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-4 z-50"
                 >
                     <p className="text-red-400 text-sm">Failed to load notifications</p>
@@ -141,10 +151,15 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
         return (
             <AnimatePresence>
                 <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    initial={{ opacity: 0, y: -10, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 25,
+                        mass: 0.5,
+                    }}
                     className="absolute top-12 right-0 w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-6 text-center z-50"
                 >
                     <User className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
@@ -232,15 +247,14 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                    initial={{ opacity: 0, y: -10, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.9 }}
                     transition={{
                         type: "spring",
-                        stiffness: 300,
-                        damping: 30,
-                        mass: 0.8,
-                        bounce: 0.2,
+                        stiffness: 400,
+                        damping: 25,
+                        mass: 0.5,
                     }}
                     className="fixed top-16 right-4 w-80 max-h-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-50"
                 >
@@ -261,18 +275,9 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                     </div>
                     <div className="max-h-80 overflow-y-auto">
                         <div className="space-y-2 p-2">
-                            {invitations.map((invitation, index) => (
-                                <motion.div
+                            {invitations.map(invitation => (
+                                <div
                                     key={invitation.invitation_id}
-                                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    transition={{
-                                        type: "spring",
-                                        stiffness: 400,
-                                        damping: 25,
-                                        mass: 0.5,
-                                        delay: index * 0.05,
-                                    }}
                                     className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 hover:border-zinc-600 transition-all"
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -312,7 +317,7 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                                             </button>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
                             ))}
                         </div>
                     </div>

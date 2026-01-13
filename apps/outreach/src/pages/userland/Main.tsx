@@ -61,16 +61,16 @@ const Main = () => {
             </div>
 
             {/* Mobile Layout */}
-            <div className="lg:hidden w-full">
+            <div className="lg:hidden w-full relative">
                 {/* Mobile Notification Backdrop */}
                 {showNotifications && (
                     <div
-                        className="fixed inset-0 bg-black/30 z-40"
+                        className="fixed inset-0 bg-black/20 z-40"
                         onClick={() => setShowNotifications(false)}
                     />
                 )}
 
-                <div className="flex justify-end relative mb-6">
+                <div className="flex justify-end relative mb-6 z-50">
                     <NotificationIcon
                         onClick={() => setShowNotifications(!showNotifications)}
                         isOpen={showNotifications}
