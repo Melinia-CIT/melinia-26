@@ -21,6 +21,7 @@
     /* Animation Variables - Pointing to Keyframes below */
     --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
+    --animate-shimmer: shimmer 1s ease-in-out;
 
     /* Keyframe Definitions */
     @keyframes pulse-slow {
@@ -44,6 +45,16 @@
 
         50% {
             transform: translateY(-4px);
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -200% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
         }
     }
 }

@@ -1,5 +1,3 @@
-"use client"
-
 import { motion, useReducedMotion } from "framer-motion"
 import type React from "react"
 import { useId, useState } from "react"
@@ -7,7 +5,7 @@ import { HyperText } from "./hyper-text"
 
 interface HudButtonProps {
     children: React.ReactNode
-    variant?: "primary" | "secondary" | "purple" | "red"
+    variant?: "primary" | "secondary" | "purple" | "red" | "pink"
     style?: "style1" | "style2"
     size?: "small" | "default" | "large"
     onClick?: () => void
@@ -44,6 +42,14 @@ export function HudButton({
                 text: "text-white",
                 glow: "rgba(255, 0, 102, 0.4)",
                 border: "var(--color-red)",
+            }
+        } else if (variant === "pink") {
+            return {
+                main: "#FF69B4",
+                gradient: "#FF69B4",
+                text: "text-white",
+                glow: "rgba(255, 105, 180, 0.4)",
+                border: "#FF69B4",
             }
         } else if (variant === "primary") {
             return {
@@ -120,7 +126,13 @@ export function HudButton({
             scale: 0.8,
         },
         hover: {
-            opacity: variant === "primary" || variant === "purple" || variant === "red" ? 0.6 : 0.3,
+            opacity:
+                variant === "primary" ||
+                variant === "purple" ||
+                variant === "red" ||
+                variant === "pink"
+                    ? 0.6
+                    : 0.3,
             scale: 1.1,
             transition: {
                 type: "spring",
@@ -558,7 +570,10 @@ export function HudButton({
             />
 
             {shouldAnimate &&
-                (variant === "primary" || variant === "purple" || variant === "red") && (
+                (variant === "primary" ||
+                    variant === "purple" ||
+                    variant === "red" ||
+                    variant === "pink") && (
                     <div className="absolute inset-0 overflow-hidden rounded-lg">
                         <motion.div
                             className="absolute inset-0"
