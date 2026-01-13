@@ -799,6 +799,16 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
             }
         }
 
+        const isRegistered:boolean = await isTeamRegistered(team_id);
+        if(isRegistered){
+            return {
+                status:false,
+                statusCode: 403,
+                message:"Team is registered, no modifications allowed",
+                data:{}
+            }
+        }
+
         if (team.leader_id !== requester_id) {
             return {
                 status: false,
