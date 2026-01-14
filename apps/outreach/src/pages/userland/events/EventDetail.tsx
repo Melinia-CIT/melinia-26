@@ -3,26 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Calendar,
-    Clock,
-    MapPin,
-    Users,
-    Trophy,
-    Target,
-    ArrowLeft,
-    AlertCircle,
-    ShieldCheck,
-    Phone,
-    User2,
-    ChevronDown,
-    CheckCircle2
+    Calendar, Clock, MapPin, Users, Trophy, Target,
+    ArrowLeft, AlertCircle, ShieldCheck,
+    Phone, User2, ChevronDown, CheckCircle2
 } from "lucide-react";
 import api from "../../../services/api";
 import EventRegister from "./EventRegister";
 
 interface Round { 
     roundNo: number; 
-    roundName?: string; // Added roundName to interface
+    roundName?: string; 
     roundDescription: string; 
 }
 interface Prize { position: number; rewardValue: number; }
@@ -113,10 +103,16 @@ const EventDetail = () => {
 
     const getStatusInfo = (event: Event) => {
         const now = new Date();
-        if (now >= new Date(event.startTime) && now <= new Date(event.endTime)) return { text: "Ongoing", color: "bg-green-500/10 text-green-400 border-green-500/20" };
-        if (now > new Date(event.endTime)) return { text: "Completed", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" };
-        if (now >= new Date(event.registrationStart) && now <= new Date(event.registrationEnd)) return { text: "Open", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" };
-        return { text: "Coming Soon", color: "bg-zinc-600/10 text-zinc-300 border-zinc-600/20" };
+        const start = new Date(event.startTime);
+        const end = new Date(event.endTime);
+        const regStart = new Date(event.registrationStart);
+        const regEnd = new Date(event.registrationEnd);
+
+        if (now > end) return { text: "Completed", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" };
+        if (now >= start && now <= end) return { text: "Ongoing", color: "bg-green-500/10 text-green-400 border-green-500/20" };
+        if (now >= regStart && now <= regEnd) return { text: "Open", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" };
+        if (now < regStart) return { text: "Coming Soon", color: "bg-zinc-600/10 text-zinc-300 border-zinc-600/20" };
+        return { text: "Reg. Closed", color: "bg-rose-500/10 text-rose-400 border-rose-500/20" };
     };
 
     if (isLoading) return <main className="flex-1 w-full p-4"><div className="h-48 rounded-xl bg-zinc-800 animate-pulse" /></main>;
@@ -144,7 +140,6 @@ const EventDetail = () => {
             </div>
 
             <div className="h-12" />
-            {/* Hero Section */}
             <motion.div
                 className={`relative bg-gradient-to-br ${theme.banner} rounded-xl p-6 md:p-8 mb-6 overflow-hidden border border-white/10`}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -179,7 +174,15 @@ const EventDetail = () => {
                         {event.participationType.toLowerCase() === "team" && (
                             <div className="flex items-start gap-2">
                                 <Users className={`w-4 h-4 ${theme.icon} mt-0.5`} />
-                                <div><p className="text-[10px] font-bold text-zinc-500 uppercase">Size</p><p className="text-xs text-white font-medium">{event.minTeamSize} - {event.maxTeamSize} per team</p></div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-zinc-500 uppercase">Size</p>
+                                    <p className="text-xs text-white font-medium">
+                                        {event.minTeamSize === event.maxTeamSize 
+                                            ? `${event.maxTeamSize} members` 
+                                            : `${event.minTeamSize} - ${event.maxTeamSize} per team`
+                                        }
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -217,11 +220,9 @@ const EventDetail = () => {
                                                 <div className="flex items-center gap-4 pointer-events-none">
                                                     <div className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold text-xs border border-white/10 bg-white/5 text-white`}>{round.roundNo}</div>
                                                     <div>
-                                                        {/* Displaying roundName as the primary title, fallback to Round No if empty */}
                                                         <h3 className="text-xs font-bold text-white uppercase tracking-tight">
                                                             {round.roundName || `Round ${round.roundNo}`}
                                                         </h3>
-                                                        {/* Displaying roundDescription below the name */}
                                                         <p className="text-[10px] text-zinc-500 uppercase mt-0.5">{round.roundDescription}</p>
                                                     </div>
                                                 </div>
@@ -293,35 +294,47 @@ const EventDetail = () => {
                         <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 mb-4">
                             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
                                 <p className="text-[9px] font-bold text-zinc-500 uppercase">Opens</p>
-                                <p className="text-xs text-white font-medium">{formatDate(event.registrationStart)}</p>
+                                <p className="text-xs text-white font-medium">
+                                    {formatDate(event.registrationStart)}
+                                    <span className="block text-[9px] text-zinc-500 mt-0.5">{formatTime(event.registrationStart)}</span>
+                                </p>
                             </div>
                             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
                                 <p className="text-[9px] font-bold text-zinc-500 uppercase">Closes</p>
-                                <p className="text-xs text-white font-medium">{formatDate(event.registrationEnd)}</p>
+                                <p className="text-xs text-white font-medium">
+                                    {formatDate(event.registrationEnd)}
+                                    <span className="block text-[9px] text-zinc-500 mt-0.5">{formatTime(event.registrationEnd)}</span>
+                                </p>
                             </div>
                         </div>
                         
                         <button 
-                            onClick={() => !isRegistered && setIsRegisterModalOpen(true)}
-                            disabled={isRegistered}
-                            className={`w-full py-2.5 rounded-lg font-bold border text-[10px] uppercase tracking-widest transition-colors duration-300 flex items-center justify-center gap-2 
+                            onClick={() => !isRegistered && status.text === "Open" && setIsRegisterModalOpen(true)}
+                            disabled={isRegistered || status.text !== "Open"}
+                            className={`w-full py-2.5 rounded-lg font-bold border text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 
                                 ${isRegistered 
                                     ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" 
+                                    : status.text !== "Open"
+                                    ? "bg-zinc-800/50 text-zinc-500 border-zinc-700 cursor-not-allowed"
                                     : `bg-transparent ${theme.button}`}`}
                         >
                             {isRegistered ? (
-                                <>
-                                    <CheckCircle2 className="w-5 h-5" />
-                                    Registered
-                                </>
-                            ) : (
+                                <><CheckCircle2 className="w-5 h-5" /> Registered</>
+                            ) : status.text === "Open" ? (
                                 "Register Now"
+                            ) : (
+                                status.text
                             )}
                         </button>
                         
                         {isRegistered && registrationStatus?.team_name && (
                             <p className="mt-4 text-[12px] text-center text-zinc-500 uppercase font-semibold tracking-tighter">
                                 Registered via <span className="text-zinc-200 font-semibold">{registrationStatus.team_name}</span> Team
+                            </p>
+                        )}
+                        {isRegistered && !registrationStatus?.team_name && registrationStatus?.mode === "solo" && (
+                            <p className="mt-4 text-[12px] text-center text-zinc-500 uppercase font-semibold tracking-tighter">
+                                Registered as <span className="text-zinc-200 font-semibold">Solo</span>
                             </p>
                         )}
                     </div>

@@ -148,6 +148,7 @@ export const deleteEventSchema = z.object({
 
 export const eventRegistrationSchema = z.object({
     teamId: z.string().optional().nullable(),
+    participationType: z.enum(["solo", "team"])
 });
 
 export const getEventDetailsSchema = z.object({
