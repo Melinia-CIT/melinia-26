@@ -6,14 +6,15 @@ import confetti from "canvas-confetti"
 import { cn } from "../../lib/utils"
 
 const TARGET_AMOUNT = 100000
-const ANIMATION_DURATION = 2000
-const PLUS_ANIMATION_DELAY = 1000
+const ANIMATION_DURATION = 1600
+const PLUS_ANIMATION_DELAY = 0
 
 export default function PrizePoolSection() {
     const [currentAmount, setCurrentAmount] = useState(0)
     const [hasAnimated, setHasAnimated] = useState(false)
     const [shouldShimmer, setShouldShimmer] = useState(false)
     const [showPlus, setShowPlus] = useState(false)
+    const [animationComplete, setAnimationComplete] = useState(false)
     const sectionRef = useRef<HTMLElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const isInView = useInView(sectionRef, { once: true, amount: 0.5 })
@@ -43,6 +44,7 @@ export default function PrizePoolSection() {
                         requestAnimationFrame(animate)
                     } else {
                         setShouldShimmer(true)
+                        setAnimationComplete(true)
                         confettiInstance({
                             particleCount: 100,
                             spread: 70,
@@ -100,8 +102,8 @@ export default function PrizePoolSection() {
                             <motion.div
                                 className="transition-all duration-300"
                                 initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.5, delay: 1.0 }}
+                                animate={{ opacity: showPlus ? 1 : 0 }}
+                                transition={{ duration: 0.3 }}
                             >
                                 <NumberFlow
                                     value={currentAmount}
@@ -124,9 +126,18 @@ export default function PrizePoolSection() {
                             </motion.div>
                         </div>
                         <motion.span
-                            initial={{ opacity: 0, x: -400 }}
-                            animate={showPlus ? { opacity: 1, x: 0 } : { opacity: 0, x: -400 }}
-                            transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
+                            initial={{ opacity: 0, x: -400, rotate: 0 }}
+                            animate={
+                                showPlus
+                                    ? { opacity: 1, x: 0, rotate: animationComplete ? 360 : 0 }
+                                    : { opacity: 0, x: -400, rotate: 0 }
+                            }
+                            transition={{
+                                opacity: { duration: 0.3 },
+                                x: { duration: 1, ease: [0.25, 0.1, 0.25, 1] },
+                                rotate: { duration: 0.5, delay: 1, ease: "easeOut" },
+                            }}
+                            style={{ transformOrigin: "center center" }}
                             className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold text-[#FF0066] self-center"
                         >
                             +

@@ -1,9 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import {
+    motion,
+    AnimatePresence,
+    useMotionValue,
+    useMotionTemplate,
+    useAnimationFrame,
+} from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { Plus, Minus, MapPin, Clock, Trophy, User, Box, Award } from "lucide-react"
-import { FloatingPathsBackground } from "../ui/floating-paths"
 import { HudButton } from "../ui/hud-button"
 import { HudCard, HudCardHeader, HudTag } from "../ui/hud-card"
 import api from "../../services/api"
@@ -49,10 +54,31 @@ const EventsSection = () => {
     const [currentEventIndex, setCurrentEventIndex] = useState(0)
     const [activeFilter, setActiveFilter] = useState<EventFilter>("flagship")
     const [expandedRounds, setExpandedRounds] = useState<Set<number>>(new Set())
-    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
     const descriptionRef = useRef<HTMLDivElement>(null)
     const touchStartRef = useRef<number | null>(null)
     const isSwipingRef = useRef(false)
+
+    // Grid Background Logic
+    const containerRef = useRef<HTMLDivElement>(null)
+    const mouseX = useMotionValue(0)
+    const mouseY = useMotionValue(0)
+    const gridOffsetX = useMotionValue(0)
+    const gridOffsetY = useMotionValue(0)
+
+    const speed = 0.5
+
+    useAnimationFrame(() => {
+        gridOffsetX.set((gridOffsetX.get() + speed) % 40)
+        gridOffsetY.set((gridOffsetY.get() + speed) % 40)
+    })
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const { left, top } = e.currentTarget.getBoundingClientRect()
+        mouseX.set(e.clientX - left)
+        mouseY.set(e.clientY - top)
+    }
+
+    const maskImage = useMotionTemplate`radial-gradient(350px circle at ${mouseX}px ${mouseY}px, white 0%, transparent 80%)`
 
     const { data: allEvents, isLoading } = useQuery<Event[]>({
         queryKey: ["events"],
@@ -88,19 +114,14 @@ const EventsSection = () => {
         }
     }, [currentEventIndex, sortedEvents])
 
-     useEffect(() => {
-        const currentEventType = sortedEvents?.[currentEventIndex]?.eventType?.toLowerCase()
-
-        // If the user requested a different filter than the current event's type, jump to start
-        if (currentEventType !== activeFilter) {
-            const firstIndex = sortedEvents?.findIndex(
-                event => event.eventType?.toLowerCase() === activeFilter
-            )
-            if (firstIndex !== undefined && firstIndex !== -1) {
-                setCurrentEventIndex(firstIndex)
-            }
+    useEffect(() => {
+        const currentType = sortedEvents?.[currentEventIndex]?.eventType?.toLowerCase() as
+            | EventFilter
+            | undefined
+        if (currentType && currentType !== activeFilter) {
+            setActiveFilter(currentType)
         }
-    }, [activeFilter, sortedEvents]);
+    }, [currentEventIndex, sortedEvents, activeFilter])
 
     const currentEvent = sortedEvents?.[currentEventIndex]
 
@@ -211,20 +232,21 @@ const EventsSection = () => {
         )
 
     return (
-        <section className="relative min-h-screen w-full overflow-hidden bg-zinc-950 text-white font-body selection:bg-[#FF0066] selection:text-white">
-            {/* Spider-Verse Background Effects */}
-            <FloatingPathsBackground position={2} className="absolute inset-0 opacity-40">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#000000_90%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(0,102,255,0.15),_transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(255,0,102,0.15),_transparent_50%)]" />
-                <div
-                    className="absolute inset-0 opacity-[0.07] mix-blend-overlay pointer-events-none"
-                    style={{
-                        backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-                        backgroundSize: "4px 4px",
-                    }}
-                />
-            </FloatingPathsBackground>
+        <section
+            ref={containerRef}
+            onMouseMove={handleMouseMove}
+            className="relative min-h-screen w-full overflow-hidden bg-zinc-950 text-white font-body selection:bg-[#FF0066] selection:text-white"
+        >
+            {/* Animated Grid Background */}
+            <div className="absolute inset-0 z-0 opacity-[0.15] pointer-events-none">
+                <GridPattern offsetX={gridOffsetX} offsetY={gridOffsetY} />
+            </div>
+            <motion.div
+                className="absolute inset-0 z-0 opacity-60 pointer-events-none"
+                style={{ maskImage, WebkitMaskImage: maskImage }}
+            >
+                <GridPattern offsetX={gridOffsetX} offsetY={gridOffsetY} />
+            </motion.div>
 
             {/* Content Container */}
             <div className="relative z-10 max-w-8xl mx-auto px-4 md:px-8 py-12 md:py-20">
@@ -378,7 +400,7 @@ const EventsSection = () => {
                                         glitchOnHover
                                     >
                                         {/* Image Section */}
-                                        <div className="relative aspect-[3/2] md:aspect-[16/6] w-full overflow-hidden bg-gray-900">
+                                        <div className="relative aspect-[4/1] md:aspect-[16/6] w-full overflow-hidden bg-gray-900">
                                             <div className="absolute inset-0 bg-[radial-gradient(circle,_var(--tw-gradient-stops))] from-gray-800 via-black to-black opacity-50" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10" />
 
@@ -409,47 +431,16 @@ const EventsSection = () => {
                                             </h2>
 
                                             <div
-                                                className={`text-gray-400 font-body leading-relaxed mb-3 md:mb-4 border-l-4 pl-3 md:pl-4 text-sm md:text-base flex-shrink-0 h-24 transition-all duration-300 ${isDescriptionExpanded
-                                                        ? "overflow-y-auto custom-scrollbar"
-                                                        : "overflow-hidden"
-                                                    }`}
+                                                className="text-gray-400 font-body leading-relaxed mb-3 md:mb-4 border-l-4 pl-3 md:pl-4 text-sm md:text-base flex-shrink-0 h-24 overflow-y-auto custom-scrollbar"
                                                 style={{
                                                     borderColor: getEventTypeColor(
                                                         currentEvent.eventType
                                                     ),
                                                 }}
                                             >
-                                                <div
-                                                    ref={descriptionRef}
-                                                    className={
-                                                        isDescriptionExpanded ? "" : "line-clamp-3"
-                                                    }
-                                                >
+                                                <div ref={descriptionRef}>
                                                     {currentEvent.description}
                                                 </div>
-                                            </div>
-                                            <div className="flex-shrink-0">
-                                                <button
-                                                    onClick={() =>
-                                                        setIsDescriptionExpanded(
-                                                            !isDescriptionExpanded
-                                                        )
-                                                    }
-                                                    className={`text-xs font-medium uppercase tracking-wider hover:underline mb-4 md:mb-6 transition-colors ${currentEvent?.description.split(/\s+/)
-                                                            .length > 10
-                                                            ? ""
-                                                            : "invisible"
-                                                        }`}
-                                                    style={{
-                                                        color: getEventTypeColor(
-                                                            currentEvent.eventType
-                                                        ),
-                                                    }}
-                                                >
-                                                    {isDescriptionExpanded
-                                                        ? "Show Less"
-                                                        : "View More"}
-                                                </button>
                                             </div>
 
                                             {/* Meta Info Grid */}
@@ -528,37 +519,36 @@ const EventsSection = () => {
                                             </div>
                                         </div>
                                     </HudCard>
-
-                                    {/* Navigation Controls */}
-                                    <div className="w-full max-w-xl flex items-center justify-center gap-2 sm:gap-3 md:gap-8 mt-3 sm:mt-4 md:mt-8 px-2 sm:px-4">
-                                        <HudButton
-                                            variant={getEventVariant(currentEvent.eventType)}
-                                            style="style2"
-                                            size="small"
-                                            onClick={handlePrevEvent}
-                                            enableAnimations={(sortedEvents?.length || 0) > 1}
-                                        >
-                                            ◀
-                                        </HudButton>
-
-                                        <div className="font-mono text-white/50 text-[10px] sm:text-xs md:text-sm px-1 sm:px-2 md:px-0">
-                                            {String(currentEventIndex + 1).padStart(2, "0")} /{" "}
-                                            {String(sortedEvents?.length || 0).padStart(2, "0")}
-                                        </div>
-
-                                        <HudButton
-                                            variant={getEventVariant(currentEvent.eventType)}
-                                            style="style2"
-                                            size="small"
-                                            onClick={handleNextEvent}
-                                            enableAnimations={(sortedEvents?.length || 0) > 1}
-                                        >
-                                            ▶
-                                        </HudButton>
-                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                        {/* Navigation Controls */}
+                        <div className="w-full max-w-xl flex items-center justify-center gap-2 sm:gap-3 md:gap-8 mt-3 sm:mt-4 md:mt-8 px-2 sm:px-4">
+                            <HudButton
+                                variant={getEventVariant(currentEvent.eventType)}
+                                style="style2"
+                                size="small"
+                                onClick={handlePrevEvent}
+                                enableAnimations={(sortedEvents?.length || 0) > 1}
+                            >
+                                ◀
+                            </HudButton>
+
+                            <div className="font-mono text-white/50 text-[10px] sm:text-xs md:text-sm px-1 sm:px-2 md:px-0">
+                                {String(currentEventIndex + 1).padStart(2, "0")} /{" "}
+                                {String(sortedEvents?.length || 0).padStart(2, "0")}
+                            </div>
+
+                            <HudButton
+                                variant={getEventVariant(currentEvent.eventType)}
+                                style="style2"
+                                size="small"
+                                onClick={handleNextEvent}
+                                enableAnimations={(sortedEvents?.length || 0) > 1}
+                            >
+                                ▶
+                            </HudButton>
+                        </div>
                     </div>
 
                     {/* COLUMN 3: RIGHT SIDE (Prizes + Organizers) */}
@@ -723,6 +713,27 @@ const EventsSection = () => {
                 </div>
             </div>
         </section>
+    )
+}
+
+const GridPattern = ({ offsetX, offsetY }: { offsetX: any; offsetY: any }) => {
+    return (
+        <svg className="w-full h-full">
+            <defs>
+                <motion.pattern
+                    id="grid-pattern"
+                    width="40"
+                    height="40"
+                    patternUnits="userSpaceOnUse"
+                    x={offsetX}
+                    y={offsetY}
+                >
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#9D00FF" strokeWidth="2" />
+                    <path d="M 0 0 L 40 0" fill="none" stroke="#FF0066" strokeWidth="2" />
+                </motion.pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+        </svg>
     )
 }
 

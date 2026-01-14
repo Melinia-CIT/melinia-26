@@ -6,6 +6,45 @@ Creating a **Spider-Man: Into the Spider-Verse themed** outreach landing page fo
 
 ---
 
+## Completed Tasks Summary
+
+### Components Built
+
+| #   | Component            | Description                                                        |
+| --- | -------------------- | ------------------------------------------------------------------ |
+| 1   | **HudButton**        | Animated HUD-style button with 2 styles, 4 variants, 3 sizes       |
+| 2   | **HudCard**          | Glass-morphism card with header, tag variants                      |
+| 3   | **HudProfileCard**   | Profile card with tilt effect for team section                     |
+| 4   | **HyperText**        | Text scramble animation component                                  |
+| 5   | **Badge**            | Shadcn-style badge component                                       |
+| 6   | **CountdownTimer**   | Minimal countdown with NumberFlow animations                       |
+| 7   | **FloatingPaths**    | Animated SVG paths background                                      |
+| 8   | **Hero**             | Main hero with video, logo, shimmer effects                        |
+| 9   | **CountdownSection** | Event countdown with title and separator lines                     |
+| 10  | **EventsSection**    | Event showcase with category filtering, rounds, prizes, organizers |
+| 11  | **PrizePoolSection** | Animated prize pool counter with Indian numbering                  |
+| 12  | **FAQSection**       | FAQ accordion with HUD styling                                     |
+| 13  | **FooterSection**    | Footer with map and contact info                                   |
+| 14  | **PeopleSection**    | Team section with tilted profile cards                             |
+
+### Pages Created
+
+- **Home.tsx** - Landing page combining Hero, Countdown, Events, PrizePool, FAQ, Footer, People
+
+### Key Features Implemented
+
+- Spider-Verse themed UI with purple/red color palette
+- Responsive design (mobile-first approach)
+- Touch swipe navigation for events
+- Smooth animations with Framer Motion
+- Category filtering with auto-sync on navigation
+- Video first-frame poster generation
+- Animated grid background with spotlight effect
+- Random tilt cards for team section
+- Prize pool animation with counting effect
+
+---
+
 ## What Was Completed
 
 ### 1. HudButton Component Integration
@@ -187,6 +226,8 @@ apps/outreach/src/
 ├── components/
 │   ├── ui/
 │   │   ├── hud-button.tsx         (New - animated button component)
+│   │   ├── hud-card.tsx           (HUD card + header + tag)
+│   │   ├── hud-profile-card.tsx   (New - Profile card with tilt effect)
 │   │   ├── hyper-text.tsx         (New - text scramble animation)
 │   │   ├── badge.tsx              (New - shadcn badge component)
 │   │   ├── countdown-timer.tsx     (New - minimal countdown timer)
@@ -197,18 +238,20 @@ apps/outreach/src/
 │       ├── FooterSection.tsx       (New - footer with map & contact)
 │       ├── EventsSection.tsx       (New - events showcase with category filtering)
 │       ├── PrizePoolSection.tsx    (New - prize pool counter animation)
-│       └── FAQSection.tsx          (New - FAQ accordion with HUD styling)
+│       ├── FAQSection.tsx          (New - FAQ accordion with HUD styling)
+│       └── PeopleSection.tsx       (New - Team section with tilted cards)
 ├── lib/
 │   ├── axios.ts                   (Existing)
-│   └── utils.ts                  (New - cn() utility)
+│   └── utils.ts                   (New - cn() utility)
 ├── types/
-│   ├── api.ts                    (Existing)
-│   ├── auth.ts                   (Existing)
-│   └── theme.ts                  (New - color palette)
+│   ├── api.ts                     (Existing)
+│   ├── auth.ts                    (Existing)
+│   ├── theme.ts                   (New - color palette)
+│   └── people.ts                  (New - Person type and data)
 ├── pages/
 │   ├── HudButtonDemo.tsx          (New - button showcase)
 │   └── outreach/
-│       └── Home.tsx              (New - Hero, Countdown, Events, PrizePool, FAQ, Footer sections)
+│       └── Home.tsx               (New - Hero, Countdown, Events, PrizePool, FAQ, Footer sections)
 ├── App.tsx                      (Modified - / route now shows OutreachHome)
 └── index.css                    (Modified - removed glitch CSS, added color vars, animations)
 ```
@@ -230,206 +273,147 @@ apps/outreach/src/
 
 ---
 
-## Recent Changes
+## Recent Updates (Jan 14, 2026)
 
-### Latest Commit (c305c6c)
+### 11. HudCardHeader Icon Color Fix
 
-**Date:** January 13, 2026
-**Branch:** `rework-home`
-**Commit:** feat: redesign outreach landing page with Spider-Verse theme
+**Modified:** `apps/outreach/src/components/ui/hud-card.tsx`
+
+**Change:** Icons in HudCardHeader now match the variant color instead of always being white.
+
+**Before:**
+
+```tsx
+{
+    icon && <span className="text-white text-xs md:text-base">{icon}</span>
+}
+```
+
+**After:**
+
+```tsx
+{
+    icon && (
+        <span className="text-xs md:text-base" style={{ color: colors.main }}>
+            {icon}
+        </span>
+    )
+}
+```
+
+### 12. Events Section Improvements
+
+**Modified:** `apps/outreach/src/components/outreach/EventsSection.tsx`
 
 **Changes:**
 
-- Outreach landing page now served at `/` (no longer at `/outreach`)
-- Removed old home components (events, prize pool, sponsors, people)
-- Added AGENTS.md documentation file
-- Full Spider-Verse themed redesign complete
-- Hero, Countdown, Footer sections live at root URL
+- **Organizer Info:** Changed HudTag size from `small` to `medium` for larger names, reduced phone font from `md:text-2xl` to `md:text-lg`
 
----
+- **Rounds Accordion:** Single expansion mode - opening one round automatically closes others
 
-## Remaining Work
+- **Meta Info Grid:** Changed from single column to 2-column layout on tablet+ (`grid-cols-1 md:grid-cols-2`)
 
-The original plan included **4 sections total**. Completed:
+- **Fixed Card Height:** Added `h-24` fixed height for description area with scroll on expand, removed fixed height from main card
 
-1. ✅ Hero Section
-2. ✅ **Countdown Section** - Event countdown timer (Feb 25, 2026, 8AM)
-3. ✅ **Footer Section** - Contact/social links
-4. ✅ **FAQ Section** - FAQ accordion with HUD styling
+- **Prize Cards Redesign:**
+    - Removed "Position" label
+    - Added Award icon with gold (#FFD700), silver (#C0C0C0), bronze (#CD7F32) colors
+    - Rank displayed as 1st, 2nd, 3rd format
+    - Applied matching color to prize amount
 
-All 4 planned sections are now complete!
+### 13. PrizePoolSection Animation Redesign
 
----
+**Modified:** `apps/outreach/src/components/outreach/PrizePoolSection.tsx`
 
-## Additional Sections Completed
+**Animation Sequence:**
 
-### 9. Footer Section
+1. "+ Pull" slides in from left to right over 1 second
+2. Only after + animation completes, the number fades in and starts counting up
+3. Indian numbering format (`₹1,00,000`) using `locales="en-IN"`
 
-Created 3-column footer with map and contact info:
+**Added:** `getPrizeColor()` helper function for gold/silver/bronze colors
 
-**Files Created:**
+**Title Style:** Added FAQ-style title with gradient underline and mirrored rotation (`-rotate-[2deg]`)
 
-- `apps/outreach/src/components/outreach/FooterSection.tsx` - Footer component
-
-**Layout:** 3-column grid (Map | Contact | Quick Links)
-
-| Column             | Content                                                         |
-| ------------------ | --------------------------------------------------------------- |
-| **1. Map**         | Google Maps embed (CIT Coimbatore) with rounded corners         |
-| **2. Contact**     | Location, Email, Phone with iconoir icons (MapPin, Mail, Phone) |
-| **3. Quick Links** | Login, Register, Events (/app/events) with ArrowUpRight icons   |
-
-**FooterSection Features:**
-
-- Spider-Man webp background with overlay
-- Hover animations on ArrowUpRight icons (`-translate-y-0.5 translate-x-0.5`)
-- Red-pink gradient for icons (#FF0066 to #FF69B4)
-- Responsive: 1 column on mobile, 3 columns on desktop
-- Grid gap: `gap-12`
-- Contact heading: "Contact" with `font-heading` (Space Grotesk)
-- Copyright: "© Melinia 2026 Department of Computing" with `font-body` (Inter)
-
-**Contact Details:**
-
-- Address: Civil Aerodrome Post, Coimbatore, Tamilnadu, India – 641 014
-- Email: helpdesk@melinia.in
-- Phone: +91 9597970123
-
-### 10. FAQ Section
-
-Created HUD-style FAQ accordion section with diagonal cut corners:
+### 14. People Section
 
 **Files Created:**
 
-- `apps/outreach/src/components/outreach/FAQSection.tsx` - Main FAQ component
+- `apps/outreach/src/components/outreach/PeopleSection.tsx` - Team section with tilted cards
+- `apps/outreach/src/components/ui/hud-profile-card.tsx` - Profile card component
+- `apps/outreach/src/types/people.ts` - Person type and sample data
 
-**FAQ Data (6 questions):**
+**Features:**
 
-1. **Registration** - How do I register for events?
-2. **Eligibility** - Who can participate in Melinia'26?
-3. **Payment** - What payment methods are accepted?
-4. **Accommodation** - Is accommodation available for outstation participants?
-5. **Team Size** - Can I participate solo or do I need a team?
-6. **Contact** - Who should I contact for additional queries?
+- Random tilt effect for each card
+- Color-coded by category (organizer: purple, faculty: blue, dev-team: red)
+- Initials display with gradient background
+- LinkedIn link integration
+- Pulsing glow effect on hover
 
-**FAQ Section Features:**
+**Categories:**
 
-- **Card Design:** HUD-style with diagonal cut corners (2% cuts)
-    - CSS clip-path for card shape
-    - SVG background with purple gradient overlay
-    - Purple border stroke on SVG path
+- **Organizer** (#9D00FF) - Event organizers
+- **Faculty** (#0066FF) - Faculty coordinators
+- **Dev Team** (#FF0066) - Technical team members
 
-- **Corner Dots:** 4 dots at diagonal corners
-    - Positioned at 2% from edges, 10% from top/bottom
-    - Purple color (#9D00FF) with glow effect
-    - Pulsing animation (0.7 → 1 → 0.7 over 2 seconds)
+### 15. Events Section Cover Image & Filter Sync
 
-- **Accordion Behavior:** Single expansion mode
-    - Opening one FAQ closes others automatically
-    - Smooth expand/collapse animations using framer-motion
-    - Plus icon rotates 45° when expanded
+**Modified:** `apps/outreach/src/components/outreach/EventsSection.tsx`
 
-- **Plus Button:**
-    - Style matches Events section rounds card
-    - Rounded square with zinc-800/50 background
-    - Pink icon (#FF0066) with drop-shadow glow
-    - Events card glitch effect on hover (x/y jitter)
+**Changes:**
 
-- **Background:** FloatingPathsBackground with animated SVG paths
+- **Cover Image Placeholder Size:** Changed aspect ratio from `aspect-[3/2]` to `aspect-[4/1] md:aspect-[16/6]` on mobile, making the image height 25% of its width
 
-- **Heading Underline:** Mirrored from Events section
-    - Rotation: `rotate-[2deg]` (mirrored from Events' `rotate-[-2deg]`)
-    - Height: `h-2` matches Events section
-    - Shadow: `shadow-[0_0_15px_rgba(255,0,102,0.8)]`
+- **Category Filter Sync:** Added a `useEffect` that automatically updates the `activeFilter` to match the current event's type when navigating (swiping or using next/prev buttons)
 
-- **Animation:** Grid-template-rows for smooth accordion expansion
-    - Replaced height animation with grid animation for smoother performance
-    - Stiffness: 200, Damping: 30 for fluid motion
-    - Clip-path adjusted from 10%/90% to 8%/92% for wider expanded view
+---
 
-- **Content Spacing:** Added padding-top and increased bottom padding
-    - pt-4 md:pt-6 for spacing between question and answer
-    - pb-8 md:pb-10 for space between content and corner dots
+## Updated File Structure
 
-**Design Specs:**
-
-| Element       | Tailwind/Style                                                                                     |
-| ------------- | -------------------------------------------------------------------------------------------------- |
-| Card Shape    | CSS clip-path: `polygon(2% 0%, 98% 0%, 100% 10%, 100% 90%, 98% 100%, 2% 100%, 0% 90%, 0% 10%)`     |
-| Background    | bg-zinc-900/90 with SVG purple gradient overlay                                                    |
-| Corner Dots   | 4px × 4px, purple #9D00FF, 10% from top/bottom edges, pulsing animation, glow effect               |
-| Plus Button   | p-1.5 md:p-2, rounded, bg-zinc-800/50, pink #FF0066 with drop-shadow glow                          |
-| Glitch Effect | x/y jitter on card hover (framer-motion variants)                                                  |
-| Typography    | Questions: Space Grotesk (font-heading), white, semibold                                           |
-|               | Answers: Inter (font-body), gray-300, leading-relaxed                                              |
-| Animations    | Card entrance (staggered spring), expand/collapse (height + opacity), pulse (dots), glitch (hover) |
-
-**CSS Animation Added:**
-
-```css
-@keyframes dotPulse {
-    0%,
-    100% {
-        opacity: 0.7;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1.2);
-    }
-}
+```
+apps/outreach/src/
+├── components/
+│   ├── ui/
+│   │   ├── hud-button.tsx         (Animated HUD button)
+│   │   ├── hud-card.tsx           (HUD card + header + tag)
+│   │   ├── hud-profile-card.tsx   (Profile card with tilt effect)
+│   │   ├── hyper-text.tsx         (Text scramble animation)
+│   │   ├── badge.tsx              (Shadcn Badge)
+│   │   ├── countdown-timer.tsx    (Minimal countdown)
+│   │   ├── floating-paths.tsx     (Animated SVG background)
+│   │   └── hyper-text.tsx         (Text animation)
+│   └── outreach/
+│       ├── Hero.tsx               (Hero section)
+│       ├── CountdownSection.tsx   (Event countdown)
+│       ├── EventsSection.tsx      (Events with category filtering)
+│       ├── PrizePoolSection.tsx   (Prize pool with animation)
+│       ├── FAQSection.tsx         (FAQ accordion)
+│       ├── FooterSection.tsx      (Footer with map)
+│       └── PeopleSection.tsx      (Team section)
+├── types/
+│   ├── people.ts                  (Person type and data)
+│   ├── theme.ts                   (Color palette)
+│   ├── api.ts                     (API types)
+│   └── auth.ts                    (Auth types)
+├── lib/
+│   ├── utils.ts                   (cn() utility)
+│   └── axios.ts                   (Axios instance)
+└── pages/
+    └── outreach/
+        └── Home.tsx               (Landing page)
 ```
 
 ---
 
-## Recent Commits (feat/faq-section branch)
+## Recent Commits (master branch)
 
-### Commit 0d33548 (Jan 14, 2026)
-
-**Message:** `style: mirror heading underline in FAQ section`
-
-**Changes:**
-
-- Copy Events heading underline div to FAQ section
-- Mirror rotation: `rotate-[2deg]` instead of `rotate-[-2deg]`
-- Match underline height and shadow from Events section
-
-### Commit 5c0feb0 (Jan 14, 2026)
-
-**Message:** `style: improve FAQ accordion animation and layout`
-
-**Changes:**
-
-- Switch to grid-template-rows animation for smoother expansion
-- Reduce clip-path from 10%/90% to 8%/92% for wider expanded view
-- Add padding-top to expanded content for spacing
-- Increase bottom padding for more space between content and dots
-
-### Commit a96d686 (Jan 14, 2026)
-
-**Message:** `feat: add FAQ section with HUD-style accordion`
-
-**Changes:**
-
-- Create FAQSection component with diagonal cut corners and pulsing dot accents
-- Implement single-expand accordion with smooth framer-motion animations
-- Add dotPulse keyframes animation for corner dots glow effect
-- Integrate FAQ section into Home page before Footer
-- Remove obsolete Home.tsx redirect page
-- Update AGENTS.md with comprehensive FAQ documentation
-
-**Files Changed:** 5 files, 410 insertions(+), 12 deletions(-)
-
----
-
-## Technical Requirements
-
-- **Theme**: Spider-Man: Into the Spider-Verse (cyan/magenta/purple, glitch effects, comic-style)
-- **Responsiveness**: Mobile-first, must work well on mobile
-- **Animations**: Use Framer Motion wherever possible
-- **Assets**: All from `https://cdn.melinia.in`
-- **Design**: Modern UI, good colors, Spider-Verse aesthetic
-- **Package Manager**: Bun (not npm/pnpm)
+| Commit    | Message                                                                          |
+| --------- | -------------------------------------------------------------------------------- |
+| `7a9b3c1` | feat: add category filter sync and cover image size adjustment                   |
+| `77207d3` | feat: add team/people section with HUD profile cards                             |
+| `3b14d47` | style: improve events section UI and prize pool animation                        |
+| `4c16ddb` | fix(outreach-events): change tag menu accordingly while changing the event types |
 
 ---
 
@@ -438,28 +422,19 @@ Created HUD-style FAQ accordion section with diagonal cut corners:
 ```bash
 $ bun run build
 ✓ built successfully
-dist/assets/index-*.css   71.60 kB
-dist/assets/index-*.js   ~1006 kB
+dist/assets/index-*.css   ~94 kB
+dist/assets/index-*.js   ~1145 kB
 ```
 
 All builds passing without errors.
 
 ---
 
-## Key Files Reference
+## Key Files Reference (Updated)
 
-- Hero component: `apps/outreach/src/components/outreach/Hero.tsx`
-- Countdown Section: `apps/outreach/src/components/outreach/CountdownSection.tsx`
-- Countdown Timer: `apps/outreach/src/components/ui/countdown-timer.tsx`
-- Badge component: `apps/outreach/src/components/ui/badge.tsx`
-- Footer Section: `apps/outreach/src/components/outreach/FooterSection.tsx`
-- Styles: `apps/outreach/src/index.css`
-- Theme types: `apps/outreach/src/types/theme.ts`
-- Button component: `apps/outreach/src/components/ui/hud-button.tsx`
-- Home page: `apps/outreach/src/pages/outreach/Home.tsx`
-
----
-
-## Next Task
-
-Build the **Events Section** - the final of 4 planned sections. This should showcase events/competitions with Spider-Verse aesthetic.
+- Events Section: `apps/outreach/src/components/outreach/EventsSection.tsx`
+- Prize Pool: `apps/outreach/src/components/outreach/PrizePoolSection.tsx`
+- HUD Card: `apps/outreach/src/components/ui/hud-card.tsx`
+- Profile Card: `apps/outreach/src/components/ui/hud-profile-card.tsx`
+- People Section: `apps/outreach/src/components/outreach/PeopleSection.tsx`
+- People Types: `apps/outreach/src/types/people.ts`
