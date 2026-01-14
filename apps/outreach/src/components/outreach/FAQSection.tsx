@@ -286,16 +286,14 @@ export default function FAQSection() {
                 className="relative z-10 max-w-4xl mx-auto px-6"
             >
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                    className="text-center mb-10 md:mb-16"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center mb-8 md:mb-12 relative"
                 >
-                    <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide mb-4">
+                    <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Frequently Asked Questions
                     </h2>
-                    <div className="h-1 w-20 md:w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto shadow-[0_0_12px_rgba(255,0,102,0.6)]" />
+                    <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
                 </motion.div>
 
                 <div className="flex flex-col gap-4 md:gap-6">
