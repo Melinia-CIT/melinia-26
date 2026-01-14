@@ -221,7 +221,7 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
                     onClick={onToggle}
                     className="relative w-full flex items-center justify-between p-5 md:p-6 text-left cursor-pointer"
                 >
-                    <span className="flex-1 font-heading text-base md:text-lg font-semibold text-white tracking-wide pr-4">
+                    <span className="flex-1 font-heading text-lg md:text-xl font-semibold text-white tracking-wide pr-4">
                         {item.question}
                     </span>
                     <motion.div
@@ -252,7 +252,7 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.1, duration: 0.3 }}
-                                    className="px-5 md:px-6 pt-4 md:pt-6 pb-8 md:pb-10 font-body text-sm md:text-base text-gray-300 leading-relaxed"
+                                    className="px-5 md:px-6 pt-4 md:pt-6 pb-8 md:pb-10 font-body text-base md:text-lg text-gray-300 leading-relaxed"
                                 >
                                     {item.answer}
                                 </motion.p>
@@ -285,14 +285,14 @@ export default function FAQ() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="relative z-10 max-w-4xl mx-auto px-6"
+                className="relative z-10 max-w-7xl mx-auto px-6"
             >
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-8 md:mb-12 relative"
                 >
-                    <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
+                    <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-semibold text-white tracking-wide">
                         Frequently Asked Questions
                     </h2>
                     <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
