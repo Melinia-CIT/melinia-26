@@ -75,26 +75,6 @@ const Hero = () => {
             <div className="absolute inset-0 z-10 bg-gradient-to-b from-zinc-950/70 via-zinc-950/50 to-zinc-950/30" />
             <div className="absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(3,7,30,0.4)_70%,rgba(3,7,30,0.9)_100%)]" />
 
-            {/* Top Left Corner - College Info */}
-            <div className="absolute top-4 md:top-6 left-4 md:left-6 z-20 flex flex-col items-start gap-2 md:gap-3">
-                <div className="flex items-center gap-2 md:gap-3">
-                    <img
-                        src="https://cdn.melinia.in/cit.webp"
-                        alt="CIT"
-                        className="h-8 md:h-10 lg:h-12 w-auto object-contain"
-                    />
-                    <div className="h-6 md:h-8 w-[2px] bg-white" />
-                    <img
-                        src="https://cdn.melinia.in/melinia-top-logo.webp"
-                        alt="Melinia"
-                        className="h-8 md:h-10 lg:h-12 w-auto object-contain"
-                    />
-                </div>
-                <p className="font-geist text-white text-xs md:text-sm lg:text-base tracking-wide border-b border-white pb-1">
-                    Department of Computing
-                </p>
-            </div>
-
             {/* Main Content */}
             <div className="relative z-20 flex flex-col items-center justify-center min-h-screen px-6 py-12">
                 {/* Main Logo with Shimmer and Hover Effects */}
@@ -111,53 +91,84 @@ const Hero = () => {
                         transition={{ duration: 0.3, ease: "easeOut" }}
                         className="relative"
                     >
-                        {/* Logo Image */}
-                        <motion.img
-                            src="https://cdn.melinia.in/mln-logo.svg"
-                            alt="Melinia'26"
-                            className="w-64 md:w-80 lg:w-[22rem] xl:w-[26rem] 2xl:w-[32rem]"
-                            whileHover={{
-                                filter: isLogoHovered
-                                    ? "brightness(1.1) drop-shadow(0 0 20px rgba(157,0,255,0.5))"
-                                    : "brightness(1)",
-                            }}
-                            transition={{ duration: 0.3 }}
-                        />
+                        <div className="relative flex flex-col items-center">
+                            <div className="relative">
+                                {/* Logo Image */}
+                                <motion.img
+                                    src="https://cdn.melinia.in/mln-logo.svg"
+                                    alt="Melinia'26"
+                                    className="w-64 md:w-80 lg:w-[22rem] xl:w-[26rem] 2xl:w-[32rem]"
+                                    whileHover={{
+                                        filter: isLogoHovered
+                                            ? "brightness(1.1) drop-shadow(0 0 20px rgba(157,0,255,0.5))"
+                                            : "brightness(1)",
+                                    }}
+                                    transition={{ duration: 0.3 }}
+                                />
 
-                        {/* Shimmer Effect with mask */}
-                        <motion.div
-                            className="absolute inset-0 overflow-hidden pointer-events-none"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 1, duration: 0.5 }}
-                            style={{
-                                maskImage: "url(https://cdn.melinia.in/mln-logo.svg)",
-                                maskSize: "contain",
-                                maskRepeat: "no-repeat",
-                                maskPosition: "center",
-                                WebkitMaskImage: "url(https://cdn.melinia.in/mln-logo.svg)",
-                                WebkitMaskSize: "contain",
-                                WebkitMaskRepeat: "no-repeat",
-                                WebkitMaskPosition: "center",
-                            }}
-                        >
-                            <motion.div
-                                className="absolute inset-0 w-full h-full"
-                                style={{
-                                    background:
-                                        "linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%)",
-                                }}
-                                animate={{
-                                    x: ["-100%", "100%"],
-                                }}
-                                transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    repeatDelay: 4,
-                                    ease: "easeInOut",
-                                }}
-                            />
-                        </motion.div>
+                                {/* Shimmer Effect with mask - only on logo */}
+                                <motion.div
+                                    className="absolute inset-0 overflow-hidden pointer-events-none"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 1, duration: 0.5 }}
+                                    style={{
+                                        maskImage: "url(https://cdn.melinia.in/mln-logo.svg)",
+                                        maskSize: "contain",
+                                        maskRepeat: "no-repeat",
+                                        maskPosition: "center",
+                                        WebkitMaskImage: "url(https://cdn.melinia.in/mln-logo.svg)",
+                                        WebkitMaskSize: "contain",
+                                        WebkitMaskRepeat: "no-repeat",
+                                        WebkitMaskPosition: "center",
+                                    }}
+                                >
+                                    <motion.div
+                                        className="absolute inset-0 w-full h-full"
+                                        style={{
+                                            background:
+                                                "linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%)",
+                                        }}
+                                        animate={{
+                                            x: ["-100%", "100%"],
+                                        }}
+                                        transition={{
+                                            duration: 3,
+                                            repeat: Infinity,
+                                            repeatDelay: 4,
+                                            ease: "easeInOut",
+                                        }}
+                                    />
+                                </motion.div>
+                            </div>
+
+                            {/* Curved Date Text */}
+                            <svg
+                                className="-mt-8 md:-mt-5 ml-10 md:ml-10 lg:ml-16 -rotate-7 md:-rotate-5 w-64 md:w-80 lg:w-[22rem] xl:w-[26rem] 2xl:w-[32rem] h-12"
+                                style={{ transform: "translateX(0.3in)" }}
+                                viewBox="0 0 400 60"
+                            >
+                                <defs>
+                                    <path
+                                        id="curvePath"
+                                        d="M 0,30 Q 200,70 400,30"
+                                        fill="transparent"
+                                    />
+                                </defs>
+                                <motion.text
+                                    className="text-white font-heading font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl tracking-widest"
+                                    fill="white"
+                                    textAnchor="middle"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.5, duration: 0.5 }}
+                                >
+                                    <textPath href="#curvePath" startOffset="50%">
+                                        February 25
+                                    </textPath>
+                                </motion.text>
+                            </svg>
+                        </div>
 
                         {/* Hover Glow Effect */}
                         {isLogoHovered && (
@@ -179,7 +190,7 @@ const Hero = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3, duration: 0.6 }}
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[140%] flex flex-col md:flex-row gap-6 w-full max-w-md items-center justify-center"
+                        className="flex flex-col md:flex-row gap-6 items-center justify-center mx-auto mt-8"
                     >
                         <HudButton
                             style="style1"
