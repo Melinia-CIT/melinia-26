@@ -9,7 +9,7 @@ const TARGET_AMOUNT = 100000
 const ANIMATION_DURATION = 1600
 const PLUS_ANIMATION_DELAY = 0
 
-export default function PrizePoolSection() {
+export default function PrizePool() {
     const [currentAmount, setCurrentAmount] = useState(0)
     const [hasAnimated, setHasAnimated] = useState(false)
     const [shouldShimmer, setShouldShimmer] = useState(false)

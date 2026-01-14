@@ -24,12 +24,12 @@ const faqData: FAQItem[] = [
     {
         id: "3",
         question: "What payment methods are accepted?",
-        answer: "We accept payments through UPI, credit/debit cards, and net banking. All transactions are secure and processed through our payment gateway. If you face any issues during payment, please contact our helpdesk at helpdesk@melinia.in for assistance.",
+        answer: "We accept payments through UPI, credit/debit cards, and net banking. All transactions are secure and processed through Razorpay. If you face any issues during payment, please contact our helpdesk at helpdesk@melinia.in for assistance.",
     },
     {
         id: "4",
         question: "Is accommodation available for outstation participants?",
-        answer: "Yes! We provide on-campus accommodation for outstation participants on a first-come, first-served basis. Accommodation details and booking options will be available during the registration process. Alternatively, you can contact our team at +91 9597970123 for accommodation queries.",
+        answer: "Accommodation is not provided for participants. However, we can help guide you to nearby hotels and PG accommodations in Coimbatore. Please contact our team at +91 9597970123 for assistance.",
     },
     {
         id: "5",
@@ -265,7 +265,7 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
     )
 }
 
-export default function FAQSection() {
+export default function FAQ() {
     const [openItemId, setOpenItemId] = useState<string | null>(null)
 
     const toggleItem = (id: string) => {

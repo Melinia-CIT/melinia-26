@@ -2,10 +2,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { sendOTP, verifyOTP, register } from "../../services/auth";
-import EmailForm from "../../components/registration/EmailForm";
-import OtpForm from "../../components/registration/OtpForm";
-import PasswordForm from "../../components/registration/PasswordForm";
+import { sendOTP, verifyOTP, register } from "../../../services/auth";
+import EmailForm from "../../../components/registration/EmailForm";
+import OtpForm from "../../../components/registration/OtpForm";
+import PasswordForm from "../../../components/registration/PasswordForm";
 import { CheckCircle } from "iconoir-react";
 
 const Registration = () => {

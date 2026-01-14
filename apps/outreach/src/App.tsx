@@ -2,22 +2,22 @@ import { BrowserRouter, Routes, Route } from "react-router"
 
 import { PublicRoute, ProtectedRoute } from "./components/Router"
 
-import Login from "./pages/auth/Login"
-import ResetPassword from "./pages/auth/ResetPassword"
+import Home from "./pages/Home"
 import AppLayout from "./pages/userland/Layout"
-import ForgotPassword from "./pages/auth/ForgotPassword"
+import Login from "./pages/userland/auth/Login"
+import Register from "./pages/userland/auth/Registration"
+import ResetPassword from "./pages/userland/auth/ResetPassword"
+import ForgotPassword from "./pages/userland/auth/ForgotPassword"
+import Main from "./pages/userland/Main"
 import EventLayout from "./pages/userland/events/Events"
 import EventDetail from "./pages/userland/events/EventDetail"
-import Main from "./pages/userland/Main"
-import Register from "./pages/auth/Registration"
 import Teams from "./pages/userland/Teams"
-import OutreachHome from "./pages/outreach/Home"
 
 function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<OutreachHome />} />
+                <Route path="/" element={<Home />} />
                 <Route element={<PublicRoute />}>
                     <Route path="/login" element={<Login />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -39,4 +39,4 @@ function App() {
     )
 }
 
-export default App
+export default App;

@@ -2,7 +2,7 @@ import { motion } from "framer-motion"
 import CountdownTimer from "../ui/countdown-timer"
 import { FloatingPathsBackground } from "../ui/floating-paths"
 
-export default function CountdownSection() {
+export default function Countdown() {
     return (
         <section className="relative w-full py-16 md:py-24 overflow-hidden bg-zinc-950">
             <FloatingPathsBackground position={1} className="absolute inset-0">
