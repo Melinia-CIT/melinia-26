@@ -342,6 +342,15 @@ Created HUD-style FAQ accordion section with diagonal cut corners:
     - Height: `h-2` matches Events section
     - Shadow: `shadow-[0_0_15px_rgba(255,0,102,0.8)]`
 
+- **Animation:** Grid-template-rows for smooth accordion expansion
+    - Replaced height animation with grid animation for smoother performance
+    - Stiffness: 200, Damping: 30 for fluid motion
+    - Clip-path adjusted from 10%/90% to 8%/92% for wider expanded view
+
+- **Content Spacing:** Added padding-top and increased bottom padding
+    - pt-4 md:pt-6 for spacing between question and answer
+    - pb-8 md:pb-10 for space between content and corner dots
+
 **Design Specs:**
 
 | Element       | Tailwind/Style                                                                                     |
@@ -384,6 +393,17 @@ Created HUD-style FAQ accordion section with diagonal cut corners:
 - Copy Events heading underline div to FAQ section
 - Mirror rotation: `rotate-[2deg]` instead of `rotate-[-2deg]`
 - Match underline height and shadow from Events section
+
+### Commit 5c0feb0 (Jan 14, 2026)
+
+**Message:** `style: improve FAQ accordion animation and layout`
+
+**Changes:**
+
+- Switch to grid-template-rows animation for smoother expansion
+- Reduce clip-path from 10%/90% to 8%/92% for wider expanded view
+- Add padding-top to expanded content for spacing
+- Increase bottom padding for more space between content and dots
 
 ### Commit a96d686 (Jan 14, 2026)
 
