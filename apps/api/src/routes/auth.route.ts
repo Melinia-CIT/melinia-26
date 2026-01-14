@@ -179,7 +179,7 @@ auth.post("/refresh", async (c) => {
 
     const storedToken = await ioredis.get(`refresh:${id}`);
 
-    if (!storedToken || storedToken !== refreshToken) {
+    if (storedToken === null || storedToken !== refreshToken) {
         throw new HTTPException(401, { message: "Invalid refresh token" });
     }
 
