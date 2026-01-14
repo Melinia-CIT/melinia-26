@@ -8,6 +8,7 @@ interface HudCardProps {
     widthClass?: string
     hoverEffect?: "scale" | "glitch" | "glow" | "none"
     glitchOnHover?: boolean
+    showDots?: boolean
     className?: string
 }
 
@@ -17,6 +18,7 @@ export function HudCard({
     widthClass = "w-full",
     hoverEffect = "glitch",
     glitchOnHover = true,
+    showDots = true,
     className = "",
 }: HudCardProps) {
     const shouldReduceMotion = useReducedMotion()
@@ -91,15 +93,15 @@ export function HudCard({
         hover:
             shouldAnimate && glitchOnHover
                 ? {
-                    x: "150%",
-                    opacity: [0, 0.5, 0],
-                    transition: {
-                        duration: 1.5,
-                        repeat: Infinity,
-                        repeatDelay: 1,
-                        ease: "easeInOut",
-                    },
-                }
+                      x: "150%",
+                      opacity: [0, 0.5, 0],
+                      transition: {
+                          duration: 1.5,
+                          repeat: Infinity,
+                          repeatDelay: 1,
+                          ease: "easeInOut",
+                      },
+                  }
                 : { opacity: 0 },
     }
 
@@ -107,10 +109,10 @@ export function HudCard({
         hover:
             shouldAnimate && glitchOnHover
                 ? {
-                    x: [0, -2, 2, -1, 1, 0],
-                    y: [0, 1, -1, 0.5, -0.5, 0],
-                    transition: { duration: 0.3, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
-                }
+                      x: [0, -2, 2, -1, 1, 0],
+                      y: [0, 1, -1, 0.5, -0.5, 0],
+                      transition: { duration: 0.3, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+                  }
                 : {},
     }
 
@@ -171,7 +173,8 @@ export function HudCard({
                             opacity="0.5"
                         />
                     )}
-                    {variant !== "secondary" &&
+                    {showDots &&
+                        variant !== "secondary" &&
                         cornerDots.map((dot, i) => (
                             <motion.circle
                                 key={i}
@@ -232,37 +235,43 @@ export function HudCardHeader({
         pink: { main: "#FF69B4" },
     }[variant]
     return (
-        <div className={`relative mb-4 min-h-[32px] ${className}`}>
-            <svg
-                className="absolute inset-0 w-full h-full"
-                viewBox="0 0 200 32"
-                preserveAspectRatio="none"
-            >
-                <defs>
-                    <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor={colors.main} stopOpacity="0.2" />
-                        <stop offset="50%" stopColor={colors.main} stopOpacity="0.1" />
-                        <stop offset="100%" stopColor={colors.main} stopOpacity="0" />
-                    </linearGradient>
-                </defs>
-                <path
-                    d="M4,0 L196,0 L200,4 L200,28 L196,32 L4,32 L0,28 L0,4 Z"
-                    fill={`url(#${gradientId})`}
-                    stroke={colors.main}
-                    strokeWidth="0.5"
-                    vectorEffect="non-scaling-stroke"
-                />
-                <circle cx="8" cy="16" r="2" fill={colors.main} />
-                <circle cx="192" cy="16" r="2" fill={colors.main} />
-            </svg>
-            <div className="relative z-10 flex items-center gap-2 px-6 py-3">
-                {icon && <span className="text-white">{icon}</span>}
-                <h3
-                    className="font-heading text-sm font-bold uppercase tracking-widest whitespace-nowrap"
-                    style={{ color: colors.main }}
+        <div className={`relative mb-4 ${className}`}>
+            <div className="relative h-8">
+                <svg
+                    className="absolute left-0 top-0 h-full w-auto"
+                    viewBox="0 0 200 32"
+                    preserveAspectRatio="xMidYMid meet"
                 >
-                    {title}
-                </h3>
+                    <defs>
+                        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor={colors.main} stopOpacity="0.2" />
+                            <stop offset="50%" stopColor={colors.main} stopOpacity="0.1" />
+                            <stop offset="100%" stopColor={colors.main} stopOpacity="0" />
+                        </linearGradient>
+                    </defs>
+                    <path
+                        d="M4,0 L196,0 L200,4 L200,28 L196,32 L4,32 L0,28 L0,4 Z"
+                        fill={`url(#${gradientId})`}
+                        stroke={colors.main}
+                        strokeWidth="0.5"
+                        vectorEffect="non-scaling-stroke"
+                    />
+                    <circle cx="8" cy="16" r="2" fill={colors.main} />
+                    <circle cx="192" cy="16" r="2" fill={colors.main} />
+                </svg>
+                <div className="absolute inset-0 z-10 flex items-center gap-2 px-4 md:px-6 py-1.5 md:py-2">
+                    {icon && (
+                        <span className="text-xs md:text-base" style={{ color: colors.main }}>
+                            {icon}
+                        </span>
+                    )}
+                    <h3
+                        className="font-heading text-xs md:text-sm font-bold uppercase tracking-wider md:tracking-widest whitespace-nowrap"
+                        style={{ color: colors.main }}
+                    >
+                        {title}
+                    </h3>
+                </div>
             </div>
         </div>
     )
@@ -293,8 +302,8 @@ export function HudTag({
     }[variant]
 
     const sizes = {
-        small: { height: "h-7", text: "text-[10px]", padding: "px-2" },
-        medium: { height: "h-8", text: "text-xs", padding: "px-3" },
+        small: { height: "h-7", text: "text-[10px] sm:text-xs", padding: "px-2 sm:px-3" },
+        medium: { height: "h-8", text: "text-xs sm:text-sm", padding: "px-3 sm:px-4" },
     }[size]
 
     const tagVariants: Variants = {
@@ -302,10 +311,10 @@ export function HudTag({
         show: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 400, damping: 25 } },
         hover: shouldAnimate
             ? {
-                scale: 1.05,
-                boxShadow: `0 0 15px ${colors.glow}`,
-                transition: { type: "spring", stiffness: 400, damping: 25 },
-            }
+                  scale: 1.05,
+                  boxShadow: `0 0 15px ${colors.glow}`,
+                  transition: { type: "spring", stiffness: 400, damping: 25 },
+              }
             : {},
     }
 
