@@ -115,7 +115,7 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <User className="w-6 h-6 text-indigo-400" />
-                        <h2 className="text-xl font-bold text-white">Team Invitations</h2>
+                        <h2 className="text-xl font-bold text-white">Notifications</h2>
                         <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs font-semibold rounded-full">
                             {invitations.length}
                         </span>
@@ -234,7 +234,7 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                             // Empty State
                             <div className="p-6 text-center">
                                 <User className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
-                                <p className="text-zinc-500 text-sm">No pending invitations</p>
+                                <p className="text-zinc-500 text-sm">No notifications</p>
                             </div>
                         ) : (
                             // List State

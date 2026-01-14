@@ -12,6 +12,7 @@ import api from "../../services/api"
 interface Round {
     roundNo: number
     roundDescription: string
+    roundName: string
 }
 interface Prize {
     position: number
@@ -58,7 +59,6 @@ const EventsSection = () => {
         staleTime: 5 * 60 * 1000,
     })
 
-    // FIX: Sort events strictly by category order (Flagship -> Technical -> Non-Technical)
     const categoryPriority: Record<string, number> = {
         flagship: 1,
         technical: 2,
@@ -74,14 +74,34 @@ const EventsSection = () => {
         })
     }, [allEvents])
 
+    // --- EFFECT 1: Sync Filter Tab when navigating events ---
+    // This updates the filter button visual state when you click Next/Prev
     useEffect(() => {
-        const firstIndex = sortedEvents?.findIndex(
-            event => event.eventType?.toLowerCase() === activeFilter
-        )
-        if (firstIndex !== undefined && firstIndex !== -1) {
-            setCurrentEventIndex(firstIndex)
+        if (sortedEvents && sortedEvents[currentEventIndex]) {
+            const type = sortedEvents[currentEventIndex].eventType?.toLowerCase()
+            if (type === "flagship" || type === "technical" || type === "non-technical") {
+                setActiveFilter(type as EventFilter)
+            }
         }
-    }, [activeFilter, sortedEvents])
+    }, [currentEventIndex, sortedEvents])
+
+    // --- EFFECT 2: Jump to category start ONLY when clicking a Tab ---
+    // FIX: We removed 'currentEventIndex' from the dependency array to break the infinite loop.
+    // This effect only triggers when 'activeFilter' changes (e.g., user clicks a button), 
+    // NOT when 'currentEventIndex' changes (which triggers Effect 1).
+    useEffect(() => {
+        const currentEventType = sortedEvents?.[currentEventIndex]?.eventType?.toLowerCase()
+
+        // If the user requested a different filter than the current event's type, jump to start
+        if (currentEventType !== activeFilter) {
+            const firstIndex = sortedEvents?.findIndex(
+                event => event.eventType?.toLowerCase() === activeFilter
+            )
+            if (firstIndex !== undefined && firstIndex !== -1) {
+                setCurrentEventIndex(firstIndex)
+            }
+        }
+    }, [activeFilter, sortedEvents]) // Removed 'currentEventIndex' dependency
 
     const currentEvent = sortedEvents?.[currentEventIndex]
 
@@ -106,9 +126,9 @@ const EventsSection = () => {
 
     const getEventTypeColor = (eventType: string) => {
         const t = eventType?.toLowerCase()
-        if (t === "flagship") return "#FF0066" // Red
-        if (t === "technical") return "#9D00FF" // Purple
-        if (t === "non-technical") return "#FF69B4" // Pink
+        if (t === "flagship") return "#FF0066"
+        if (t === "technical") return "#9D00FF"
+        if (t === "non-technical") return "#FF69B4"
         return "#FFFFFF"
     }
 
@@ -159,11 +179,10 @@ const EventsSection = () => {
 
     return (
         <section className="relative min-h-screen w-full overflow-hidden bg-zinc-950 text-white font-body selection:bg-[#FF0066] selection:text-white">
-            {/* Spider-Verse Background Effects */}
             <FloatingPathsBackground position={2} className="absolute inset-0 opacity-40">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#000000_90%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(0,102,255,0.15),_transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(255,0,102,0.15),_transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,102,255,0.15),transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,0,102,0.15),transparent_50%)]" />
                 <div
                     className="absolute inset-0 opacity-[0.07] mix-blend-overlay pointer-events-none"
                     style={{
@@ -173,9 +192,7 @@ const EventsSection = () => {
                 />
             </FloatingPathsBackground>
 
-            {/* Content Container */}
             <div className="relative z-10 max-w-8xl mx-auto px-4 md:px-8 py-12 md:py-20">
-                {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -187,7 +204,6 @@ const EventsSection = () => {
                     <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[-2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
                 </motion.div>
 
-                {/* Filter Tabs */}
                 <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 md:mb-16">
                     {(["flagship", "technical", "non-technical"] as EventFilter[]).map(filter => (
                         <motion.button
@@ -222,9 +238,7 @@ const EventsSection = () => {
                     ))}
                 </div>
 
-                {/* Main Grid Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-12 items-stretch">
-                    {/* COLUMN 1: ROUNDS (Left Sidebar) */}
                     <div className="lg:col-span-1 flex flex-col h-full order-2 lg:order-1">
                         <div className="w-full mb-3 md:mb-4">
                             <HudCardHeader
@@ -246,7 +260,7 @@ const EventsSection = () => {
                                         variant="secondary"
                                         widthClass="w-full"
                                         hoverEffect="glow"
-                                        className="!p-0 border-x-0 border-l-0 border-r-0 bg-white/5"
+                                        className="p-0! border-x-0 border-l-0 border-r-0 bg-white/5"
                                     >
                                         <div className="relative w-full bg-transparent overflow-hidden">
                                             <button
@@ -262,15 +276,9 @@ const EventsSection = () => {
                                                 </div>
                                                 <div className="p-1 rounded bg-white/10">
                                                     {expandedRounds.has(round.roundNo) ? (
-                                                        <Minus
-                                                            size={14}
-                                                            className="text-[#FF0066]"
-                                                        />
+                                                        <Minus size={14} className="text-[#FF0066]" />
                                                     ) : (
-                                                        <Plus
-                                                            size={14}
-                                                            className="text-[#FF0066]"
-                                                        />
+                                                        <Plus size={14} className="text-[#FF0066]" />
                                                     )}
                                                 </div>
                                             </button>
@@ -295,9 +303,9 @@ const EventsSection = () => {
                         </div>
                     </div>
 
-                    {/* COLUMN 2: MAIN EVENT (Center) */}
                     <div className="lg:col-span-1 lg:col-start-2 lg:col-end-3 flex flex-col h-full items-center order-1 lg:order-2 relative z-20">
-                        <AnimatePresence mode="wait">
+                        {/* AnimatePresence Warning Fix: Added initial={false} to handle React 18 Strict Mode double mounting issues */}
+                        <AnimatePresence mode="wait" initial={false}>
                             {currentEvent && (
                                 <motion.div
                                     key={currentEvent.id}
@@ -313,11 +321,9 @@ const EventsSection = () => {
                                         hoverEffect="glitch"
                                         glitchOnHover
                                     >
-                                        {/* Image Section */}
-                                        <div className="relative aspect-[3/2] md:aspect-[16/6] w-full overflow-hidden bg-gray-900">
-                                            <div className="absolute inset-0 bg-[radial-gradient(circle,_var(--tw-gradient-stops))] from-gray-800 via-black to-black opacity-50" />
+                                        <div className="relative aspect-3/2 md:aspect-16/6 w-full overflow-hidden bg-gray-900">
+                                            <div className="absolute inset-0 bg-[radial-gradient(circle,var(--tw-gradient-stops))] from-gray-800 via-black to-black opacity-50" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10" />
-
                                             <div
                                                 className="absolute top-2 md:top-4 left-2 md:left-4 z-20 px-2 py-1 md:px-3 md:py-1 rounded text-white font-heading font-bold text-[10px] md:text-xs uppercase tracking-wider skew-x-[-10deg]"
                                                 style={{
@@ -328,7 +334,6 @@ const EventsSection = () => {
                                             >
                                                 {currentEvent.eventType}
                                             </div>
-
                                             <div className="absolute inset-0 flex items-center justify-center z-0">
                                                 <span className="font-heading text-3xl md:text-6xl text-white/5 font-black uppercase select-none text-center px-4">
                                                     {currentEvent.name}
@@ -336,14 +341,11 @@ const EventsSection = () => {
                                             </div>
                                         </div>
 
-                                        {/* Content Section */}
                                         <div className="flex-1 p-4 md:p-8 relative">
                                             <div className="absolute -right-10 -top-10 w-40 h-40 bg-gradient-to-br from-pink-600/10 to-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
                                             <h2 className="font-heading text-2xl md:text-4xl font-black text-white mb-3 md:mb-4 uppercase leading-none">
                                                 {currentEvent.name}
                                             </h2>
-
                                             <p
                                                 className="text-gray-400 font-body leading-relaxed mb-4 md:mb-6 border-l-4 pl-3 md:pl-4 text-sm md:text-base"
                                                 style={{
@@ -355,9 +357,7 @@ const EventsSection = () => {
                                                 {currentEvent.description}
                                             </p>
 
-                                            {/* Meta Info Grid */}
                                             <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
-                                                {/* Venue */}
                                                 <div className="flex items-center gap-2 md:gap-3 text-white">
                                                     <div className="p-1.5 md:p-2 rounded-full bg-purple-500/20 text-purple-400">
                                                         <MapPin size={16} />
@@ -371,7 +371,6 @@ const EventsSection = () => {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                {/* Time */}
                                                 <div className="flex items-center gap-2 md:gap-3 text-white">
                                                     <div className="p-1.5 md:p-2 rounded-full bg-red-500/20 text-red-400">
                                                         <Clock size={16} />
@@ -385,7 +384,6 @@ const EventsSection = () => {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                {/* Team Size */}
                                                 <div className="flex items-center gap-2 md:gap-3 text-white">
                                                     <div className="p-1.5 md:p-2 rounded-full bg-purple-500/20 text-purple-400">
                                                         <User size={16} />
@@ -400,7 +398,6 @@ const EventsSection = () => {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                {/* Type */}
                                                 <div className="flex items-center gap-2 md:gap-3 text-white">
                                                     <div className="p-1.5 md:p-2 rounded-full bg-red-500/20 text-red-400">
                                                         <User size={16} />
@@ -416,7 +413,6 @@ const EventsSection = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Register Button */}
                                             <div className="w-full">
                                                 <HudButton
                                                     variant={getEventVariant(
@@ -432,7 +428,6 @@ const EventsSection = () => {
                                         </div>
                                     </HudCard>
 
-                                    {/* Navigation Controls */}
                                     <div className="w-full max-w-xl flex items-center justify-center gap-3 md:gap-8 mt-4 md:mt-8 px-2">
                                         <HudButton
                                             variant={getEventVariant(currentEvent.eventType)}
@@ -464,9 +459,7 @@ const EventsSection = () => {
                         </AnimatePresence>
                     </div>
 
-                    {/* COLUMN 3: RIGHT SIDE (Prizes + Organizers) */}
                     <div className="lg:col-span-1 flex flex-col gap-4 md:gap-6 order-3 lg:order-3 h-full">
-                        {/* Prizes Section */}
                         <div className="flex flex-col gap-2 md:gap-3 w-full">
                             <div className="w-full">
                                 <HudCardHeader
@@ -506,7 +499,6 @@ const EventsSection = () => {
                             </div>
                         </div>
 
-                        {/* Organizers Section */}
                         <div className="flex flex-col gap-2 md:gap-3 w-full">
                             <div className="w-full">
                                 <HudCardHeader
@@ -543,7 +535,6 @@ const EventsSection = () => {
                     </div>
                 </div>
 
-                {/* Bottom Pagination Dots - HUD Bar */}
                 <div className="flex flex-wrap items-center justify-center gap-x-4 md:gap-x-6 gap-y-2 md:gap-y-3 mt-8 md:mt-12 min-h-[60px] px-2 md:px-4">
                     {categoryOrder.map((category, catIdx) => {
                         const categoryEvents = groupedEvents[category]
@@ -551,7 +542,6 @@ const EventsSection = () => {
 
                         return (
                             <div key={category} className="flex items-center gap-2 md:gap-3">
-                                {/* Category Label */}
                                 <span
                                     className="font-mono text-[10px] md:text-xs uppercase tracking-wider whitespace-nowrap"
                                     style={{ color: getEventTypeColor(category) }}
@@ -559,7 +549,6 @@ const EventsSection = () => {
                                     {category}
                                 </span>
 
-                                {/* Event Dots */}
                                 <div className="flex items-center gap-1 md:gap-2">
                                     {categoryEvents.map(event => {
                                         const globalIndex = sortedEvents.indexOf(event)
@@ -597,7 +586,6 @@ const EventsSection = () => {
                                         )
                                     })}
                                 </div>
-                                {/* Divider between categories (except last) */}
                                 {catIdx < categoryOrder.length - 1 && (
                                     <div className="w-px h-6 md:h-8 bg-white/10 mx-1 md:mx-2 hidden sm:block" />
                                 )}
