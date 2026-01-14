@@ -337,6 +337,11 @@ Created HUD-style FAQ accordion section with diagonal cut corners:
 
 - **Background:** FloatingPathsBackground with animated SVG paths
 
+- **Heading Underline:** Mirrored from Events section
+    - Rotation: `rotate-[2deg]` (mirrored from Events' `rotate-[-2deg]`)
+    - Height: `h-2` matches Events section
+    - Shadow: `shadow-[0_0_15px_rgba(255,0,102,0.8)]`
+
 **Design Specs:**
 
 | Element       | Tailwind/Style                                                                                     |
@@ -365,6 +370,35 @@ Created HUD-style FAQ accordion section with diagonal cut corners:
     }
 }
 ```
+
+---
+
+## Recent Commits (feat/faq-section branch)
+
+### Commit 0d33548 (Jan 14, 2026)
+
+**Message:** `style: mirror heading underline in FAQ section`
+
+**Changes:**
+
+- Copy Events heading underline div to FAQ section
+- Mirror rotation: `rotate-[2deg]` instead of `rotate-[-2deg]`
+- Match underline height and shadow from Events section
+
+### Commit a96d686 (Jan 14, 2026)
+
+**Message:** `feat: add FAQ section with HUD-style accordion`
+
+**Changes:**
+
+- Create FAQSection component with diagonal cut corners and pulsing dot accents
+- Implement single-expand accordion with smooth framer-motion animations
+- Add dotPulse keyframes animation for corner dots glow effect
+- Integrate FAQ section into Home page before Footer
+- Remove obsolete Home.tsx redirect page
+- Update AGENTS.md with comprehensive FAQ documentation
+
+**Files Changed:** 5 files, 410 insertions(+), 12 deletions(-)
 
 ---
 
