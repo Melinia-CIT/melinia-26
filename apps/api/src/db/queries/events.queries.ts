@@ -102,7 +102,7 @@ export async function createEvent(input: CreateEvent) {
 
         if (data.rounds && data.rounds.length > 0) {
             for (const r of data.rounds) {
-                await sql`INSERT INTO event_rounds (event_id, round_no, round_name, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundName}, ${r.roundDescription});`;
+                await sql`INSERT INTO event_rounds (event_id, round_no, round_name, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundName ?? null}, ${r.roundDescription ?? null});`;
             }
         }
 
@@ -120,7 +120,7 @@ export async function createEvent(input: CreateEvent) {
 
         if (data.rules && data.rules.length > 0) {
             for (const rule of data.rules) {
-                await sql`INSERT INTO event_rules (event_id, round_no, rule_number, rule_description) VALUES (${eventId}, ${rule.roundNo ?? null}, ${rule.ruleNumber}, ${rule.ruleDescription});`;
+                await sql`INSERT INTO event_rules (event_id, round_no, rule_number, rule_description) VALUES (${eventId}, ${rule.roundNo ?? null}, ${rule.ruleNumber}, ${rule.ruleDescription ?? null});`;
             }
         }
 
@@ -191,6 +191,9 @@ export async function getEventById(input: GetEventDetailsInput) {
         }
 
         const eventRow = events[0];
+        if(!eventRow){
+            throw new Error("Event not found");
+        }
         const eventId = eventRow.id as string;
         const eventIds = [eventId];
 
@@ -276,7 +279,7 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
 
         if (data.rounds && data.rounds.length > 0) {
             for (const r of data.rounds) {
-                await sql`INSERT INTO event_rounds (event_id, round_no, round_name, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundName}, ${r.roundDescription});`;
+                await sql`INSERT INTO event_rounds (event_id, round_no, round_name, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundName ?? null}, ${r.roundDescription ?? null});`;
             }
         }
 
@@ -294,7 +297,7 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
 
         if (data.rules && data.rules.length > 0) {
             for (const rule of data.rules) {
-                await sql`INSERT INTO event_rules (event_id, round_no, rule_number, rule_description) VALUES (${eventId}, ${rule.roundNo ?? null}, ${rule.ruleNumber}, ${rule.ruleDescription});`;
+                await sql`INSERT INTO event_rules (event_id, round_no, rule_number, rule_description) VALUES (${eventId}, ${rule.roundNo ?? null}, ${rule.ruleNumber}, ${rule.ruleDescription ?? null});`;
             }
         }
 
