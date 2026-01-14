@@ -189,11 +189,15 @@ apps/outreach/src/
 │   │   ├── hud-button.tsx         (New - animated button component)
 │   │   ├── hyper-text.tsx         (New - text scramble animation)
 │   │   ├── badge.tsx              (New - shadcn badge component)
-│   │   └── countdown-timer.tsx     (New - minimal countdown timer)
+│   │   ├── countdown-timer.tsx     (New - minimal countdown timer)
+│   │   └── floating-paths.tsx      (New - animated SVG paths background)
 │   └── outreach/
 │       ├── Hero.tsx                (New - main hero section)
 │       ├── CountdownSection.tsx    (New - countdown section wrapper)
-│       └── FooterSection.tsx       (New - footer with map & contact)
+│       ├── FooterSection.tsx       (New - footer with map & contact)
+│       ├── EventsSection.tsx       (New - events showcase with category filtering)
+│       ├── PrizePoolSection.tsx    (New - prize pool counter animation)
+│       └── FAQSection.tsx          (New - FAQ accordion with HUD styling)
 ├── lib/
 │   ├── axios.ts                   (Existing)
 │   └── utils.ts                  (New - cn() utility)
@@ -204,9 +208,9 @@ apps/outreach/src/
 ├── pages/
 │   ├── HudButtonDemo.tsx          (New - button showcase)
 │   └── outreach/
-│       └── Home.tsx              (New - Hero, Countdown, Footer sections)
+│       └── Home.tsx              (New - Hero, Countdown, Events, PrizePool, FAQ, Footer sections)
 ├── App.tsx                      (Modified - / route now shows OutreachHome)
-└── index.css                    (Modified - removed glitch CSS, added color vars)
+└── index.css                    (Modified - removed glitch CSS, added color vars, animations)
 ```
 
 ---
@@ -251,8 +255,9 @@ The original plan included **4 sections total**. Completed:
 1. ✅ Hero Section
 2. ✅ **Countdown Section** - Event countdown timer (Feb 25, 2026, 8AM)
 3. ✅ **Footer Section** - Contact/social links
+4. ✅ **FAQ Section** - FAQ accordion with HUD styling
 
-Still to build: 4. ❌ **Events Section** - Showcase events/competitions
+All 4 planned sections are now complete!
 
 ---
 
@@ -289,6 +294,77 @@ Created 3-column footer with map and contact info:
 - Address: Civil Aerodrome Post, Coimbatore, Tamilnadu, India – 641 014
 - Email: helpdesk@melinia.in
 - Phone: +91 9597970123
+
+### 10. FAQ Section
+
+Created HUD-style FAQ accordion section with diagonal cut corners:
+
+**Files Created:**
+
+- `apps/outreach/src/components/outreach/FAQSection.tsx` - Main FAQ component
+
+**FAQ Data (6 questions):**
+
+1. **Registration** - How do I register for events?
+2. **Eligibility** - Who can participate in Melinia'26?
+3. **Payment** - What payment methods are accepted?
+4. **Accommodation** - Is accommodation available for outstation participants?
+5. **Team Size** - Can I participate solo or do I need a team?
+6. **Contact** - Who should I contact for additional queries?
+
+**FAQ Section Features:**
+
+- **Card Design:** HUD-style with diagonal cut corners (2% cuts)
+    - CSS clip-path for card shape
+    - SVG background with purple gradient overlay
+    - Purple border stroke on SVG path
+
+- **Corner Dots:** 4 dots at diagonal corners
+    - Positioned at 2% from edges, 10% from top/bottom
+    - Purple color (#9D00FF) with glow effect
+    - Pulsing animation (0.7 → 1 → 0.7 over 2 seconds)
+
+- **Accordion Behavior:** Single expansion mode
+    - Opening one FAQ closes others automatically
+    - Smooth expand/collapse animations using framer-motion
+    - Plus icon rotates 45° when expanded
+
+- **Plus Button:**
+    - Style matches Events section rounds card
+    - Rounded square with zinc-800/50 background
+    - Pink icon (#FF0066) with drop-shadow glow
+    - Events card glitch effect on hover (x/y jitter)
+
+- **Background:** FloatingPathsBackground with animated SVG paths
+
+**Design Specs:**
+
+| Element       | Tailwind/Style                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| Card Shape    | CSS clip-path: `polygon(2% 0%, 98% 0%, 100% 10%, 100% 90%, 98% 100%, 2% 100%, 0% 90%, 0% 10%)`     |
+| Background    | bg-zinc-900/90 with SVG purple gradient overlay                                                    |
+| Corner Dots   | 4px × 4px, purple #9D00FF, 10% from top/bottom edges, pulsing animation, glow effect               |
+| Plus Button   | p-1.5 md:p-2, rounded, bg-zinc-800/50, pink #FF0066 with drop-shadow glow                          |
+| Glitch Effect | x/y jitter on card hover (framer-motion variants)                                                  |
+| Typography    | Questions: Space Grotesk (font-heading), white, semibold                                           |
+|               | Answers: Inter (font-body), gray-300, leading-relaxed                                              |
+| Animations    | Card entrance (staggered spring), expand/collapse (height + opacity), pulse (dots), glitch (hover) |
+
+**CSS Animation Added:**
+
+```css
+@keyframes dotPulse {
+    0%,
+    100% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+```
 
 ---
 

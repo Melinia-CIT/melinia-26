@@ -2,6 +2,7 @@ import Hero from "../../components/outreach/Hero"
 import CountdownSection from "../../components/outreach/CountdownSection"
 import PrizePoolSection from "../../components/outreach/PrizePoolSection"
 import EventsSection from "../../components/outreach/EventsSection"
+import FAQSection from "../../components/outreach/FAQSection"
 import FooterSection from "../../components/outreach/FooterSection"
 
 const Home = () => {
@@ -11,6 +12,7 @@ const Home = () => {
             <CountdownSection />
             <EventsSection />
             <PrizePoolSection />
+            <FAQSection />
             <FooterSection />
         </main>
     )

@@ -57,6 +57,18 @@
             background-position: 200% 0;
         }
     }
+
+    @keyframes dotPulse {
+        0%,
+        100% {
+            opacity: 0.7;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+    }
 }
 
 @layer base {
