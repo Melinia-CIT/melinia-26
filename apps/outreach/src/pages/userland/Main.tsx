@@ -1,6 +1,7 @@
 import { useState, useRef } from "react"
 import UserCard from "../../components/userland/main/UserCard"
 import Notifications from "../../components/userland/main/Notifications"
+//import RegisteredEvents from "../../components/userland/main/RegisteredEvents"
 import { NotificationIcon } from "../../components/userland/main/NotificationIcon"
 import { motion } from "framer-motion"
 
