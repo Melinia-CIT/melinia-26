@@ -131,7 +131,7 @@ export default function Footer() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-12 relative"
                 >
-                    <h2 className="font-heading text-3xl md:text-4xl font-semibold text-white tracking-wide">
+                    <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Get in Touch
                     </h2>
                     <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[-2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />

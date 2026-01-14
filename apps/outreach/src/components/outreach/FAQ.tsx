@@ -143,59 +143,41 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
                         "polygon(2% 0%, 98% 0%, 100% 8%, 100% 92%, 98% 100%, 2% 100%, 0% 92%, 0% 8%)",
                 }}
             >
-                {/* Corner Dots - Four corners */}
+                {/* Grouped Dots - Bottom Right Corner */}
                 <div
-                    className="absolute"
+                    className="absolute flex flex-col gap-1"
                     style={{
-                        top: "10%",
-                        left: "2%",
-                        width: "4px",
-                        height: "4px",
-                        backgroundColor: "#9D00FF",
-                        borderRadius: "50%",
-                        boxShadow: "0 0 4px #9D00FF, 0 0 8px rgba(157, 0, 255, 0.5)",
-                        animation: "dotPulse 2s ease-in-out infinite",
+                        bottom: "6%",
+                        right: "4%",
                     }}
-                />
-                <div
-                    className="absolute"
-                    style={{
-                        top: "10%",
-                        right: "2%",
-                        width: "4px",
-                        height: "4px",
-                        backgroundColor: "#9D00FF",
-                        borderRadius: "50%",
-                        boxShadow: "0 0 4px #9D00FF, 0 0 8px rgba(157, 0, 255, 0.5)",
-                        animation: "dotPulse 2s ease-in-out infinite",
-                    }}
-                />
-                <div
-                    className="absolute"
-                    style={{
-                        bottom: "10%",
-                        left: "2%",
-                        width: "4px",
-                        height: "4px",
-                        backgroundColor: "#9D00FF",
-                        borderRadius: "50%",
-                        boxShadow: "0 0 4px #9D00FF, 0 0 8px rgba(157, 0, 255, 0.5)",
-                        animation: "dotPulse 2s ease-in-out infinite",
-                    }}
-                />
-                <div
-                    className="absolute"
-                    style={{
-                        bottom: "10%",
-                        right: "2%",
-                        width: "4px",
-                        height: "4px",
-                        backgroundColor: "#9D00FF",
-                        borderRadius: "50%",
-                        boxShadow: "0 0 4px #9D00FF, 0 0 8px rgba(157, 0, 255, 0.5)",
-                        animation: "dotPulse 2s ease-in-out infinite",
-                    }}
-                />
+                >
+                    <div className="flex gap-1.5">
+                        {[0, 1].map(i => (
+                            <div
+                                key={`row1-${i}`}
+                                className="w-px h-px rounded-full"
+                                style={{
+                                    backgroundColor: "#9D00FF",
+                                    boxShadow: "0 0 4px #9D00FF, 0 0 8px rgba(157, 0, 255, 0.6)",
+                                    animation: `dotPulse 2s ease-in-out infinite ${i * 0.3}s`,
+                                }}
+                            />
+                        ))}
+                    </div>
+                    <div className="flex gap-1.5">
+                        {[0, 1].map(i => (
+                            <div
+                                key={`row2-${i}`}
+                                className="w-px h-px rounded-full"
+                                style={{
+                                    backgroundColor: "#9D00FF",
+                                    boxShadow: "0 0 4px #9D00FF, 0 0 8px rgba(157, 0, 255, 0.6)",
+                                    animation: `dotPulse 2s ease-in-out infinite ${(i + 2) * 0.3}s`,
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
                 <svg
                     className="absolute inset-0 w-full h-full pointer-events-none"
                     viewBox="0 0 400 80"
@@ -292,7 +274,7 @@ export default function FAQ() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-8 md:mb-12 relative"
                 >
-                    <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-semibold text-white tracking-wide">
+                    <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Frequently Asked Questions
                     </h2>
                     <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
