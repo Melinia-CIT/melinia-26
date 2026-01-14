@@ -10,12 +10,16 @@ export const teamSchema = z.object({
 
 // Create team schema - member_emails should be optional or have validation
 export const createTeamSchema = z.object({
-  name: z.string().min(1, "Team name is required").max(255, "Team name is too long"),
-  member_emails: z.array(
-    z.string().email("Invalid email format")
-  )
+  name: z
+    .string()
+    .min(1, "Team name is required")
+    .max(255, "Team name is too long")
+    .regex(
+      /^[A-Za-z0-9 ]+$/,          // letters, digits, spaces only
+      "Team name can only contain letters, numbers and spaces"
+    ),
+  member_emails: z.array(z.string().email("Invalid email format"))
 });
-
 // Delete team schema
 export const deleteTeamSchema = z.object({
   team_id: z.string().min(1, "Invalid Team ID"),

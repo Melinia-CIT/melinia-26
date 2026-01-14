@@ -105,7 +105,7 @@ export const CreateTeamForm: React.FC<CreateTeamFormProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-lg p-6 shadow-xl animate-in fade-in zoom-in duration-200">
+      <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in duration-200">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-white">Create New Team</h2>
           <button
@@ -123,7 +123,7 @@ export const CreateTeamForm: React.FC<CreateTeamFormProps> = ({ onClose }) => {
           <div>
             <label
               className={`block text-xs font-medium mb-1.5 ${
-                errors.name ? "text-red-400" : "text-zinc-400"
+                errors.name ? "text-red-400" : "text-zinc-200"
               }`}
             >
               Team Name *
@@ -145,8 +145,8 @@ export const CreateTeamForm: React.FC<CreateTeamFormProps> = ({ onClose }) => {
 
           {/* Member Emails Field */}
           <div>
-            <label className="block text-xs font-medium mb-1.5 text-zinc-400">
-              Invite Members (Optional)
+            <label className="block text-xs font-medium mb-1.5 text-zinc-200">
+              Teammates Email ID (Optional)
             </label>
             
             {/* Email Input Area */}
@@ -156,13 +156,13 @@ export const CreateTeamForm: React.FC<CreateTeamFormProps> = ({ onClose }) => {
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="name@example.com"
+                placeholder="Enter Email ID"
                 className="flex-1 bg-zinc-950 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white placeholder-zinc-600"
               />
               <button
                 type="button"
                 onClick={handleAddEmail}
-                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-2 rounded-md transition-colors border border-zinc-700"
+                className="bg-white text-zinc-900 px-3 py-2 rounded-md transition-colors"
               >
                 <Plus className="h-5 w-5" />
               </button>

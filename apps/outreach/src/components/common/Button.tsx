@@ -52,10 +52,10 @@ const Button: React.FC<ButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={isDisabled}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className} ${isDisabled ? 'cursor-not-allowed!' : ''} `}
     >
       {loading && (
-        <div className="w-4 h-4 border-1 border-t-transparent rounded-full animate-spin mr-2" />
+        <div className="w-4 h-4 border border-t-transparent rounded-full animate-spin mr-2" />
       )}
       {children}
     </button>
