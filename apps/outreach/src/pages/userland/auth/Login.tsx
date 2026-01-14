@@ -6,7 +6,7 @@ import { loginSchema, type Login } from "@melinia/shared";
 import { Eye, EyeClosed, Mail, Lock } from "iconoir-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router";
-import { login } from "../../services/auth";
+import { login } from "../../../services/auth";
 
 
 const Login = () => {

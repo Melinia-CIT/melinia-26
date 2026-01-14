@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { forgotPasswordSchema, type ForgotPassword } from "@melinia/shared";
 import { Mail } from "iconoir-react";
-import api from "../../services/api";
+import api from "../../../services/api";
 
 
 const ForgotPassword = () => {

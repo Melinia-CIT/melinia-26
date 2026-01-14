@@ -8,7 +8,7 @@ interface PeopleSectionProps {
     className?: string
 }
 
-export default function PeopleSection({ className = "" }: PeopleSectionProps) {
+export default function People({ className = "" }: PeopleSectionProps) {
     const allPeople: Person[] = peopleData
 
     const getRandomProps = (index: number) => {

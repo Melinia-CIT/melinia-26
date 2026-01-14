@@ -1,12 +1,12 @@
 'use strict';
 
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronRight, Users, Plus } from 'lucide-react'; 
+import { ChevronRight, Users, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { TeamDetailsPanel } from '../../components/userland/teams/TeamDetailsPanel';
 import { TeamListItem } from '../../components/userland/teams/TeamList';
 import { TeamModal } from '../../components/userland/teams/TeamModel';
-import { Spinner } from '../../components/common/Spinner';
+import { Spinner } from '../../components/ui/spinner';
 import { CreateTeamForm } from '../../components/userland/teams/TeamForm';
 import type { Team } from '@melinia/shared';
 import { team_management } from '../../services/teams';
@@ -55,7 +55,7 @@ const TeamsPage: React.FC = () => {
               <h2 className="text-2xl font-inst font-bold text-white">Teams</h2>
               <p className="text-xs text-zinc-400 mt-1">{teams.length} team(s)</p>
             </div>
-            
+
             <button
               onClick={() => { setIsTeamCreation(true); }}
               className="flex items-center gap-2 p-3 bg-zinc-200 text-zinc-800 text-sm font-semibold rounded-md transition-colors"
@@ -64,11 +64,11 @@ const TeamsPage: React.FC = () => {
               <Plus size={14} /> New Team
             </button>
           </div>
-        
+
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
-                <Spinner w={20} h={20}/>
+                <Spinner w={20} h={20} />
               </div>
             ) : teams.length > 0 ? (
               teams.map((team) => (
@@ -108,22 +108,22 @@ const TeamsPage: React.FC = () => {
       {/* Mobile Layout */}
       <div className="md:hidden p-4 space-y-4">
         <div className="flex justify-between items-center mb-2">
-            <div>
-                <h2 className="text-2xl font-bold font-inst text-white">Teams</h2>
-                <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
-            </div>
-            <button 
-                onClick={() => setIsTeamCreation(true)}
-                className="p-2 bg-zinc-800 rounded-full text-zinc-200 border border-zinc-700"
-            >
-                <Plus size={20} />
-            </button>
+          <div>
+            <h2 className="text-2xl font-bold font-inst text-white">Teams</h2>
+            <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
+          </div>
+          <button
+            onClick={() => setIsTeamCreation(true)}
+            className="p-2 bg-zinc-800 rounded-full text-zinc-200 border border-zinc-700"
+          >
+            <Plus size={20} />
+          </button>
         </div>
 
         <div className="space-y-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Spinner w={20} h={20}/>
+              <Spinner w={20} h={20} />
             </div>
           ) : teams.length > 0 ? (
             teams.map((team) => (

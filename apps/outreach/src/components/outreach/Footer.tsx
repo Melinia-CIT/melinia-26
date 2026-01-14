@@ -57,7 +57,7 @@ function QuickLinks() {
     )
 }
 
-export default function FooterSection() {
+export default function Footer() {
     return (
         <section className="relative w-full overflow-hidden bg-zinc-950">
             <div className="absolute inset-0 z-0">

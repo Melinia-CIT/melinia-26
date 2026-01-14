@@ -223,37 +223,82 @@ Reduced logo sizes for better proportions:
 
 ```
 apps/outreach/src/
+├── App.tsx
 ├── components/
+│   ├── outreach/
+│   │   ├── Countdown.tsx
+│   │   ├── Events.tsx
+│   │   ├── FAQ.tsx
+│   │   ├── Footer.tsx
+│   │   ├── Hero.tsx
+│   │   ├── People.tsx
+│   │   └── PrizePool.tsx
+│   ├── payment/
+│   │   └── PaymentModal.tsx
+│   ├── registration/
+│   │   ├── EmailForm.tsx
+│   │   ├── OtpForm.tsx
+│   │   └── PasswordForm.tsx
+│   ├── Router.tsx
 │   ├── ui/
-│   │   ├── hud-button.tsx         (New - animated button component)
-│   │   ├── hud-card.tsx           (HUD card + header + tag)
-│   │   ├── hud-profile-card.tsx   (New - Profile card with tilt effect)
-│   │   ├── hyper-text.tsx         (New - text scramble animation)
-│   │   ├── badge.tsx              (New - shadcn badge component)
-│   │   ├── countdown-timer.tsx     (New - minimal countdown timer)
-│   │   └── floating-paths.tsx      (New - animated SVG paths background)
-│   └── outreach/
-│       ├── Hero.tsx                (New - main hero section)
-│       ├── CountdownSection.tsx    (New - countdown section wrapper)
-│       ├── FooterSection.tsx       (New - footer with map & contact)
-│       ├── EventsSection.tsx       (New - events showcase with category filtering)
-│       ├── PrizePoolSection.tsx    (New - prize pool counter animation)
-│       ├── FAQSection.tsx          (New - FAQ accordion with HUD styling)
-│       └── PeopleSection.tsx       (New - Team section with tilted cards)
+│   │   ├── badge.tsx
+│   │   ├── button.tsx
+│   │   ├── countdown-timer.tsx
+│   │   ├── dialog-box.tsx
+│   │   ├── floating-paths.tsx
+│   │   ├── gesture-toaster.tsx
+│   │   ├── hud-button.tsx
+│   │   ├── hud-card.tsx
+│   │   ├── hud-profile-card.tsx
+│   │   ├── hyper-text.tsx
+│   │   └── spinner.tsx
+│   └── userland/
+│       ├── events/
+│       │   └── EventsCard.tsx
+│       ├── main/
+│       │   ├── NotificationIcon.tsx
+│       │   ├── Notifications.tsx
+│       │   ├── QRCode.tsx
+│       │   └── UserCard.tsx
+│       ├── Navigator.tsx
+│       └── teams/
+│           ├── TeamDetailsPanel.tsx
+│           ├── TeamForm.tsx
+│           ├── TeamList.tsx
+│           └── TeamModel.tsx
 ├── lib/
-│   ├── axios.ts                   (Existing)
-│   └── utils.ts                   (New - cn() utility)
-├── types/
-│   ├── api.ts                     (Existing)
-│   ├── auth.ts                    (Existing)
-│   ├── theme.ts                   (New - color palette)
-│   └── people.ts                  (New - Person type and data)
+│   ├── axios.ts
+│   └── utils.ts
+├── main.tsx
 ├── pages/
-│   ├── HudButtonDemo.tsx          (New - button showcase)
-│   └── outreach/
-│       └── Home.tsx               (New - Hero, Countdown, Events, PrizePool, FAQ, Footer sections)
-├── App.tsx                      (Modified - / route now shows OutreachHome)
-└── index.css                    (Modified - removed glitch CSS, added color vars, animations)
+│   ├── Home.tsx
+│   └── userland/
+│       ├── auth/
+│       │   ├── ForgotPassword.tsx
+│       │   ├── Login.tsx
+│       │   ├── Registration.tsx
+│       │   └── ResetPassword.tsx
+│       ├── events/
+│       │   ├── EventDetail.tsx
+│       │   ├── EventRegister.tsx
+│       │   └── Events.tsx
+│       ├── Layout.tsx
+│       ├── Leaderboard.tsx
+│       ├── Main.tsx
+│       ├── Profile.tsx
+│       └── Teams.tsx
+├── services/
+│   ├── api.ts
+│   ├── auth.ts
+│   ├── payment.ts
+│   ├── teams.ts
+│   └── users.ts
+├── types/
+│   ├── api.ts
+│   ├── auth.ts
+│   ├── people.ts
+│   └── theme.ts
+└── vite-env.d.ts
 ```
 
 ---
@@ -374,34 +419,78 @@ apps/outreach/src/
 ```
 apps/outreach/src/
 ├── components/
+│   ├── outreach/
+│   │   ├── Countdown.tsx
+│   │   ├── Events.tsx
+│   │   ├── FAQ.tsx
+│   │   ├── Footer.tsx
+│   │   ├── Hero.tsx
+│   │   ├── People.tsx
+│   │   └── PrizePool.tsx
+│   ├── payment/
+│   │   └── PaymentModal.tsx
+│   ├── registration/
+│   │   ├── EmailForm.tsx
+│   │   ├── OtpForm.tsx
+│   │   └── PasswordForm.tsx
+│   ├── Router.tsx
 │   ├── ui/
-│   │   ├── hud-button.tsx         (Animated HUD button)
-│   │   ├── hud-card.tsx           (HUD card + header + tag)
-│   │   ├── hud-profile-card.tsx   (Profile card with tilt effect)
-│   │   ├── hyper-text.tsx         (Text scramble animation)
-│   │   ├── badge.tsx              (Shadcn Badge)
-│   │   ├── countdown-timer.tsx    (Minimal countdown)
-│   │   ├── floating-paths.tsx     (Animated SVG background)
-│   │   └── hyper-text.tsx         (Text animation)
-│   └── outreach/
-│       ├── Hero.tsx               (Hero section)
-│       ├── CountdownSection.tsx   (Event countdown)
-│       ├── EventsSection.tsx      (Events with category filtering)
-│       ├── PrizePoolSection.tsx   (Prize pool with animation)
-│       ├── FAQSection.tsx         (FAQ accordion)
-│       ├── FooterSection.tsx      (Footer with map)
-│       └── PeopleSection.tsx      (Team section)
-├── types/
-│   ├── people.ts                  (Person type and data)
-│   ├── theme.ts                   (Color palette)
-│   ├── api.ts                     (API types)
-│   └── auth.ts                    (Auth types)
+│   │   ├── badge.tsx
+│   │   ├── button.tsx
+│   │   ├── countdown-timer.tsx
+│   │   ├── dialog-box.tsx
+│   │   ├── floating-paths.tsx
+│   │   ├── gesture-toaster.tsx
+│   │   ├── hud-button.tsx
+│   │   ├── hud-card.tsx
+│   │   ├── hud-profile-card.tsx
+│   │   ├── hyper-text.tsx
+│   │   └── spinner.tsx
+│   └── userland/
+│       ├── events/
+│       │   └── EventsCard.tsx
+│       ├── main/
+│       │   ├── NotificationIcon.tsx
+│       │   ├── Notifications.tsx
+│       │   ├── QRCode.tsx
+│       │   └── UserCard.tsx
+│       ├── Navigator.tsx
+│       └── teams/
+│           ├── TeamDetailsPanel.tsx
+│           ├── TeamForm.tsx
+│           ├── TeamList.tsx
+│           └── TeamModel.tsx
 ├── lib/
-│   ├── utils.ts                   (cn() utility)
-│   └── axios.ts                   (Axios instance)
-└── pages/
-    └── outreach/
-        └── Home.tsx               (Landing page)
+│   ├── axios.ts
+│   └── utils.ts
+├── pages/
+│   ├── Home.tsx
+│   └── userland/
+│       ├── auth/
+│       │   ├── ForgotPassword.tsx
+│       │   ├── Login.tsx
+│       │   ├── Registration.tsx
+│       │   └── ResetPassword.tsx
+│       ├── events/
+│       │   ├── EventDetail.tsx
+│       │   ├── EventRegister.tsx
+│       │   └── Events.tsx
+│       ├── Layout.tsx
+│       ├── Leaderboard.tsx
+│       ├── Main.tsx
+│       ├── Profile.tsx
+│       └── Teams.tsx
+├── services/
+│   ├── api.ts
+│   ├── auth.ts
+│   ├── payment.ts
+│   ├── teams.ts
+│   └── users.ts
+└── types/
+    ├── api.ts
+    ├── auth.ts
+    ├── people.ts
+    └── theme.ts
 ```
 
 ---

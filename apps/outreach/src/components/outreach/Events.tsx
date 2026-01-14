@@ -49,7 +49,7 @@ interface Event {
 
 type EventFilter = "flagship" | "technical" | "non-technical"
 
-const EventsSection = () => {
+const Events = () => {
     const navigate = useNavigate()
     const [currentEventIndex, setCurrentEventIndex] = useState(0)
     const [activeFilter, setActiveFilter] = useState<EventFilter>("flagship")
@@ -103,7 +103,7 @@ const EventsSection = () => {
             const priorityB = categoryPriority[b.eventType?.toLowerCase() || ""] ?? 99
             return priorityA - priorityB
         })
-    }, [allEvents]);
+    }, [allEvents])
 
     useEffect(() => {
         if (sortedEvents && sortedEvents[currentEventIndex]) {
@@ -310,8 +310,8 @@ const EventsSection = () => {
                         </div>
 
                         <div className="flex flex-col gap-3 md:gap-4 w-full">
-                            {[...currentEvent?.rounds]
-                                ?.sort((a, b) => a.roundNo - b.roundNo)
+                            {[...(currentEvent?.rounds || [])]
+                                .sort((a, b) => a.roundNo - b.roundNo)
                                 .map(round => (
                                     <motion.div
                                         key={round.roundNo}
@@ -408,16 +408,16 @@ const EventsSection = () => {
                                                 className="absolute top-2 md:top-4 left-2 md:left-4 z-20 px-2 py-1 md:px-3 md:py-1 rounded text-white font-heading font-bold text-[10px] md:text-xs uppercase tracking-wider skew-x-[-10deg]"
                                                 style={{
                                                     backgroundColor: getEventTypeColor(
-                                                        currentEvent.eventType
+                                                        currentEvent?.eventType || ""
                                                     ),
                                                 }}
                                             >
-                                                {currentEvent.eventType}
+                                                {currentEvent?.eventType}
                                             </div>
 
                                             <div className="absolute inset-0 flex items-center justify-center z-0">
                                                 <span className="font-heading text-3xl md:text-6xl text-white/5 font-black uppercase select-none text-center px-4">
-                                                    {currentEvent.name}
+                                                    {currentEvent?.name}
                                                 </span>
                                             </div>
                                         </div>
@@ -434,12 +434,12 @@ const EventsSection = () => {
                                                 className="text-gray-400 font-body leading-relaxed mb-3 md:mb-4 border-l-4 pl-3 md:pl-4 text-sm md:text-base flex-shrink-0 h-24 overflow-y-auto custom-scrollbar"
                                                 style={{
                                                     borderColor: getEventTypeColor(
-                                                        currentEvent.eventType
+                                                        currentEvent?.eventType || ""
                                                     ),
                                                 }}
                                             >
                                                 <div ref={descriptionRef}>
-                                                    {currentEvent.description}
+                                                    {currentEvent?.description}
                                                 </div>
                                             </div>
 
@@ -508,7 +508,7 @@ const EventsSection = () => {
                                             <div className="w-full flex-shrink-0">
                                                 <HudButton
                                                     variant={getEventVariant(
-                                                        currentEvent.eventType
+                                                        currentEvent?.eventType || ""
                                                     )}
                                                     style="style1"
                                                     size="default"
@@ -525,7 +525,7 @@ const EventsSection = () => {
                         {/* Navigation Controls */}
                         <div className="w-full max-w-xl flex items-center justify-center gap-2 sm:gap-3 md:gap-8 mt-3 sm:mt-4 md:mt-8 px-2 sm:px-4">
                             <HudButton
-                                variant={getEventVariant(currentEvent.eventType)}
+                                variant={getEventVariant(currentEvent?.eventType || "")}
                                 style="style2"
                                 size="small"
                                 onClick={handlePrevEvent}
@@ -540,7 +540,7 @@ const EventsSection = () => {
                             </div>
 
                             <HudButton
-                                variant={getEventVariant(currentEvent.eventType)}
+                                variant={getEventVariant(currentEvent?.eventType || "")}
                                 style="style2"
                                 size="small"
                                 onClick={handleNextEvent}
@@ -588,10 +588,10 @@ const EventsSection = () => {
                                                             {prize.position === 1
                                                                 ? "1st"
                                                                 : prize.position === 2
-                                                                    ? "2nd"
-                                                                    : prize.position === 3
-                                                                        ? "3rd"
-                                                                        : `${prize.position}th`}
+                                                                  ? "2nd"
+                                                                  : prize.position === 3
+                                                                    ? "3rd"
+                                                                    : `${prize.position}th`}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -686,13 +686,13 @@ const EventsSection = () => {
                                                     className="absolute inset-0 rounded-full transition-all duration-300"
                                                     style={{
                                                         backgroundColor: getEventTypeColor(
-                                                            event.eventType
+                                                            event.eventType || ""
                                                         ),
                                                         width: "100%",
                                                         height: "100%",
                                                         opacity: isActive ? 1 : 0.4,
                                                         boxShadow: isActive
-                                                            ? `0 0 8px ${getEventTypeColor(event.eventType)}`
+                                                            ? `0 0 8px ${getEventTypeColor(event.eventType || "")}`
                                                             : "none",
                                                         transform: isActive
                                                             ? "scale(1.1)"
@@ -737,4 +737,4 @@ const GridPattern = ({ offsetX, offsetY }: { offsetX: any; offsetY: any }) => {
     )
 }
 
-export default EventsSection
+export default Events

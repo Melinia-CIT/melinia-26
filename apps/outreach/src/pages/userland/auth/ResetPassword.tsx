@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import api from "../../services/api";
+import api from "../../../services/api";
 import { Eye, EyeClosed, Lock } from "iconoir-react";
 import toast from "react-hot-toast";
 import { z } from "zod";

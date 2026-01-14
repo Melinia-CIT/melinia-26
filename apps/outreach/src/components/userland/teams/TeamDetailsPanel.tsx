@@ -7,10 +7,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash, MessageAlert, Community, Calendar, User, UserPlus, Xmark } from 'iconoir-react';
 import toast from 'react-hot-toast';
 import { type TeamDetails, type AddNewMemberRequest, addNewMemberSchema } from '@melinia/shared';
-import { Spinner } from '../../common/Spinner';
+import { Spinner } from '../../ui/spinner';
 import { team_management } from '../../../services/teams';
-import Button from '../../common/Button';
-import DialogBox from '../../common/DialogBox';
+import Button from '../../ui/button';
+import DialogBox from '../../ui/dialog-box';
 
 interface TeamDetailsPanelProps {
   teamId: string;
@@ -30,7 +30,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [deleteMember, setDeleteMember] = useState<boolean>(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
-  
+
   // Add Member Form
   const {
     register: registerMember,
@@ -95,12 +95,12 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
   });
 
   const deleteMemberMutation = useMutation({
-    mutationFn:(member_id:string) => team_management.removeTeammate(teamId, member_id),
-    onSuccess:()=>{
+    mutationFn: (member_id: string) => team_management.removeTeammate(teamId, member_id),
+    onSuccess: () => {
       toast.success("Team member deleted!");
       setDeleteMember(false);
     },
-    onError:(err:any)=>{
+    onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Failed to delete member');
     }
   })
@@ -114,7 +114,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
     }
   }, [deleteConfirm, deleteTeamMutation, deleteInvitationMutation, teamId]);
 
-  const handleDeleteMember = (member_id:string) => {
+  const handleDeleteMember = (member_id: string) => {
     if (hasRegisteredEvents) {
       toast.error("Cannot remove member while event is registered.");
       return;
@@ -159,9 +159,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
           )}
         </div>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 min-h-0">
-        
+
         {/* Warning Banner if Events are Registered */}
         {hasRegisteredEvents && (
           <div className="bg-yellow-900/10 border border-yellow-700/30 rounded-lg p-3 flex items-start gap-3">
@@ -213,9 +213,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                     type='button'
                     size='sm'
                     disabled={hasRegisteredEvents}
-                    onClick={()=>{
-                        setDeleteMember(true);
-                        setSelectedMemberId(member.user_id)
+                    onClick={() => {
+                      setDeleteMember(true);
+                      setSelectedMemberId(member.user_id)
                     }}
                   >
                     Remove
@@ -289,8 +289,8 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
             onClick={() => setIsAddMemberOpen(true)}
             disabled={hasRegisteredEvents}
             className={`flex-1 px-4 py-2.5 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2
-              ${hasRegisteredEvents 
-                ? "bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed" 
+              ${hasRegisteredEvents
+                ? "bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed"
                 : "bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white"
               }`}
           >
@@ -302,8 +302,8 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
             onClick={() => !hasRegisteredEvents && setDeleteConfirm({ type: 'team', id: teamId })}
             disabled={hasRegisteredEvents}
             className={`flex-1 px-4 py-2.5 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2
-              ${hasRegisteredEvents 
-                ? "bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed" 
+              ${hasRegisteredEvents
+                ? "bg-zinc-900 border border-zinc-800 text-zinc-600 cursor-not-allowed"
                 : "bg-red-900/10 hover:bg-red-900/20 border border-red-900/50 text-red-400"
               }`}
           >
@@ -320,10 +320,10 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
           <DialogBox
             heading='Remove Teammate'
             description='Are you sure to delete this member?'
-            actionButtonLabel={deleteMemberMutation.isPending? "Removing..." : 'Remove'}
+            actionButtonLabel={deleteMemberMutation.isPending ? "Removing..." : 'Remove'}
             actionButtonVariant='danger'
-            handleActionButton={()=>handleDeleteMember(selectedMemberId)}
-            handleCancelButton={()=>{setDeleteMember(false);}}
+            handleActionButton={() => handleDeleteMember(selectedMemberId)}
+            handleCancelButton={() => { setDeleteMember(false); }}
           />
         )
       }
@@ -397,8 +397,8 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
                   placeholder="peterparker@tuta.com"
                   {...registerMember('email')}
                   className={`w-full bg-zinc-950 border rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors ${memberErrors.email
-                      ? "border-red-500 text-red-100 placeholder-red-300/50 focus:ring-red-500"
-                      : "border-zinc-700 text-white placeholder-zinc-600 focus:border-white focus:ring-white"
+                    ? "border-red-500 text-red-100 placeholder-red-300/50 focus:ring-red-500"
+                    : "border-zinc-700 text-white placeholder-zinc-600 focus:border-white focus:ring-white"
                     }`}
                 />
                 {memberErrors.email && (
