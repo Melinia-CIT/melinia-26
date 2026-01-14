@@ -74,8 +74,6 @@ const EventsSection = () => {
         })
     }, [allEvents])
 
-    // --- EFFECT 1: Sync Filter Tab when navigating events ---
-    // This updates the filter button visual state when you click Next/Prev
     useEffect(() => {
         if (sortedEvents && sortedEvents[currentEventIndex]) {
             const type = sortedEvents[currentEventIndex].eventType?.toLowerCase()
@@ -85,14 +83,9 @@ const EventsSection = () => {
         }
     }, [currentEventIndex, sortedEvents])
 
-    // --- EFFECT 2: Jump to category start ONLY when clicking a Tab ---
-    // FIX: We removed 'currentEventIndex' from the dependency array to break the infinite loop.
-    // This effect only triggers when 'activeFilter' changes (e.g., user clicks a button), 
-    // NOT when 'currentEventIndex' changes (which triggers Effect 1).
-    useEffect(() => {
+   useEffect(() => {
         const currentEventType = sortedEvents?.[currentEventIndex]?.eventType?.toLowerCase()
 
-        // If the user requested a different filter than the current event's type, jump to start
         if (currentEventType !== activeFilter) {
             const firstIndex = sortedEvents?.findIndex(
                 event => event.eventType?.toLowerCase() === activeFilter
@@ -101,7 +94,7 @@ const EventsSection = () => {
                 setCurrentEventIndex(firstIndex)
             }
         }
-    }, [activeFilter, sortedEvents]) // Removed 'currentEventIndex' dependency
+    }, [activeFilter, sortedEvents]) 
 
     const currentEvent = sortedEvents?.[currentEventIndex]
 
