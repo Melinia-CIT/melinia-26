@@ -196,126 +196,137 @@ export default function PaymentModal({
                             )}
                         </div>
                     ) : (
-                        paymentStatus === "idle" && (
-                            <div className="space-y-6">
-                                <div className="text-center">
+                        <>
+                            {paymentStatus === "idle" && (
+                                <div className="space-y-6">
+                                    <div className="text-center">
+                                        <div className="mx-auto w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+                                            <CreditCard
+                                                width={32}
+                                                height={32}
+                                                className="text-zinc-300"
+                                            />
+                                        </div>
+                                        <h3 className="text-xl font-semibold text-white mb-2">
+                                            Complete Registration
+                                        </h3>
+                                        <p className="text-zinc-400 text-sm">
+                                            Pay ₹1 to complete your registration and unlock all
+                                            features
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-zinc-400">Registration Fee</span>
+                                            <span className="text-white font-semibold">₹1.00</span>
+                                        </div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-zinc-400">Convenience Fee</span>
+                                            <span className="text-white font-semibold">₹0.00</span>
+                                        </div>
+                                        <div className="border-t border-zinc-700 my-2 pt-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-white font-semibold">
+                                                    Total
+                                                </span>
+                                                <span className="text-lg font-bold text-white">
+                                                    ₹1.00
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handlePay}
+                                        disabled={isProcessing}
+                                        className="w-full py-3 px-6 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isProcessing ? (
+                                            <>
+                                                <SystemRestart
+                                                    width={18}
+                                                    height={18}
+                                                    className="animate-spin"
+                                                    strokeWidth={1.5}
+                                                />
+                                                Processing...
+                                            </>
+                                        ) : (
+                                            "Pay ₹1"
+                                        )}
+                                    </button>
+
+                                    <p className="text-xs text-zinc-500 text-center">
+                                        Secured by Razorpay. Your payment information is safe.
+                                    </p>
+                                </div>
+                            )}
+
+                            {paymentStatus === "processing" && (
+                                <div className="text-center py-8">
                                     <div className="mx-auto w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-                                        <CreditCard
+                                        <SystemRestart
                                             width={32}
                                             height={32}
-                                            className="text-zinc-300"
+                                            className="animate-spin text-zinc-300"
+                                            strokeWidth={1.5}
                                         />
                                     </div>
                                     <h3 className="text-xl font-semibold text-white mb-2">
-                                        Complete Registration
+                                        Verifying Payment
                                     </h3>
                                     <p className="text-zinc-400 text-sm">
-                                        Pay ₹1 to complete your registration and unlock all features
+                                        Please wait while we verify your payment...
                                     </p>
                                 </div>
+                            )}
 
-                                <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-zinc-400">Registration Fee</span>
-                                        <span className="text-white font-semibold">₹1.00</span>
+                            {paymentStatus === "success" && (
+                                <div className="text-center py-8">
+                                    <div className="mx-auto w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mb-4">
+                                        <CheckCircle
+                                            width={32}
+                                            height={32}
+                                            className="text-green-500"
+                                        />
                                     </div>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-zinc-400">Convenience Fee</span>
-                                        <span className="text-white font-semibold">₹0.00</span>
-                                    </div>
-                                    <div className="border-t border-zinc-700 my-2 pt-2">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-white font-semibold">Total</span>
-                                            <span className="text-lg font-bold text-white">
-                                                ₹1.00
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <h3 className="text-xl font-semibold text-white mb-2">
+                                        Payment Successful!
+                                    </h3>
+                                    <p className="text-zinc-400 text-sm mb-6">
+                                        Your registration is complete. You can now access all
+                                        features.
+                                    </p>
                                 </div>
+                            )}
 
-                                <button
-                                    onClick={handlePay}
-                                    disabled={isProcessing}
-                                    className="w-full py-3 px-6 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isProcessing ? (
-                                        <>
-                                            <SystemRestart
-                                                width={18}
-                                                height={18}
-                                                className="animate-spin"
-                                                strokeWidth={1.5}
-                                            />
-                                            Processing...
-                                        </>
-                                    ) : (
-                                        "Pay ₹1"
-                                    )}
-                                </button>
-
-                                <p className="text-xs text-zinc-500 text-center">
-                                    Secured by Razorpay. Your payment information is safe.
-                                </p>
-                            </div>
-                        )
-                    )}
-
-                    {paymentStatus === "processing" && (
-                        <div className="text-center py-8">
-                            <div className="mx-auto w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-                                <SystemRestart
-                                    width={32}
-                                    height={32}
-                                    className="animate-spin text-zinc-300"
-                                    strokeWidth={1.5}
-                                />
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">
-                                Verifying Payment
-                            </h3>
-                            <p className="text-zinc-400 text-sm">
-                                Please wait while we verify your payment...
-                            </p>
-                        </div>
-                    )}
-
-                    {paymentStatus === "success" && (
-                        <div className="text-center py-8">
-                            <div className="mx-auto w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mb-4">
-                                <CheckCircle width={32} height={32} className="text-green-500" />
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">
-                                Payment Successful!
-                            </h3>
-                            <p className="text-zinc-400 text-sm mb-6">
-                                Your registration is complete. You can now access all features.
-                            </p>
-                        </div>
-                    )}
-
-                    {paymentStatus === "error" && (
-                        <div className="text-center py-8">
-                            <div className="mx-auto w-16 h-16 bg-red-900/30 rounded-full flex items-center justify-center mb-4">
-                                <InfoCircle
-                                    width={32}
-                                    height={32}
-                                    className="text-red-500"
-                                    strokeWidth={2}
-                                />
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">
-                                Payment Failed
-                            </h3>
-                            <p className="text-zinc-400 text-sm mb-6">
-                                There was an issue processing your payment. Please try again.
-                            </p>
-                            <button
-                                onClick={handleRetry}
-                                className="w-full py-3 px-6 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-semibold rounded-lg transition-all duration-200"
-                            >
-                                Try Again
-                            </button>
-                        </div>
+                            {paymentStatus === "error" && (
+                                <div className="text-center py-8">
+                                    <div className="mx-auto w-16 h-16 bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+                                        <InfoCircle
+                                            width={32}
+                                            height={32}
+                                            className="text-red-500"
+                                            strokeWidth={2}
+                                        />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-white mb-2">
+                                        Payment Failed
+                                    </h3>
+                                    <p className="text-zinc-400 text-sm mb-6">
+                                        There was an issue processing your payment. Please try
+                                        again.
+                                    </p>
+                                    <button
+                                        onClick={handleRetry}
+                                        className="w-full py-3 px-6 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-semibold rounded-lg transition-all duration-200"
+                                    >
+                                        Try Again
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
