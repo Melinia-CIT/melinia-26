@@ -31,7 +31,7 @@ export function FloatingPathsBackground({
                     <defs>
                         <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stopColor="#FF0066" stopOpacity="0.6" />
-                            <stop offset="100%" stopColor="#FF69B4" stopOpacity="0.6" />
+                            <stop offset="100%" stopColor="#9D00FF" stopOpacity="0.6" />
                         </linearGradient>
                     </defs>
                     {paths.map(path => (
