@@ -63,7 +63,7 @@ const EventsSection = () => {
         staleTime: 5 * 60 * 1000,
     })
 
-    // FIX: Sort events strictly by category order (Flagship -> Technical -> Non-Technical)
+    //Sort events strictly by category order (Flagship -> Technical -> Non-Technical)
     const categoryPriority: Record<string, number> = {
         flagship: 1,
         technical: 2,
@@ -77,20 +77,30 @@ const EventsSection = () => {
             const priorityB = categoryPriority[b.eventType?.toLowerCase() || ""] ?? 99
             return priorityA - priorityB
         })
-    }, [allEvents])
+    }, [allEvents]);
 
     useEffect(() => {
-        const firstIndex = sortedEvents?.findIndex(
-            event => event.eventType?.toLowerCase() === activeFilter
-        )
-        if (firstIndex !== undefined && firstIndex !== -1) {
-            setCurrentEventIndex(firstIndex)
+        if (sortedEvents && sortedEvents[currentEventIndex]) {
+            const type = sortedEvents[currentEventIndex].eventType?.toLowerCase()
+            if (type === "flagship" || type === "technical" || type === "non-technical") {
+                setActiveFilter(type as EventFilter)
+            }
         }
-    }, [activeFilter, sortedEvents])
+    }, [currentEventIndex, sortedEvents])
 
-    useEffect(() => {
-        setIsDescriptionExpanded(false)
-    }, [currentEventIndex])
+     useEffect(() => {
+        const currentEventType = sortedEvents?.[currentEventIndex]?.eventType?.toLowerCase()
+
+        // If the user requested a different filter than the current event's type, jump to start
+        if (currentEventType !== activeFilter) {
+            const firstIndex = sortedEvents?.findIndex(
+                event => event.eventType?.toLowerCase() === activeFilter
+            )
+            if (firstIndex !== undefined && firstIndex !== -1) {
+                setCurrentEventIndex(firstIndex)
+            }
+        }
+    }, [activeFilter, sortedEvents]);
 
     const currentEvent = sortedEvents?.[currentEventIndex]
 
@@ -227,7 +237,7 @@ const EventsSection = () => {
                     <h1 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Events
                     </h1>
-                    <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[-2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
+                    <div className="h-2 w-24 bg-linear-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[-2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
                 </motion.div>
 
                 {/* Filter Tabs */}
@@ -399,11 +409,10 @@ const EventsSection = () => {
                                             </h2>
 
                                             <div
-                                                className={`text-gray-400 font-body leading-relaxed mb-3 md:mb-4 border-l-4 pl-3 md:pl-4 text-sm md:text-base flex-shrink-0 h-24 transition-all duration-300 ${
-                                                    isDescriptionExpanded
+                                                className={`text-gray-400 font-body leading-relaxed mb-3 md:mb-4 border-l-4 pl-3 md:pl-4 text-sm md:text-base flex-shrink-0 h-24 transition-all duration-300 ${isDescriptionExpanded
                                                         ? "overflow-y-auto custom-scrollbar"
                                                         : "overflow-hidden"
-                                                }`}
+                                                    }`}
                                                 style={{
                                                     borderColor: getEventTypeColor(
                                                         currentEvent.eventType
@@ -426,12 +435,11 @@ const EventsSection = () => {
                                                             !isDescriptionExpanded
                                                         )
                                                     }
-                                                    className={`text-xs font-medium uppercase tracking-wider hover:underline mb-4 md:mb-6 transition-colors ${
-                                                        currentEvent?.description.split(/\s+/)
+                                                    className={`text-xs font-medium uppercase tracking-wider hover:underline mb-4 md:mb-6 transition-colors ${currentEvent?.description.split(/\s+/)
                                                             .length > 10
                                                             ? ""
                                                             : "invisible"
-                                                    }`}
+                                                        }`}
                                                     style={{
                                                         color: getEventTypeColor(
                                                             currentEvent.eventType
@@ -590,10 +598,10 @@ const EventsSection = () => {
                                                             {prize.position === 1
                                                                 ? "1st"
                                                                 : prize.position === 2
-                                                                  ? "2nd"
-                                                                  : prize.position === 3
-                                                                    ? "3rd"
-                                                                    : `${prize.position}th`}
+                                                                    ? "2nd"
+                                                                    : prize.position === 3
+                                                                        ? "3rd"
+                                                                        : `${prize.position}th`}
                                                         </span>
                                                     </div>
                                                 </div>

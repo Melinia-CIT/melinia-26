@@ -23,7 +23,7 @@ const Main = () => {
             </div>
 
             {/* Desktop Layout */}
-            <div className="hidden lg:flex w-full justify-center min-h-[600px] relative">
+            <div className="hidden lg:flex w-full justify-center relative">
                 <UserCard />
 
                 {/* Notification Backdrop */}
@@ -53,7 +53,7 @@ const Main = () => {
                     style={{ pointerEvents: showDesktopNotifications ? "auto" : "none" }}
                 >
                     <Notifications
-                        isOpen={false}
+                        isOpen={showDesktopNotifications}
                         onClose={() => setShowDesktopNotifications(false)}
                         isDesktop={true}
                     />

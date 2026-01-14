@@ -320,7 +320,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({ teamId, onDe
           <DialogBox
             heading='Remove Teammate'
             description='Are you sure to delete this member?'
-            actionButtonLabel='Remove'
+            actionButtonLabel={deleteMemberMutation.isPending? "Removing..." : 'Remove'}
             actionButtonVariant='danger'
             handleActionButton={()=>handleDeleteMember(selectedMemberId)}
             handleCancelButton={()=>{setDeleteMember(false);}}

@@ -58,7 +58,8 @@ const TeamsPage: React.FC = () => {
             
             <button
               onClick={() => { setIsTeamCreation(true); }}
-              className="flex items-center gap-2 p-3 bg-zinc-200 text-zinc-800 text-sm font-semibold rounded-md transition-colors border border-zinc-700"
+              className="flex items-center gap-2 p-3 bg-zinc-200 text-zinc-800 text-sm font-semibold rounded-md transition-colors"
+
             >
               <Plus size={14} /> New Team
             </button>
