@@ -85,15 +85,15 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
 
     const answerVariants = {
         closed: {
-            height: 0,
+            gridTemplateRows: "0fr",
             opacity: 0,
         },
         open: {
-            height: "auto",
+            gridTemplateRows: "1fr",
             opacity: 1,
             transition: {
                 type: "spring" as const,
-                stiffness: 300,
+                stiffness: 200,
                 damping: 30,
             },
         },
@@ -140,7 +140,7 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
                 className="relative bg-zinc-900/90 overflow-hidden"
                 style={{
                     clipPath:
-                        "polygon(2% 0%, 98% 0%, 100% 10%, 100% 90%, 98% 100%, 2% 100%, 0% 90%, 0% 10%)",
+                        "polygon(2% 0%, 98% 0%, 100% 8%, 100% 92%, 98% 100%, 2% 100%, 0% 92%, 0% 8%)",
                 }}
             >
                 {/* Corner Dots - Four corners */}
@@ -245,16 +245,18 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
                             initial="closed"
                             animate="open"
                             exit="closed"
-                            className="overflow-hidden border-t border-white/10"
+                            className="grid grid-rows-[0fr] border-t border-white/10"
                         >
-                            <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.1, duration: 0.3 }}
-                                className="px-5 md:px-6 pb-5 md:pb-6 font-body text-sm md:text-base text-gray-300 leading-relaxed"
-                            >
-                                {item.answer}
-                            </motion.p>
+                            <div className="min-h-0 overflow-hidden">
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.1, duration: 0.3 }}
+                                    className="px-5 md:px-6 pt-4 md:pt-6 pb-8 md:pb-10 font-body text-sm md:text-base text-gray-300 leading-relaxed"
+                                >
+                                    {item.answer}
+                                </motion.p>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
