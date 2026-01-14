@@ -179,6 +179,26 @@ const Events = () => {
         return "#FFFFFF"
     }
 
+    const getContrastingVariant = (eventType: string): "purple" | "pink" | "red" | undefined => {
+        const t = eventType?.toLowerCase()
+        if (t === "flagship") {
+            return "red"
+        } else if (t === "technical") {
+            return "purple"
+        } else if (t === "non-technical") {
+            return "pink"
+        }
+        return undefined
+    }
+
+    const getContrastingColor = (eventType: string) => {
+        const t = eventType?.toLowerCase()
+        if (t === "flagship") return "#FF0066"
+        if (t === "technical") return "#9D00FF"
+        if (t === "non-technical") return "#FF69B4"
+        return "#FFFFFF"
+    }
+
     const getEventVariant = (eventType: string) => {
         const t = eventType?.toLowerCase()
         if (t === "flagship") return "red"
@@ -268,14 +288,11 @@ const Events = () => {
                         <motion.button
                             key={filter}
                             onClick={() => {
-                                if (activeFilter === filter) {
-                                    const firstIndex = sortedEvents?.findIndex(
-                                        event => event.eventType?.toLowerCase() === filter
-                                    )
-                                    if (firstIndex !== undefined && firstIndex !== -1) {
-                                        setCurrentEventIndex(firstIndex)
-                                    }
-                                } else {
+                                const firstIndex = sortedEvents?.findIndex(
+                                    event => event.eventType?.toLowerCase() === filter
+                                )
+                                if (firstIndex !== undefined && firstIndex !== -1) {
+                                    setCurrentEventIndex(firstIndex)
                                     setActiveFilter(filter)
                                 }
                             }}
@@ -304,8 +321,13 @@ const Events = () => {
                         <div className="w-auto mb-3 md:mb-4">
                             <HudCardHeader
                                 title="Rounds"
-                                variant="purple"
-                                icon={<Box size={18} className="text-purple-500" />}
+                                variant={getContrastingVariant(currentEvent?.eventType || "")}
+                                icon={
+                                    <Box
+                                        size={18}
+                                        className={`text-[${getContrastingColor(currentEvent?.eventType || "")}]`}
+                                    />
+                                }
                             />
                         </div>
 
@@ -320,9 +342,12 @@ const Events = () => {
                                         className="relative group flex-1"
                                     >
                                         <HudCard
-                                            variant="secondary"
+                                            variant={getContrastingVariant(
+                                                currentEvent?.eventType || ""
+                                            )}
                                             widthClass="w-full"
                                             hoverEffect="glow"
+                                            showDots={false}
                                             className="!p-0 border-x-0 border-l-0 border-r-0 bg-white/5"
                                         >
                                             <div className="relative w-full bg-transparent overflow-hidden">
@@ -333,8 +358,12 @@ const Events = () => {
                                                     className="w-full flex items-center justify-between p-3 md:p-4 text-left hover:bg-white/5 transition-colors"
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 md:w-10 md:h-10 rounded bg-[#9D00FF]/20 flex items-center justify-center flex-shrink-0">
-                                                            <span className="font-heading text-lg md:text-xl font-bold text-[#9D00FF]">
+                                                        <div
+                                                            className={`w-8 h-8 md:w-10 md:h-10 rounded bg-[${getContrastingColor(currentEvent?.eventType || "")}]/20 flex items-center justify-center flex-shrink-0`}
+                                                        >
+                                                            <span
+                                                                className={`font-heading text-lg md:text-xl font-bold text-[${getContrastingColor(currentEvent?.eventType || "")}]`}
+                                                            >
                                                                 0{round.roundNo}
                                                             </span>
                                                         </div>
@@ -348,12 +377,12 @@ const Events = () => {
                                                         {expandedRounds.has(round.roundNo) ? (
                                                             <Minus
                                                                 size={14}
-                                                                className="text-[#FF0066]"
+                                                                className={`text-[${getContrastingColor(currentEvent?.eventType || "")}]`}
                                                             />
                                                         ) : (
                                                             <Plus
                                                                 size={14}
-                                                                className="text-[#FF0066]"
+                                                                className={`text-[${getContrastingColor(currentEvent?.eventType || "")}]`}
                                                             />
                                                         )}
                                                     </div>
@@ -474,20 +503,38 @@ const Events = () => {
                                                     </div>
                                                 </div>
                                                 {/* Team Size */}
-                                                <div className="flex items-center gap-2 md:gap-3 text-white">
-                                                    <div className="p-1.5 md:p-2 rounded-full bg-purple-500/20 text-purple-400">
-                                                        <User size={16} />
+                                                {!(
+                                                    currentEvent.minTeamSize === 1 &&
+                                                    currentEvent.maxTeamSize === 1
+                                                ) && (
+                                                    <div className="flex items-center gap-2 md:gap-3 text-white">
+                                                        <div
+                                                            className={`p-1.5 md:p-2 rounded-full ${currentEvent.minTeamSize === currentEvent.maxTeamSize ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`}
+                                                        >
+                                                            <User size={16} />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                                                                Team Size
+                                                            </span>
+                                                            <span
+                                                                className={`text-xs md:text-sm font-medium ${currentEvent.minTeamSize === currentEvent.maxTeamSize ? "text-red-400" : ""}`}
+                                                            >
+                                                                {currentEvent.minTeamSize ===
+                                                                currentEvent.maxTeamSize ? (
+                                                                    <>
+                                                                        {currentEvent.minTeamSize}
+                                                                        <sup className="text-[0.5em] ml-0.5 align-super">
+                                                                            *
+                                                                        </sup>
+                                                                    </>
+                                                                ) : (
+                                                                    `${currentEvent.minTeamSize} - ${currentEvent.maxTeamSize}`
+                                                                )}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
-                                                            Team Size
-                                                        </span>
-                                                        <span className="text-xs md:text-sm font-medium">
-                                                            {currentEvent.minTeamSize} -{" "}
-                                                            {currentEvent.maxTeamSize}
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                )}
                                                 {/* Type */}
                                                 <div className="flex items-center gap-2 md:gap-3 text-white">
                                                     <div className="p-1.5 md:p-2 rounded-full bg-red-500/20 text-red-400">
@@ -558,7 +605,7 @@ const Events = () => {
                             <div className="w-auto">
                                 <HudCardHeader
                                     title="Prize Pool"
-                                    variant="red"
+                                    variant={getContrastingVariant(currentEvent?.eventType || "")}
                                     icon={<Trophy size={18} className="text-yellow-400" />}
                                 />
                             </div>
@@ -570,7 +617,9 @@ const Events = () => {
                                         animate={{ x: 0, opacity: 1 }}
                                     >
                                         <HudCard
-                                            variant="red"
+                                            variant={getContrastingVariant(
+                                                currentEvent?.eventType || ""
+                                            )}
                                             widthClass="w-full"
                                             hoverEffect="glow"
                                             showDots={false}
@@ -613,7 +662,7 @@ const Events = () => {
                             <div className="w-auto">
                                 <HudCardHeader
                                     title="Organizers"
-                                    variant="pink"
+                                    variant={getContrastingVariant(currentEvent?.eventType || "")}
                                     icon={<User size={18} />}
                                 />
                             </div>
@@ -625,13 +674,21 @@ const Events = () => {
                                         animate={{ x: 0, opacity: 1 }}
                                     >
                                         <HudCard
-                                            variant="pink"
+                                            variant={getContrastingVariant(
+                                                currentEvent?.eventType || ""
+                                            )}
                                             widthClass="w-full"
                                             hoverEffect="glow"
                                             showDots={false}
                                         >
                                             <div className="flex flex-wrap gap-2 p-3 md:p-4 content-start items-center">
-                                                <HudTag key={i} variant="pink" size="medium">
+                                                <HudTag
+                                                    key={i}
+                                                    variant={getContrastingVariant(
+                                                        currentEvent?.eventType || ""
+                                                    )}
+                                                    size="medium"
+                                                >
                                                     {org.firstName} {org.lastName}
                                                 </HudTag>
                                                 <a

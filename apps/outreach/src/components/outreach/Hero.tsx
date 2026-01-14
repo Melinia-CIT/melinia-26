@@ -90,8 +90,8 @@ const Hero = () => {
                         className="h-8 md:h-10 lg:h-12 w-auto object-contain"
                     />
                 </div>
-                <p className="font-heading text-white text-xs md:text-sm lg:text-base tracking-wide border-b border-white pb-1">
-                    DEPARTMENT OF COMPUTING
+                <p className="font-geist text-white text-xs md:text-sm lg:text-base tracking-wide border-b border-white pb-1">
+                    Department of Computing
                 </p>
             </div>
 
