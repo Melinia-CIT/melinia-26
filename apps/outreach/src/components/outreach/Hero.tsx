@@ -75,26 +75,6 @@ const Hero = () => {
             <div className="absolute inset-0 z-10 bg-gradient-to-b from-zinc-950/70 via-zinc-950/50 to-zinc-950/30" />
             <div className="absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(3,7,30,0.4)_70%,rgba(3,7,30,0.9)_100%)]" />
 
-            {/* Top Left Corner - College Info */}
-            <div className="absolute top-4 md:top-6 left-4 md:left-6 z-20 flex flex-col items-start gap-2 md:gap-3">
-                <div className="flex items-center gap-2 md:gap-3">
-                    <img
-                        src="https://cdn.melinia.in/cit.webp"
-                        alt="CIT"
-                        className="h-8 md:h-10 lg:h-12 w-auto object-contain"
-                    />
-                    <div className="h-6 md:h-8 w-[2px] bg-white" />
-                    <img
-                        src="https://cdn.melinia.in/melinia-top-logo.webp"
-                        alt="Melinia"
-                        className="h-8 md:h-10 lg:h-12 w-auto object-contain"
-                    />
-                </div>
-                <p className="font-geist text-white text-xs md:text-sm lg:text-base tracking-wide border-b border-white pb-1">
-                    Department of Computing
-                </p>
-            </div>
-
             {/* Main Content */}
             <div className="relative z-20 flex flex-col items-center justify-center min-h-screen px-6 py-12">
                 {/* Main Logo with Shimmer and Hover Effects */}
