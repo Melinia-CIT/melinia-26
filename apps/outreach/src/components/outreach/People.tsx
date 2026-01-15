@@ -353,6 +353,9 @@ export default function People() {
     return (
         <section className="relative w-full py-20 bg-zinc-950 text-white overflow-hidden">
             <div className="relative max-w-[96rem] mx-auto px-4 md:px-8 w-full">
+                <div className="absolute top-0 bottom-0 left-4 md:left-8 w-px bg-gradient-to-b from-transparent via-[#9D00FF]/30 to-transparent" />
+                <div className="absolute top-0 bottom-0 right-4 md:right-8 w-px bg-gradient-to-b from-transparent via-[#FF0066]/30 to-transparent" />
+
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -365,13 +368,16 @@ export default function People() {
                     <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 -rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
                 </motion.div>
 
-                <div className="space-y-16">
+                <div className="space-y-16 relative">
                     {peopleData.map((section, index) => {
                         const isEven = index % 2 === 0
                         const sectionColor = colorMap[section.title] || "#FF0055"
 
                         return (
                             <div key={index} className="relative">
+                                {index > 0 && (
+                                    <div className="absolute -top-8 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#9D00FF]/30 to-transparent" />
+                                )}
                                 <HudSectionHeader
                                     title={section.title}
                                     color={sectionColor}

@@ -1,8 +1,126 @@
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
 import { HudButton } from "../../components/ui/hud-button"
 import { MouseScrollWheel } from "iconoir-react"
+import { VerticalCutReveal } from "../ui/vertical-cut-text-reveal"
+
+const HERO_TEXTS = [
+    "CTFs, Hackathons & Innovation.",
+    "Culture, Competition & Code.",
+    "Where Tech meets Talent.",
+    "Build. Compete. Celebrate.",
+    "More than a fest. It's Melinia.",
+]
+
+export function HeroAnimatedText() {
+    const [index, setIndex] = useState(0)
+    const [showFinal, setShowFinal] = useState(false)
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex(prev => {
+                if (prev + 1 >= HERO_TEXTS.length) {
+                    setShowFinal(true)
+                    return prev
+                }
+                return prev + 1
+            })
+        }, 4000)
+
+        return () => clearInterval(interval)
+    }, [])
+
+    useEffect(() => {
+        if (showFinal) {
+            const resetTimeout = setTimeout(() => {
+                setShowFinal(false)
+                setIndex(0)
+            }, 6000)
+            return () => clearTimeout(resetTimeout)
+        }
+    }, [showFinal])
+
+    const shimmerStyle: React.CSSProperties = {
+        background:
+            "linear-gradient(90deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0.5) 100%)",
+        backgroundSize: "200% 100%",
+        WebkitBackgroundClip: "text",
+        backgroundClip: "text",
+        color: "transparent",
+        backgroundPosition: "100% 0",
+        animation: "shimmer 2.5s ease-in-out infinite",
+    }
+
+    useEffect(() => {
+        const styleSheet = document.createElement("style")
+        styleSheet.textContent = `
+            @keyframes shimmer {
+                0%, 100% { background-position: 200% 0; }
+                50% { background-position: -200% 0; }
+            }
+        `
+        document.head.appendChild(styleSheet)
+        return () => {
+            document.head.removeChild(styleSheet)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (showFinal) {
+            const timer = setTimeout(() => {
+                setShowFinal(false)
+                setIndex(0)
+            }, 5000)
+            return () => clearTimeout(timer)
+        }
+    }, [showFinal])
+
+    return (
+        <div className="font-space text-white font-bold text-base sm:text-lg md:text-xl lg:text-2xl mt-2 text-center min-h-[2.5rem] sm:min-h-[3rem] relative flex flex-col items-center justify-center px-4 w-full">
+            <AnimatePresence mode="wait">
+                {showFinal ? (
+                    <motion.div
+                        key="final"
+                        initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, y: -10, filter: "blur(10px)" }}
+                        transition={{ duration: 0.5 }}
+                        className="w-full flex justify-center"
+                    >
+                        <span className="relative inline-block" style={shimmerStyle}>
+                            Happening on February 25, 2026.
+                        </span>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key={index}
+                        initial={{ opacity: 0, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, filter: "blur(10px)" }}
+                        transition={{ duration: 0.4 }}
+                        className="w-full flex justify-center"
+                    >
+                        <span className="relative inline-block text-white/70">
+                            <VerticalCutReveal
+                                splitBy="characters"
+                                staggerDuration={0.03}
+                                staggerFrom={index % 2 !== 0 ? "last" : "first"}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 200,
+                                    damping: 22,
+                                }}
+                            >
+                                {HERO_TEXTS[index]}
+                            </VerticalCutReveal>
+                        </span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    )
+}
 
 const Hero = () => {
     const navigate = useNavigate()
@@ -74,6 +192,49 @@ const Hero = () => {
             {/* Cinematic Overlay - Multi-layer gradient */}
             <div className="absolute inset-0 z-10 bg-gradient-to-b from-zinc-950/70 via-zinc-950/50 to-zinc-950/30" />
             <div className="absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(3,7,30,0.4)_70%,rgba(3,7,30,0.9)_100%)]" />
+
+            {/* Institution Logos - Top Left */}
+            <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="absolute top-4 sm:top-6 left-4 sm:left-6 z-30 flex flex-row items-start gap-2 sm:gap-4 pointer-events-auto"
+            >
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <a
+                        href="https://cit.edu.in"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cursor-pointer"
+                    >
+                        <img
+                            src="https://cdn.melinia.in/cit.webp"
+                            alt="CIT"
+                            className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
+                        />
+                    </a>
+                    <div className="w-[2px] h-8 sm:h-10 bg-white/90" />
+                    <img
+                        src="https://cdn.melinia.in/mln-logo.webp"
+                        alt="Melinia"
+                        className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
+                    />
+                </div>
+                <div className="flex flex-col justify-center min-w-0 font-space">
+                    <a
+                        href="https://cit.edu.in"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white/90 font-semibold text-xs sm:text-sm md:text-base tracking-wide leading-tight hover:text-white transition-colors relative inline-block w-fit cursor-pointer group"
+                    >
+                        Coimbatore Institute of Technology
+                        <span className="absolute -bottom-1 left-0 w-0 h-px bg-white/80 group-hover:w-full transition-all duration-400 ease-out" />
+                    </a>
+                    <span className="text-white/60 text-[10px] sm:text-xs md:text-sm font-medium leading-tight pt-1">
+                        Department of Computing
+                    </span>
+                </div>
+            </motion.div>
 
             {/* Main Content */}
             <div className="relative z-20 flex flex-col items-center justify-center min-h-screen px-6 py-12">
@@ -158,6 +319,8 @@ const Hero = () => {
                         )}
                     </motion.div>
 
+                    {HeroAnimatedText()}
+
                     {/* Buttons - Positioned relative to logo bottom */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -183,15 +346,6 @@ const Hero = () => {
                             Register
                         </HudButton>
                     </motion.div>
-
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6, duration: 0.6 }}
-                        className="text-white/70 font-light text-sm md:text-2xl mt-4 text-center"
-                    >
-                        Happening on February 25, 2026.
-                    </motion.p>
                 </motion.div>
 
                 {/* Scroll Mouse Icon - Bottom Center */}

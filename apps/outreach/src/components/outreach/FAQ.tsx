@@ -280,16 +280,25 @@ export default function FAQ() {
                     <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
                 </motion.div>
 
-                <div className="flex flex-col gap-4 md:gap-6">
-                    {faqData.map((item, index) => (
-                        <FAQItem
-                            key={item.id}
-                            item={item}
-                            isOpen={openItemId === item.id}
-                            onToggle={() => toggleItem(item.id)}
-                            index={index}
-                        />
-                    ))}
+                <div className="relative">
+                    <div className="absolute top-0 bottom-0 left-0 w-px bg-gradient-to-b from-transparent via-[#9D00FF]/50 to-transparent" />
+                    <div className="absolute top-0 bottom-0 right-0 w-px bg-gradient-to-b from-transparent via-[#FF0066]/50 to-transparent" />
+
+                    <div className="flex flex-col gap-4 md:gap-6 pl-4 pr-4">
+                        {faqData.map((item, index) => (
+                            <div key={item.id} className="relative">
+                                {index > 0 && (
+                                    <div className="absolute -top-2 left-8 right-8 h-px bg-gradient-to-r from-[#9D00FF]/0 via-[#9D00FF]/30 to-[#FF0066]/0" />
+                                )}
+                                <FAQItem
+                                    item={item}
+                                    isOpen={openItemId === item.id}
+                                    onToggle={() => toggleItem(item.id)}
+                                    index={index}
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </motion.div>
         </section>
