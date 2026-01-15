@@ -141,33 +141,6 @@ const Hero = () => {
                                     />
                                 </motion.div>
                             </div>
-
-                            {/* Curved Date Text */}
-                            <svg
-                                className="-mt-8 md:-mt-5 ml-10 md:ml-10 lg:ml-16 -rotate-7 md:-rotate-5 w-64 md:w-80 lg:w-[22rem] xl:w-[26rem] 2xl:w-[32rem] h-12"
-                                style={{ transform: "translateX(0.3in)" }}
-                                viewBox="0 0 400 60"
-                            >
-                                <defs>
-                                    <path
-                                        id="curvePath"
-                                        d="M 0,30 Q 200,70 400,30"
-                                        fill="transparent"
-                                    />
-                                </defs>
-                                <motion.text
-                                    className="text-white font-heading font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl tracking-widest"
-                                    fill="white"
-                                    textAnchor="middle"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.5, duration: 0.5 }}
-                                >
-                                    <textPath href="#curvePath" startOffset="50%">
-                                        February 25
-                                    </textPath>
-                                </motion.text>
-                            </svg>
                         </div>
 
                         {/* Hover Glow Effect */}
@@ -210,6 +183,15 @@ const Hero = () => {
                             Register
                         </HudButton>
                     </motion.div>
+
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6, duration: 0.6 }}
+                        className="text-white/70 font-light text-sm md:text-2xl mt-4 text-center"
+                    >
+                        Happening on February 25, 2026.
+                    </motion.p>
                 </motion.div>
 
                 {/* Scroll Mouse Icon - Bottom Center */}

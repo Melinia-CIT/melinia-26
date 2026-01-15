@@ -4,7 +4,7 @@ import Hero from "../components/outreach/Hero"
 import PrizePool from "../components/outreach/PrizePool"
 import FAQ from "../components/outreach/FAQ"
 import Footer from "../components/outreach/Footer"
-
+import People from "../components/outreach/People"
 
 const Home = () => {
     return (
@@ -13,10 +13,11 @@ const Home = () => {
             <Countdown />
             <Events />
             <PrizePool />
+            <People />
             <FAQ />
             <Footer />
         </main>
     )
 }
 
-export default Home;
+export default Home
