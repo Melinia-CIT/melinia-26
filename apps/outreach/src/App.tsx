@@ -12,6 +12,7 @@ import Main from "./pages/userland/Main"
 import EventLayout from "./pages/userland/events/Events"
 import EventDetail from "./pages/userland/events/EventDetail"
 import Teams from "./pages/userland/Teams"
+import Leaderboard from "./pages/userland/Leaderboard"
 
 function App() {
     return (
@@ -30,7 +31,7 @@ function App() {
                         <Route index element={<Main />} />
                         <Route path="events" element={<EventLayout />} />
                         <Route path="events/:id" element={<EventDetail />} />
-                        <Route path="leaderboard" />
+                        <Route path="leaderboard" element={<Leaderboard/>}/>
                         <Route path="teams" element={<Teams />} />
                     </Route>
                 </Route>

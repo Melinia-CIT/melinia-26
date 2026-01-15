@@ -16,7 +16,7 @@
     --font-geist: "Geist", sans-serif;
     --font-press: "Press Start 2P" system-ui;
     --font-jk: "Plus Jakarta Sans", sans-serif;
-    --font-heading: "Space Grotesk", sans-serif;
+    --font-space: "Space Grotesk", sans-serif;
     --font-body: "Inter", sans-serif;
     /* Animation Variables - Pointing to Keyframes below */
     --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;

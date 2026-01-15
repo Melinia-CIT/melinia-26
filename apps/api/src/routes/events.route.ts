@@ -13,7 +13,8 @@ import {
     deleteEvent, 
     updateEvent, 
     registerForEvent, 
-    getUserEventStatusbyEventId
+    getUserEventStatusbyEventId,
+    getRegisteredEventsByUser
 } from "../db/queries";
 import { sendError, sendSuccess } from "../utils/response";
 import { 
@@ -34,6 +35,19 @@ events.post("", authMiddleware, adminOnlyMiddleware, zValidator("json", createEv
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error(error);
+        return sendError(c);
+    }
+});
+
+// Fetch all the events that a user is registered to
+events.get("/registered", authMiddleware, async (c) => {
+    try {
+        const userId = c.get('user_id');
+        const { statusCode, status, data, message } = await getRegisteredEventsByUser(userId);
+        
+        return sendSuccess(c, data, message, status, statusCode);
+    } catch (error: unknown) {
+        console.error("Error fetching user registered events:", error);
         return sendError(c);
     }
 });
@@ -146,3 +160,4 @@ events.get("/:id/status", authMiddleware, zValidator("param", getEventDetailsSch
         return sendError(c);
     }
 });
+

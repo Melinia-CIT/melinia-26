@@ -7,7 +7,8 @@ import {
     X, 
     CreditCard, 
     PlusCircle, 
-    AlertCircle 
+    AlertCircle,
+    User
 } from "lucide-react";
 import api from "../../../services/api";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +33,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [isSoloChoice, setIsSoloChoice] = useState(false);
     const registrationInitiated = useRef(false);
 
     useEffect(() => {
@@ -39,7 +41,6 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
         const checkEligibilityAndProcess = async () => {
             if (registrationInitiated.current) return;
             try {
-                // 1. Check Payment Status
                 const payRes = await api.get("/payment/payment-status");
                 if (!isSubscribed) return;
                 const paymentStatus = payRes.data.paid; 
@@ -49,20 +50,19 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                     return;
                 }
 
-                // 2. Participation Logic
                 if (event.participationType.toLowerCase() === "solo") {
                     registrationInitiated.current = true;
-                    handleFinalRegister(null); 
+                    handleFinalRegister(null, "solo"); 
                 } else {
                     const teamRes = await api.get("/teams");
-                    
                     if (!isSubscribed) return;
 
                     const userTeams = teamRes.data.data || [];
-                    if (userTeams.length === 0) {
+                    setTeams(userTeams);
+
+                    if (userTeams.length === 0 && event.minTeamSize > 1) {
                         setStep("no_teams");
                     } else {
-                        setTeams(userTeams);
                         setStep("team_selection");
                     }
                 }
@@ -75,25 +75,26 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
 
         checkEligibilityAndProcess();
 
-        return () => {
-            isSubscribed = false;
-        };
+        return () => { isSubscribed = false; };
     }, [event.id]); 
 
-    const handleFinalRegister = async (teamId: string | null) => {
+    const handleFinalRegister = async (teamId: string | null, typeOverride?: string) => {
         if (loading) return;
-        
         setLoading(true);
         try {
-            const response = await api.post(`/events/${event.id}/register`, { teamId });
+            const response = await api.post(`/events/${event.id}/register`, { 
+                teamId,
+                participationType: typeOverride || (isSoloChoice ? "solo" : event.participationType),
+                minTeamSize: event.minTeamSize,
+                maxTeamSize: event.maxTeamSize,
+                registrationStart: event.registrationStart,
+                registrationEnd: event.registrationEnd
+            });
             
             if (response.data.status) {
                 setStep("success");
                 onSuccess(); 
-                
-                setTimeout(() => {
-                    onClose();
-                }, 2500);
+                setTimeout(() => onClose(), 2500);
             }
         } catch (err: any) {
             setErrorMessage(err.response?.data?.message || "Registration failed. One or more members might already be registered.");
@@ -106,9 +107,12 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
     const handlePaymentRedirect = async () => {
         setLoading(true);
         try {
-            await api.post("/payment/register-melinia");
-        } catch (err) { 
-            setErrorMessage("Could not initialize payment.");
+            const res = await api.post("/payment/register-melinia");
+            if (res.data.url) {
+                window.location.href = res.data.url;
+            }
+        } catch (err: any) {
+            setErrorMessage("Could not initialize payment. Please try again later.");
             setStep("error");
         } finally {
             setLoading(false);
@@ -175,7 +179,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                             </div>
                             <h2 className="text-xl font-bold mb-2 text-white">No Team Found</h2>
                             <p className="text-sm text-zinc-400 mb-6">This is a team event. You must create a team in the teams section first.</p>
-                            <button onClick={() => navigate("/app/teams")} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold transition-colors">
+                            <button onClick={() => navigate("/app/teams")} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold transition-colors text-white">
                                 Go to Teams Section
                             </button>
                         </motion.div>
@@ -183,8 +187,27 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
 
                     {step === "team_selection" && (
                         <motion.div key="select" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-2">
-                            <h2 className="text-lg font-bold mb-4 text-white">Select your Team</h2>
+                            <h2 className="text-lg font-bold mb-4 text-white">Select Participation</h2>
                             <div className="space-y-3 max-h-60 overflow-y-auto pr-2 mb-6 custom-scrollbar">
+                                {event.minTeamSize === 1 && (
+                                    <label className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${isSoloChoice ? 'border-orange-500 bg-orange-500/5' : 'bg-white/5 border-white/10 hover:border-white/20'}`}>
+                                        <div className="flex items-center gap-3">
+                                            <input 
+                                                type="radio" name="team"
+                                                onChange={() => {
+                                                    setSelectedTeamId(null);
+                                                    setIsSoloChoice(true);
+                                                }}
+                                                className="accent-orange-500 w-4 h-4"
+                                            />
+                                            <div className="flex items-center gap-2">
+                                                <User className="w-4 h-4 text-orange-500" />
+                                                <p className="text-sm font-bold text-white">Solo Registration</p>
+                                            </div>
+                                        </div>
+                                    </label>
+                                )}
+
                                 {teams.map((t) => {
                                     const isValidSize = Number(t.member_count) >= event.minTeamSize && Number(t.member_count) <= event.maxTeamSize;
                                     return (
@@ -192,7 +215,10 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                             <div className="flex items-center gap-3">
                                                 <input 
                                                     type="radio" name="team" disabled={!isValidSize}
-                                                    onChange={() => setSelectedTeamId(t.id)}
+                                                    onChange={() => {
+                                                        setSelectedTeamId(t.id);
+                                                        setIsSoloChoice(false);
+                                                    }}
                                                     className="accent-orange-500 w-4 h-4"
                                                 />
                                                 <div>
@@ -206,9 +232,9 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                 })}
                             </div>
                             <button 
-                                disabled={!selectedTeamId || loading}
+                                disabled={(!selectedTeamId && !isSoloChoice) || loading}
                                 onClick={() => setStep("confirm")}
-                                className="w-full py-3 bg-orange-500 disabled:opacity-50 hover:bg-orange-600 rounded-xl font-bold transition-all"
+                                className="w-full py-3 bg-orange-500 disabled:opacity-50 hover:bg-orange-600 rounded-xl font-bold transition-all text-white"
                             >
                                 Continue
                             </button>
@@ -219,9 +245,9 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                         <motion.div key="confirm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-4">
                             <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 font-bold text-2xl">!</div>
                             <h2 className="text-xl font-bold mb-2 text-white">Final Confirmation</h2>
-                            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">Once registered, your team members cannot be modified. Do you wish to proceed?</p>
+                            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">Once registered, your participation details cannot be modified. Do you wish to proceed?</p>
                             <div className="flex gap-3">
-                                <button onClick={() => setStep("team_selection")} className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold transition-colors">Cancel</button>
+                                <button onClick={() => setStep("team_selection")} className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold transition-colors text-white">Cancel</button>
                                 <button onClick={() => handleFinalRegister(selectedTeamId)} disabled={loading} className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-white">
                                     {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                                     Register
@@ -232,12 +258,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
 
                     {step === "success" && (
                         <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-12">
-                            <motion.div 
-                                initial={{ scale: 0, rotate: -45 }} 
-                                animate={{ scale: 1.1, rotate: 0 }}
-                                transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                                className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(34,197,94,0.4)]"
-                            >
+                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1.1 }} className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/20">
                                 <CheckCircle className="w-14 h-14 text-white" />
                             </motion.div>
                             <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Registered!</h2>
