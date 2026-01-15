@@ -220,7 +220,7 @@ const Hero = () => {
                         className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
                     />
                 </div>
-                <div className="flex flex-col gap-2 py-1 justify-center min-w-0">
+                <div className="flex flex-col gap-1 sm:gap-2 sm:py-1 justify-center min-w-0">
                     <a
                         href="https://cit.edu.in"
                         target="_blank"
