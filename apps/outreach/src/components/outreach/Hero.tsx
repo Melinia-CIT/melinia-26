@@ -220,7 +220,7 @@ const Hero = () => {
                         className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
                     />
                 </div>
-                <div className="flex flex-col justify-center min-w-0 font-space">
+                <div className="flex flex-col gap-2 py-1 justify-center min-w-0">
                     <a
                         href="https://cit.edu.in"
                         target="_blank"
@@ -230,7 +230,7 @@ const Hero = () => {
                         Coimbatore Institute of Technology
                         <span className="absolute -bottom-1 left-0 w-0 h-px bg-white/80 group-hover:w-full transition-all duration-400 ease-out" />
                     </a>
-                    <span className="text-white/60 text-[10px] sm:text-xs md:text-sm font-medium leading-tight pt-1">
+                    <span className="text-white/60 text-[10px] sm:text-xs md:text-sm font-medium leading-tight">
                         Department of Computing
                     </span>
                 </div>
