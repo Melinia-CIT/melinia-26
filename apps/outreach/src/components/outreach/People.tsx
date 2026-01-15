@@ -1,89 +1,398 @@
-import { motion } from "framer-motion"
-import { FloatingPathsBackground } from "../ui/floating-paths"
-import { HudProfileCard } from "../ui/hud-profile-card"
-import { peopleData } from "../../types/people"
-import type { Person } from "../../types/people"
+import { motion, useReducedMotion, useAnimation, Variants } from "framer-motion"
+import { useEffect, useState } from "react"
+import UserCard from "../ui/user-card"
+import { HudSectionHeader } from "../ui/hud-section-header"
 
-interface PeopleSectionProps {
-    className?: string
+const leftImageVariants: Variants = {
+    initial: { rotate: 0, x: 0, y: 0 },
+    animate: {
+        rotate: -8,
+        x: 0,
+        y: 15,
+        transition: {
+            type: "spring",
+            stiffness: 120,
+            damping: 12,
+        },
+    },
+    hover: {
+        rotate: -3,
+        x: 0,
+        y: 0,
+        transition: {
+            type: "spring",
+            stiffness: 200,
+            damping: 15,
+        },
+    },
 }
 
-export default function People({ className = "" }: PeopleSectionProps) {
-    const allPeople: Person[] = peopleData
+const middleImageVariants: Variants = {
+    initial: { rotate: 0, x: 0, y: 0 },
+    animate: {
+        rotate: 6,
+        x: 0,
+        y: 0,
+        transition: {
+            type: "spring",
+            stiffness: 120,
+            damping: 12,
+        },
+    },
+    hover: {
+        rotate: 0,
+        x: 0,
+        y: -15,
+        transition: {
+            type: "spring",
+            stiffness: 200,
+            damping: 15,
+        },
+    },
+}
 
-    const getRandomProps = (index: number) => {
-        const seed = index * 9301 + 49297
-        const random = () => {
-            let t = seed
-            t = (t ^ (t << 15)) & 0x7fffffff
-            t = (t ^ (t >> 12)) & 0x7fffffff
-            t = (t ^ (t << 4)) & 0x7fffffff
-            t = (t ^ (t >> 16)) & 0x7fffffff
-            return (t % 100) / 100
+const rightImageVariants: Variants = {
+    initial: { rotate: 0, x: 0, y: 0 },
+    animate: {
+        rotate: -6,
+        x: 0,
+        y: 25,
+        transition: {
+            type: "spring",
+            stiffness: 120,
+            damping: 12,
+        },
+    },
+    hover: {
+        rotate: 3,
+        x: 0,
+        y: 15,
+        transition: {
+            type: "spring",
+            stiffness: 200,
+            damping: 15,
+        },
+    },
+}
+
+interface SectionData {
+    title: string
+    people: {
+        name: string
+        role?: string
+        imageUrl?: string
+        linkedinUrl?: string
+        color?: string
+    }[]
+}
+
+const peopleData: SectionData[] = [
+    {
+        title: "Event Coordinators",
+        people: [
+            {
+                name: "Alice Johnson",
+                role: "Coordinator",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Bob Smith",
+                role: "Coordinator",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Charlie Davis",
+                role: "Lead",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Diana Prince",
+                role: "Manager",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+        ],
+    },
+    {
+        title: "Faculty Coordinators",
+        people: [
+            {
+                name: "Dr. Emily Stone",
+                role: "Faculty Advisor",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#00E0FF",
+            },
+            {
+                name: "Prof. Alan Grant",
+                role: "Faculty Advisor",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#00E0FF",
+            },
+            {
+                name: "Dr. Ellie Sattler",
+                role: "Faculty Advisor",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#00E0FF",
+            },
+            {
+                name: "Ian Malcolm",
+                role: "Faculty Advisor",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#00E0FF",
+            },
+        ],
+    },
+    {
+        title: "Dev Team",
+        people: [
+            {
+                name: "Sarah Connor",
+                role: "Lead Developer",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#9D00FF",
+            },
+            {
+                name: "John Doe",
+                role: "Frontend Developer",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#9D00FF",
+            },
+            {
+                name: "Neo Anderson",
+                role: "Backend Developer",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#9D00FF",
+            },
+            {
+                name: "Trinity Moss",
+                role: "UI/UX Designer",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#9D00FF",
+            },
+            {
+                name: "Cypher Reagan",
+                role: "DevOps Engineer",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#9D00FF",
+            },
+            {
+                name: "Tank",
+                role: "System Administrator",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#9D00FF",
+            },
+        ],
+    },
+]
+
+interface InfiniteScrollRowProps {
+    people: SectionData["people"]
+}
+
+function InfiniteScrollRow({ people }: InfiniteScrollRowProps) {
+    const shouldReduceMotion = useReducedMotion()
+    const controls = useAnimation()
+    const [cardWidth, setCardWidth] = useState(192)
+    const [gap, setGap] = useState(24)
+    const [isDragging, setIsDragging] = useState(false)
+    const [dragStartX, setDragStartX] = useState(0)
+    const [isMobile, setIsMobile] = useState(false)
+
+    // Detect window size to adjust scroll distance for responsive layouts
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth < 768
+            setIsMobile(mobile)
+            if (mobile) {
+                setCardWidth(window.innerWidth / 2 - 12)
+                setGap(24)
+            } else {
+                setCardWidth(192)
+                setGap(64)
+            }
         }
 
-        return {
-            tilt: Math.floor(random() * 17) - 8,
-            zIndex: Math.floor(random() * 10),
-            delay: index * 0.1,
+        handleResize()
+        window.addEventListener("resize", handleResize)
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
+
+    const duplicatedPeople = [...people, ...people, ...people]
+    const scrollDistance = people.length * (cardWidth + gap)
+
+    useEffect(() => {
+        if (!shouldReduceMotion && !isDragging) {
+            controls.start({
+                x: -scrollDistance,
+                transition: {
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    duration: people.length * 3,
+                    ease: "linear",
+                },
+            })
+        } else {
+            controls.stop()
+        }
+    }, [controls, shouldReduceMotion, people.length, scrollDistance, isDragging])
+
+    const getVariant = (index: number) => {
+        const position = index % 3
+        if (position === 0) return leftImageVariants
+        if (position === 1) return middleImageVariants
+        return rightImageVariants
+    }
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setIsDragging(true)
+        setDragStartX(e.touches[0].clientX)
+        controls.stop()
+    }
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!isDragging) return
+        const deltaX = e.touches[0].clientX - dragStartX
+        controls.set({ x: deltaX })
+    }
+
+    const handleTouchEnd = () => {
+        setIsDragging(false)
+        if (!shouldReduceMotion) {
+            controls.start({
+                x: -scrollDistance,
+                transition: {
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    duration: people.length * 3,
+                    ease: "linear",
+                },
+            })
         }
     }
 
     return (
-        <section
-            className={`relative w-full py-16 md:py-24 overflow-hidden bg-zinc-950 ${className}`}
-        >
-            <FloatingPathsBackground position={2} className="absolute inset-0 opacity-30">
-                <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/50 via-zinc-950/30 to-zinc-950/60" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,0,255,0.1),_transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(255,0,102,0.1),_transparent_50%)]" />
-            </FloatingPathsBackground>
-
+        <div className="relative w-full overflow-hidden py-12">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="relative z-10 max-w-8xl mx-auto px-4 md:px-8"
+                className="flex gap-6 md:gap-28"
+                animate={controls}
+                onHoverStart={() => controls.stop()}
+                onHoverEnd={() => {
+                    if (!shouldReduceMotion && !isDragging) {
+                        controls.start({
+                            x: -scrollDistance,
+                            transition: {
+                                repeat: Infinity,
+                                repeatType: "loop",
+                                duration: people.length * 3,
+                                ease: "linear",
+                            },
+                        })
+                    }
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{ touchAction: "pan-y" }}
             >
+                {duplicatedPeople.map((person, index) => (
+                    <motion.div
+                        key={index}
+                        className="flex-shrink-0"
+                        style={{ width: `${cardWidth}px` }}
+                        variants={!shouldReduceMotion ? getVariant(index) : undefined}
+                        initial={!shouldReduceMotion ? "initial" : undefined}
+                        animate={!shouldReduceMotion ? "animate" : undefined}
+                        whileHover={!shouldReduceMotion ? "hover" : undefined}
+                    >
+                        <UserCard {...person} alwaysShowText={isMobile} />
+                    </motion.div>
+                ))}
+            </motion.div>
+        </div>
+    )
+}
+
+export default function People() {
+    const colorMap: Record<string, string> = {
+        "Event Coordinators": "#FF0055",
+        "Faculty Coordinators": "#00E0FF",
+        "Dev Team": "#9D00FF",
+    }
+
+    return (
+        <section className="relative w-full py-20 bg-zinc-950 text-white overflow-hidden">
+            <div className="relative max-w-[96rem] mx-auto px-4 md:px-8 w-full">
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-8 md:mb-12 relative"
+                    viewport={{ once: true }}
+                    className="mb-16 text-center relative"
                 >
                     <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
-                        The Team
+                        Our Team
                     </h2>
-                    <div className="h-2 w-24 bg-gradient-to-r from-[#9D00FF] to-[#0066FF] mx-auto mt-4 rotate-[2deg] shadow-[0_0_15px_rgba(157,0,255,0.8)]" />
+                    <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 -rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
                 </motion.div>
 
-                <div className="flex flex-wrap justify-center gap-3 md:gap-4 lg:gap-6 px-2 md:px-4">
-                    {allPeople.map((person: Person, index: number) => {
-                        const { tilt, zIndex } = getRandomProps(index)
+                <div className="space-y-16">
+                    {peopleData.map((section, index) => {
+                        const isEven = index % 2 === 0
+                        const sectionColor = colorMap[section.title] || "#FF0055"
 
                         return (
-                            <div
-                                key={person.id}
-                                className="w-32 md:w-40 lg:w-48 flex-shrink-0"
-                                style={{
-                                    transform: `rotate(${tilt}deg)`,
-                                    marginTop: `${Math.random() * 8 - 4}px`,
-                                    marginBottom: `${Math.random() * 8 - 4}px`,
-                                    marginLeft: `${Math.random() * 6 - 3}px`,
-                                    marginRight: `${Math.random() * 6 - 3}px`,
-                                }}
-                            >
-                                <HudProfileCard
-                                    person={person}
-                                    tilt={tilt}
-                                    zIndex={zIndex}
-                                    className="w-full"
+                            <div key={index} className="relative">
+                                <HudSectionHeader
+                                    title={section.title}
+                                    color={sectionColor}
+                                    align={isEven ? "left" : "right"}
+                                    className="mb-8"
                                 />
+
+                                {/* Desktop View: Infinite Carousel */}
+                                <div className="hidden md:block">
+                                    <InfiniteScrollRow people={section.people} />
+                                </div>
+
+                                {/* Mobile View: Horizontal Carousel */}
+                                <div className="block md:hidden">
+                                    <InfiniteScrollRow people={section.people} />
+                                </div>
                             </div>
                         )
                     })}
                 </div>
-            </motion.div>
+            </div>
         </section>
     )
 }

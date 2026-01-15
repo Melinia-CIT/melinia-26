@@ -75,26 +75,6 @@ const Hero = () => {
             <div className="absolute inset-0 z-10 bg-gradient-to-b from-zinc-950/70 via-zinc-950/50 to-zinc-950/30" />
             <div className="absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(3,7,30,0.4)_70%,rgba(3,7,30,0.9)_100%)]" />
 
-            {/* Top Left Corner - College Info */}
-            <div className="absolute top-4 md:top-6 left-4 md:left-6 z-20 flex flex-col items-start gap-2 md:gap-3">
-                <div className="flex items-center gap-2 md:gap-3">
-                    <img
-                        src="https://cdn.melinia.in/cit.webp"
-                        alt="CIT"
-                        className="h-8 md:h-10 lg:h-12 w-auto object-contain"
-                    />
-                    <div className="h-6 md:h-8 w-[2px] bg-white" />
-                    <img
-                        src="https://cdn.melinia.in/melinia-top-logo.webp"
-                        alt="Melinia"
-                        className="h-8 md:h-10 lg:h-12 w-auto object-contain"
-                    />
-                </div>
-                <p className="font-geist text-white text-xs md:text-sm lg:text-base tracking-wide border-b border-white pb-1">
-                    Department of Computing
-                </p>
-            </div>
-
             {/* Main Content */}
             <div className="relative z-20 flex flex-col items-center justify-center min-h-screen px-6 py-12">
                 {/* Main Logo with Shimmer and Hover Effects */}
@@ -161,33 +141,6 @@ const Hero = () => {
                                     />
                                 </motion.div>
                             </div>
-
-                            {/* Curved Date Text */}
-                            <svg
-                                className="-mt-8 md:-mt-5 ml-10 md:ml-10 lg:ml-16 -rotate-7 md:-rotate-5 w-64 md:w-80 lg:w-[22rem] xl:w-[26rem] 2xl:w-[32rem] h-12"
-                                style={{ transform: "translateX(0.3in)" }}
-                                viewBox="0 0 400 60"
-                            >
-                                <defs>
-                                    <path
-                                        id="curvePath"
-                                        d="M 0,30 Q 200,70 400,30"
-                                        fill="transparent"
-                                    />
-                                </defs>
-                                <motion.text
-                                    className="text-white font-heading font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl tracking-widest"
-                                    fill="white"
-                                    textAnchor="middle"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.5, duration: 0.5 }}
-                                >
-                                    <textPath href="#curvePath" startOffset="50%">
-                                        February 25
-                                    </textPath>
-                                </motion.text>
-                            </svg>
                         </div>
 
                         {/* Hover Glow Effect */}
@@ -230,6 +183,15 @@ const Hero = () => {
                             Register
                         </HudButton>
                     </motion.div>
+
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6, duration: 0.6 }}
+                        className="text-white/70 font-light text-sm md:text-2xl mt-4 text-center"
+                    >
+                        Happening on February 25, 2026.
+                    </motion.p>
                 </motion.div>
 
                 {/* Scroll Mouse Icon - Bottom Center */}
