@@ -72,17 +72,9 @@ services:
             - api-3
             - api-4
 
-    uptime-kuma:
-        image: louislam/uptime-kuma:latest
-        container_name: melinia-uptime-kuma
-        restart: unless-stopped
-        volumes:
-            - uptime_kuma_data:/app/data
-
 volumes:
     caddy_data:
     caddy_config:
-    uptime_kuma_data:
 
 networks:
     default:
