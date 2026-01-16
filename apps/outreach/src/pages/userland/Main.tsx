@@ -64,7 +64,7 @@ const Main = () => {
             </div>
 
             {/* Mobile Layout */}
-            <div className="lg:hidden w-full relative flex flex-col items-center gap-6 pt-12">
+            <div className="lg:hidden w-full relative flex flex-col items-center gap-6 pt-6">
                 {/* Mobile Notification Backdrop */}
                 {showNotifications && (
                     <div

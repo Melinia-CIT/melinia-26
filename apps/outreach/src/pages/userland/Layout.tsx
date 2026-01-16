@@ -50,7 +50,7 @@ const AppLayout = () => {
             </main>
 
             {/* Mobile: Main content with bottom padding for mobile nav */}
-            <main className="md:hidden px-4 pt-6 pb-32 transition-all duration-300 relative z-0 min-h-screen">
+            <main className="md:hidden px-4 pt-6 pb-8 transition-all duration-300 relative z-0 min-h-screen">
                 <Outlet />
             </main>
 

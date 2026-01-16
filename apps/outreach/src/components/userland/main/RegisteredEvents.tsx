@@ -48,8 +48,8 @@ const RegisteredEvents = () => {
                 >
                     <span className="font-semibold">Explore Events</span>
                     <ArrowRight
-                        width="12"
-                        height="12"
+                        width="14"
+                        height="14"
                         className="group-hover:translate-x-1 transition-transform"
                     />
                 </div>

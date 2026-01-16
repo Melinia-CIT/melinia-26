@@ -7,7 +7,6 @@ interface TeamListItemProps {
     onClick: () => void
 }
 
-// Team List Item
 export const TeamListItem: React.FC<TeamListItemProps> = ({ team, isSelected, onClick }) => {
     return (
         <button

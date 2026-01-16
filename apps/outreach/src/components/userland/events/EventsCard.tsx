@@ -11,8 +11,8 @@ interface Event {
     id: string;
     name: string;
     description: string;
-    participationType: string; 
-    eventType: string; 
+    participationType: string;
+    eventType: string;
     maxAllowed: number;
     minTeamSize: number;
     maxTeamSize: number;
@@ -98,7 +98,7 @@ const EventsCard = ({ event }: EventsCardProps) => {
                                 </feMerge>
                             </filter>
                         </defs>
-                        
+
                         <motion.rect
                             x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="16"
                             stroke={theme.accent}
@@ -116,16 +116,16 @@ const EventsCard = ({ event }: EventsCardProps) => {
                             pathLength="100"
                             variants={{
                                 initial: { strokeWidth: 0, opacity: 0 },
-                                hover: { 
-                                    strokeWidth: 4, 
+                                hover: {
+                                    strokeWidth: 4,
                                     opacity: 1,
                                     strokeDasharray: "40 60", // 40% Bright, 60% Faded
                                     strokeDashoffset: [0, -100],
-                                    transition: { 
+                                    transition: {
                                         strokeDashoffset: { repeat: Infinity, duration: 3, ease: "linear" },
                                         strokeWidth: { duration: 0.3 },
                                         opacity: { duration: 0.3 }
-                                    } 
+                                    }
                                 }
                             }}
                         />
