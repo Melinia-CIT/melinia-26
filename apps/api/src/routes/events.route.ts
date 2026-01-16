@@ -4,7 +4,8 @@ import {
     createEventSchema,
     getEventDetailsSchema,
     updateEventDetailsSchema,
-    eventRegistrationSchema
+    eventRegistrationSchema,
+    unregisterEventSchema
 } from "@packages/shared";
 import {
     createEvent, 
@@ -14,7 +15,8 @@ import {
     updateEvent, 
     registerForEvent, 
     getUserEventStatusbyEventId,
-    getRegisteredEventsByUser
+    getRegisteredEventsByUser,
+    unregisterFromEvent
 } from "../db/queries";
 import { sendError, sendSuccess } from "../utils/response";
 import { 
@@ -23,6 +25,9 @@ import {
     adminAndOrganizerMiddleware, 
     participantOnlyMiddleware 
 } from "../middleware/auth.middleware";
+import { 
+    paymentStatusMiddleware
+} from "../middleware/paymentStatus.middleware";
 import { HTTPException } from "hono/http-exception";
 
 export const events = new Hono();
@@ -121,7 +126,7 @@ events.delete("/:id", authMiddleware, adminOnlyMiddleware, zValidator("param", g
 });
 
 // Register for Event
-events.post("/:id/register", authMiddleware, participantOnlyMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", eventRegistrationSchema), async (c) => {
+events.post("/:id/register", authMiddleware, participantOnlyMiddleware,paymentStatusMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", eventRegistrationSchema), async (c) => {
     try {
         const userId = c.get('user_id');
         const { id } = c.req.valid('param');
@@ -138,6 +143,33 @@ events.post("/:id/register", authMiddleware, participantOnlyMiddleware, zValidat
         return sendError(c);
     }
 });
+
+// Unregister from Event
+events.post("/:id/unregister", 
+    authMiddleware, 
+    participantOnlyMiddleware, 
+    zValidator("param", getEventDetailsSchema), 
+    zValidator("json", unregisterEventSchema), 
+    async (c) => {
+        try {
+            const userId = c.get('user_id'); 
+            const { id: eventId } = c.req.valid('param');
+            const { participationType, teamId } = c.req.valid('json');
+
+            const { statusCode, status, data, message } = await unregisterFromEvent({
+                eventId,
+                userId,
+                participationType,
+                teamId
+            });
+
+            return sendSuccess(c, data, message, status, statusCode);
+        } catch (error: unknown) {
+            console.error("Unregistration route error:", error);
+            return sendError(c);
+        }
+    }
+);
 
 // Check Registration Status for a specific event
 events.get("/:id/status", authMiddleware, zValidator("param", getEventDetailsSchema), async (c) => {

@@ -151,6 +151,11 @@ export const eventRegistrationSchema = z.object({
     participationType: z.enum(["solo", "team"])
 });
 
+export const unregisterEventSchema = z.object({
+    participationType: z.enum(["solo", "team"]),
+    teamId: z.string().optional().nullable(),
+});
+
 export const getEventDetailsSchema = z.object({
     id: z.string().min(1, "Event id is required"),
 });
@@ -173,6 +178,7 @@ export const deleteEventRuleSchema = z.object({
     id: z.number().int().min(1, "Rule ID is required"),
 });
 
+export type UnregisterEventInput = z.infer<typeof unregisterEventSchema>;
 export type DeleteEventInput = z.infer<typeof deleteEventSchema>;
 export type EventRegistrationInput = z.infer<typeof eventRegistrationSchema>;
 export type GetEventDetailsInput = z.infer<typeof getEventDetailsSchema>;

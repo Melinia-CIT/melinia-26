@@ -28,7 +28,7 @@ interface EventRegisterProps {
 
 const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
     const navigate = useNavigate();
-    const [step, setStep] = useState<"checking" | "payment_needed" | "team_selection" | "no_teams" | "confirm" | "success" | "error">("checking");
+    const [step, setStep] = useState<"checking" | "Payment required" | "team_selection" | "no_teams" | "confirm" | "success" | "error">("checking");
     const [teams, setTeams] = useState<Team[]>([]);
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -41,12 +41,14 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
         const checkEligibilityAndProcess = async () => {
             if (registrationInitiated.current) return;
             try {
+                // This call triggers the paymentStatusMiddleware on the backend
                 const payRes = await api.get("/payment/payment-status");
                 if (!isSubscribed) return;
+                
                 const paymentStatus = payRes.data.paid; 
 
                 if (!paymentStatus) {
-                    setStep("payment_needed");
+                    setStep("Payment required");
                     return;
                 }
 
@@ -68,8 +70,14 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                 }
             } catch (err: any) {
                 if (!isSubscribed) return;
-                setErrorMessage(err.response?.data?.message || "Failed to verify eligibility.");
-                setStep("error");
+
+                // FIX: Check if the middleware threw a 402 Payment Required error
+                if (err.response?.status === 402) {
+                    setStep("Payment required");
+                } else {
+                    setErrorMessage(err.response?.data?.message || "Failed to verify eligibility.");
+                    setStep("error");
+                }
             }
         };
 
@@ -97,8 +105,13 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                 setTimeout(() => onClose(), 2500);
             }
         } catch (err: any) {
-            setErrorMessage(err.response?.data?.message || "Registration failed. One or more members might already be registered.");
-            setStep("error");
+            // FIX: Also check for 402 here in case status changed mid-session
+            if (err.response?.status === 402) {
+                setStep("Payment required");
+            } else {
+                setErrorMessage(err.response?.data?.message || "Registration failed. One or more members might already be registered.");
+                setStep("error");
+            }
         } finally {
             setLoading(false);
         }
@@ -150,22 +163,21 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                             <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <AlertCircle className="w-8 h-8 text-rose-500" />
                             </div>
-                            <h2 className="text-xl font-bold mb-2 text-white">Action Required</h2>
-                            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">{errorMessage}</p>
-                            <button onClick={onClose} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold transition-colors">
+                            <h2 className="text-xl font-bold mb-2 text-white">{errorMessage}</h2>
+                            <button onClick={onClose} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold transition-colors text-white">
                                 Close
                             </button>
                         </motion.div>
                     )}
 
-                    {step === "payment_needed" && (
+                    {step === "Payment required" && (
                         <motion.div key="pay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-4">
                             <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <CreditCard className="w-8 h-8 text-rose-500" />
                             </div>
                             <h2 className="text-xl font-bold mb-2 text-white">Payment Required</h2>
                             <p className="text-sm text-zinc-400 mb-6 px-2">You need to complete your Melinia registration payment before participating in events.</p>
-                            <button onClick={handlePaymentRedirect} disabled={loading} className="w-full py-3 bg-orange-500 hover:bg-orange-600 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                            <button onClick={handlePaymentRedirect} disabled={loading} className="w-full py-3 bg-orange-500 hover:bg-orange-600 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-white">
                                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                                 Pay Now
                             </button>
@@ -194,6 +206,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                         <div className="flex items-center gap-3">
                                             <input 
                                                 type="radio" name="team"
+                                                checked={isSoloChoice}
                                                 onChange={() => {
                                                     setSelectedTeamId(null);
                                                     setIsSoloChoice(true);
@@ -210,11 +223,13 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
 
                                 {teams.map((t) => {
                                     const isValidSize = Number(t.member_count) >= event.minTeamSize && Number(t.member_count) <= event.maxTeamSize;
+                                    const isSelected = selectedTeamId === t.id;
                                     return (
-                                        <label key={t.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isValidSize ? 'bg-white/5 border-white/10 cursor-pointer hover:border-orange-500/50' : 'bg-zinc-950 border-white/5 opacity-50 grayscale cursor-not-allowed'}`}>
+                                        <label key={t.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isValidSize ? (isSelected ? 'border-orange-500 bg-orange-500/5' : 'bg-white/5 border-white/10 cursor-pointer hover:border-orange-500/50') : 'bg-zinc-950 border-white/5 opacity-50 grayscale cursor-not-allowed'}`}>
                                             <div className="flex items-center gap-3">
                                                 <input 
                                                     type="radio" name="team" disabled={!isValidSize}
+                                                    checked={isSelected}
                                                     onChange={() => {
                                                         setSelectedTeamId(t.id);
                                                         setIsSoloChoice(false);
