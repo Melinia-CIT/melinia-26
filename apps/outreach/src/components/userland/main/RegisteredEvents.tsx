@@ -47,12 +47,12 @@ const RegisteredEvents = () => {
                     className="mt-4 text-xs hover:cursor-pointer transition-colors uppercase tracking-widest flex gap-2 items-center text-zinc-400 hover:text-white"
                 >
                     <span className="font-semibold">Explore Events</span>
-                    <motion.div
+                    <motion.span
                         whileHover={{ x: 3 }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
                         <ArrowRight />
-                    </motion.div>
+                    </motion.span>
                 </div>
             </div>
         )
