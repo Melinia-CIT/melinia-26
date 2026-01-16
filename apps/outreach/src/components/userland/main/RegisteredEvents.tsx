@@ -48,7 +48,7 @@ const RegisteredEvents = () => {
                 >
                     <span className="font-semibold">Explore Events</span>
                     <motion.div
-                        whileHover={{ x: 4 }}
+                        whileHover={{ x: 3 }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
                         <ArrowRight />
