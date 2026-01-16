@@ -388,7 +388,7 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
 export async function deleteEvent(input: DeleteEventInput) {
     const { id } = input;
     try {
-        await sql`DELETE FROM teams WHERE event_id = ${id};`;
+        await sql`UPDATE teams SET event_id = NULL WHERE event_id = ${id}`;
         await sql`DELETE FROM event_rounds WHERE event_id = ${id};`;
         await sql`DELETE FROM event_prizes WHERE event_id = ${id};`;
         await sql`DELETE FROM event_organizers WHERE event_id = ${id};`;
@@ -503,69 +503,58 @@ export async function getUserEventStatusbyEventId(userId: string, eventId: strin
             return { status: false, statusCode: 404, message: "Event not found", data: {} };
         }
 
-        const isSolo = event.participation_type.toLowerCase() === "solo";
-        const canBeSoloInTeam = event.participation_type.toLowerCase() === "team" && Number(event.min_team_size) === 1;
+        const [registration] = await sql`
+            SELECT 
+                er.id, 
+                er.team_id, 
+                er.user_id,
+                t.name as team_name,
+                (SELECT count(*) FROM team_members WHERE team_id = er.team_id) as member_count
+            FROM event_registrations er
+            LEFT JOIN teams t ON er.team_id = t.id
+            WHERE er.event_id = ${eventId} 
+            AND (er.user_id = ${userId} OR er.team_id IN (SELECT team_id FROM team_members WHERE user_id = ${userId}))
+            LIMIT 1
+        `;
 
-        if (isSolo || canBeSoloInTeam) {
-            const [registration] = await sql`
-                SELECT id FROM event_registrations 
-                WHERE event_id = ${eventId} 
-                AND user_id = ${userId} 
-                AND team_id IS NULL
-            `;
+        if (registration) {
+            const isTeamMode = registration.team_id !== null;
+            return { 
+                status: true, 
+                statusCode: 200, 
+                message: isTeamMode ? "Registered via team" : "Registered solo", 
+                data: { 
+                    registration_status: "registered",
+                    mode: isTeamMode ? "team" : "solo",
+                    team_id: registration.team_id,
+                    team_name: registration.team_name,
+                    member_count: registration.member_count
+                } 
+            };
+        }
 
-            if (registration) {
-                return { 
-                    status: true, 
-                    statusCode: 200, 
-                    message: isSolo 
-                        ? "User is registered for this solo event" 
-                        : "User is registered as a solo participant for this team event", 
-                    data: { 
-                        registration_status: "registered",
-                        mode: "solo"
-                    } 
-                };
-            }
-        } 
-        else {
-            const userTeams = await sql`
-                SELECT t.id, t.name, t.event_id, 
-                (SELECT count(user_id) FROM team_members tm WHERE tm.team_id = t.id) as member_count
-                FROM teams t
-                JOIN team_members tm ON t.id = tm.team_id
-                WHERE tm.user_id = ${userId}
-            `;
+        const [syncedTeam] = await sql`
+            SELECT t.id, t.name, 
+            (SELECT count(*) FROM team_members WHERE team_id = t.id) as member_count
+            FROM teams t
+            JOIN team_members tm ON t.id = tm.team_id
+            WHERE tm.user_id = ${userId} AND t.event_id = ${eventId}
+            LIMIT 1
+        `;
 
-            if (teamId) {
-                const specificTeam = userTeams.find(t => t.id === teamId);
-                if (specificTeam && specificTeam.event_id === eventId) {
-                    return {
-                        status: true,
-                        statusCode: 200,
-                        message: "The specified team is registered for this event",
-                        data: {
-                            registration_status: "registered",
-                            team_name: specificTeam.name,
-                            member_count: specificTeam.member_count
-                        }
-                    };
+        if (syncedTeam) {
+            return {
+                status: true,
+                statusCode: 200,
+                message: "Registered (Synced via Team)",
+                data: {
+                    registration_status: "registered",
+                    mode: "team",
+                    team_id: syncedTeam.id,
+                    team_name: syncedTeam.name,
+                    member_count: syncedTeam.member_count
                 }
-            }
-
-            const registeredTeam = userTeams.find(t => t.event_id === eventId);
-            if (registeredTeam) {
-                return {
-                    status: true,
-                    statusCode: 200,
-                    message: "User is already registered for this event via a team",
-                    data: {
-                        registration_status: "registered",
-                        team_name: registeredTeam.name,
-                        member_count: registeredTeam.member_count
-                    }
-                };
-            }
+            };
         }
 
         return { 
@@ -576,6 +565,7 @@ export async function getUserEventStatusbyEventId(userId: string, eventId: strin
         };
 
     } catch (error) {
+        console.error("Error in getUserEventStatusbyEventId:", error);
         throw error;
     }
 }
@@ -629,5 +619,67 @@ export async function getRegisteredEventsByUser(userId: string) {
             message: error.message || "Internal server error while fetching events", 
             data: [] 
         };
+    }
+}
+
+// Unregister from event
+export async function unregisterFromEvent(input: { 
+    eventId: string; 
+    userId: string; 
+    participationType: string; 
+    teamId?: string | null 
+}) {
+    const { eventId, userId, participationType, teamId } = input;
+
+    try {
+        if (participationType.toLowerCase() === "solo") {
+            const result = await sql`
+                DELETE FROM event_registrations 
+                WHERE event_id = ${eventId} 
+                AND user_id = ${userId} 
+                AND team_id IS NULL
+                RETURNING id;
+            `;
+
+            if (result.length === 0) {
+                return { status: false, statusCode: 404, message: "Solo registration not found", data: {} };
+            }
+
+            return { status: true, statusCode: 200, message: "Successfully unregistered from solo event", data: {} };
+        } else {
+            if (!teamId) {
+                return { status: false, statusCode: 400, message: "Team ID is required for team unregistration", data: {} };
+            }
+
+            const [team] = await sql`
+                SELECT name FROM teams 
+                WHERE id = ${teamId} 
+                AND leader_id = ${userId} 
+                AND event_id = ${eventId}
+            `;
+
+            if (!team) {
+                return { 
+                    status: false, 
+                    statusCode: 403, 
+                    message: "Only the team leader can unregister the team from this event", 
+                    data: {} 
+                };
+            }
+
+            await sql`UPDATE teams SET event_id = NULL WHERE id = ${teamId};`;
+
+            await sql`DELETE FROM event_registrations WHERE event_id = ${eventId} AND team_id = ${teamId};`;
+
+            return { 
+                status: true, 
+                statusCode: 200, 
+                message: `Team "${team.name}" has been successfully unregistered`, 
+                data: { teamName: team.name } 
+            };
+        }
+    } catch (error: any) {
+        console.error("Unregister Error:", error);
+        return { status: false, statusCode: 500, message: error.message || "Unregistration failed", data: {} };
     }
 }
