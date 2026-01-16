@@ -10,32 +10,32 @@ const app = new Hono()
 const v1 = new Hono()
 
 app.onError((err, c) => {
-	console.error(err)
+    console.error(err)
 
-	if (err instanceof HTTPException) {
-		return c.json({ message: err.message }, err.status)
-	}
+    if (err instanceof HTTPException) {
+        return c.json({ message: err.message }, err.status)
+    }
 
-	return c.json({ message: "Internal Server Error" }, 500)
+    return c.json({ message: "Internal Server Error" }, 500)
 })
 
 app.use(
-	cors({
-		origin: [
-			"http://localhost:5173",
-			"https://d2ects9rfqf4lr.cloudfront.net",
-			"https://melinia.in",
-			"https://mlndemo.melinia.in",
-		],
-		credentials: true,
-	})
+    cors({
+        origin: [
+            "http://localhost:5173",
+            "https://d2ects9rfqf4lr.cloudfront.net",
+            "https://melinia.in",
+            "https://mlndemo.melinia.in",
+        ],
+        credentials: true,
+    })
 )
 app.use(requestLogger)
 
 setupLogRotation()
 
 v1.get("/ping", async c => {
-	return c.json("pong")
+    return c.json("pong")
 })
 
 v1.route("/auth", auth)
@@ -49,6 +49,6 @@ v1.route("/coupons", coupons)
 app.route("/api/v1", v1)
 
 Bun.serve({
-	fetch: app.fetch,
-	reusePort: true,
+    fetch: app.fetch,
+    reusePort: true,
 })
