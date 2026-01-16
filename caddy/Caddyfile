@@ -1,0 +1,23 @@
+api.melinia.in {
+    handle /api/* {
+        reverse_proxy api-1:3000 api-2:3000 api-3:3000 api-4:3000 {
+            lb_policy round_robin
+            health_uri /api/v1/ping
+            health_interval 30s
+            health_timeout 5s
+            health_status 200
+        }
+    }
+
+    handle {
+        respond "Melinia API" 200
+    }
+}
+
+:80 {
+    redir https://{host}{uri} permanent
+}
+
+uptime.melinia.in {
+    reverse_proxy uptime-kuma:3001
+}

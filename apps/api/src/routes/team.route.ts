@@ -1,19 +1,11 @@
 import { Hono, type Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import {
-    type CreateTeam,
-    type RespondInvitationRequest,
     type DeleteTeamMemberRequest,
-    type DeleteTeamRequest,
-    type UpdateTeamRequest,
     createTeamSchema,
-    respondInvitationSchema,
-    deleteTeamMemberSchema,
-    deleteTeamSchema,
     updateTeamSchema,
-    getPendingInvitationsSchema,
     addNewMemberSchema
-} from "@melinia/shared/dist/";
+} from "@melinia/shared";
 
 import {
     createTeam,
@@ -54,8 +46,8 @@ teamRouter.get("/:team_id", authMiddleware, async (c) => {
     try {
 
         const teamID = c.req.param('team_id');
-        if(!teamID){
-            throw new HTTPException(400, {message:"Invalid Team ID"})
+        if (!teamID) {
+            throw new HTTPException(400, { message: "Invalid Team ID" })
         }
         const { statusCode, status, data, message } = await getTeamDetails(teamID);
 
@@ -67,17 +59,17 @@ teamRouter.get("/:team_id", authMiddleware, async (c) => {
 })
 
 //Update Team 
-teamRouter.put("/:team_id", authMiddleware, zValidator("json",updateTeamSchema), async (c) => {
+teamRouter.put("/:team_id", authMiddleware, zValidator("json", updateTeamSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
         const team_id = c.req.param('team_id');
-        if(!team_id){
+        if (!team_id) {
             return sendError(c, "Invalid Team", 400);
         }
 
         const formData = await c.req.valid('json');
 
-        const { statusCode, status, data, message } = await updateTeam(formData, user_id,team_id);
+        const { statusCode, status, data, message } = await updateTeam(formData, user_id, team_id);
 
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
@@ -86,13 +78,13 @@ teamRouter.put("/:team_id", authMiddleware, zValidator("json",updateTeamSchema),
     }
 })
 
-// Get Team details by team_id
+// Delete Team team_id
 teamRouter.delete("/:team_id", authMiddleware, async (c) => {
     try {
         const teamID = c.req.param('team_id');
         const userID = c.get('user_id');
-        if(!teamID){
-            throw new HTTPException(400, {message:"Invalid Team ID"})
+        if (!teamID) {
+            throw new HTTPException(400, { message: "Invalid Team ID" })
         }
         const { statusCode, status, data, message } = await deleteTeam(userID, teamID);
 
@@ -110,14 +102,14 @@ teamRouter.delete("/:team_id/team_member/:member_id", authMiddleware, async (c) 
         const memberID = c.req.param('member_id');
         const userID = c.get('user_id');
 
-        if(!teamID){
+        if (!teamID) {
             return sendError(c, "Invalid Team", 400);
         }
-        if(!memberID){
+        if (!memberID) {
             return sendError(c, "Invalid Member", 400);
         }
 
-        const input:DeleteTeamMemberRequest = {requester_id:userID, member_id:memberID, team_id:teamID}
+        const input: DeleteTeamMemberRequest = { requester_id: userID, member_id: memberID, team_id: teamID }
         const { statusCode, status, data, message } = await deleteTeamMember(input);
 
         return sendSuccess(c, data, message, status, statusCode);
@@ -131,7 +123,7 @@ teamRouter.delete("/:team_id/team_member/:member_id", authMiddleware, async (c) 
 teamRouter.get("/:team_id/pending_invitations", authMiddleware, async (c: Context) => {
     try {
         const teamID = c.req.param('team_id');
-        if(!teamID){
+        if (!teamID) {
             return sendError(c, "Invalid team", 400);
         }
 
@@ -148,15 +140,15 @@ teamRouter.delete("/:team_id/pending_invitations/:invitation_id", authMiddleware
     try {
         const teamID = c.req.param('team_id');
         const invitationID = Number(c.req.param('invitation_id'));
-        const userID:string = c.get('user_id');
+        const userID: string = c.get('user_id');
 
-        if(!teamID){
+        if (!teamID) {
             return sendError(c, "Invalid team", 400);
         }
-        if(!invitationID){
+        if (!invitationID) {
             return sendError(c, "Invalid Invitation", 400);
         }
-        const input = {requester_id:userID, invitation_id:invitationID};
+        const input = { requester_id: userID, invitation_id: invitationID };
         const { statusCode, status, data, message } = await deleteInvitation(input);
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
@@ -168,12 +160,12 @@ teamRouter.delete("/:team_id/pending_invitations/:invitation_id", authMiddleware
 teamRouter.post("/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
     try {
         const invitationID = Number(c.req.param('invitation_id'));
-        const userID:string = c.get('user_id');
+        const userID: string = c.get('user_id');
 
-        if(!invitationID){
+        if (!invitationID) {
             return sendError(c, "Invalid Invitation", 400);
         }
-        const input = {user_id:userID, invitation_id:invitationID};
+        const input = { user_id: userID, invitation_id: invitationID };
         const { statusCode, status, data, message } = await acceptTeamInvitation(input);
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
@@ -186,12 +178,12 @@ teamRouter.post("/pending_invitations/:invitation_id", authMiddleware, async (c:
 teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
     try {
         const invitationID = Number(c.req.param('invitation_id'));
-        const userID:string = c.get('user_id');
+        const userID: string = c.get('user_id');
 
-        if(!invitationID){
+        if (!invitationID) {
             return sendError(c, "Invalid Invitation", 400);
         }
-        const input = {user_id:userID, invitation_id:invitationID};
+        const input = { user_id: userID, invitation_id: invitationID };
         const { statusCode, status, data, message } = await declineTeamInvitation(input);
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
@@ -199,13 +191,14 @@ teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: 
         return sendError(c);
     }
 })
-// Add a new member //
-teamRouter.post("/add_member", authMiddleware, zValidator("json", addNewMemberSchema), async (c) => {
+// Add a new member
+teamRouter.post("/:team_id/members", authMiddleware, zValidator("json", addNewMemberSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
+        const teamID = c.req.param('team_id');
         const formData = await c.req.valid('json');
 
-        const { statusCode, status, data, message } = await inviteTeamMember(formData, user_id);
+        const { statusCode, status, data, message } = await inviteTeamMember(formData, user_id, teamID);
 
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
@@ -214,13 +207,23 @@ teamRouter.post("/add_member", authMiddleware, zValidator("json", addNewMemberSc
     }
 })
 
-teamRouter.get("/", authMiddleware, async (c) => {
+ teamRouter.get('/', authMiddleware, async (c) => {
     try {
-        const user_id = c.get("user_id");
-        const { statusCode, status, data, message } = await getAllTeamsForUser(user_id);
+        const user_id = c.get('user_id');
+        const filter = c.req.query('filter') as 'led' | 'member' | 'all' | undefined;
+
+        // Validate filter param
+
+        if (filter && !['led', 'member', 'all'].includes(filter)) {
+            return sendError(c, 'Invalid filter parameter', 400);
+        }
+
+        const { statusCode, status, data, message } = await getAllTeamsForUser(user_id, filter || 'all');
+
         return sendSuccess(c, data, message, status, statusCode);
-    } catch (error: unknown) {
-        console.error("Error details:", error);
+    } 
+    catch (error: unknown) {
+        console.error('Error details:', error);
         return sendError(c);
     }
 });

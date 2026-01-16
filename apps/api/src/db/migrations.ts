@@ -1,5 +1,6 @@
 import sql from "./connection"
 
+
 await sql`
     CREATE TABLE IF NOT EXISTS migrations (
         id SERIAL PRIMARY KEY,
@@ -99,6 +100,7 @@ await runMigration("melinia db init", async () => {
             updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
     `
+
 
     await sql`
         CREATE TABLE IF NOT EXISTS profile (
@@ -223,7 +225,7 @@ await runMigration("melinia db init", async () => {
     `
 
     // check-in
-    await sql`apps/api/src/db/migrations.ts
+    await sql`
         CREATE TABLE IF NOT EXISTS checkin (
             id SERIAL PRIMARY KEY,
             tag_id TEXT UNIQUE NOT NULL REFERENCES tags(id),
@@ -340,25 +342,24 @@ await runMigration("create event registrations", async () => {
 
 await runMigration("create payments table", async () => {
     await sql`
-  CREATE TABLE IF NOT EXISTS payments (
-    id SERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id),
-    order_id TEXT NOT NULL,
-    payment_id TEXT,
+        CREATE TABLE IF NOT EXISTS payments (
+            id SERIAL PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id),
+            order_id TEXT NOT NULL,
+            payment_id TEXT,
 
-    email TEXT NOT NULL,
-    payment_status TEXT NOT NULL CHECK(payment_status IN ('CREATED', 'PAID', 'FAILED', 'REFUNDED')),
-    payment_method VARCHAR(50),
+            email TEXT NOT NULL,
+            payment_status TEXT NOT NULL CHECK(payment_status IN ('CREATED', 'PAID', 'FAILED', 'REFUNDED')),
+            payment_method VARCHAR(50),
 
-    amount DECIMAL(10, 2) NOT NULL,
+            amount DECIMAL(10, 2) NOT NULL,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    paid_at TIMESTAMP,
-    gateway_response JSONB
-  )
-
-  `
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            paid_at TIMESTAMP,
+            gateway_response JSONB
+        );
+    `
 })
 
 await runMigration("add fk in degrees", async () => {
@@ -367,7 +368,6 @@ await runMigration("add fk in degrees", async () => {
         ALTER TABLE degrees
         ADD COLUMN college_id INTEGER REFERENCES colleges(id);
     `;
-
 });
 
 
@@ -451,6 +451,59 @@ await runMigration("add razorpay timestamps to payments table", async () => {
     ALTER TABLE payments
     ADD COLUMN razorpay_payment_created_at TIMESTAMP
   `
+})
+
+await runMigration("add event rules table ", async () => {
+    await sql`
+    CREATE TABLE IF NOT EXISTS event_rules (
+        id SERIAL PRIMARY KEY,
+        event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        round_no INTEGER,
+        rule_number INTEGER NOT NULL,
+        rule_description TEXT NOT NULL,
+        
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
+})
+
+await runMigration("create user payment status type", async () => {
+    await sql`
+        CREATE TYPE user_payment_status AS ENUM (
+            'UNPAID', 
+            'PAID', 
+            'EXEMPTED'
+        );
+    `;
+})
+
+await runMigration("add payment status column to users", async () => {
+    await sql`
+        ALTER TABLE users
+        ADD COLUMN payment_status user_payment_status NOT NULL DEFAULT 'UNPAID';
+    `;
+})
+
+await runMigration("create single use coupons table", async () => {
+    await sql`
+        CREATE TABLE IF NOT EXISTS coupons (
+            id SERIAL PRIMARY KEY,
+            code TEXT UNIQUE NOT NULL,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+})
+
+await runMigration("create single use coupon redemptions table", async () => {
+    await sql`
+        CREATE TABLE IF NOT EXISTS coupon_redemptions (
+            id SERIAL PRIMARY KEY,
+            user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+            coupon_id INTEGER UNIQUE NOT NULL REFERENCES coupons(id) ON DELETE CASCADE,
+            redeemed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
 })
 
 await sql.end();

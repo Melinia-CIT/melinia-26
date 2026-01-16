@@ -1,13 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Press+Start+2P&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Instrument+Serif:ital@0;1&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
 @import "tailwindcss";
 
 @theme {
+    /* Font Variables */
     --font-inst: "Instrument Serif", serif;
     --font-geist: "Geist", sans-serif;
+    --font-press: "Press Start 2P" system-ui;
+    --font-jk: "Plus Jakarta Sans", sans-serif;
+    /* Animation Variables - Pointing to Keyframes below */
     --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
 
+    /* Keyframe Definitions */
     @keyframes pulse-slow {
 
         0%,
@@ -21,33 +26,33 @@
             transform: scale(1.05);
         }
     }
+
+    @keyframes bounce-subtle {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-4px);
+        }
+    }
 }
 
 @layer base {
-  body {
-    @apply bg-zinc-950 text-white;
-  }
-
-  @keyframes bounce-subtle {
-
-    0%,
-    100% {
-      transform: translateY(0);
+    body {
+        @apply bg-zinc-950 text-white font-geist;
     }
 
-    50% {
-      transform: translateY(-4px);
+    button,
+    a {
+        @apply cursor-pointer;
     }
-  }
 }
 
+/* Helper Class */
 .geist-regular {
-  font-family: "Geist", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-}
-
-body {
-  font-family: "Geist", sans-serif;
+    font-family: var(--font-geist);
+    font-weight: 400;
 }

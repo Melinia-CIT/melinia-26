@@ -4,8 +4,17 @@ import Razorpay from "razorpay"
 
 import crypto from "crypto"
 
-import sql from "../db/connection"
 import { authMiddleware } from "../middleware/auth.middleware"
+import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
+import {
+    getUserEmail,
+    createPaymentRecord,
+    updatePaymentStatus,
+    getUserLatestPaymentStatus,
+    checkUserExistsById,
+    getUserIdByOrderId,
+    updateUserPaymentStatus,
+} from "../db/queries"
 
 const keyId = process.env.RAZORPAY_KEY_ID
 const secretKey = process.env.RAZORPAY_KEY_SECRET
@@ -24,7 +33,7 @@ payment.post("/register-melinia", authMiddleware, async c => {
     try {
         const user_id = c.get("user_id")
 
-        const [user] = await sql`SELECT email FROM users WHERE id = ${user_id}`
+        const user = await getUserEmail(user_id)
 
         if (!user) {
             return c.json({ error: "User not found" }, 404)
@@ -36,28 +45,7 @@ payment.post("/register-melinia", authMiddleware, async c => {
             receipt: `receipt_${Date.now()}`,
         })
 
-        await sql`
-            INSERT INTO payments (
-                user_id,
-                order_id,
-                payment_status,
-                email,
-                amount,
-                payment_method,
-                gateway_response,
-                razorpay_order_created_at
-            )
-            VALUES (
-                ${user_id},
-                ${order.id},
-                'CREATED',
-                ${user.email},
-                1.00,
-                null,
-                ${JSON.stringify(order)},
-                ${new Date(order.created_at * 1000)}
-            )
-            `
+        await createPaymentRecord(user_id, order.id, user.email, order)
 
         return c.json({
             id: order.id,
@@ -91,69 +79,22 @@ payment.post("/webhook", async c => {
         const status = event.event === "payment.captured" ? "PAID" : "FAILED"
         const paidAt = status === "PAID" ? new Date(payment.created_at * 1000) : null
 
-        await sql`
-            UPDATE payments
-            SET
-                payment_id = ${payment.id},
-                payment_status = ${status},
-                payment_method = ${payment.method || null},
-                gateway_response = ${JSON.stringify(payment)},
-                paid_at = ${paidAt},
-                razorpay_payment_created_at = ${new Date(payment.created_at * 1000)},
-                updated_at = CURRENT_TIMESTAMP
-            WHERE order_id = ${payment.order_id}
-                AND payment_status != 'PAID'
-            `
+        await updatePaymentStatus(payment, status, paidAt)
+
+        if (status === "PAID") {
+            const userId = await getUserIdByOrderId(payment.order_id)
+            if (userId) {
+                await updateUserPaymentStatus(userId, "PAID")
+            }
+        }
     }
 
     return c.json({ status: "ok" })
 })
 
-payment.get("/payment-status", authMiddleware, async c => {
+payment.get("/payment-status", authMiddleware, paymentStatusMiddleware, async c => {
     try {
-        const userId = c.get("user_id")
-
-        // 1️⃣ Check if user exists
-        const [user] = await sql`
-            SELECT id FROM users WHERE id = ${userId}
-            `
-
-        if (!user) {
-            return c.json({ error: "User not found" }, 404)
-        }
-
-        // 2️⃣ Get latest payment
-        const [payment] = await sql`
-            SELECT payment_status
-            FROM payments
-            WHERE user_id = ${userId}
-            ORDER BY created_at DESC
-            LIMIT 1
-            `
-
-        if (!payment) {
-            return c.json({ error: "No payment record found" }, 404)
-        }
-
-        // 3️⃣ Handle payment states
-        if (payment.payment_status === "PAID") {
-            return c.json({ paid: true }, 200)
-        }
-
-        if (payment.payment_status === "CREATED") {
-            return c.json({ error: "Payment pending" }, 202)
-        }
-
-        if (payment.payment_status === "FAILED") {
-            return c.json({ error: "Payment failed" }, 402)
-        }
-
-        if (payment.payment_status === "REFUNDED") {
-            return c.json({ error: "Payment refunded" }, 402)
-        }
-
-        // 4️⃣ Fallback (should never happen)
-        return c.json({ error: "Invalid payment state" }, 500)
+        return c.json({ paid: true }, 200)
     } catch (err) {
         console.error("Payment status check failed:", err)
         return c.json({ error: "Internal server error" }, 500)

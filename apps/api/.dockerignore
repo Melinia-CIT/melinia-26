@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+*.log
+tests
+*.test.ts
+*.test.tsx
+turbo
+bruno
+.tsbuildinfo

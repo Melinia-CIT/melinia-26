@@ -1,25 +1,85 @@
+import { HTTPException } from "hono/http-exception";
 import sql from "../connection";
 import {
     type CreateTeam,
     type RespondInvitationRequest,
     type DeleteTeamMemberRequest,
-    type DeleteTeamRequest,
     type UpdateTeamRequest,
-    type addNewMemberRequest,
+    type AddNewMemberRequest,
+    type TeamDetails,
     addNewMemberSchema,
     createTeamSchema,
     respondInvitationSchema,
     deleteTeamMemberSchema,
-    deleteTeamSchema,
     updateTeamSchema,
-} from "@melinia/shared/dist/";
+    teamDetailsSchema
+} from "@melinia/shared";
+
+// Helper functions
+export async function isPaymentDone(email_id: string): Promise<boolean> {
+    try {
+        const result = await sql`
+            SELECT 1 FROM payments WHERE email = ${email_id} AND payment_status = 'PAID'
+        `;
+        return result.length > 0;
+    } catch (error: unknown) {
+        throw new HTTPException(500, { message: "Internal Server Error" });
+    }
+}
+
+export async function checkProfileExists(id: string): Promise<boolean> {
+    try {
+        const user = await sql`
+            SELECT 1 FROM users WHERE id = ${id} AND profile_completed = true
+        `;
+        return user.length > 0;
+    } catch (error: unknown) {
+        throw new HTTPException(500, { message: "Internal Server Error" });
+    }
+}
 
 // Create Team with Member Invitations (Same College Only)
 export async function createTeam(input: CreateTeam, leader_id: string) {
     const data = createTeamSchema.parse(input);
 
     try {
-        // 1. Get leader's college_id from profile
+        // 1. Check if leader has completed payment
+        const [leaderUser] = await sql`
+            SELECT email FROM users WHERE id = ${leader_id}
+        `;
+
+        if (!leaderUser) {
+            return {
+                status: false,
+                statusCode: 404,
+                message: 'Leader user not found',
+                data: {}
+            };
+        }
+
+        const leaderPaymentDone = await isPaymentDone(leaderUser.email);
+        if (!leaderPaymentDone) {
+            //throw new HTTPException(402, {message:"Payment not done"});
+            return {
+                status: false,
+                statusCode: 402,
+                message: 'Kindly complete payment before creating a team.',
+                data: {}
+            };
+         }
+
+        // 2. Check if leader has completed profile
+        const leaderProfileCompleted = await checkProfileExists(leader_id);
+        if (!leaderProfileCompleted) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: 'Leader profile not completed. Please complete your profile before creating a team.',
+                data: {}
+            };
+        }
+
+        // 3. Get leader's college_id from profile
         const [leaderProfile] = await sql`
             SELECT college_id FROM profile WHERE user_id = ${leader_id}
         `;
@@ -35,7 +95,7 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
 
         const leader_college_id = leaderProfile.college_id;
 
-        // 2. Check if team name is unique
+        // 4. Check if team name is unique
         const [existingTeam] = await sql`
             SELECT id FROM teams WHERE name = ${data.name}
         `;
@@ -49,7 +109,8 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
             };
         }
 
-        // 3. Validate all email ids exist in users table AND belong to same college
+        // 5. Validate all email ids exist in users table AND belong to same college
+        // AND have completed payment AND profile
         if (data.member_emails && data.member_emails.length > 0) {
             const validUsers = await sql`
                 SELECT u.id, u.email, p.college_id 
@@ -60,16 +121,38 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
 
             const invalidEmails: string[] = [];
             const differentCollegeEmails: string[] = [];
+            const paymentNotDoneEmails: string[] = [];
+            const profileNotCompletedEmails: string[] = [];
 
             for (const email of data.member_emails) {
                 const user = validUsers.find(u => u.email === email);
 
+                // Check if user exists
                 if (!user) {
                     invalidEmails.push(email);
-                } else if (user.college_id !== leader_college_id) {
-                    differentCollegeEmails.push(email);
+                    continue;
                 }
-            }
+
+                // Check if user has completed profile
+                const profileCompleted = await checkProfileExists(user.id);
+                if (!profileCompleted) {
+                    profileNotCompletedEmails.push(email);
+                }
+ 
+                // Check if user has completed payment
+                const paymentDone = await isPaymentDone(email);
+                if (!paymentDone) {
+                    paymentNotDoneEmails.push(email);
+                    continue;
+                }
+
+                // Check if user belongs to same college
+                if (user.college_id !== leader_college_id) {
+                    differentCollegeEmails.push(email);
+                    continue;
+                }    
+
+           }
 
             if (invalidEmails.length > 0) {
                 return {
@@ -79,8 +162,30 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
                     data: { invalid_emails: invalidEmails }
                 };
             }
+            if (profileNotCompletedEmails.length > 0) {
+                console.log(profileNotCompletedEmails.length);
+                
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: `Profile not completed for these user(s): ${profileNotCompletedEmails.join(', ')}. They must complete their profile before joining a team.`,
+                    data: { profile_not_completed_emails: profileNotCompletedEmails }
+                };
+            }
+
+            if (paymentNotDoneEmails.length > 0) {
+                return {
+                    status: false,
+                    statusCode: 402,
+                    message: `Payment not completed for these user(s): ${paymentNotDoneEmails.join(', ')}. They must complete payment before joining a team.`,
+                    data: { payment_not_done_emails: paymentNotDoneEmails }
+                };
+            }
+
 
             if (differentCollegeEmails.length > 0) {
+                console.log(differentCollegeEmails.length);
+                
                 return {
                     status: false,
                     statusCode: 400,
@@ -88,35 +193,26 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
                     data: { different_college_emails: differentCollegeEmails }
                 };
             }
-        }
 
-        // 4. Create team - handle optional event_id
-        let teamRow: { id: string } | undefined;
+       }
 
-        if (data.event_id) {
-            [teamRow] = await sql`
-                INSERT INTO teams (name, leader_id, event_id)
-                VALUES (${data.name}, ${leader_id}, ${data.event_id})
-                RETURNING id
-            `;
-        } else {
-            [teamRow] = await sql`
-                INSERT INTO teams (name, leader_id)
-                VALUES (${data.name}, ${leader_id})
-                RETURNING id
-            `;
-        }
+        // 6. Create team
+        const [teamRow] = await sql`
+            INSERT INTO teams (name, leader_id)
+            VALUES (${data.name}, ${leader_id})
+            RETURNING id
+        `;
 
         if (!teamRow) throw new Error('Team creation failed');
         const team_id = teamRow.id;
 
-        // 5. Add leader as team member
+        // 7. Add leader as team member
         await sql`
             INSERT INTO team_members (team_id, user_id)
             VALUES (${team_id}, ${leader_id})
         `;
 
-        // 6. Get user IDs for invitees and create invitations
+        // 8. Get user IDs for invitees and create invitations
         let invitation_ids: number[] = [];
         if (data.member_emails && data.member_emails.length > 0) {
             const invitees = await sql`
@@ -156,11 +252,11 @@ export async function createTeam(input: CreateTeam, leader_id: string) {
 }
 
 // Invite Team Member (Same College Only)
-export async function inviteTeamMember(input: addNewMemberRequest, requester_id: string) {
+export async function inviteTeamMember(input: AddNewMemberRequest, requester_id: string, team_id: string) {
     try {
-        const { team_id, email } = input;
+        const { email } = input;
 
-        // 1. Verify team exists
+        // 1. Verify team exists and get leader
         const [team] = await sql`
             SELECT leader_id FROM teams WHERE id = ${team_id}
         `;
@@ -212,7 +308,7 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
             return {
                 status: false,
                 statusCode: 400,
-                message: `User with email "${email}" does not exist in the system`,
+                message: `Email "${email}" does not registered yet`,
                 data: {}
             };
         }
@@ -222,7 +318,7 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
             return {
                 status: false,
                 statusCode: 400,
-                message: `Cannot invite user from a different college. User "${email}" belongs to a different college.`,
+                message: `Cannot invite user from a different college. "${email}" belongs to a different college.`,
                 data: {}
             };
         }
@@ -239,7 +335,29 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
             };
         }
 
-        // 7. Check if user is already a member of the team
+        // 7. Check if user has completed payment
+        const paymentDone = await isPaymentDone(email);
+        if (!paymentDone) {
+            return {
+                status: false,
+                statusCode: 402,
+                message: `User "${email}" has not completed payment. They must complete payment before joining a team.`,
+                data: {}
+            };
+        }
+
+        // 8. Check if user has completed profile
+        const profileCompleted = await checkProfileExists(invitee_id);
+        if (!profileCompleted) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: `User "${email}" has not completed their profile. They must complete their profile before joining a team.`,
+                data: {}
+            };
+        }
+
+        // 9. Check if user is already a member of the team
         const [existingMember] = await sql`
             SELECT user_id FROM team_members 
             WHERE team_id = ${team_id} AND user_id = ${invitee_id}
@@ -254,7 +372,7 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
             };
         }
 
-        // 8. Check if user already has a pending invitation
+        // 10. Check if user already has a pending invitation
         const [existingInvitation] = await sql`
             SELECT id, status FROM invitations 
             WHERE team_id = ${team_id} 
@@ -271,7 +389,7 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
             };
         }
 
-        // 9. Create new invitation
+        // 11. Create new invitation
         const [invitationRow] = await sql`
             INSERT INTO invitations (team_id, invitee_id, inviter_id, status)
             VALUES (${team_id}, ${invitee_id}, ${requester_id}, 'pending')
@@ -300,7 +418,7 @@ export async function inviteTeamMember(input: addNewMemberRequest, requester_id:
 // Accept Team Invitation
 export async function acceptTeamInvitation(input: RespondInvitationRequest) {
     const data = respondInvitationSchema.parse(input);
-    
+
     try {
         const { invitation_id, user_id } = data;
 
@@ -359,7 +477,7 @@ export async function acceptTeamInvitation(input: RespondInvitationRequest) {
 // Decline Team Invitation
 export async function declineTeamInvitation(input: RespondInvitationRequest) {
     const data = respondInvitationSchema.parse(input);
-    
+
     try {
         const { invitation_id, user_id } = data;
 
@@ -372,7 +490,7 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
                 status: false,
                 statusCode: 404,
                 message: 'Invitation not found',
-                data:{}
+                data: {}
             };
         }
 
@@ -381,7 +499,7 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
                 status: false,
                 statusCode: 403,
                 message: 'This invitation is not for you',
-                data:{}
+                data: {}
             };
         }
 
@@ -390,7 +508,7 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
                 status: false,
                 statusCode: 400,
                 message: `Invitation already ${invitation.status}`,
-                data:{}
+                data: {}
             };
         }
 
@@ -402,36 +520,85 @@ export async function declineTeamInvitation(input: RespondInvitationRequest) {
             status: true,
             statusCode: 200,
             message: 'Invitation declined',
-            data:{}
+            data: {}
         };
     } catch (error) {
         throw error;
     }
 }
 
-// Get All Teams for User
-export async function getAllTeamsForUser(userId: string) {
+// Get All Teams for User - with query param filtering
+export async function getAllTeamsForUser(userId: string, filter?: 'led' | 'member' | 'all') {
     try {
-        const rows = await sql`
-            SELECT
-                t.id,
-                t.name AS team_name,
-                t.event_id,
-                e.name AS event_name,
-                t.leader_id,
-                (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
-            FROM team_members AS tm
-            JOIN teams AS t ON t.id = tm.team_id
-            LEFT JOIN events AS e ON e.id = t.event_id
-            WHERE tm.user_id = ${userId}
-            ORDER BY t.id DESC
-        `;
+        let query;
+
+        if (filter === 'led') {
+            // Teams where user is the leader
+            query = sql`
+                SELECT
+                    t.id,
+                    t.name AS team_name,
+                    t.event_id,
+                    e.name AS event_name,
+                    t.leader_id,
+                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
+                FROM teams AS t
+                LEFT JOIN events AS e ON e.id = t.event_id
+                WHERE t.leader_id = ${userId}
+                ORDER BY t.id DESC
+            `;
+        } else if (filter === 'member') {
+            // Teams where user is a member (not leader)
+            query = sql`
+                SELECT
+                    t.id,
+                    t.name AS team_name,
+                    t.event_id,
+                    e.name AS event_name,
+                    t.leader_id,
+                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
+                FROM team_members AS tm
+                JOIN teams AS t ON t.id = tm.team_id
+                LEFT JOIN events AS e ON e.id = t.event_id
+                WHERE tm.user_id = ${userId} AND t.leader_id != ${userId}
+                ORDER BY t.id DESC
+            `;
+        } else {
+            // All teams (led + member)
+            query = sql`
+                SELECT
+                    t.id,
+                    t.name AS team_name,
+                    t.event_id,
+                    e.name AS event_name,
+                    t.leader_id,
+                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
+                FROM teams AS t
+                LEFT JOIN events AS e ON e.id = t.event_id
+                WHERE t.leader_id = ${userId}
+                UNION ALL
+                SELECT
+                    t.id,
+                    t.name AS team_name,
+                    t.event_id,
+                    e.name AS event_name,
+                    t.leader_id,
+                    (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
+                FROM team_members AS tm
+                JOIN teams AS t ON t.id = tm.team_id
+                LEFT JOIN events AS e ON e.id = t.event_id
+                WHERE tm.user_id = ${userId} AND t.leader_id != ${userId}
+                ORDER BY id DESC
+            `;
+        }
+
+        const rows = await query;
 
         return {
             status: true,
             statusCode: 200,
-            message: 'List of all teams for this user',
-            data: rows
+            message: `List of ${filter === 'led' ? 'teams led by' : filter === 'member' ? 'teams user is member of' : 'all'} this user`,
+            data: rows,
         };
     } catch (error) {
         throw error;
@@ -440,55 +607,113 @@ export async function getAllTeamsForUser(userId: string) {
 
 // Get Team Details with Members
 export async function getTeamDetails(teamId: string) {
-    try {
-        const [team] = await sql`
-            SELECT
-                t.id,
-                t.name,
-                t.leader_id,
-                t.event_id,
-                e.name AS event_name
-            FROM teams AS t
-            LEFT JOIN events AS e ON e.id = t.event_id
-            WHERE t.id = ${teamId}
-        `;
+  try {
+    // Get team basic info and leader details
+    const [team] = await sql`
+      SELECT
+        t.id,
+        t.name,
+        t.leader_id,
+        u.email AS leader_email,
+        p.first_name AS leader_first_name,
+        p.last_name AS leader_last_name
+      FROM teams AS t
+      JOIN users AS u ON u.id = t.leader_id
+      LEFT JOIN profile AS p ON p.user_id = u.id
+      WHERE t.id = ${teamId}
+    `;
 
-        if (!team) {
-            return {
-                status: false,
-                statusCode: 404,
-                message: 'Team not found'
-            };
-        }
-
-        const members = await sql`
-            SELECT
-                u.id,
-                u.email,
-                p.first_name,
-                p.last_name,
-                tm.joined_at
-            FROM team_members AS tm
-            JOIN users AS u ON u.id = tm.user_id
-            LEFT JOIN profile AS p ON p.user_id = u.id
-            WHERE tm.team_id = ${teamId}
-            ORDER BY tm.joined_at ASC
-        `;
-
-        return {
-            status: true,
-            statusCode: 200,
-            message: 'Team details retrieved successfully',
-            data: {
-                ...team,
-                members
-            }
-        };
-    } catch (error) {
-        throw error;
+    if (!team) {
+      return {
+        status: false,
+        statusCode: 404,
+        message: 'Team not found',
+      };
     }
-}
 
+    // Get all members (excluding leader)
+    const members = await sql`
+      SELECT
+        u.id AS user_id,
+        p.first_name,
+        p.last_name,
+        u.email
+      FROM team_members AS tm
+      JOIN users AS u ON u.id = tm.user_id
+      LEFT JOIN profile AS p ON p.user_id = u.id
+      WHERE tm.team_id = ${teamId} AND u.id != ${team.leader_id}
+      ORDER BY tm.joined_at ASC
+    `;
+
+    // Get pending invitations
+    const pendingInvites = await sql`
+      SELECT
+        i.id AS invitation_id,
+        i.invitee_id AS user_id,
+        p.first_name,
+        p.last_name,
+        u.email
+      FROM invitations AS i
+      JOIN users AS u ON u.id = i.invitee_id
+      LEFT JOIN profile AS p ON p.user_id = u.id
+      WHERE i.team_id = ${teamId} AND i.status = 'pending'
+      ORDER BY i.id ASC
+    `;
+
+    // Get events registered for this team
+    const eventsRegistered = await sql`
+      SELECT DISTINCT
+        e.id AS event_id,
+        e.name AS event_name
+      FROM event_registrations AS er
+      JOIN events AS e ON e.id = er.event_id
+      WHERE er.team_id = ${teamId}
+      ORDER BY e.name ASC
+    `;
+
+    // Calculate team size (leader + members)
+    const teamSize = members.length + 1;
+
+    const teamData = {
+      id: team.id,
+      name: team.name,
+      leader_id: team.leader_id,
+      leader_first_name: team.leader_first_name,
+      leader_last_name: team.leader_last_name || "",
+      leader_email: team.leader_email,
+      members: members.map((m: any) => ({
+        user_id: m.user_id,
+        first_name: m.first_name,
+        last_name: m.last_name || "",
+        email: m.email,
+      })),
+      pending_invites: pendingInvites.map((pi: any) => ({
+        invitation_id: pi.invitation_id,
+        user_id: pi.user_id,
+        first_name: pi.first_name,
+        last_name: pi.last_name || "",
+        email: pi.email,
+      })),
+      events_registered: eventsRegistered.map((er: any) => ({
+        event_id: er.event_id,
+        event_name: er.event_name,
+      })),
+      team_size: teamSize,
+    };
+
+    // Validate response against schema
+   const validatedData = teamDetailsSchema.parse(teamData);
+
+    return {
+      status: true,
+      statusCode: 200,
+      message: 'Team details retrieved successfully',
+      data: teamData,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
 // Get Pending Invitations for Team
 export async function getPendingInvitationsForTeam(team_id: string) {
     try {
@@ -524,7 +749,7 @@ export async function getPendingInvitationsForTeam(team_id: string) {
 // Delete Team Member (only leader can delete)
 export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
     const data = deleteTeamMemberSchema.parse(input);
-    
+
     try {
         const { team_id, member_id, requester_id } = data;
 
@@ -538,7 +763,7 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
                 status: false,
                 statusCode: 404,
                 message: 'Team not found',
-                data:{}
+                data: {}
             };
         }
 
@@ -547,7 +772,7 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
                 status: false,
                 statusCode: 403,
                 message: 'Only team leader can remove members',
-                data:{}
+                data: {}
             };
         }
 
@@ -556,7 +781,7 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
                 status: false,
                 statusCode: 400,
                 message: 'Cannot remove team leader',
-                data:{}
+                data: {}
             };
         }
 
@@ -570,7 +795,7 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
                 status: false,
                 statusCode: 404,
                 message: 'Member not found in this team',
-                data:{}
+                data: {}
             };
         }
 
@@ -591,11 +816,11 @@ export async function deleteTeamMember(input: DeleteTeamMemberRequest) {
 
 
 // Update Team (name, event_id)
-export async function updateTeam(input: UpdateTeamRequest, requester_id:string, team_id:string) {
+export async function updateTeam(input: UpdateTeamRequest, requester_id: string, team_id: string) {
     const formData = updateTeamSchema.parse(input);
-    
+
     try {
-        const {  name, event_id } = formData;
+        const { name, event_id } = formData;
 
         // Verify requester is the team leader
         const [team] = await sql`
@@ -629,7 +854,7 @@ export async function updateTeam(input: UpdateTeamRequest, requester_id:string, 
                     status: false,
                     statusCode: 409,
                     message: 'Team name already taken',
-                    data:{}
+                    data: {}
                 };
             }
         }
@@ -658,7 +883,7 @@ export async function updateTeam(input: UpdateTeamRequest, requester_id:string, 
                 status: false,
                 statusCode: 400,
                 message: 'No fields to update',
-                data:{}
+                data: {}
             };
         }
 
@@ -666,7 +891,7 @@ export async function updateTeam(input: UpdateTeamRequest, requester_id:string, 
             status: true,
             statusCode: 200,
             message: 'Team updated successfully',
-            data:{}
+            data: {}
         };
     } catch (error) {
         throw error;
@@ -732,8 +957,8 @@ export async function deleteInvitation(input: { invitation_id: number; requester
 }
 
 // Delete Team (only leader can delete)
-export async function deleteTeam(requester_id:string, team_id:string) {
-    
+export async function deleteTeam(requester_id: string, team_id: string) {
+
     try {
 
         const [team] = await sql`
@@ -745,7 +970,7 @@ export async function deleteTeam(requester_id:string, team_id:string) {
                 status: false,
                 statusCode: 404,
                 message: 'Team not found',
-                data:{}
+                data: {}
             };
         }
 
@@ -754,7 +979,7 @@ export async function deleteTeam(requester_id:string, team_id:string) {
                 status: false,
                 statusCode: 403,
                 message: 'Only team leader can delete team',
-                data:{}
+                data: {}
             };
         }
 
@@ -768,7 +993,7 @@ export async function deleteTeam(requester_id:string, team_id:string) {
             status: true,
             statusCode: 200,
             message: 'Team deleted successfully',
-            data:{}
+            data: {}
         };
     } catch (error) {
         throw error;
@@ -776,7 +1001,7 @@ export async function deleteTeam(requester_id:string, team_id:string) {
 }
 
 export async function getPendingInvitationsForUser(user_id: string) {
-        const invitations = await sql`
+    const invitations = await sql`
             SELECT
                 i.id AS invitation_id,
                 i.team_id,
@@ -795,6 +1020,6 @@ export async function getPendingInvitationsForUser(user_id: string) {
             ORDER BY i.id DESC
         `;
 
-        return invitations
+    return invitations
 }
 

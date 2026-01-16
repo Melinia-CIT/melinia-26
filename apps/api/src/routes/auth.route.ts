@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { generateOTPSchema, verifyOTPSchema, registrationSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@packages/shared/dist";
+import { generateOTPSchema, verifyOTPSchema, registrationSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@packages/shared";
 import { checkUserExists, getUserByMail, insertUser, updatePasswd } from "../db/queries";
-import { redis } from "../utils/redis";
+import { ioredis } from "../utils/redis";
 import { generateOTP, getEnv } from "../utils/lib";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { sign, verify } from "hono/jwt";
@@ -11,8 +11,23 @@ import { createAccessToken, createRefreshToken, verifyToken } from "../utils/jwt
 import { createHash } from "crypto";
 import { sendOTP, sendResetLink } from "../workers/email/service";
 import { createRateLimiter } from "../middleware/ratelimiter.middleware";
+import type { CookieOptions } from "hono/utils/cookie";
+import { couponExists, couponRedeemed, redeemCoupon } from "../db/queries/coupons.queries";
 
 export const auth = new Hono();
+
+const getCookieOptions = (maxAge: number, path: string = "/") => {
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    return {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        path,
+        maxAge,
+        domain: isDev ? undefined : ".melinia.in"
+    } as CookieOptions;
+};
 
 auth.post("/send-otp",
     zValidator("json", generateOTPSchema),
@@ -29,24 +44,17 @@ auth.post("/send-otp",
         const OTP = generateOTP();
         const otpHash = createHash("sha256").update(OTP).digest("hex");
 
-        console.log(`${email}:${OTP}`);
+        // console.log(`${email}:${OTP}`);
         const jobId = await sendOTP(email, OTP);
-        console.log(jobId);
         if (!jobId) {
             console.error(`Failed to send OTP to ${email}`);
             throw new HTTPException(500, { message: "Failed to send OTP, Please try again" });
         }
 
-        await redis.set(`otp:${email}`, otpHash, "EX", 600);
+        await ioredis.set(`otp:${email}`, otpHash, "EX", 600);
 
         const token = await sign({ email, exp: Math.floor(Date.now() / 1000) + 10 * 60 }, getEnv("JWT_SECRET_KEY"));
-        setCookie(c, "registration_token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "Lax",
-            path: "/api/v1/auth",
-            maxAge: 600,
-        });
+        setCookie(c, "registration_token", token, getCookieOptions(600, "/api/v1/auth"));
 
         return c.json({ "msg": "OTP sent" }, 200);
     }
@@ -61,7 +69,7 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
     }
 
     const { email } = await verifyToken(token);
-    const storedOtpHash = await redis.get(`otp:${email}`);
+    const storedOtpHash = await ioredis.get(`otp:${email}`);
 
     if (!storedOtpHash) {
         throw new HTTPException(400, { message: "OTP expired or invalid" });
@@ -73,24 +81,19 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
         throw new HTTPException(403, { message: "Invalid OTP" });
     }
 
-    await redis.del(`otp:${email}`);
+    await ioredis.del(`otp:${email}`);
 
     const regToken = await sign({ email, otpVerified: true, exp: Math.floor(Date.now() / 1000) + 10 * 60 }, getEnv("JWT_SECRET_KEY"));
-    setCookie(c, "registration_token", regToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Lax",
-        path: "/api/v1/auth",
-        maxAge: 600,
-    });
+    setCookie(c, "registration_token", regToken, getCookieOptions(600, "/api/v1/auth"));
 
     return c.json({ message: "OTP verified successfully" }, 200);
 });
 
 
 auth.post("/register", zValidator("json", registrationSchema), async (c) => {
-    const { passwd, confirmPasswd } = c.req.valid("json");
+    const { passwd, confirmPasswd, couponCode } = c.req.valid("json");
     const token = getCookie(c, "registration_token");
+    console.log(couponCode);
 
     if (!token) {
         throw new HTTPException(401, { message: "Registration token not provided" });
@@ -101,37 +104,34 @@ auth.post("/register", zValidator("json", registrationSchema), async (c) => {
         throw new HTTPException(401, { message: "Email not verified." });
     }
 
-    if (passwd !== confirmPasswd) {
-        throw new HTTPException(400, { message: "Password doesn't match" });
-    }
-
     const exists = await checkUserExists(email as string);
     if (exists) {
         throw new HTTPException(409, { message: "User already exists, try logging in." })
     }
 
+    if (passwd !== confirmPasswd) {
+        throw new HTTPException(400, { message: "Password doesn't match" });
+    }
     const passwdHash = await Bun.password.hash(passwd);
-    const user = await insertUser(email as string, passwdHash);
 
-    deleteCookie(c, "registration_token", {
-        path: "/api/v1/auth",
-        httpOnly: true,
-        secure: true,
-        sameSite: "Lax",
-    });
+    const validCoupon = !!couponCode && (await couponExists(couponCode) && !await couponRedeemed(couponCode));
+    if (couponCode !== undefined && !validCoupon) {
+        throw new HTTPException(400, { message: "Invalid coupon code" });
+    }
+
+    const user = await insertUser(email as string, passwdHash, validCoupon);
+    if (user && validCoupon) {
+        await redeemCoupon(user.id, couponCode);
+    }
+
+    deleteCookie(c, "registration_token", getCookieOptions(0, "/api/v1/auth"));
 
     const accessToken = await createAccessToken(user.id, user.role);
     const refreshToken = await createRefreshToken(user.id, user.role);
 
-    await redis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
+    await ioredis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
 
-    setCookie(c, "refresh_token", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-        path: "/api/v1/auth",
-        maxAge: 60 * 60 * 24 * 7,
-    });
+    setCookie(c, "refresh_token", refreshToken, getCookieOptions(7 * 24 * 60 * 60, "/api/v1/auth"));
 
     return c.json({ message: "User created", data: user, accessToken }, 201);
 });
@@ -148,15 +148,9 @@ auth.post("/login", zValidator("json", loginSchema), async (c) => {
     const accessToken = await createAccessToken(user.id, user.role);
     const refreshToken = await createRefreshToken(user.id, user.role);
 
-    await redis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
+    await ioredis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
 
-    setCookie(c, "refresh_token", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-        path: "/api/v1/auth",
-        maxAge: 60 * 60 * 24 * 7,
-    });
+    setCookie(c, "refresh_token", refreshToken, getCookieOptions(7 * 24 * 60 * 60, "/api/v1/auth"));
 
     return c.json({ message: "Ok", accessToken }, 200);
 });
@@ -166,10 +160,10 @@ auth.post("/logout", async (c) => {
 
     if (refreshToken) {
         const { id } = await verify(refreshToken, getEnv("JWT_SECRET_KEY"));
-        await redis.del(`refresh:${id}`);
+        await ioredis.del(`refresh:${id}`);
     }
 
-    deleteCookie(c, "refresh_token", { path: "/api/v1/auth", httpOnly: true, secure: true, sameSite: "Strict" });
+    deleteCookie(c, "refresh_token", getCookieOptions(0, "/api/v1/auth"));
 
     return c.json({ message: "Ok" }, 200);
 });
@@ -183,7 +177,7 @@ auth.post("/refresh", async (c) => {
 
     const { id, role } = await verifyToken(refreshToken);
 
-    const storedToken = await redis.get(`refresh:${id}`);
+    const storedToken = await ioredis.get(`refresh:${id}`);
 
     if (!storedToken || storedToken !== refreshToken) {
         throw new HTTPException(401, { message: "Invalid refresh token" });
@@ -214,7 +208,7 @@ auth.post(
                 throw new HTTPException(500, { message: "Failed to send password reset link, Please try again" });
             }
 
-            await redis.set(`reset:token:${token}`, email, "EX", 900); // Valid for 15 mins
+            await ioredis.set(`reset:token:${token}`, email, "EX", 900); // Valid for 15 mins
             // console.log(resetLink);
         } else {
             console.error(`User doesn't exists. ${email}`);
@@ -232,7 +226,7 @@ auth.post(
 
         const tokenKey = `reset:token:${token}`;
 
-        const email = await redis.get(tokenKey);
+        const email = await ioredis.get(tokenKey);
         if (!email) {
             throw new HTTPException(400, { message: "Invalid token" });
         }
@@ -245,7 +239,7 @@ auth.post(
             throw new HTTPException(500, { message: "Failed to reset password" });
         }
 
-        await redis.del(tokenKey);
+        await ioredis.del(tokenKey);
 
         return c.json({ message: "Password reset successfully." }, 200);
     }

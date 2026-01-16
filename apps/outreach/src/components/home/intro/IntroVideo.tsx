@@ -22,7 +22,7 @@ const IntroVideo = ({ onComplete }: IntroVideoProps) => {
                 muted
                 playsInline
                 onEnded={handleEnded}
-                className="w-full h-full object-cover"
+                className="w-full h-auto"
             />
         </div>
     );

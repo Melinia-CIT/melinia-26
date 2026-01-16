@@ -5,7 +5,7 @@ import {
     getEventDetailsSchema,
     updateEventDetailsSchema,
     eventRegistrationSchema
-} from "@packages/shared/dist";
+} from "@packages/shared";
 import {
     createEvent, 
     getEvents, 
@@ -13,7 +13,7 @@ import {
     deleteEvent, 
     updateEvent, 
     registerForEvent, 
-    getUserEventRegistrations
+    getUserEventStatusbyEventId
 } from "../db/queries";
 import { sendError, sendSuccess } from "../utils/response";
 import { 
@@ -27,7 +27,7 @@ import { HTTPException } from "hono/http-exception";
 export const events = new Hono();
 
 // Create Event 
-events.post("/events", authMiddleware, adminOnlyMiddleware, zValidator("json", createEventSchema), async (c) => {
+events.post("", authMiddleware, adminOnlyMiddleware, zValidator("json", createEventSchema), async (c) => {
     try {
         const formData = await c.req.valid('json');
         const { statusCode, status, data, message } = await createEvent(formData);
@@ -39,7 +39,7 @@ events.post("/events", authMiddleware, adminOnlyMiddleware, zValidator("json", c
 });
 
 // Get All Events
-events.get("/events", async (c) => {
+events.get("", async (c) => {
     try {
         const { statusCode, status, data, message } = await getEvents();
         return sendSuccess(c, data, message, status, statusCode);
@@ -50,7 +50,7 @@ events.get("/events", async (c) => {
 });
 
 //To get the details of the specific event
-events.get("/events/:id", zValidator("param", getEventDetailsSchema), 
+events.get("/:id", zValidator("param", getEventDetailsSchema), 
   async (c) => {
     try {
       const { id } = c.req.valid('param'); 
@@ -70,7 +70,7 @@ events.get("/events/:id", zValidator("param", getEventDetailsSchema),
 );
 
 // Update Event 
-events.patch("/events/:id", authMiddleware, adminAndOrganizerMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", updateEventDetailsSchema), async (c) => {
+events.patch("/:id", authMiddleware, adminAndOrganizerMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", updateEventDetailsSchema), async (c) => {
     try {
         const { id } = c.req.valid('param');
         const updateData = await c.req.valid('json');
@@ -89,7 +89,7 @@ events.patch("/events/:id", authMiddleware, adminAndOrganizerMiddleware, zValida
 });
 
 // Delete Event
-events.delete("/events/:id", authMiddleware, adminOnlyMiddleware, zValidator("param", getEventDetailsSchema), async (c) => {
+events.delete("/:id", authMiddleware, adminOnlyMiddleware, zValidator("param", getEventDetailsSchema), async (c) => {
     try {
         const { id } = c.req.valid('param');
         const formData = { id };
@@ -107,11 +107,11 @@ events.delete("/events/:id", authMiddleware, adminOnlyMiddleware, zValidator("pa
 });
 
 // Register for Event
-events.post("/events/:id/register", authMiddleware, participantOnlyMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", eventRegistrationSchema), async (c) => {
+events.post("/:id/register", authMiddleware, participantOnlyMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", eventRegistrationSchema), async (c) => {
     try {
         const userId = c.get('user_id');
         const { id } = c.req.valid('param');
-        const formData = await c.req.valid('json');  // { teamId? }
+        const formData = await c.req.valid('json');  
         
         const { statusCode, status, data, message } = await registerForEvent({ 
             ...formData, 
@@ -121,6 +121,28 @@ events.post("/events/:id/register", authMiddleware, participantOnlyMiddleware, z
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error("Registration error:", error);
+        return sendError(c);
+    }
+});
+
+// Check Registration Status for a specific event
+events.get("/:id/status", authMiddleware, zValidator("param", getEventDetailsSchema), async (c) => {
+    try {
+        const userId = c.get('user_id'); 
+        const { id: eventId } = c.req.valid('param');
+        const teamId = c.req.query('teamId');
+
+        const result = await getUserEventStatusbyEventId(userId, eventId, teamId);
+        
+        return sendSuccess(
+            c, 
+            result.data, 
+            result.message, 
+            result.status, 
+            result.statusCode
+        );
+    } catch (error: unknown) {
+        console.error("Error fetching registration status:", error);
         return sendError(c);
     }
 });
