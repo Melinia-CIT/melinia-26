@@ -42,15 +42,18 @@ const RegisteredEvents = () => {
                     <Star className="w-5 h-5 text-zinc-600" />
                 </div>
                 <p className="text-zinc-400 font-medium">No event registrations yet.</p>
-                <button
+                <div
                     onClick={() => navigate("/app/events")}
-                    className="mt-4 text-xs font-bold hover:cursor-pointer transition-colors uppercase tracking-widest"
+                    className="mt-4 text-xs hover:cursor-pointer transition-colors uppercase tracking-widest flex gap-2 items-center text-zinc-400 hover:text-white"
                 >
-                    <div className="flex">
-                        Explore Events
+                    <span className="font-semibold">Explore Events</span>
+                    <motion.div
+                        whileHover={{ x: 4 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
                         <ArrowRight />
-                    </div>
-                </button>
+                    </motion.div>
+                </div>
             </div>
         )
     }
