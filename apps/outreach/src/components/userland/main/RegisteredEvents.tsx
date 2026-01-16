@@ -44,15 +44,14 @@ const RegisteredEvents = () => {
                 <p className="text-zinc-400 font-medium">No event registrations yet.</p>
                 <div
                     onClick={() => navigate("/app/events")}
-                    className="mt-4 text-xs hover:cursor-pointer transition-colors uppercase tracking-widest flex gap-2 items-center text-zinc-400 hover:text-white"
+                    className="mt-4 text-xs hover:cursor-pointer transition-colors uppercase tracking-widest flex gap-2 items-center text-zinc-400 hover:text-white group"
                 >
                     <span className="font-semibold">Explore Events</span>
-                    <motion.span
-                        whileHover={{ x: 3 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    >
-                        <ArrowRight />
-                    </motion.span>
+                    <ArrowRight
+                        width="12"
+                        height="12"
+                        className="group-hover:translate-x-1 transition-transform"
+                    />
                 </div>
             </div>
         )
