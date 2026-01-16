@@ -171,7 +171,7 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                         damping: 25,
                         mass: 0.5,
                     }}
-                    className="absolute top-12 right-0 w-80 max-h-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-50"
+                    className="fixed top-16 right-4 w-80 max-h-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-50"
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-900/50">

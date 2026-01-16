@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import QRCode from "./QRCode";
+import { useState, useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
+import QRCode from "./QRCode"
 import {
     User,
     Mail,
@@ -14,32 +14,35 @@ import {
     Refresh,
 } from "iconoir-react"
 import { paymentService } from "../../../services/payment"
-import { ChevronDown } from "lucide-react";
-import { fetchUser } from "../../../services/users";
+import { ChevronDown } from "lucide-react"
+import { fetchUser } from "../../../services/users"
 
 const PreloaderCard = () => {
     return (
-        <div className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 relative overflow-hidden p-6 sm:p-10">
+        <div className="w-full max-w-md mx-auto bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 relative overflow-hidden p-6 sm:p-10">
             {/* Ambient background glow */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-800/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-            <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
-                <div className="flex flex-col items-center shrink-0 w-full md:w-auto md:pr-8 gap-6">
+            <div className="flex flex-col gap-8 items-start relative z-10">
+                <div className="flex flex-col items-center shrink-0 w-full md:w-auto gap-6">
                     {/* Shining Image Placeholder */}
                     <div className="relative w-[60vw] h-[60vw] max-w-[256px] max-h-[256px] bg-zinc-800/50 rounded-lg overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
 
                     <div className="relative w-3/4 h-6 bg-zinc-800/50 rounded md:hidden overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
                 </div>
 
-                <div className="hidden md:flex flex-1 flex-col space-y-8 border-l border-zinc-800/50 pl-8 w-full">
-                    <div className="border-b border-zinc-800 pb-6 space-y-4">
+                <div className="hidden md:flex flex-1 flex-col space-y-8 w-full">
+                    <div className="space-y-4">
                         <div className="relative w-1/2 h-8 bg-zinc-800/50 rounded overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
                         <div className="relative w-1/3 h-4 bg-zinc-800/30 rounded overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6">
                         {[...Array(5)].map((_, i) => (
-                            <div key={i} className={`flex flex-col gap-2 ${i === 4 ? 'sm:col-span-2' : ''}`}>
+                            <div
+                                key={i}
+                                className={`flex flex-col gap-2 ${i === 4 ? "sm:col-span-2" : ""}`}
+                            >
                                 <div className="relative w-12 h-3 bg-zinc-800/30 rounded overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
                                 <div className="relative w-full h-5 bg-zinc-800/50 rounded overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
                             </div>
@@ -48,9 +51,8 @@ const PreloaderCard = () => {
                 </div>
             </div>
         </div>
-    );
-};
-
+    )
+}
 
 const UserCard = () => {
     const {
@@ -61,11 +63,11 @@ const UserCard = () => {
     } = useQuery({
         queryKey: ["userMe"],
         queryFn: fetchUser,
-        staleTime: 5 * 60 * 1000
-    });
+        staleTime: 5 * 60 * 1000,
+    })
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
     const { data: paymentStatus } = useQuery({
         queryKey: ["paymentStatus"],
@@ -81,7 +83,7 @@ const UserCard = () => {
         return () => window.removeEventListener("keydown", handleEscape)
     }, [])
 
-    if (isLoading) return <PreloaderCard />;
+    if (isLoading) return <PreloaderCard />
 
     if (isError) {
         return (
@@ -98,11 +100,11 @@ const UserCard = () => {
         <>
             {isModalOpen && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-6 animate-in fade-in duration-200"
                     onClick={() => setIsModalOpen(false)}
                 >
                     <div
-                        className="bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl p-16 max-w-[400px] w-full flex flex-col items-center relative animate-in zoom-in-95 duration-200"
+                        className="bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl p-8 sm:p-12 md:p-16 max-w-[90vw] sm:max-w-[400px] md:max-w-[450px] w-full flex flex-col items-center relative animate-in zoom-in-95 duration-200"
                         onClick={e => e.stopPropagation()}
                     >
                         <button
@@ -131,13 +133,14 @@ const UserCard = () => {
             )}
 
             {/* Main Card */}
-            <div className={`text-zinc-100 w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 relative overflow-hidden transition-all duration-300 ${isModalOpen ? 'blur-[2px] pointer-events-none' : ''}`}>
+            <div
+                className={`text-zinc-100 w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl shadow-zinc-900/50 relative overflow-hidden transition-all duration-300 ${isModalOpen ? "blur-[2px] pointer-events-none" : ""}`}
+            >
                 <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-800/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-                <div className="flex flex-col md:flex-row p-6 sm:p-10 relative z-10">
-
+                <div className="flex flex-col p-6 sm:p-10 relative z-10">
                     {/* Left Column: QR Code & Mobile Name */}
-                    <div className="flex flex-col items-center justify-center shrink-0 w-full md:w-auto md:pr-8">
+                    <div className="flex flex-col items-center justify-center shrink-0 w-full md:w-auto">
                         <div
                             onClick={() => setIsModalOpen(true)}
                             className="group p-1 bg-zinc-800/50 rounded-xl border border-zinc-700 shadow-inner cursor-pointer hover:border-zinc-500 hover:bg-zinc-800 transition-all duration-300"
@@ -158,61 +161,86 @@ const UserCard = () => {
                             </div>
                         </div>
 
-                        {/* Mobile Name Section (Always Visible) */}
-                        <div className="w-full text-center mt-6 md:hidden">
+                        {/* Name Section (Always Visible on All Screens) */}
+                        <div className="w-full text-center mt-6">
                             <h1 className="text-3xl font-bold text-white tracking-tight font-inst leading-tight">
                                 {user.profile?.first_name} {user.profile?.last_name}
                             </h1>
                             <p className="text-zinc-500 text-xs flex items-center justify-center gap-1 mt-1">
                                 <User width={12} height={12} /> {user.role}
-                        				{paymentStatus && (
-				                            <PaymentStatusBadge status={paymentStatus.status} />
-				                        )}
+                                {paymentStatus && (
+                                    <PaymentStatusBadge status={paymentStatus.status} />
+                                )}
                             </p>
                         </div>
                     </div>
 
-                    {/* Right Column: Desktop Details */}
-                    <div className="hidden md:flex flex-1 flex-col space-y-8 border-l border-zinc-800/50 pl-8 w-full">
-                        <div className="border-b border-zinc-800 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                            <div>
-                                <h1 className="text-3xl font-bold text-white tracking-tight font-inst">
-                                    {user.profile?.first_name} {user.profile?.last_name}
-                                </h1>
-                                <p className="text-zinc-400 mt-1 text-sm flex items-center gap-1">
-                                    <User width={14} height={14} /> {user.role}
-				                            {paymentStatus && (
-					                              <PaymentStatusBadge status={paymentStatus.status} />
-				                            )}
-                                </p>
-			                      </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6">
-                            <DetailRow icon={<Building strokeWidth={2} />} label="College" value={user.profile?.college || "N/A"} />
-                            <DetailRow icon={<OpenBook strokeWidth={2} />} label="Degree" value={user.profile?.degree || "N/A"} />
-                            <DetailRow icon={<GraduationCap strokeWidth={2} />} label="Year" value={user.profile?.year?.toString() || "N/A"} />
-                            <DetailRow icon={<Phone strokeWidth={2} />} label="Phone Number" value={user.ph_no || "N/A"} />
-                            <div className="sm:col-span-2">
-                                <DetailRow icon={<Mail strokeWidth={2} />} label="Email" value={user.email} />
-                            </div>
+                    {/* Details Section (Always Visible on Desktop, Hidden on Mobile) */}
+                    <div className="hidden md:block border-t border-zinc-800/50 pt-8 mt-8">
+                        <div className="grid grid-cols-1 gap-y-6">
+                            <DetailRow
+                                icon={<Building strokeWidth={2} />}
+                                label="College"
+                                value={user.profile?.college || "N/A"}
+                            />
+                            <DetailRow
+                                icon={<OpenBook strokeWidth={2} />}
+                                label="Degree"
+                                value={user.profile?.degree || "N/A"}
+                            />
+                            <DetailRow
+                                icon={<GraduationCap strokeWidth={2} />}
+                                label="Year"
+                                value={user.profile?.year?.toString() || "N/A"}
+                            />
+                            <DetailRow
+                                icon={<Phone strokeWidth={2} />}
+                                label="Phone Number"
+                                value={user.ph_no || "N/A"}
+                            />
+                            <DetailRow
+                                icon={<Mail strokeWidth={2} />}
+                                label="Email"
+                                value={user.email}
+                            />
                         </div>
                     </div>
                 </div>
 
-                {/* Mobile Toggle Section */}
+                {/* Mobile Toggle Section (Hidden on Desktop) */}
                 <div className="md:hidden w-full border-t border-zinc-800/50 bg-zinc-900/50 relative">
                     {/* Expandable Content Wrapper */}
                     <div
-                        className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${isDetailsOpen ? 'max-h-[500px]' : 'max-h-0'
-                            }`}
+                        className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${
+                            isDetailsOpen ? "max-h-[500px]" : "max-h-0"
+                        }`}
                     >
                         <div className="px-6 pb-6 pt-4 grid grid-cols-1 gap-y-6 gap-x-6">
-                            <DetailRow icon={<Building strokeWidth={2} />} label="College" value={user.profile?.college || "N/A"} />
-                            <DetailRow icon={<OpenBook strokeWidth={2} />} label="Degree" value={user.profile?.degree || "N/A"} />
-                            <DetailRow icon={<GraduationCap strokeWidth={2} />} label="Year" value={user.profile?.year?.toString() || "N/A"} />
-                            <DetailRow icon={<Phone strokeWidth={2} />} label="Phone Number" value={user.ph_no || "N/A"} />
-                            <DetailRow icon={<Mail strokeWidth={2} />} label="Email" value={user.email} />
+                            <DetailRow
+                                icon={<Building strokeWidth={2} />}
+                                label="College"
+                                value={user.profile?.college || "N/A"}
+                            />
+                            <DetailRow
+                                icon={<OpenBook strokeWidth={2} />}
+                                label="Degree"
+                                value={user.profile?.degree || "N/A"}
+                            />
+                            <DetailRow
+                                icon={<GraduationCap strokeWidth={2} />}
+                                label="Year"
+                                value={user.profile?.year?.toString() || "N/A"}
+                            />
+                            <DetailRow
+                                icon={<Phone strokeWidth={2} />}
+                                label="Phone Number"
+                                value={user.ph_no || "N/A"}
+                            />
+                            <DetailRow
+                                icon={<Mail strokeWidth={2} />}
+                                label="Email"
+                                value={user.email}
+                            />
                         </div>
                     </div>
 
@@ -224,7 +252,7 @@ const UserCard = () => {
                         >
                             <span>{isDetailsOpen ? "Hide Details" : "View Details"}</span>
                             <ChevronDown
-                                className={`transition-transform duration-300 ${isDetailsOpen ? 'rotate-180' : ''}`}
+                                className={`transition-transform duration-300 ${isDetailsOpen ? "rotate-180" : ""}`}
                                 width={18}
                                 height={18}
                             />

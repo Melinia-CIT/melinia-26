@@ -11,22 +11,23 @@ const Main = () => {
     const desktopNotificationsRef = useRef<HTMLDivElement>(null)
 
     return (
-        <main className="w-full bg-zinc-950 flex flex-col items-center p-4 font-geist selection:bg-indigo-500/30 relative min-h-screen">
-            {/* Notification Icon - Desktop */}
-            <div className="hidden lg:block absolute top-4 right-4 z-50 cursor-pointer">
-                <NotificationIcon
-                    onClick={() => setShowDesktopNotifications(!showDesktopNotifications)}
-                    isOpen={showDesktopNotifications}
-                />
-            </div>
-
+        <div className="w-full bg-zinc-950 flex flex-col items-center p-4 font-geist selection:bg-indigo-500/30 relative min-h-screen">
             {/* Desktop Layout */}
-            <div className="hidden lg:flex w-full flex-col items-center relative gap-8 max-w-7xl">
-                {/* Vertical Stack: UserCard then RegisteredEvents */}
-                <UserCard />
-                
-                <div className="w-full">
+            <div className="hidden lg:flex w-full flex-row items-start gap-8 relative h-screen">
+                {/* Notification Icon - Desktop */}
+                <div className="absolute top-0 right-0 z-50 cursor-pointer">
+                    <NotificationIcon
+                        onClick={() => setShowDesktopNotifications(!showDesktopNotifications)}
+                        isOpen={showDesktopNotifications}
+                    />
+                </div>
+
+                <div className="flex-1 w-full">
                     <RegisteredEvents />
+                </div>
+
+                <div className="my-auto w-md">
+                    <UserCard />
                 </div>
 
                 {/* Notification Backdrop */}
@@ -51,7 +52,7 @@ const Main = () => {
                         damping: 30,
                         mass: 0.8,
                     }}
-                    className="absolute top-0 right-0 w-[418px] z-50"
+                    className="fixed top-22 right-14 w-[418px] z-50"
                     style={{ pointerEvents: showDesktopNotifications ? "auto" : "none" }}
                 >
                     <Notifications
@@ -63,7 +64,7 @@ const Main = () => {
             </div>
 
             {/* Mobile Layout */}
-            <div className="lg:hidden w-full relative flex flex-col gap-6">
+            <div className="lg:hidden w-full relative flex flex-col items-center gap-6 pt-12">
                 {/* Mobile Notification Backdrop */}
                 {showNotifications && (
                     <div
@@ -72,23 +73,25 @@ const Main = () => {
                     />
                 )}
 
-                <div className="flex justify-end relative z-50">
-                    <NotificationIcon
-                        onClick={() => setShowNotifications(!showNotifications)}
-                        isOpen={showNotifications}
-                    />
-                    <Notifications
-                        isOpen={showNotifications}
-                        onClose={() => setShowNotifications(false)}
-                        isDesktop={false}
-                    />
+                <div className="flex justify-end fixed top-0 right-0 z-50">
+                    <div className="p-4">
+                        <NotificationIcon
+                            onClick={() => setShowNotifications(!showNotifications)}
+                            isOpen={showNotifications}
+                        />
+                    </div>
                 </div>
+                <Notifications
+                    isOpen={showNotifications}
+                    onClose={() => setShowNotifications(false)}
+                    isDesktop={false}
+                />
 
                 {/* Vertical Stack: UserCard then RegisteredEvents */}
                 <UserCard />
                 <RegisteredEvents />
             </div>
-        </main>
+        </div>
     )
 }
 

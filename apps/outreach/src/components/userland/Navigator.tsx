@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, Group, Trophy, Medal1st, LogOut, Xmark, CreditCard } from "iconoir-react"
+import { Home, Group, Trophy, LogOut, Xmark, CreditCard, LeaderboardStar } from "iconoir-react"
 import { logout } from "../../services/auth"
 import { ChevronRight, ChevronUp } from "lucide-react"
 import PaymentModal from "../payment/PaymentModal"
@@ -26,7 +26,7 @@ export default function Navigator() {
         { to: "/app", Icon: Home, label: "Home", end: true },
         { to: "/app/events", Icon: Trophy, label: "Events" },
         { to: "/app/teams", Icon: Group, label: "Teams" },
-        { to: "/app/leaderboard", Icon: Medal1st, label: "Leaderboard" },
+        { to: "/app/leaderboard", Icon: LeaderboardStar, label: "Leaderboard" },
     ]
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
@@ -155,7 +155,7 @@ export default function Navigator() {
             </div>
 
             {/* Mobile Navigation (Bottom Dock) */}
-            <div className="md:hidden fixed bottom-6 left-4 right-4 z-50">
+            <div className="md:hidden fixed bottom-4 right-1/2 translate-x-1/2 z-50">
                 <div className="flex items-center justify-between p-1.5 rounded-2xl bg-zinc-900/60 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 relative">
                     {navItems.map(({ to, Icon, end }) => (
                         <NavLink
