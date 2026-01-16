@@ -1,5 +1,3 @@
-"use strict"
-
 import { useState, useCallback, useMemo } from "react"
 import { ChevronRight, Users, Plus } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
@@ -10,8 +8,6 @@ import { Spinner } from "../../components/ui/spinner"
 import { CreateTeamForm } from "../../components/userland/teams/TeamForm"
 import type { Team } from "@melinia/shared"
 import { team_management } from "../../services/teams"
-
-// Main Teams Page
 
 const TeamsPage: React.FC = () => {
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
@@ -45,9 +41,9 @@ const TeamsPage: React.FC = () => {
     }, [])
 
     return (
-        <div className="h-full bg-zinc-950 text-white">
+        <div className="flex flex-col justify-center h-screen bg-zinc-950 text-white">
             {/* Desktop & Tablet Layout */}
-            <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 h-[calc(100vh-120px)] p-6">
+            <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 h-[calc(100vh-120px)]">
                 {/* Left Side - Teams List */}
                 <div className="md:col-span-1 flex flex-col border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50">
                     <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
@@ -95,7 +91,10 @@ const TeamsPage: React.FC = () => {
                 {/* Right Side - Team Details */}
                 <div className="md:col-span-2 lg:col-span-3 border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50">
                     {selectedTeamId ? (
-                        <TeamDetailsPanel teamId={selectedTeamId} />
+                        <TeamDetailsPanel
+                            teamId={selectedTeamId}
+                            onDelete={() => setSelectedTeamId(null)}
+                        />
                     ) : (
                         <div className="h-full flex items-center justify-center">
                             <div className="text-center">
@@ -108,8 +107,8 @@ const TeamsPage: React.FC = () => {
             </div>
 
             {/* Mobile Layout */}
-            <div className="md:hidden p-4 space-y-4">
-                <div className="flex justify-between items-center mb-2">
+            <div className="md:hidden h-full flex flex-col gap-6 px-2">
+                <div className="flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold font-inst text-white">Teams</h2>
                         <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
@@ -125,20 +124,36 @@ const TeamsPage: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="flex-1 flex flex-col space-y-3">
                     {isLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                            <Spinner w={20} h={20} />
-                        </div>
+                        <>
+                            {[1, 2, 3].map(i => (
+                                <div
+                                    key={i}
+                                    className="w-full px-4 py-4 bg-zinc-900/50 border border-zinc-800 rounded-xl animate-pulse"
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex flex-col w-full">
+                                            <div className="h-5 w-3/4 bg-zinc-800 rounded mb-2" />
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-3 w-20 bg-zinc-800 rounded" />
+                                                <div className="h-3 w-24 bg-zinc-800 rounded" />
+                                            </div>
+                                        </div>
+                                        <div className="h-5 w-5 bg-zinc-800 rounded shrink-0" />
+                                    </div>
+                                </div>
+                            ))}
+                        </>
                     ) : teams.length > 0 ? (
                         teams.map(team => (
-                            <button
+                            <div
                                 key={team.id}
                                 onClick={() => handleMobileTeamSelect(team.id)}
-                                className="w-full text-left px-4 py-4 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-zinc-700 transition-colors"
+                                className="w-full text-left px-4 py-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors"
                             >
                                 <div className="flex items-start justify-between gap-3">
-                                    <div className="flex-1">
+                                    <div className="flex flex-col">
                                         <h3 className="font-semibold text-white mb-2">
                                             {team.team_name}
                                         </h3>
@@ -150,14 +165,16 @@ const TeamsPage: React.FC = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <ChevronRight className="h-5 w-5 text-zinc-500 shrink-0" />
+                                    <ChevronRight className="h-5 w-5 text-zinc-500 shrink-0 self-center" />
                                 </div>
-                            </button>
+                            </div>
                         ))
                     ) : (
-                        <div className="text-center py-8">
-                            <Users className="h-10 w-10 text-zinc-600 mx-auto mb-2" />
-                            <p className="text-sm text-zinc-500">No teams yet</p>
+                        <div className="flex items-center justify-center flex-1 text-center">
+                            <div>
+                                <Users className="h-10 w-10 text-zinc-600 mx-auto mb-2" />
+                                <p className="text-sm text-zinc-500">No teams yet</p>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -165,7 +182,11 @@ const TeamsPage: React.FC = () => {
 
             {/* Mobile Modal */}
             {mobileModalOpen && mobileSelectedId && (
-                <TeamModal teamId={mobileSelectedId} onClose={handleMobileModalClose} />
+                <TeamModal
+                    teamId={mobileSelectedId}
+                    onClose={handleMobileModalClose}
+                    onDelete={handleMobileModalClose}
+                />
             )}
 
             {/* Create Team Modal - Updated here */}
