@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Trash, MessageAlert, Community, Calendar, User, UserPlus, Xmark } from "iconoir-react"
 import toast from "react-hot-toast"
+import { useNavigate } from "react-router"
 import { type TeamDetails, type AddNewMemberRequest, addNewMemberSchema } from "@melinia/shared"
 import { Spinner } from "../../ui/spinner"
 import { team_management } from "../../../services/teams"
@@ -26,7 +27,8 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
     onDelete,
     onClose,
 }) => {
-    const queryClient = useQueryClient()
+    const queryClient = useQueryClient();
+    const navigate = useNavigate();
 
     const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null)
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
@@ -287,14 +289,15 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                 {/* Events Registered */}
                 <section>
                     <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wide mb-3 flex items-center gap-2">
-                        <Calendar className="h-4 w-4" strokeWidth={2} /> Registered Event
+                        <Calendar className="h-4 w-4" strokeWidth={2} /> Registered Events
                     </h3>
                     <div className="space-y-2">
                         {teamData.events_registered && teamData.events_registered.length > 0 ? (
                             teamData.events_registered.map(event => (
                                 <div
                                     key={event.event_id}
-                                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3"
+                                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 hover:cursor-pointer"
+                                    onClick={()=>{navigate(`/app/events/${event.event_id}`)}}
                                 >
                                     <p className="text-base font-medium text-white">
                                         {event.event_name}
