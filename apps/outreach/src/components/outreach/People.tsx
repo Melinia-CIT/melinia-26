@@ -126,43 +126,7 @@ const peopleData: SectionData[] = [
             },
         ],
     },
-    {
-        title: "Faculty Coordinators",
-        people: [
-            {
-                name: "Dr. Emily Stone",
-                role: "Faculty Advisor",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#00E0FF",
-            },
-            {
-                name: "Prof. Alan Grant",
-                role: "Faculty Advisor",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#00E0FF",
-            },
-            {
-                name: "Dr. Ellie Sattler",
-                role: "Faculty Advisor",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#00E0FF",
-            },
-            {
-                name: "Ian Malcolm",
-                role: "Faculty Advisor",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#00E0FF",
-            },
-        ],
-    },
+ 
     {
         title: "Dev Team",
         people: [
