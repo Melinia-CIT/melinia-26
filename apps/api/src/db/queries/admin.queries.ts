@@ -1,5 +1,5 @@
 import { getUserByMail } from "./";
-import { redis } from "../../utils/redis";
+import { ioredis } from "../../utils/redis";
 import { createAccessToken, createRefreshToken, verifyToken } from "../../utils/jwt";
 import { adminLoginSchema, type AdminLoginInput } from "@packages/shared/dist/types/admin";
 import { adminOrganizerAndVolunteerMiddleware } from "../../middleware/auth.middleware";
@@ -32,7 +32,7 @@ export async function adminLogin(input: AdminLoginInput, c: any) {
         const accessToken = await createAccessToken(user.id, user.role);
         const refreshToken = await createRefreshToken(user.id, user.role);
 
-        await redis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
+        await ioredis.set(`refresh:${user.id}`, refreshToken, "EX", 7 * 24 * 60 * 60);
 
         return {
             status: true,
