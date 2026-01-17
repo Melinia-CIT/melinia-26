@@ -12,7 +12,7 @@ interface ApiResponse<T> {
     data: T;
 }
 
-const BASE_PATH = "/events/events";
+const BASE_PATH = "/events";
 
 export const fetchEvents = async (): Promise<Event[]> => {
     const response: AxiosResponse<ApiResponse<Event[]>> = await api.get<ApiResponse<Event[]>>(BASE_PATH);
