@@ -99,14 +99,7 @@ export default function SearchableSelect<T>({
                 behavior: "smooth",
             })
         }
-        if (highlightedIndex === filteredResults.length && query.trim() && query.length >= 2) {
-            const addOption = document.querySelector(".cursor-pointer.border-t")
-            addOption?.scrollIntoView({
-                block: "nearest",
-                behavior: "smooth",
-            })
-        }
-    }, [highlightedIndex, filteredResults.length, query])
+    }, [highlightedIndex])
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && query.trim()) {
@@ -125,26 +118,25 @@ export default function SearchableSelect<T>({
         }
 
         const maxIndex =
-            filteredResults.length > 0 && query.trim() && query.length >= 2
-                ? filteredResults.length
-                : filteredResults.length - 1
+            filteredResults.length > 0 ? filteredResults.length - 1 : query.length >= 2 ? 0 : -1
 
         switch (e.key) {
             case "ArrowDown":
                 e.preventDefault()
-                if (filteredResults.length > 0 || (query.trim() && query.length >= 2)) {
+                if (maxIndex >= 0) {
                     setHighlightedIndex(prev => (prev < maxIndex ? prev + 1 : 0))
                 }
                 break
             case "ArrowUp":
                 e.preventDefault()
-                if (filteredResults.length > 0 || (query.trim() && query.length >= 2)) {
+                if (maxIndex >= 0) {
                     setHighlightedIndex(prev => (prev > 0 ? prev - 1 : maxIndex))
                 }
                 break
             case "Enter":
                 e.preventDefault()
                 if (
+                    filteredResults.length > 0 &&
                     highlightedIndex >= 0 &&
                     highlightedIndex < filteredResults.length &&
                     filteredResults[highlightedIndex]
@@ -154,7 +146,7 @@ export default function SearchableSelect<T>({
                     setQuery(selectedValue)
                     setIsOpen(false)
                     inputRef.current?.blur()
-                } else if (highlightedIndex === filteredResults.length && query.trim()) {
+                } else if (filteredResults.length === 0 && query.trim() && query.length >= 2) {
                     onChange(query)
                     setQuery(query)
                     setIsOpen(false)
@@ -225,46 +217,21 @@ export default function SearchableSelect<T>({
                     className={`${dropdownClassName} absolute z-50 w-full mt-1 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl max-h-60 overflow-y-auto`}
                 >
                     {filteredResults.length > 0 ? (
-                        <>
-                            {filteredResults.map((result, index) => (
-                                <div
-                                    key={index}
-                                    ref={el => {
-                                        resultRefs.current[index] = el
-                                    }}
-                                    onClick={() => handleResultClick(result.item)}
-                                    className={`px-4 py-2 text-sm text-zinc-300 cursor-pointer transition-colors ${
-                                        index === highlightedIndex
-                                            ? "bg-zinc-700"
-                                            : "hover:bg-zinc-800"
-                                    }`}
-                                    dangerouslySetInnerHTML={{
-                                        __html: highlightMatch(
-                                            String(result.item[displayKey]),
-                                            query
-                                        ),
-                                    }}
-                                />
-                            ))}
-                            {query.trim() && query.length >= 2 && (
-                                <div
-                                    className={`px-4 py-2 text-xs text-zinc-400 cursor-pointer border-t border-zinc-800 hover:bg-zinc-800 transition-colors flex items-center gap-2 ${
-                                        highlightedIndex === filteredResults.length
-                                            ? "bg-zinc-700"
-                                            : ""
-                                    }`}
-                                    onClick={() => {
-                                        onChange(query)
-                                        setQuery(query)
-                                        setIsOpen(false)
-                                        inputRef.current?.blur()
-                                    }}
-                                >
-                                    <span>Add</span>
-                                    <span className="text-zinc-300 font-medium">"{query}"</span>
-                                </div>
-                            )}
-                        </>
+                        filteredResults.map((result, index) => (
+                            <div
+                                key={index}
+                                ref={el => {
+                                    resultRefs.current[index] = el
+                                }}
+                                onClick={() => handleResultClick(result.item)}
+                                className={`px-4 py-2 text-sm text-zinc-300 cursor-pointer transition-colors ${
+                                    index === highlightedIndex ? "bg-zinc-700" : "hover:bg-zinc-800"
+                                }`}
+                                dangerouslySetInnerHTML={{
+                                    __html: highlightMatch(String(result.item[displayKey]), query),
+                                }}
+                            />
+                        ))
                     ) : query.length >= 2 ? (
                         <div
                             className="px-4 py-2 text-sm text-zinc-300 cursor-pointer hover:bg-zinc-800 transition-colors flex items-center gap-2"
