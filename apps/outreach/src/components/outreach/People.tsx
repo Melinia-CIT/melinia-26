@@ -1,5 +1,7 @@
-import { motion, useReducedMotion, useAnimation, Variants } from "framer-motion"
-import { useEffect, useState } from "react"
+'use strict'
+
+import { motion, useReducedMotion, Variants } from "framer-motion"
+import { useEffect, useState, useRef } from "react"
 import UserCard from "../ui/user-card"
 import { HudSectionHeader } from "../ui/hud-section-header"
 
@@ -124,43 +126,7 @@ const peopleData: SectionData[] = [
             },
         ],
     },
-    {
-        title: "Faculty Coordinators",
-        people: [
-            {
-                name: "Dr. Emily Stone",
-                role: "Faculty Advisor",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#00E0FF",
-            },
-            {
-                name: "Prof. Alan Grant",
-                role: "Faculty Advisor",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#00E0FF",
-            },
-            {
-                name: "Dr. Ellie Sattler",
-                role: "Faculty Advisor",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#00E0FF",
-            },
-            {
-                name: "Ian Malcolm",
-                role: "Faculty Advisor",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#00E0FF",
-            },
-        ],
-    },
+ 
     {
         title: "Dev Team",
         people: [
@@ -220,18 +186,15 @@ interface InfiniteScrollRowProps {
     people: SectionData["people"]
 }
 
-function InfiniteScrollRow({ people }: InfiniteScrollRowProps) {
+function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactElement {
     const shouldReduceMotion = useReducedMotion()
-    const controls = useAnimation()
-    const [cardWidth, setCardWidth] = useState(192)
-    const [gap, setGap] = useState(24)
-    const [isDragging, setIsDragging] = useState(false)
-    const [dragStartX, setDragStartX] = useState(0)
-    const [isMobile, setIsMobile] = useState(false)
+    const [cardWidth, setCardWidth] = useState<number>(192)
+    const [gap, setGap] = useState<number>(24)
+    const [isMobile, setIsMobile] = useState<boolean>(false)
+    const containerRef = useRef<HTMLDivElement>(null)
 
-    // Detect window size to adjust scroll distance for responsive layouts
     useEffect(() => {
-        const handleResize = () => {
+        const handleResize = (): void => {
             const mobile = window.innerWidth < 768
             setIsMobile(mobile)
             if (mobile) {
@@ -250,85 +213,62 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps) {
 
     const duplicatedPeople = [...people, ...people, ...people]
     const scrollDistance = people.length * (cardWidth + gap)
+    const duration = people.length * 3
 
-    useEffect(() => {
-        if (!shouldReduceMotion && !isDragging) {
-            controls.start({
-                x: -scrollDistance,
-                transition: {
-                    repeat: Infinity,
-                    repeatType: "loop",
-                    duration: people.length * 3,
-                    ease: "linear",
-                },
-            })
-        } else {
-            controls.stop()
-        }
-    }, [controls, shouldReduceMotion, people.length, scrollDistance, isDragging])
-
-    const getVariant = (index: number) => {
+    const getVariant = (index: number): Variants => {
         const position = index % 3
         if (position === 0) return leftImageVariants
         if (position === 1) return middleImageVariants
         return rightImageVariants
     }
 
-    const handleTouchStart = (e: React.TouchEvent) => {
-        setIsDragging(true)
-        setDragStartX(e.touches[0].clientX)
-        controls.stop()
-    }
-
-    const handleTouchMove = (e: React.TouchEvent) => {
-        if (!isDragging) return
-        const deltaX = e.touches[0].clientX - dragStartX
-        controls.set({ x: deltaX })
-    }
-
-    const handleTouchEnd = () => {
-        setIsDragging(false)
-        if (!shouldReduceMotion) {
-            controls.start({
-                x: -scrollDistance,
-                transition: {
-                    repeat: Infinity,
-                    repeatType: "loop",
-                    duration: people.length * 3,
-                    ease: "linear",
-                },
-            })
-        }
-    }
+    const animationStyle = shouldReduceMotion
+        ? {}
+        : {
+              animation: `scroll-carousel ${duration}s linear infinite`,
+          }
 
     return (
-        <div className="relative w-full overflow-hidden py-12">
-            <motion.div
-                className="flex gap-6 md:gap-28"
-                animate={controls}
-                onHoverStart={() => controls.stop()}
-                onHoverEnd={() => {
-                    if (!shouldReduceMotion && !isDragging) {
-                        controls.start({
-                            x: -scrollDistance,
-                            transition: {
-                                repeat: Infinity,
-                                repeatType: "loop",
-                                duration: people.length * 3,
-                                ease: "linear",
-                            },
-                        })
+        <div
+            ref={containerRef}
+            className="relative w-full overflow-hidden py-12 group"
+            style={
+                {
+                    "--scroll-distance": `-${scrollDistance}px`,
+                    "--duration": `${duration}s`,
+                } as React.CSSProperties
+            }
+        >
+            <style>{`
+                @keyframes scroll-carousel {
+                    0% {
+                        transform: translateX(0);
                     }
-                }}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                style={{ touchAction: "pan-y" }}
-            >
+                    100% {
+                        transform: translateX(var(--scroll-distance));
+                    }
+                }
+
+                .carousel-container {
+                    animation: scroll-carousel var(--duration) linear infinite;
+                }
+
+                .carousel-container:hover {
+                    animation-play-state: paused;
+                }
+
+                @media (prefers-reduced-motion: reduce) {
+                    .carousel-container {
+                        animation: none;
+                    }
+                }
+            `}</style>
+
+            <div className="carousel-container flex gap-6 md:gap-28">
                 {duplicatedPeople.map((person, index) => (
                     <motion.div
                         key={index}
-                        className="flex-shrink-0"
+                        className="shrink-0"
                         style={{ width: `${cardWidth}px` }}
                         variants={!shouldReduceMotion ? getVariant(index) : undefined}
                         initial={!shouldReduceMotion ? "initial" : undefined}
@@ -338,13 +278,17 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps) {
                         <UserCard {...person} alwaysShowText={isMobile} />
                     </motion.div>
                 ))}
-            </motion.div>
+            </div>
         </div>
     )
 }
 
-export default function People() {
-    const colorMap: Record<string, string> = {
+interface ColorMapType {
+    [key: string]: string
+}
+
+export default function People(): React.ReactElement {
+    const colorMap: ColorMapType = {
         "Event Coordinators": "#FF0055",
         "Faculty Coordinators": "#00E0FF",
         "Dev Team": "#9D00FF",
@@ -385,15 +329,7 @@ export default function People() {
                                     className="mb-8"
                                 />
 
-                                {/* Desktop View: Infinite Carousel */}
-                                <div className="hidden md:block">
-                                    <InfiniteScrollRow people={section.people} />
-                                </div>
-
-                                {/* Mobile View: Horizontal Carousel */}
-                                <div className="block md:hidden">
-                                    <InfiniteScrollRow people={section.people} />
-                                </div>
+                                <InfiniteScrollRow people={section.people} />
                             </div>
                         )
                     })}

@@ -253,7 +253,7 @@ const UserCard = ({
                             <img
                                 src={imageUrl}
                                 alt={name}
-                                className="w-full h-full object-cover object-center rounded-lg grayscale hover:grayscale-0 transition-all duration-300"
+                                className="w-full h-full object-cover object-center rounded-lg md:grayscale md:hover:grayscale-0 transition-all duration-300"
                                 style={{
                                     maxHeight: "calc(100% - 8px)",
                                     maxWidth: "calc(100% - 8px)",
