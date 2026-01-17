@@ -536,7 +536,7 @@ await runMigration("create food preference table", async () => {
 })
 
 await runMigration("add round_name", async () => {
-    sql`
+    await sql`
         ALTER TABLE event_rounds
         ADD COLUMN round_name TEXT NOT NULL;
     `
