@@ -11,6 +11,7 @@ const sql = postgres({
     connect_timeout: 5,
     idle_timeout: 30,
     max_lifetime: 300,
+    ssl: getEnv("NODE_ENV") !== "production" ? "require" : undefined // disable ssl in prod machine
 })
 
 export default sql
