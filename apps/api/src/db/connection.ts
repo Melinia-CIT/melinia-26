@@ -7,11 +7,10 @@ const sql = postgres({
     database: getEnv("DB_NAME"),
     username: getEnv("DB_USERNAME"),
     password: getEnv("DB_PASSWORD"),
-    max: 5,
+    max: 50,
     connect_timeout: 5,
-    idle_timeout: 10,
-    max_lifetime: 1800,
-    ssl:"require"
+    idle_timeout: 30,
+    max_lifetime: 300,
 })
 
 export default sql
