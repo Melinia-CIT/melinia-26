@@ -11,6 +11,7 @@ const sql = postgres({
     connect_timeout: 5,
     idle_timeout: 10,
     max_lifetime: 1800,
+    ssl:"require"
 })
 
 export default sql

@@ -46,7 +46,7 @@ export async function checkProfileExists(id: string): Promise<boolean> {
 export async function isTeamRegistered(team_id: string): Promise<boolean> {
     try {
         const [team] = await sql`
-            SELECT event_id FROM teams WHERE id = ${team_id}
+            SELECT event_id FROM event_registrations WHERE team_id = ${team_id}
         `
 
         // Check if team exists
