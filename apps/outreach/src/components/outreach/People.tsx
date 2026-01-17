@@ -222,11 +222,7 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
         return rightImageVariants
     }
 
-    const animationStyle = shouldReduceMotion
-        ? {}
-        : {
-              animation: `scroll-carousel ${duration}s linear infinite`,
-          }
+//    const animationStyle = shouldReduceMotion? {} : {animation: `scroll-carousel ${duration}s linear infinite`,}
 
     return (
         <div
