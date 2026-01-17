@@ -95,3 +95,19 @@ export async function getUserIdByOrderId(orderId: string): Promise<string | null
 
     return payment.user_id
 }
+
+export async function getFoodPreference(userId : string) : Promise< any | null> {
+
+	const [food_preference] = await sql`
+		
+		
+	`;
+	
+	if (!food_preference) {
+
+		return null;
+	}
+
+	
+
+}
