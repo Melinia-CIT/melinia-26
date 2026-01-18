@@ -33,10 +33,10 @@ jobs:
                       set -e
 
                       # Create .env file
-                      echo "$ENV_CONTENT" > /app/melinia/deployments/.env
+                      echo "$ENV_CONTENT" > /app/melinia/.env
 
                       # Deploy monitoring stack
-                      cd /app/melinia/deployments
+                      cd /app/melinia
                       ./scripts/deploy-monitor.sh
 
                       echo "Monitoring deployment complete!"

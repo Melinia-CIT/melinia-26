@@ -65,12 +65,12 @@ jobs:
                       set -e
 
                       # Create .env file
-                      echo "$ENV_CONTENT" > /app/melinia/deployments/.env
+                      echo "$ENV_CONTENT" > /app/melinia/.env
 
                       # Login to GHCR
                       echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
                       docker pull ghcr.io/melinia-cit/melinia-26/api:latest
 
                       # Run deploy script
-                      cd /app/melinia/deployments
+                      cd /app/melinia/
                       ./scripts/deploy-api.sh
