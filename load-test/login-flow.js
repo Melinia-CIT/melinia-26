@@ -1,7 +1,7 @@
 import http from "k6/http"
 import { check, sleep } from "k6"
 
-const BASE_URL = "https://api.melinia.in"
+const BASE_URL = "https://app.melinia.in"
 
 export const options = {
     scenarios: {
