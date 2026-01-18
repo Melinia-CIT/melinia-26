@@ -90,7 +90,7 @@ interface SectionData {
 
 const peopleData: SectionData[] = [
     {
-        title: "Core Team",
+        title: "Event Coordinators",
         people: [
             {
                 name: "Alice Johnson",
@@ -326,9 +326,9 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
         return () => window.removeEventListener("resize", handleResize)
     }, [])
 
-    const duplicatedPeople = [...people, ...people, ...people]
+    const duplicatedPeople = [...people, ...people, ...people, ...people, ...people]
     const scrollDistance = people.length * (cardWidth + gap)
-    const duration = people.length * 3
+    const duration = people.length * 4
 
     const getVariant = (index: number): Variants => {
         const position = index % 3
@@ -336,6 +336,24 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
         if (position === 1) return middleImageVariants
         return rightImageVariants
     }
+
+    // Auto-reset carousel to beginning for seamless infinite loop
+    useEffect(() => {
+        const carousel = carouselRef.current
+        if (!carousel || shouldReduceMotion) return
+
+        const handleAnimationIteration = () => {
+            carousel.scrollLeft = 0
+        }
+
+        const carouselContainer = carousel.querySelector(".carousel-container")
+        if (carouselContainer) {
+            carouselContainer.addEventListener("animationiteration", handleAnimationIteration)
+            return () => {
+                carouselContainer.removeEventListener("animationiteration", handleAnimationIteration)
+            }
+        }
+    }, [shouldReduceMotion])
 
     const handleScroll = (): void => {
         setIsScrolling(true)
@@ -365,7 +383,7 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
     return (
         <div
             ref={containerRef}
-            className="relative w-full py-8 px-2 group overflow-hidden"
+            className="relative w-full py-8 px-2 group overflow-visible"
             style={
                 {
                     "--scroll-distance": `-${scrollDistance}px`,
@@ -404,13 +422,12 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
                 }
 
                 .carousel-wrapper {
-                    -ms-overflow-style: auto;
+                    -ms-overflow-style: none;
                     scrollbar-width: none;
                 }
 
                 .carousel-wrapper {
                     overflow-x: auto;
-                    overflow-y: visible;
                 }
 
                 @media (prefers-reduced-motion: reduce) {
@@ -422,7 +439,8 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
 
             <div
                 ref={carouselRef}
-                className="carousel-wrapper relative w-full py-12"            >
+                className="carousel-wrapper relative w-full overflow-x-auto lg:overflow-hidden py-12"
+            >
                 <div
                     className={`carousel-container flex gap-6 md:gap-28 ${isScrolling ? "scrolling" : ""}`}
                 >
@@ -457,9 +475,9 @@ export default function People(): React.ReactElement {
 
     return (
         <section className="relative w-full py-20 bg-zinc-950 text-white overflow-hidden">
-            <div className="relative max-w-384 mx-auto px-4 md:px-8 w-full">
-                <div className="absolute top-0 bottom-0 left-4 md:left-8 w-px bg-linear-to-b from-transparent via-[#9D00FF]/30 to-transparent" />
-                <div className="absolute top-0 bottom-0 right-4 md:right-8 w-px bg-linear-to-b from-transparent via-[#FF0066]/30 to-transparent" />
+            <div className="relative  mx-auto px-4 md:px-8 w-full">
+                <div className="absolute top-0 bottom-0 left-4 md:left-8 w-px bg-gradient-to-b from-transparent via-[#9D00FF]/30 to-transparent" />
+                <div className="absolute top-0 bottom-0 right-4 md:right-8 w-px bg-gradient-to-b from-transparent via-[#FF0066]/30 to-transparent" />
 
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -470,7 +488,7 @@ export default function People(): React.ReactElement {
                     <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Our Team
                     </h2>
-                    <div className="h-2 w-24 bg-linear-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 -rotate-2 shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
+                    <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 -rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
                 </motion.div>
 
                 <div className="space-y-16 relative">
@@ -481,7 +499,7 @@ export default function People(): React.ReactElement {
                         return (
                             <div key={index} className="relative">
                                 {index > 0 && (
-                                    <div className="absolute -top-8 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#9D00FF]/30 to-transparent" />
+                                    <div className="absolute -top-8 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#9D00FF]/30 to-transparent" />
                                 )}
                                 <HudSectionHeader
                                     title={section.title}
