@@ -90,7 +90,7 @@ interface SectionData {
 
 const peopleData: SectionData[] = [
     {
-        title: "Event Coordinators",
+        title: "Core Team",
         people: [
             {
                 name: "Alice Johnson",
@@ -310,7 +310,7 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
 
     useEffect(() => {
         const handleResize = (): void => {
-            const mobile = window.innerWidth < 768
+            const mobile = window.innerWidth < 1024
             setIsMobile(mobile)
             if (mobile) {
                 setCardWidth(window.innerWidth / 2 - 12)
@@ -365,7 +365,7 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
     return (
         <div
             ref={containerRef}
-            className="relative w-full py-8 px-2 group overflow-visible"
+            className="relative w-full py-8 px-2 group overflow-hidden"
             style={
                 {
                     "--scroll-distance": `-${scrollDistance}px`,
