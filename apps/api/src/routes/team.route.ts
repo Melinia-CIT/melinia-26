@@ -26,10 +26,10 @@ import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
 import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-export const teamRouter = new Hono();
+export const teams = new Hono();
 
 // Create Team //
-teamRouter.post("/", authMiddleware, paymentStatusMiddleware,zValidator("json", createTeamSchema), async (c) => {
+teams.post("/", authMiddleware, paymentStatusMiddleware,zValidator("json", createTeamSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
         const formData = await c.req.valid('json');
@@ -44,7 +44,7 @@ teamRouter.post("/", authMiddleware, paymentStatusMiddleware,zValidator("json", 
 })
 
 // Get Team details by team_id
-teamRouter.get("/:team_id", authMiddleware, async (c) => {
+teams.get("/:team_id", authMiddleware, async (c) => {
     try {
 
         const teamID = c.req.param('team_id');
@@ -61,7 +61,7 @@ teamRouter.get("/:team_id", authMiddleware, async (c) => {
 })
 
 //Update Team 
-teamRouter.put("/:team_id", authMiddleware, zValidator("json", updateTeamSchema), async (c) => {
+teams.put("/:team_id", authMiddleware, zValidator("json", updateTeamSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
         const team_id = c.req.param('team_id');
@@ -81,7 +81,7 @@ teamRouter.put("/:team_id", authMiddleware, zValidator("json", updateTeamSchema)
 })
 
 // Delete Team team_id
-teamRouter.delete("/:team_id", authMiddleware, async (c) => {
+teams.delete("/:team_id", authMiddleware, async (c) => {
     try {
         const teamID = c.req.param('team_id');
         const userID = c.get('user_id');
@@ -98,7 +98,7 @@ teamRouter.delete("/:team_id", authMiddleware, async (c) => {
 })
 
 // delete a teammate
-teamRouter.delete("/:team_id/team_member/:member_id", authMiddleware, async (c) => {
+teams.delete("/:team_id/team_member/:member_id", authMiddleware, async (c) => {
     try {
         const teamID = c.req.param('team_id');
         const memberID = c.req.param('member_id');
@@ -122,7 +122,7 @@ teamRouter.delete("/:team_id/team_member/:member_id", authMiddleware, async (c) 
 })
 
 //List of Pending Invitations for a Particular team
-teamRouter.get("/:team_id/pending_invitations", authMiddleware, async (c: Context) => {
+teams.get("/:team_id/pending_invitations", authMiddleware, async (c: Context) => {
     try {
         const teamID = c.req.param('team_id');
         if (!teamID) {
@@ -138,7 +138,7 @@ teamRouter.get("/:team_id/pending_invitations", authMiddleware, async (c: Contex
 })
 
 //Delete a Invitation
-teamRouter.delete("/:team_id/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
+teams.delete("/:team_id/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
     try {
         const teamID = c.req.param('team_id');
         const invitationID = Number(c.req.param('invitation_id'));
@@ -159,7 +159,7 @@ teamRouter.delete("/:team_id/pending_invitations/:invitation_id", authMiddleware
     }
 })
 // Accept invitations
-teamRouter.post("/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
+teams.post("/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
     try {
         const invitationID = Number(c.req.param('invitation_id'));
         const userID: string = c.get('user_id');
@@ -177,7 +177,7 @@ teamRouter.post("/pending_invitations/:invitation_id", authMiddleware, async (c:
 })
 
 // Decline invitations
-teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
+teams.put("/pending_invitations/:invitation_id", authMiddleware, async (c: Context) => {
     try {
         const invitationID = Number(c.req.param('invitation_id'));
         const userID: string = c.get('user_id');
@@ -194,7 +194,7 @@ teamRouter.put("/pending_invitations/:invitation_id", authMiddleware, async (c: 
     }
 })
 // Add a new member
-teamRouter.post("/:team_id/members", authMiddleware, paymentStatusMiddleware,zValidator("json", addNewMemberSchema), async (c) => {
+teams.post("/:team_id/members", authMiddleware, paymentStatusMiddleware,zValidator("json", addNewMemberSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
         const teamID = c.req.param('team_id');
@@ -209,7 +209,7 @@ teamRouter.post("/:team_id/members", authMiddleware, paymentStatusMiddleware,zVa
     }
 })
 
- teamRouter.get('/', authMiddleware, async (c) => {
+ teams.get('/', authMiddleware, async (c) => {
     try {
         const user_id = c.get('user_id');
         const filter = c.req.query('filter') as 'led' | 'member' | 'all' | undefined;

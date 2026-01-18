@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
-import { events, auth, user, teamRouter, payment, college, coupons } from "./routes"
+import { events, auth, user, teams, payment, college, coupons, organizer } from "./routes"
 import { HTTPException } from "hono/http-exception"
 import { requestLogger } from "./middleware/logger.middleware"
 import { setupLogRotation } from "./middleware/logger.config"
@@ -41,10 +41,11 @@ v1.get("/ping", async c => {
 v1.route("/auth", auth)
 v1.route("/users", user)
 v1.route("/events", events)
-v1.route("/teams", teamRouter)
+v1.route("/teams", teams)
 v1.route("/colleges", college)
 v1.route("/payment", payment)
 v1.route("/coupons", coupons)
+v1.route("/events/organizer", organizer)
 
 app.route("/api/v1", v1)
 
