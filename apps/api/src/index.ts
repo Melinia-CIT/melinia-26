@@ -45,7 +45,7 @@ v1.route("/teams", teams)
 v1.route("/colleges", college)
 v1.route("/payment", payment)
 v1.route("/coupons", coupons)
-v1.route("/organizer", organizer)
+v1.route("/events/organizer", organizer)
 
 app.route("/api/v1", v1)
 
