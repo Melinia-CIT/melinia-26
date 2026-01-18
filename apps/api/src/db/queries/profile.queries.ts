@@ -16,7 +16,7 @@ async function resolveDegreeId(degreeName: string, collegeId: number): Promise<n
         SELECT id FROM ins
         UNION ALL
         SELECT id FROM degrees WHERE name = ${degreeName} and college_id = ${collegeId}
-        LIMIT 1
+        LIMIT 1;
     `;
 
     if (!result[0]) {
@@ -37,7 +37,7 @@ async function resolveCollegeId(collegeName: string): Promise<number> {
         SELECT id FROM ins
         UNION ALL
         SELECT id FROM colleges WHERE name = ${collegeName}
-        LIMIT 1
+        LIMIT 1;
     `;
 
     if (!result[0]) {
@@ -48,7 +48,7 @@ async function resolveCollegeId(collegeName: string): Promise<number> {
 }
 
 export async function checkPhoneNumberExists(phone_number: string): Promise<boolean> {
-    const number = await sql`SELECT 1 FROM  users WHERE ph_no = ${phone_number}`
+    const number = await sql`SELECT 1 FROM  users WHERE ph_no = ${phone_number};`
 
     return number.length > 0;
 }
@@ -66,7 +66,7 @@ export async function getProfileById(id: string): Promise<Profile | null> {
         LEFT JOIN colleges c ON p.college_id = c.id
         LEFT JOIN degrees d ON p.degree_id = d.id
         INNER JOIN users u ON p.user_id = u.id
-        WHERE u.id = ${id}
+        WHERE u.id = ${id};
     `;
 
     return profile ? profileSchema.parse(profile) : null;
@@ -118,7 +118,7 @@ export async function createProfile(userId: string, profileData: CreateProfile):
     await sql`
         UPDATE users
         SET ph_no = ${ph_no}
-        WHERE id = ${userId}
+        WHERE id = ${userId};
 	`;
 
     return profileSchema.parse(profile);
@@ -141,7 +141,7 @@ export async function updateProfile(userId: string, profileData: CreateProfile):
     await sql`
         UPDATE users
         SET ph_no = ${ph_no}
-        WHERE id = ${userId}
+        WHERE id = ${userId};
 	`;
 
     const [profile] = await sql`
@@ -189,7 +189,7 @@ export async function setProfileCompleted(userId: string) {
         UPDATE users
         SET profile_completed = true
         WHERE id = ${userId}
-        RETURNING *
+        RETURNING *;
     `;
 
     return result;

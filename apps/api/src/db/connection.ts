@@ -12,6 +12,6 @@ const sql = postgres({
     idle_timeout: 30,
     max_lifetime: 300,
     ssl: getEnv("NODE_ENV") === "production" ? undefined : "require" 
-})
+});
 
-export default sql
+export default sql;

@@ -1,4 +1,5 @@
 import sql from "./connection"
+import { seedColleges, seedDegrees } from "./seed"
 
 
 await sql`
@@ -540,6 +541,11 @@ await runMigration("add round_name", async () => {
         ALTER TABLE event_rounds
         ADD COLUMN round_name TEXT NOT NULL;
     `
+});
+
+await runMigration("seed colleges and degress", async () => {
+    await seedColleges();
+    await seedDegrees();
 });
 
 
