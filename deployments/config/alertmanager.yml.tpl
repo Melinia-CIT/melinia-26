@@ -19,40 +19,40 @@ route:
 receivers:
     - name: "email-default"
       email_configs:
-          - to: "${ALERT_EMAIL_RECIPIENT}"
+          - to: "${ALERT_EMAIL_TO}"
             from: "${MAILCOW_SMTP_USERNAME}"
             smarthost: "${MAILCOW_SMTP_HOST}:${MAILCOW_SMTP_PORT}"
             auth_username: "${MAILCOW_SMTP_USERNAME}"
             auth_password: "${MAILCOW_SMTP_PASSWORD}"
             require_tls: true
             tls_config:
-                insecure_skip_verify: ${ALERTMANAGER_SKIP_TLS:-false}
+                insecure_skip_verify: false
             send_resolved: true
 
     - name: "email-critical"
       email_configs:
-          - to: "${ALERT_EMAIL_RECIPIENT}"
+          - to: "${ALERT_EMAIL_TO}"
             from: "${MAILCOW_SMTP_USERNAME}"
             smarthost: "${MAILCOW_SMTP_HOST}:${MAILCOW_SMTP_PORT}"
             auth_username: "${MAILCOW_SMTP_USERNAME}"
             auth_password: "${MAILCOW_SMTP_PASSWORD}"
             require_tls: true
             tls_config:
-                insecure_skip_verify: ${ALERTMANAGER_SKIP_TLS:-false}
+                insecure_skip_verify: false
             send_resolved: true
             headers:
                 Subject: "[CRITICAL] {{ .GroupLabels.alertname }}"
 
     - name: "email-warning"
       email_configs:
-          - to: "${ALERT_EMAIL_RECIPIENT}"
+          - to: "${ALERT_EMAIL_TO}"
             from: "${MAILCOW_SMTP_USERNAME}"
             smarthost: "${MAILCOW_SMTP_HOST}:${MAILCOW_SMTP_PORT}"
             auth_username: "${MAILCOW_SMTP_USERNAME}"
             auth_password: "${MAILCOW_SMTP_PASSWORD}"
             require_tls: true
             tls_config:
-                insecure_skip_verify: ${ALERTMANAGER_SKIP_TLS:-false}
+                insecure_skip_verify: false
             send_resolved: true
             headers:
                 Subject: "[WARNING] {{ .GroupLabels.alertname }}"
