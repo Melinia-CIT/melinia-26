@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import Fuse from "fuse.js"
-import { Xmark, NavArrowDown } from "iconoir-react"
+import { Xmark } from "iconoir-react"
 
 interface SearchableSelectProps<T> {
     data: T[]
@@ -13,6 +13,7 @@ interface SearchableSelectProps<T> {
     fuseOptions?: Record<string, unknown>
     inputClassName?: string
     dropdownClassName?: string
+    isLoading?: boolean
 }
 
 export default function SearchableSelect<T>({
@@ -26,8 +27,9 @@ export default function SearchableSelect<T>({
     fuseOptions,
     inputClassName,
     dropdownClassName,
+    isLoading = false,
 }: SearchableSelectProps<T>) {
-    const [query, setQuery] = useState("")
+    const [query, setQuery] = useState(value)
     const [isOpen, setIsOpen] = useState(false)
     const [highlightedIndex, setHighlightedIndex] = useState(-1)
     const [filteredResults, setFilteredResults] = useState<
@@ -51,11 +53,9 @@ export default function SearchableSelect<T>({
 
     useEffect(() => {
         if (data.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const fuse = new Fuse(data, defaultFuseOptions)
             setFuseInstance(fuse)
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data])
 
     useEffect(() => {
@@ -69,7 +69,6 @@ export default function SearchableSelect<T>({
             return
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const results = (fuseInstance as any).search(query)
         setFilteredResults(results)
         setHighlightedIndex(-1)
@@ -102,18 +101,37 @@ export default function SearchableSelect<T>({
         }
     }, [highlightedIndex])
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && query.trim()) {
-            e.preventDefault()
-            onChange(query)
+    const handleSelect = useCallback(
+        (selectedValue: string) => {
+            onChange(selectedValue)
+            setQuery(selectedValue)
             setIsOpen(false)
             inputRef.current?.blur()
+        },
+        [onChange]
+    )
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault()
+
+            if (isOpen && filteredResults.length > 0) {
+                const firstResult = filteredResults[0]
+                const selectedValue = String(firstResult.item[displayKey])
+                handleSelect(selectedValue)
+            } else if (query.trim() && query.length >= 2) {
+                handleSelect(query)
+            }
             return
         }
 
         if (!isOpen) {
-            if (e.key === "ArrowDown") {
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                 setIsOpen(true)
+            }
+            if (e.key === "ArrowDown") {
+                e.preventDefault()
+                setHighlightedIndex(0)
             }
             return
         }
@@ -134,26 +152,6 @@ export default function SearchableSelect<T>({
                     setHighlightedIndex(prev => (prev > 0 ? prev - 1 : maxIndex))
                 }
                 break
-            case "Enter":
-                e.preventDefault()
-                if (
-                    filteredResults.length > 0 &&
-                    highlightedIndex >= 0 &&
-                    highlightedIndex < filteredResults.length &&
-                    filteredResults[highlightedIndex]
-                ) {
-                    const selectedValue = String(filteredResults[highlightedIndex].item[displayKey])
-                    onChange(selectedValue)
-                    setQuery(selectedValue)
-                    setIsOpen(false)
-                    inputRef.current?.blur()
-                } else if (filteredResults.length === 0 && query.trim() && query.length >= 2) {
-                    onChange(query)
-                    setQuery(query)
-                    setIsOpen(false)
-                    inputRef.current?.blur()
-                }
-                break
             case "Escape":
                 e.preventDefault()
                 setIsOpen(false)
@@ -164,10 +162,7 @@ export default function SearchableSelect<T>({
 
     const handleResultClick = (result: T) => {
         const selectedValue = String(result[displayKey])
-        onChange(selectedValue)
-        setQuery(selectedValue)
-        setIsOpen(false)
-        inputRef.current?.blur()
+        handleSelect(selectedValue)
     }
 
     const handleClear = () => {
@@ -180,7 +175,15 @@ export default function SearchableSelect<T>({
         const newValue = e.target.value
         setQuery(newValue)
         onChange(newValue)
-        if (!isOpen) setIsOpen(true)
+        if (newValue.length >= 2 && filteredResults.length > 0) {
+            setIsOpen(true)
+        }
+    }
+
+    const handleInputFocus = () => {
+        if (filteredResults.length > 0) {
+            setIsOpen(true)
+        }
     }
 
     return (
@@ -192,65 +195,49 @@ export default function SearchableSelect<T>({
                     placeholder={placeholder}
                     value={query}
                     onChange={handleInputChange}
-                    onFocus={() => setIsOpen(true)}
+                    onFocus={handleInputFocus}
                     onKeyDown={handleKeyDown}
                     disabled={disabled}
                     className={`${inputClassName} ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
                 />
 
-                {query && !disabled && (
+                {query && !isLoading && (
                     <button
                         type="button"
                         onClick={handleClear}
-                        className="absolute right-10 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                        tabIndex={-1}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
                     >
                         <Xmark width={16} height={16} strokeWidth={2.5} />
                     </button>
                 )}
 
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
-                    <NavArrowDown width={16} height={16} strokeWidth={2} />
-                </div>
+                {isLoading && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                )}
             </div>
 
-            {isOpen && (
+            {isOpen && filteredResults.length > 0 && (
                 <div
-                    className={`${dropdownClassName} absolute z-50 w-full mt-1 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                    className={`${dropdownClassName} absolute z-50 w-full mt-1 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar`}
                 >
-                    {filteredResults.length > 0 ? (
-                        filteredResults.map((result, index) => (
-                            <div
-                                key={index}
-                                ref={el => {
-                                    resultRefs.current[index] = el
-                                }}
-                                onClick={() => handleResultClick(result.item)}
-                                className={`px-4 py-2 text-sm text-zinc-300 cursor-pointer transition-colors ${
-                                    index === highlightedIndex ? "bg-zinc-700" : "hover:bg-zinc-800"
-                                }`}
-                                dangerouslySetInnerHTML={{
-                                    __html: highlightMatch(String(result.item[displayKey]), query),
-                                }}
-                            />
-                        ))
-                    ) : query.length >= 2 ? (
+                    {filteredResults.map((result, index) => (
                         <div
-                            className="px-4 py-2 text-sm text-zinc-300 cursor-pointer hover:bg-zinc-800 transition-colors flex items-center gap-2"
-                            onClick={() => {
-                                onChange(query)
-                                setQuery(query)
-                                setIsOpen(false)
-                                inputRef.current?.blur()
+                            key={index}
+                            ref={el => {
+                                resultRefs.current[index] = el
                             }}
-                        >
-                            <span>Add</span>
-                            <span className="text-zinc-300 font-medium">"{query}"</span>
-                        </div>
-                    ) : (
-                        <div className="p-3 text-xs text-zinc-600 text-center">
-                            Type at least 2 characters to search
-                        </div>
-                    )}
+                            onClick={() => handleResultClick(result.item)}
+                            className={`px-4 py-2 text-sm text-zinc-300 cursor-pointer transition-colors ${
+                                index === highlightedIndex ? "bg-zinc-700" : "hover:bg-zinc-800"
+                            }`}
+                            dangerouslySetInnerHTML={{
+                                __html: highlightMatch(String(result.item[displayKey]), query),
+                            }}
+                        />
+                    ))}
                 </div>
             )}
         </div>

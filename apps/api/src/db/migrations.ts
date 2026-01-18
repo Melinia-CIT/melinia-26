@@ -1,7 +1,6 @@
 import sql from "./connection"
 import { seedColleges, seedDegrees } from "./seed"
 
-
 await sql`
     CREATE TABLE IF NOT EXISTS migrations (
         id SERIAL PRIMARY KEY,
@@ -101,7 +100,6 @@ await runMigration("melinia db init", async () => {
             updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
     `
-
 
     await sql`
         CREATE TABLE IF NOT EXISTS profile (
@@ -338,7 +336,7 @@ await runMigration("create event registrations", async () => {
             registered_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(event_id, team_id, user_id)
         );
-    `;
+    `
 })
 
 await runMigration("create payments table", async () => {
@@ -368,79 +366,75 @@ await runMigration("add fk in degrees", async () => {
     await sql`
         ALTER TABLE degrees
         ADD COLUMN college_id INTEGER REFERENCES colleges(id);
-    `;
-});
-
+    `
+})
 
 await runMigration("update profile schema for degrees and colleges", async () => {
-    await sql.begin(async (tx) => {
+    await sql.begin(async tx => {
         await tx`
             ALTER TABLE profile
             DROP COLUMN other_degree;
-        `;
+        `
 
         await tx`
             ALTER TABLE colleges
             ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT false;
-        `;
+        `
 
         await tx`
             ALTER TABLE degrees 
             ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT false;
-        `;
-    });
-});
-
+        `
+    })
+})
 
 await runMigration("add fk in degrees", async () => {
     //TODO: add NOT NULL constraint
     await sql`
         ALTER TABLE degrees
         ADD COLUMN college_id INTEGER REFERENCES colleges(id);
-    `;
-});
+    `
+})
 
 await runMigration("update profile schema for degrees and colleges", async () => {
-    await sql.begin(async (tx) => {
+    await sql.begin(async tx => {
         await tx`
             ALTER TABLE profile
             DROP COLUMN other_degree;
-        `;
+        `
 
         await tx`
             ALTER TABLE colleges
             ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT false;
-        `;
+        `
 
         await tx`
             ALTER TABLE degrees 
             ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT false;
-        `;
-    });
-});
+        `
+    })
+})
 
 await runMigration("update degrees unique constraint", async () => {
-    await sql.begin(async (tx) => {
+    await sql.begin(async tx => {
         await tx`
             ALTER TABLE degrees
             DROP CONSTRAINT degrees_name_key;
-        `;
+        `
 
         await tx`
             ALTER TABLE degrees
             ADD CONSTRAINT degrees_name_college_key UNIQUE(name, college_id);
-        `;
-    });
+        `
+    })
 })
 
 await runMigration("add unique constraint on the user_id in profile", async () => {
     await sql`
         ALTER TABLE profile
         ADD CONSTRAINT profile_user_id_key UNIQUE(user_id);
-    `;
-});
-
-
+    `
+})
 
 await runMigration("add razorpay timestamps to payments table", async () => {
     await sql`
@@ -466,7 +460,7 @@ await runMigration("add event rules table ", async () => {
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
-    `;
+    `
 })
 
 await runMigration("create user payment status type", async () => {
@@ -476,14 +470,14 @@ await runMigration("create user payment status type", async () => {
             'PAID', 
             'EXEMPTED'
         );
-    `;
+    `
 })
 
 await runMigration("add payment status column to users", async () => {
     await sql`
         ALTER TABLE users
         ADD COLUMN payment_status user_payment_status NOT NULL DEFAULT 'UNPAID';
-    `;
+    `
 })
 
 await runMigration("create single use coupons table", async () => {
@@ -493,7 +487,7 @@ await runMigration("create single use coupons table", async () => {
             code TEXT UNIQUE NOT NULL,
             created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
-    `;
+    `
 })
 
 await runMigration("create single use coupon redemptions table", async () => {
@@ -504,28 +498,28 @@ await runMigration("create single use coupon redemptions table", async () => {
             coupon_id INTEGER UNIQUE NOT NULL REFERENCES coupons(id) ON DELETE CASCADE,
             redeemed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
-    `;
+    `
 })
 
-await runMigration('cascade event_registration when team is deleted', async () => {
-    await sql.begin(async (tx) => {
+await runMigration("cascade event_registration when team is deleted", async () => {
+    await sql.begin(async tx => {
         await tx`
             ALTER TABLE event_registrations
             DROP CONSTRAINT IF EXISTS event_registrations_team_id_fkey
-        `;
+        `
 
         await tx`
             ALTER TABLE event_registrations
             ADD CONSTRAINT event_registrations_team_id_fkey 
             FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
-        `;
-    });
-});
+        `
+    })
+})
 
 await runMigration("create food preference table", async () => {
     await sql`
 		CREATE TYPE food_preference AS ENUM ('NO_FOOD','VEG', 'NON_VEG');
-    `;
+    `
 
     await sql`
 		CREATE TABLE IF NOT EXISTS user_food_preference (
@@ -533,7 +527,7 @@ await runMigration("create food preference table", async () => {
 			user_id TEXT UNIQUE NOT NULL REFERENCES users(id) on delete cascade, 
 			user_preference food_preference not null
 		);
-	`;
+	`
 })
 
 await runMigration("add round_name", async () => {
@@ -541,12 +535,18 @@ await runMigration("add round_name", async () => {
         ALTER TABLE event_rounds
         ADD COLUMN round_name TEXT NOT NULL;
     `
-});
+})
 
 await runMigration("seed colleges and degress", async () => {
-    await seedColleges();
-    await seedDegrees();
-});
+    await seedColleges()
+    await seedDegrees()
+})
 
+await runMigration("add college name index for search", async () => {
+    await sql`
+        CREATE INDEX IF NOT EXISTS idx_colleges_name_default 
+        ON colleges(name) WHERE is_default = true;
+    `
+})
 
-await sql.end();
+await sql.end()

@@ -1,9 +1,9 @@
-import { useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
-import { User, Mail, Phone, GraduationCap, NavArrowDown } from "iconoir-react"
+import { User, Mail, Phone, GraduationCap, NavArrowDown, Book } from "iconoir-react"
 import { createProfileSchema, type CreateProfile } from "@melinia/shared"
 import api from "../../services/api"
 import SearchableSelect from "../../components/ui/SearchableSelect"
@@ -21,6 +21,47 @@ interface College {
 interface DegreeOption {
     name: string
 }
+
+function useCollegeSearch(debounceMs = 300) {
+    const [query, setQuery] = useState("")
+    const [results, setResults] = useState<College[]>([])
+    const [isLoading, setIsLoading] = useState(false)
+
+    const search = useCallback(async (searchTerm: string) => {
+        setIsLoading(true)
+        try {
+            const res = await api.get(`/colleges?search=${encodeURIComponent(searchTerm)}`)
+            const data = res.data.data || []
+
+            const seen = new Set<string>()
+            const deduplicated: College[] = []
+            for (const college of data) {
+                if (!seen.has(college.name)) {
+                    seen.add(college.name)
+                    deduplicated.push(college)
+                }
+            }
+            setResults(deduplicated)
+        } catch (err) {
+            console.error("College search failed:", err)
+            setResults([])
+        } finally {
+            setIsLoading(false)
+        }
+    }, [])
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            search(query)
+        }, debounceMs)
+
+        return () => clearTimeout(timer)
+    }, [query, debounceMs, search])
+
+    return { query, setQuery, results, isLoading }
+}
+
+const yearOptions = [1, 2, 3, 4, 5]
 
 const Profile = ({ initialData }: ProfileProps) => {
     const queryClient = useQueryClient()
@@ -45,22 +86,37 @@ const Profile = ({ initialData }: ProfileProps) => {
 
     const watchedCollege = watch("college")
     const watchedDegree = watch("degree")
+    const watchedYear = watch("year")
 
-    const { data: colleges = [] } = useQuery<College[]>({
-        queryKey: ["colleges"],
-        queryFn: async () => {
-            const response = await api.get("/colleges")
-            return response.data
-        },
-    })
+    const {
+        query,
+        setQuery,
+        results: colleges,
+        isLoading: isSearchingColleges,
+    } = useCollegeSearch(300)
+
+    useEffect(() => {
+        if (watchedCollege && query !== watchedCollege) {
+            setQuery(watchedCollege)
+        }
+    }, [watchedCollege, query, setQuery])
+
+    const selectedCollegeObj = colleges.find(c => c.name === watchedCollege)
+    const availableDegrees = selectedCollegeObj?.degrees || []
+    const degreeOptions: DegreeOption[] = useMemo(() => {
+        const seen = new Set<string>()
+        return availableDegrees
+            .filter(d => {
+                if (seen.has(d)) return false
+                seen.add(d)
+                return true
+            })
+            .map(d => ({ name: d }))
+    }, [availableDegrees])
 
     useEffect(() => {
         setValue("degree", "")
     }, [watchedCollege, setValue])
-
-    const selectedCollegeObj = colleges.find(c => c.name === watchedCollege)
-    const availableDegrees = selectedCollegeObj?.degrees || []
-    const degreeOptions: DegreeOption[] = availableDegrees.map(d => ({ name: d }))
 
     const updateMutation = useMutation({
         mutationFn: async (values: CreateProfile) => {
@@ -96,7 +152,6 @@ const Profile = ({ initialData }: ProfileProps) => {
     return (
         <div className="w-full font-geist text-base text-zinc-100">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Name */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label
@@ -134,7 +189,6 @@ const Profile = ({ initialData }: ProfileProps) => {
                     </div>
                 </div>
 
-                {/* Email (Read Only) */}
                 <div>
                     <label className="block text-xs font-medium mb-1 text-zinc-500">Email</label>
                     <div className="relative opacity-75">
@@ -152,7 +206,6 @@ const Profile = ({ initialData }: ProfileProps) => {
                     </div>
                 </div>
 
-                {/* Phone */}
                 <div>
                     <label className={`block text-xs font-medium mb-1 ${getLabelClass("ph_no")}`}>
                         Phone Number *
@@ -176,76 +229,84 @@ const Profile = ({ initialData }: ProfileProps) => {
                     )}
                 </div>
 
-                {/* College Searchable Select */}
                 <div>
                     <label className={`block text-xs font-medium mb-1 ${getLabelClass("college")}`}>
                         College *
                     </label>
                     <div className="relative">
                         <GraduationCap
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 z-10"
                             width={18}
                             height={18}
                         />
-                        <div className="pl-10">
-                            <SearchableSelect<College>
-                                data={colleges}
-                                searchKeys={["name"]}
-                                placeholder="Search or type college..."
-                                value={watchedCollege}
-                                onChange={val => setValue("college", val)}
-                                displayKey="name"
-                                inputClassName={getInputClass("college")}
-                            />
-                        </div>
+                        <SearchableSelect<College>
+                            data={colleges}
+                            searchKeys={["name"]}
+                            placeholder="Search college..."
+                            value={query}
+                            onChange={val => {
+                                setQuery(val)
+                                setValue("college", val)
+                            }}
+                            displayKey="name"
+                            isLoading={isSearchingColleges}
+                            inputClassName={`${getInputClass("college")} pl-10 pr-10`}
+                        />
                     </div>
                     {errors.college && (
                         <p className="text-red-400 text-[10px] mt-1">{errors.college.message}</p>
                     )}
                 </div>
 
-                {/* Degree Searchable Select */}
                 <div>
                     <label className={`block text-xs font-medium mb-1 ${getLabelClass("degree")}`}>
                         Degree *
                     </label>
-                    <SearchableSelect<DegreeOption>
-                        data={degreeOptions}
-                        searchKeys={["name"]}
-                        placeholder={
-                            !watchedCollege ? "Select college first" : "Search or type degree..."
-                        }
-                        value={watchedDegree}
-                        onChange={val => setValue("degree", val)}
-                        disabled={!watchedCollege}
-                        displayKey="name"
-                        inputClassName={getInputClass("degree")}
-                    />
+                    <div className="relative">
+                        <Book
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 z-10"
+                            width={18}
+                            height={18}
+                        />
+                        <SearchableSelect<DegreeOption>
+                            data={degreeOptions}
+                            searchKeys={["name"]}
+                            placeholder={
+                                !watchedCollege
+                                    ? "Select college first"
+                                    : "Search or type degree..."
+                            }
+                            value={watchedDegree}
+                            onChange={val => setValue("degree", val)}
+                            disabled={!watchedCollege}
+                            displayKey="name"
+                            inputClassName={`${getInputClass("degree")} pl-10 pr-10`}
+                        />
+                    </div>
                     {errors.degree && (
                         <p className="text-red-400 text-[10px] mt-1">{errors.degree.message}</p>
                     )}
                 </div>
 
-                {/* Year Field */}
                 <div>
                     <label className={`block text-xs font-medium mb-1 ${getLabelClass("year")}`}>
                         Year *
                     </label>
                     <div className="relative">
                         <select
-                            className={`${getInputClass("year")} appearance-none pl-4 pr-10`}
+                            className={`${getInputClass("year")} appearance-none pl-4 pr-10 w-full cursor-pointer`}
                             {...register("year", { valueAsNumber: true })}
+                            value={watchedYear || ""}
                         >
                             <option value="" disabled>
                                 Select Year
                             </option>
-                            {[1, 2, 3, 4, 5].map(yr => (
+                            {yearOptions.map(yr => (
                                 <option key={yr} value={yr.toString()}>
                                     {yr}
                                 </option>
                             ))}
                         </select>
-
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
                             <NavArrowDown width={16} height={16} strokeWidth={2} />
                         </div>
