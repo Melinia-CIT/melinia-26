@@ -93,7 +93,7 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
 
     useEffect(() => {
         const handleResize = (): void => {
-            const mobile = window.innerWidth < 1024
+            const mobile = window.innerWidth < 1081
             setIsMobile(mobile)
             if (mobile) {
                 setCardWidth(window.innerWidth / 2 - 12)

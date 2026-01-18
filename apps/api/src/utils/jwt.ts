@@ -17,7 +17,7 @@ export const createRefreshToken = async (id: string, role: string): Promise<stri
 
 export const verifyToken = async (token: string): Promise<JWTPayload> => {
 	try {
-		return await verify(token, getEnv("JWT_SECRET_KEY"),"HS256");
+		return await verify(token, getEnv("JWT_SECRET_KEY"));
 	} catch {
 		throw new HTTPException(401, { message: "Invalid or expired token" });
 	}
