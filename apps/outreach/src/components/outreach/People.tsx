@@ -4,6 +4,7 @@ import { motion, useReducedMotion, Variants } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
 import UserCard from "../ui/user-card"
 import { HudSectionHeader } from "../ui/hud-section-header"
+import { peopleData, SectionData } from "../../types/people"
 
 const leftImageVariants: Variants = {
     initial: { rotate: 0, x: 0, y: 0 },
@@ -76,112 +77,6 @@ const rightImageVariants: Variants = {
         },
     },
 }
-
-interface SectionData {
-    title: string
-    people: {
-        name: string
-        role?: string
-        imageUrl?: string
-        linkedinUrl?: string
-        color?: string
-    }[]
-}
-
-const peopleData: SectionData[] = [
-    {
-        title: "Event Coordinators",
-        people: [
-            {
-                name: "Alice Johnson",
-                role: "Coordinator",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#FF0055",
-            },
-            {
-                name: "Bob Smith",
-                role: "Coordinator",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#FF0055",
-            },
-            {
-                name: "Charlie Davis",
-                role: "Lead",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#FF0055",
-            },
-            {
-                name: "Diana Prince",
-                role: "Manager",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#FF0055",
-            },
-        ],
-    },
- 
-    {
-        title: "Dev Team",
-        people: [
-            {
-                name: "Sarah Connor",
-                role: "Lead Developer",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#9D00FF",
-            },
-            {
-                name: "John Doe",
-                role: "Frontend Developer",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#9D00FF",
-            },
-            {
-                name: "Neo Anderson",
-                role: "Backend Developer",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#9D00FF",
-            },
-            {
-                name: "Trinity Moss",
-                role: "UI/UX Designer",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#9D00FF",
-            },
-            {
-                name: "Cypher Reagan",
-                role: "DevOps Engineer",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#9D00FF",
-            },
-            {
-                name: "Tank",
-                role: "System Administrator",
-                imageUrl:
-                    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400",
-                linkedinUrl: "#",
-                color: "#9D00FF",
-            },
-        ],
-    },
-]
-
 interface InfiniteScrollRowProps {
     people: SectionData["people"]
 }
@@ -192,10 +87,13 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
     const [gap, setGap] = useState<number>(24)
     const [isMobile, setIsMobile] = useState<boolean>(false)
     const containerRef = useRef<HTMLDivElement>(null)
+    const carouselRef = useRef<HTMLDivElement>(null)
+    const [isScrolling, setIsScrolling] = useState<boolean>(false)
+    const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     useEffect(() => {
         const handleResize = (): void => {
-            const mobile = window.innerWidth < 768
+            const mobile = window.innerWidth < 1024
             setIsMobile(mobile)
             if (mobile) {
                 setCardWidth(window.innerWidth / 2 - 12)
@@ -211,9 +109,9 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
         return () => window.removeEventListener("resize", handleResize)
     }, [])
 
-    const duplicatedPeople = [...people, ...people, ...people]
+    const duplicatedPeople = [...people, ...people, ...people, ...people, ...people]
     const scrollDistance = people.length * (cardWidth + gap)
-    const duration = people.length * 3
+    const duration = people.length * 4
 
     const getVariant = (index: number): Variants => {
         const position = index % 3
@@ -222,12 +120,53 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
         return rightImageVariants
     }
 
-//    const animationStyle = shouldReduceMotion? {} : {animation: `scroll-carousel ${duration}s linear infinite`,}
+    // Auto-reset carousel to beginning for seamless infinite loop
+    useEffect(() => {
+        const carousel = carouselRef.current
+        if (!carousel || shouldReduceMotion) return
+
+        const handleAnimationIteration = () => {
+            carousel.scrollLeft = 0
+        }
+
+        const carouselContainer = carousel.querySelector(".carousel-container")
+        if (carouselContainer) {
+            carouselContainer.addEventListener("animationiteration", handleAnimationIteration)
+            return () => {
+                carouselContainer.removeEventListener("animationiteration", handleAnimationIteration)
+            }
+        }
+    }, [shouldReduceMotion])
+
+    const handleScroll = (): void => {
+        setIsScrolling(true)
+
+        if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current)
+        }
+
+        scrollTimeoutRef.current = setTimeout(() => {
+            setIsScrolling(false)
+        }, 150)
+    }
+
+    useEffect(() => {
+        const carousel = carouselRef.current
+        if (carousel) {
+            carousel.addEventListener("scroll", handleScroll, { passive: true })
+            return () => {
+                carousel.removeEventListener("scroll", handleScroll)
+                if (scrollTimeoutRef.current) {
+                    clearTimeout(scrollTimeoutRef.current)
+                }
+            }
+        }
+    }, [])
 
     return (
         <div
             ref={containerRef}
-            className="relative w-full overflow-hidden py-12 group"
+            className="relative w-full py-8 px-2 group overflow-visible"
             style={
                 {
                     "--scroll-distance": `-${scrollDistance}px`,
@@ -249,8 +188,29 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
                     animation: scroll-carousel var(--duration) linear infinite;
                 }
 
+                .carousel-container.scrolling {
+                    animation-play-state: paused;
+                }
+
                 .carousel-container:hover {
                     animation-play-state: paused;
+                }
+
+                .carousel-wrapper {
+                    scroll-behavior: smooth;
+                }
+
+                .carousel-wrapper::-webkit-scrollbar {
+                    display: none;
+                }
+
+                .carousel-wrapper {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+
+                .carousel-wrapper {
+                    overflow-x: auto;
                 }
 
                 @media (prefers-reduced-motion: reduce) {
@@ -260,20 +220,27 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
                 }
             `}</style>
 
-            <div className="carousel-container flex gap-6 md:gap-28">
-                {duplicatedPeople.map((person, index) => (
-                    <motion.div
-                        key={index}
-                        className="shrink-0"
-                        style={{ width: `${cardWidth}px` }}
-                        variants={!shouldReduceMotion ? getVariant(index) : undefined}
-                        initial={!shouldReduceMotion ? "initial" : undefined}
-                        animate={!shouldReduceMotion ? "animate" : undefined}
-                        whileHover={!shouldReduceMotion ? "hover" : undefined}
-                    >
-                        <UserCard {...person} alwaysShowText={isMobile} />
-                    </motion.div>
-                ))}
+            <div
+                ref={carouselRef}
+                className="carousel-wrapper relative w-full overflow-x-auto lg:overflow-hidden py-12"
+            >
+                <div
+                    className={`carousel-container flex gap-6 md:gap-28 ${isScrolling ? "scrolling" : ""}`}
+                >
+                    {duplicatedPeople.map((person, index) => (
+                        <motion.div
+                            key={index}
+                            className="shrink-0"
+                            style={{ width: `${cardWidth}px` }}
+                            variants={!shouldReduceMotion ? getVariant(index) : undefined}
+                            initial={!shouldReduceMotion ? "initial" : undefined}
+                            animate={!shouldReduceMotion ? "animate" : undefined}
+                            whileHover={!shouldReduceMotion ? "hover" : undefined}
+                        >
+                            <UserCard {...person} alwaysShowText={isMobile} />
+                        </motion.div>
+                    ))}
+                </div>
             </div>
         </div>
     )
@@ -286,13 +253,12 @@ interface ColorMapType {
 export default function People(): React.ReactElement {
     const colorMap: ColorMapType = {
         "Event Coordinators": "#FF0055",
-        "Faculty Coordinators": "#00E0FF",
         "Dev Team": "#9D00FF",
     }
 
     return (
         <section className="relative w-full py-20 bg-zinc-950 text-white overflow-hidden">
-            <div className="relative max-w-[96rem] mx-auto px-4 md:px-8 w-full">
+            <div className="relative  mx-auto px-4 md:px-8 w-full">
                 <div className="absolute top-0 bottom-0 left-4 md:left-8 w-px bg-gradient-to-b from-transparent via-[#9D00FF]/30 to-transparent" />
                 <div className="absolute top-0 bottom-0 right-4 md:right-8 w-px bg-gradient-to-b from-transparent via-[#FF0066]/30 to-transparent" />
 
