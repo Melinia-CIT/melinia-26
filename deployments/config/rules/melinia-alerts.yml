@@ -1,0 +1,202 @@
+groups:
+    - name: critical-alerts
+      rules:
+          - alert: ServerDown
+            expr: up{job=~".*node.*"} == 0
+            for: 1m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Server is down"
+                description: "Server {{ $labels.instance }} is not responding for 1 minute"
+
+          - alert: DiskSpaceCritical
+            expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes) < 0.10
+            for: 5m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Disk space critically low"
+                description: "Disk / on {{ $labels.instance }} is less than 10% free ({{ $value | humanizePercentage }})"
+
+          - alert: PostgresDown
+            expr: up{job="prod-postgres"} == 0
+            for: 1m
+            labels:
+                severity: critical
+            annotations:
+                summary: "PostgreSQL exporter down"
+                description: "PostgreSQL exporter on {{ $labels.instance }} is not responding"
+
+          - alert: RedisDown
+            expr: up{job="prod-redis"} == 0
+            for: 1m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Redis exporter down"
+                description: "Redis exporter on {{ $labels.instance }} is not responding"
+
+          - alert: ContainerDown
+            expr: cadvisor_last_seen{name!=""} < time() - 300
+            for: 5m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Container stopped"
+                description: "Container {{ $labels.name }} on {{ $labels.instance }} has been down for 5 minutes"
+
+          - alert: ContainerRestartsFrequently
+            expr: increase(container_start_time_seconds{name!=""}[1h]) > 5
+            for: 15m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Container restarting frequently"
+                description: "Container {{ $labels.name }} has restarted more than 5 times in the last hour"
+
+          - alert: ContainerHighCPU
+            expr: rate(container_cpu_usage_seconds_total{name!=""}[5m]) > 0.8
+            for: 10m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Container high CPU usage"
+                description: "Container {{ $labels.name }} on {{ $labels.instance }} is using > 80% CPU for 10 minutes"
+
+          - alert: ContainerOOMKilled
+            expr: increase(container_tasks_state{name="",state="oomkilled"}[1h]) > 0
+            for: 0m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Container OOM killed"
+                description: "Container {{ $labels.name }} on {{ $labels.instance }} was OOM killed"
+
+          - alert: CaddyDown
+            expr: up{job="prod-cadvisor",name="melinia-caddy"} == 0
+            for: 1m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Caddy reverse proxy down"
+                description: "Caddy container on {{ $labels.instance }} is not responding"
+
+          - alert: PostgreSQLHighConnections
+            expr: pg_stat_activity_count > 80
+            for: 2m
+            labels:
+                severity: critical
+            annotations:
+                summary: "PostgreSQL connections too high"
+                description: "{{ $value }} active PostgreSQL connections on {{ $labels.instance }}"
+
+          - alert: RedisHighMemory
+            expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+            for: 2m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Redis memory usage critical"
+                description: "Redis memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+          - alert: RedisDown
+            expr: redis_up == 0
+            for: 1m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Redis is down"
+                description: "Redis on {{ $labels.instance }} is not responding"
+
+          - alert: RedisQueueLengthHigh
+            expr: redis_db_keys{db="1"} > 5000
+            for: 5m
+            labels:
+                severity: critical
+            annotations:
+                summary: "Redis queue length high"
+                description: "Redis queue has {{ $value }} pending jobs on {{ $labels.instance }}"
+
+    - name: warning-alerts
+      rules:
+          - alert: HighCPUUsage
+            expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
+            for: 5m
+            labels:
+                severity: warning
+            annotations:
+                summary: "High CPU usage"
+                description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+          - alert: HighMemoryUsage
+            expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.85
+            for: 5m
+            labels:
+                severity: warning
+            annotations:
+                summary: "High memory usage"
+                description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+          - alert: DiskSpaceWarning
+            expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes) < 0.20
+            for: 5m
+            labels:
+                severity: warning
+            annotations:
+                summary: "Disk space low"
+                description: "Disk / on {{ $labels.instance }} is less than 20% free ({{ $value | humanizePercentage }})"
+
+          - alert: ContainerHighMemory
+            expr: container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""} > 0.85
+            for: 10m
+            labels:
+                severity: warning
+            annotations:
+                summary: "Container high memory usage"
+                description: "Container {{ $labels.name }} on {{ $labels.instance }} is using > 85% memory limit"
+
+          - alert: ContainerRestarting
+            expr: increase(container_start_time_seconds{name!=""}[1h]) > 2
+            for: 10m
+            labels:
+                severity: warning
+            annotations:
+                summary: "Container restarting"
+                description: "Container {{ $labels.name }} has restarted more than 2 times in the last hour"
+
+          - alert: DatabaseConnectionsHigh
+            expr: pg_stat_activity_count > 60
+            for: 3m
+            labels:
+                severity: warning
+            annotations:
+                summary: "PostgreSQL connections elevated"
+                description: "{{ $value }} active PostgreSQL connections on {{ $labels.instance }}"
+
+          - alert: PostgreSQLSlowQueries
+            expr: rate(pg_stat_statements_total{query!~"SELECT 1"}[2m]) > 0.1
+            for: 3m
+            labels:
+                severity: warning
+            annotations:
+                summary: "Slow queries detected"
+                description: "Query rate indicates slow queries on {{ $labels.instance }}"
+
+          - alert: RedisConnectedClientsHigh
+            expr: redis_connected_clients > 100
+            for: 2m
+            labels:
+                severity: warning
+            annotations:
+                summary: "Redis connected clients high"
+                description: "{{ $value }} connected Redis clients on {{ $labels.instance }}"
+
+          - alert: RedisQueueLengthWarning
+            expr: redis_db_keys{db="1"} > 1000
+            for: 5m
+            labels:
+                severity: warning
+            annotations:
+                summary: "Redis queue length elevated"
+                description: "Redis queue has {{ $value }} pending jobs on {{ $labels.instance }}"

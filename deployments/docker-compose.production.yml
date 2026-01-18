@@ -1,0 +1,239 @@
+services:
+    postgres:
+        image: postgres:17-alpine
+        container_name: melinia-postgres
+        restart: unless-stopped
+        environment:
+            - POSTGRES_DB=${DB_NAME}
+            - POSTGRES_USER=${DB_USERNAME}
+            - POSTGRES_PASSWORD=${DB_PASSWORD}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+            - ./config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+        command: >
+            postgres
+            -c config_file=/etc/postgresql/postgresql.conf
+        deploy:
+            resources:
+                limits:
+                    memory: 6GB
+        healthcheck:
+            test: ["CMD", "pg_isready", "-U", "melinia"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+
+    pgbouncer:
+        image: edoburu/pgbouncer
+        container_name: melinia-pgbouncer
+        restart: unless-stopped
+        environment:
+            - DB_USER=${DB_USERNAME}
+            - DB_PASSWORD=${DB_PASSWORD}
+            - DB_HOST=postgres
+            - POOL_MODE=transaction
+            - AUTH_TYPE=scram-sha-256
+            - MAX_CLIENT_CONN=1000
+            - DEFAULT_POOL_SIZE=100
+            - MIN_pool_SIZE=20
+            - RESERVE_POOL_SIZE=50
+            - MAX_DB_CONNECTIONS=200
+            - SERVER_IDLE_TIMEOUT=600
+        ports:
+            - "127.0.0.1:5432:5432"
+        depends_on:
+            postgres:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "pg_isready", "-h", "localhost"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+
+    redis:
+        image: redis:8.4-alpine
+        container_name: melinia-redis
+        command: redis-server --requirepass ${REDIS_PASSWORD}
+        restart: unless-stopped
+        volumes:
+            - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+            - redis_data:/data
+        deploy:
+            resources:
+                limits:
+                    memory: 2.5GB
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    migrate:
+        image: ghcr.io/melinia-cit/melinia-26/api:latest
+        container_name: melinia-migrate
+        restart: "no"
+        command: ["bun", "run", "dist/migrate.js"]
+        env_file:
+            - .env
+        depends_on:
+            postgres:
+                condition: service_healthy
+            pgbouncer:
+                condition: service_healthy
+
+    _api_template: &api_template
+        image: ghcr.io/melinia-cit/melinia-26/api:latest
+        restart: unless-stopped
+        expose:
+            - "3000"
+        env_file:
+            - .env
+        depends_on:
+            migrate:
+                condition: service_completed_successfully
+        deploy:
+            resources:
+                limits:
+                    memory: 1.2GB
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "bun",
+                    "run",
+                    "--eval",
+                    "fetch('http://localhost:3000/api/v1/ping').then(r => r.ok ? 0: 1)",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 10s
+
+    api-1:
+        <<: *api_template
+        container_name: melinia-api-1
+        volumes:
+            - ../logs/api-1:/app/logs
+
+    api-2:
+        <<: *api_template
+        container_name: melinia-api-2
+        volumes:
+            - ../logs/api-2:/app/logs
+
+    api-3:
+        <<: *api_template
+        container_name: melinia-api-3
+        volumes:
+            - ../logs/api-3:/app/logs
+
+    api-4:
+        <<: *api_template
+        container_name: melinia-api-4
+        volumes:
+            - ../logs/api-4:/app/logs
+
+    worker:
+        image: ghcr.io/melinia-cit/melinia-26/api:latest
+        container_name: melinia-worker
+        restart: unless-stopped
+        command: ["bun", "run", "dist/worker.js"]
+        env_file:
+            - .env
+        depends_on:
+            migrate:
+                condition: service_completed_successfully
+            redis:
+                condition: service_healthy
+        deploy:
+            resources:
+                limits:
+                    memory: 1GB
+
+    caddy:
+        image: caddy:alpine
+        container_name: melinia-caddy
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+            - "443:443/udp"
+        volumes:
+            - ./Caddyfile.production:/etc/caddy/Caddyfile:ro
+            - caddy_data:/data
+            - caddy_config:/config
+        depends_on:
+            api-1:
+                condition: service_healthy
+            api-2:
+                condition: service_healthy
+            api-3:
+                condition: service_healthy
+            api-4:
+                condition: service_healthy
+
+    node-exporter:
+        image: prom/node-exporter:v1.10.2
+        container_name: melinia-node-exporter
+        restart: unless-stopped
+        ports:
+            - "9100:9100"
+        volumes:
+            - /proc:/host/proc:ro
+            - /sys:/host/sys:ro
+            - /:/rootfs:ro
+        command:
+            - "--path.procfs=/host/proc"
+            - "--path.sysfs=/host/sys"
+            - "--path.rootfs=/rootfs"
+            - "--collector.systemd"
+            - "--collector.processes"
+
+    postgres-exporter:
+        image: prometheuscommunity/postgres-exporter:v0.18.1
+        container_name: melinia-postgres-exporter
+        environment:
+            - DATA_SOURCE_NAME=postgresql://${DB_USERNAME}:${DB_PASSWORD}@pgbouncer:5432/${DB_NAME}?sslmode=disable
+        restart: unless-stopped
+        ports:
+            - "9187:9187"
+        depends_on:
+            postgres:
+                condition: service_healthy
+
+    redis-exporter:
+        image: oliver006/redis_exporter:v1.80.1
+        container_name: melinia-redis-exporter
+        environment:
+            - REDIS_ADDR=redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}
+        restart: unless-stopped
+        ports:
+            - "9121:9121"
+        depends_on:
+            redis:
+                condition: service_healthy
+
+    cadvisor:
+        image: ghcr.io/google/cadvisor:latest
+        container_name: melinia-cadvisor
+        restart: unless-stopped
+        ports:
+            - "8080:8080"
+        volumes:
+            - /:/rootfs:ro
+            - /var/run:/var/run:ro
+            - /sys:/sys:ro
+            - /var/lib/docker:/var/lib/docker:ro
+
+volumes:
+    postgres_data:
+        driver: local
+    redis_data:
+        driver: local
+    caddy_data:
+    caddy_config:
+
+networks:
+    default:
+        name: melinia-network

@@ -1,0 +1,43 @@
+name: Deploy Monitoring Stack
+
+on:
+    workflow_dispatch:
+
+jobs:
+    deploy-monitoring:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Copy deployment files
+              uses: appleboy/scp-action@master
+              with:
+                  host: ${{ secrets.MONITOR_HOST }}
+                  username: ${{ secrets.MONITOR_USER }}
+                  key: ${{ secrets.MONITOR_PVT_KEY }}
+                  source: "deployments/"
+                  target: "/app/melinia"
+                  strip_components: 1
+
+            - name: Deploy Monitoring Stack
+              uses: appleboy/ssh-action@master
+              env:
+                  ENV_CONTENT: ${{ secrets.ENV }}
+              with:
+                  host: ${{ secrets.MONITOR_HOST }}
+                  username: ${{ secrets.MONITOR_USER }}
+                  key: ${{ secrets.MONITOR_PVT_KEY }}
+                  envs: ENV_CONTENT
+                  script: |
+                      set -e
+
+                      # Create .env file
+                      echo "$ENV_CONTENT" > /app/melinia/deployments/.env
+
+                      # Deploy monitoring stack
+                      cd /app/melinia/deployments
+                      ./scripts/deploy-monitor.sh
+
+                      echo "Monitoring deployment complete!"
+                      docker compose -f docker-compose.monitoring.yml ps
