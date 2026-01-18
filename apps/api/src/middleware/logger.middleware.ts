@@ -1,4 +1,6 @@
 import { type Context, type Next } from "hono"
+import { appendFileSync } from "fs"
+import { join } from "path"
 
 type LogLevel = "INFO" | "WARN" | "ERROR"
 
@@ -19,8 +21,15 @@ const generateRequestId = (): string => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9)
 }
 
+const LOG_DIR = process.env.LOG_DIR || "/app/logs"
+
 const structuredLogger = (level: LogLevel, data: LogData): void => {
-    console.log(JSON.stringify(data))
+    const logLine = JSON.stringify(data) + "\n"
+    console.log(logLine)
+
+    try {
+        appendFileSync(join(LOG_DIR, "app.log"), logLine)
+    } catch {}
 }
 
 export const requestLogger = async (c: Context, next: Next): Promise<void> => {

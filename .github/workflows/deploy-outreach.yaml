@@ -1,4 +1,4 @@
-name: Deploy Outreach App
+name: Deploy Outreach
 
 on:
   push:

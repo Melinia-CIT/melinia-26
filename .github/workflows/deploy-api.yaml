@@ -1,4 +1,4 @@
-name: Deploy Melinia API (Docker + GHCR)
+name: Deploy API
 
 on:
     push:
@@ -6,8 +6,7 @@ on:
         paths:
             - "apps/api/**"
             - "packages/shared/**"
-            - "docker-compose.yml"
-            - "caddy/Caddyfile"
+            - "deployments/**"
             - ".github/workflows/deploy-api.yaml"
     workflow_dispatch:
 
@@ -44,12 +43,12 @@ jobs:
             - name: Copy deployment files
               uses: appleboy/scp-action@master
               with:
-                  host: ${{ secrets.DO_HOST }}
-                  username: ${{ secrets.DO_USER }}
-                  key: ${{ secrets.DO_PVT_KEY }}
-                  source: "docker-compose.yml,caddy/Caddyfile"
+                  host: ${{ secrets.API_HOST }}
+                  username: ${{ secrets.API_USER }}
+                  key: ${{ secrets.API_PVT_KEY }}
+                  source: "deployments/"
                   target: "/app/melinia"
-                  strip_components: 0
+                  strip_components: 1
 
             - name: Deploy to VPS
               uses: appleboy/ssh-action@master
@@ -58,38 +57,20 @@ jobs:
                   GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   GHCR_USER: ${{ github.actor }}
               with:
-                  host: ${{ secrets.DO_HOST }}
-                  username: ${{ secrets.DO_USER }}
-                  key: ${{ secrets.DO_PVT_KEY }}
+                  host: ${{ secrets.API_HOST }}
+                  username: ${{ secrets.API_USER }}
+                  key: ${{ secrets.API_PVT_KEY }}
                   envs: ENV_CONTENT, GHCR_TOKEN, GHCR_USER
                   script: |
                       set -e
 
-                      # Create directory structure
-                      mkdir -p /app/melinia/caddy
-
                       # Create .env file
-                      echo "$ENV_CONTENT" > /app/melinia/.env
+                      echo "$ENV_CONTENT" > /app/melinia/deployments/.env
 
                       # Login to GHCR
                       echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
                       docker pull ghcr.io/melinia-cit/melinia-26/api:latest
 
-                      # Run migrations
-                      echo "Running migrations..."
-                      docker run --rm \
-                        --env-file /app/melinia/.env \
-                        ghcr.io/melinia-cit/melinia-26/api:latest \
-                        bun run dist/migrate.js
-
-                      # Update and restart services
-                      cd /app/melinia
-                      docker compose up -d
-
-                      # Health check
-                      echo "Waiting for services to start..."
-                      sleep 15
-                      curl -f http://localhost/api/v1/ping || exit 1
-
-                      echo "Deployment successful!"
-                      docker ps
+                      # Run deploy script
+                      cd /app/melinia/deployments
+                      ./scripts/deploy-api.sh

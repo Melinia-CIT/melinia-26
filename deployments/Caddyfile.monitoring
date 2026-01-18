@@ -1,0 +1,7 @@
+grafana.melinia.in {
+    reverse_proxy grafana:3000
+}
+
+:80 {
+    redir https://{host}{uri} permanent
+}

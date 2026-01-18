@@ -47,3 +47,8 @@ load-test/*.html
 
 # log files
 log.txt
+
+# Deployments
+deployments/config/prometheus.yml
+deployments/config/alertmanager.yml
+deployments/logs/
