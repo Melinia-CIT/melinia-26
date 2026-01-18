@@ -40,11 +40,11 @@ export default function SearchableSelect<T>({
     const resultRefs = useRef<(HTMLDivElement | null)[]>([])
 
     const defaultFuseOptions = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        threshold: 0.3,
+        threshold: 0.5,
         distance: 100,
         ignoreLocation: true,
-        minMatchCharLength: 2,
+        minMatchCharLength: 1,
+        includeScore: true,
         keys: searchKeys as string[],
         ...fuseOptions,
     }
@@ -77,7 +77,8 @@ export default function SearchableSelect<T>({
 
     const highlightMatch = useCallback((text: string, query: string) => {
         if (!query) return text
-        const regex = new RegExp(`(${query.split("").join(".*?")})`, "gi")
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        const regex = new RegExp(`(${escapedQuery})`, "gi")
         return text.replace(regex, "<mark class='bg-zinc-700 text-white rounded px-0.5'>$1</mark>")
     }, [])
 
