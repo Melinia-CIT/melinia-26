@@ -103,12 +103,12 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(157, 0, 255, 0.6);
+    background: rgba(139, 139, 139, 0.6);
     border-radius: 2px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(157, 0, 255, 0.8);
+    background: rgba(139, 139, 139, 0.8);
 }
 
 /* Helper Class */
