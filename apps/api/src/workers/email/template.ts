@@ -27,16 +27,23 @@ Melinia'26 Dev Team`,
             background-size: 300% 100%;
             animation: borderFlow 3s linear infinite;
         }
+        @media screen and (max-width: 480px) {
+            .container { padding: 20px 12px !important; }
+            .content { padding: 24px 16px !important; }
+            .otp-box { padding: 12px 16px !important; font-size: 22px !important; letter-spacing: 4px !important; }
+            h1 { font-size: 22px !important; }
+            .footer { padding: 16px 16px !important; }
+        }
     </style>
 </head>
 <body style="margin:0;padding:0;background-color:#09090b;font-family:system-ui,-apple-system,sans-serif;">
-    <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+    <div class="container" style="max-width:600px;margin:0 auto;padding:40px 20px;">
         <div class="running-border" style="border-radius:16px;padding:3px;">
             <div style="background:#18181b;border-radius:14px;">
-                <img src="https://cdn.melinia.in/mln-e-bnr.jpg" alt="Melinia'26" style="display:block;width:100%;height:auto;border-radius:11px 11px 0 0;">
+                <img src="https://cdn.melinia.in/mln-e-bnr.jpg" alt="Melinia'26" style="display:block;width:100%;height:auto;border-radius:11px 11px 0 0;max-width:100%;">
                 
-                <div style="padding:40px 32px;text-align:center;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#ffffff;margin-bottom:24px;">
+                <div class="content" style="padding:40px 32px;text-align:center;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#ffffff;margin-bottom:24px;max-width:48px;width:100%;height:auto;">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                         <path d="M9 12l2 2 4-4"/>
                     </svg>
@@ -49,8 +56,8 @@ Melinia'26 Dev Team`,
                         Enter this code to complete your verification
                     </p>
                     
-                    <div style="background:#27272a;border-radius:12px;padding:20px 32px;display:inline-block;margin-bottom:24px;">
-                        <div style="color:#fafafa;font-size:36px;font-weight:700;letter-spacing:8px;font-family:monospace;">
+                    <div class="otp-box" style="background:#27272a;border-radius:12px;padding:16px 24px;display:block;margin:0 auto 24px;max-width:320px;width:calc(100% - 48px);">
+                        <div style="color:#fafafa;font-size:28px;font-weight:700;letter-spacing:6px;font-family:monospace;overflow-wrap:break-word;word-break:break-all;">
                             ${otp}
                         </div>
                     </div>
@@ -64,7 +71,7 @@ Melinia'26 Dev Team`,
                     </p>
                 </div>
                 
-                <div style="padding:20px 32px;border-top:1px solid #27272a;text-align:center;border-radius:0 0 11px 11px;">
+                <div class="footer" style="padding:20px 32px;border-top:1px solid #27272a;text-align:center;border-radius:0 0 11px 11px;">
                     <p style="margin:0 0 8px;color:#71717a;font-size:12px;">
                         This is an automated message, please do not reply.
                     </p>
@@ -116,16 +123,23 @@ Melinia'26 Dev Team`,
             background-size: 300% 100%;
             animation: borderFlow 3s linear infinite;
         }
+        @media screen and (max-width: 480px) {
+            .container { padding: 20px 12px !important; }
+            .content { padding: 24px 16px !important; }
+            .btn { display: block !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; padding: 14px 16px !important; font-size: 14px !important; }
+            h1 { font-size: 22px !important; }
+            .footer { padding: 16px 16px !important; }
+        }
     </style>
 </head>
 <body style="margin:0;padding:0;background-color:#09090b;font-family:system-ui,-apple-system,sans-serif;">
-    <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+    <div class="container" style="max-width:600px;margin:0 auto;padding:40px 20px;">
         <div class="running-border" style="border-radius:16px;padding:3px;">
             <div style="background:#18181b;border-radius:14px;">
-                <img src="https://cdn.melinia.in/mln-e-bnr.jpg" alt="Melinia'26" style="display:block;width:100%;height:auto;border-radius:11px 11px 0 0;">
+                <img src="https://cdn.melinia.in/mln-e-bnr.jpg" alt="Melinia'26" style="display:block;width:100%;height:auto;border-radius:11px 11px 0 0;max-width:100%;">
                 
-                <div style="padding:40px 32px;text-align:center;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#ffffff;margin-bottom:24px;">
+                <div class="content" style="padding:40px 32px;text-align:center;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#ffffff;margin-bottom:24px;max-width:48px;width:100%;height:auto;">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
@@ -138,7 +152,7 @@ Melinia'26 Dev Team`,
                         We received a request to reset your password. Click the button below to create a new password.
                     </p>
                     
-                    <a href="${resetLink}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#ffffff;color:#09090b;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700;">
+                    <a href="${resetLink}" target="_blank" rel="noopener noreferrer" class="btn" style="display:inline-block;background:#ffffff;color:#09090b;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700;max-width:200px;">
                         Reset Password
                     </a>
                     
@@ -151,7 +165,7 @@ Melinia'26 Dev Team`,
                     </p>
                 </div>
                 
-                <div style="padding:20px 32px;border-top:1px solid #27272a;text-align:center;border-radius:0 0 11px 11px;">
+                <div class="footer" style="padding:20px 32px;border-top:1px solid #27272a;text-align:center;border-radius:0 0 11px 11px;">
                     <p style="margin:0 0 8px;color:#71717a;font-size:12px;">
                         This is an automated message, please do not reply.
                     </p>
