@@ -51,6 +51,18 @@ export const profileSchema = baseProfileSchema.omit({
     user_id: true, id: true
 });
 
+export const createOrganizerAccountSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    ph_no: z.string().length(10).regex(/^\d+$/),
+    password: z.string().min(8, "Password too short"),
+});
+export const createOrganizerProfileSchema = createProfileSchema.extend({
+    user_id: z.string().min(1, "User ID is required"),
+});
+
+
+export type CreateOrganizerProfile = z.infer<typeof createOrganizerProfileSchema>;
+export type CreateOrganizerAccount = z.infer<typeof createOrganizerAccountSchema>;
 export type BaseUser = z.infer<typeof baseUserSchema>;
 export type User = z.infer<typeof userSchema>;
 
