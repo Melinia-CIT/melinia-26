@@ -1,31 +1,32 @@
 {
-  "name": "@melinia/api",
-  "version": "0.0.1",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build:api": "bun build src/index.ts --outdir ./dist --target bun",
-    "build:worker": "bun build src/workers/email/worker.ts --outdir ./dist --target bun",
-    "build:migrate": "bun build src/db/migrations.ts --outfile ./dist/migrate.js --target bun",
-    "build": "bun run build:api && bun run build:worker && bun run build:migrate",
-    "dev": "bun --watch run src/index.ts && tsc --watch",
-    "worker": "bun --watch run src/workers/email/worker.ts",
-    "dev:all": "concurrently -n \"API,WORKER\" -c \"blue,green\" \"bun run dev\" \"bun run worker\"",
-    "db:migrate": "bun run src/db/migrations.ts"
-  },
-  "dependencies": {
-    "@aws-sdk/client-ses": "^3.965.0",
-    "@hono/zod-validator": "^0.7.6",
-    "@melinia/shared": "workspace:*",
-    "bullmq": "^5.66.4",
-    "crypto": "^1.0.1",
-    "hono": "^4.11.3",
-    "ioredis": "^5.9.1",
-    "postgres": "^3.4.8",
-    "razorpay": "^2.9.6"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "concurrently": "^9.2.1"
-  }
+    "name": "@melinia/api",
+    "version": "0.0.1",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build:api": "bun build src/index.ts --outdir ./dist --target bun",
+        "build:worker": "bun build src/workers/email/worker.ts --outdir ./dist --target bun",
+        "build:migrate": "bun build src/db/migrations.ts --outfile ./dist/migrate.js --target bun",
+        "build": "bun run build:api && bun run build:worker && bun run build:migrate",
+        "dev": "bun --watch run src/index.ts && tsc --watch",
+        "worker": "bun --watch run src/workers/email/worker.ts",
+        "dev:all": "concurrently -n \"API,WORKER\" -c \"blue,green\" \"bun run dev\" \"bun run worker\"",
+        "db:migrate": "bun run src/db/migrations.ts",
+        "db:seed:colleges": "bun run src/db/seed-colleges.ts"
+    },
+    "dependencies": {
+        "@aws-sdk/client-ses": "^3.965.0",
+        "@hono/zod-validator": "^0.7.6",
+        "@melinia/shared": "workspace:*",
+        "bullmq": "^5.66.4",
+        "crypto": "^1.0.1",
+        "hono": "^4.11.3",
+        "ioredis": "^5.9.1",
+        "postgres": "^3.4.8",
+        "razorpay": "^2.9.6"
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "concurrently": "^9.2.1"
+    }
 }
