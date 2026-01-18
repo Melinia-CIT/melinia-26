@@ -194,7 +194,7 @@ services:
         image: prometheuscommunity/postgres-exporter:v0.18.1
         container_name: melinia-postgres-exporter
         environment:
-            - DATA_SOURCE_NAME=postgresql://${DB_USERNAME}:${DB_PASSWORD}@pgbouncer:5432/${DB_NAME}?sslmode=disable
+            - DATA_SOURCE_NAME=postgresql://${DB_USERNAME}:${DB_PASSWORD}@pgbouncer:${DB_PORT}/${DB_NAME}?sslmode=disable
         restart: unless-stopped
         ports:
             - "9187:9187"
