@@ -124,9 +124,105 @@ const peopleData: SectionData[] = [
                 linkedinUrl: "#",
                 color: "#FF0055",
             },
+            {
+                name: "Eve Wilson",
+                role: "Coordinator",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Frank Miller",
+                role: "Lead",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Grace Lee",
+                role: "Coordinator",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Henry Brown",
+                role: "Manager",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Ivy Martinez",
+                role: "Coordinator",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Jack Thompson",
+                role: "Lead",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Karen White",
+                role: "Coordinator",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Leo Chen",
+                role: "Manager",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Maria Garcia",
+                role: "Coordinator",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Nathan Scott",
+                role: "Lead",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Olivia Taylor",
+                role: "Coordinator",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
+            {
+                name: "Peter Johnson",
+                role: "Manager",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#FF0055",
+            },
         ],
     },
- 
+
     {
         title: "Dev Team",
         people: [
@@ -178,6 +274,22 @@ const peopleData: SectionData[] = [
                 linkedinUrl: "#",
                 color: "#9D00FF",
             },
+            {
+                name: "Agent Smith",
+                role: "Full Stack Developer",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#9D00FF",
+            },
+            {
+                name: "Morpheus",
+                role: "Tech Lead",
+                imageUrl:
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+                linkedinUrl: "#",
+                color: "#9D00FF",
+            },
         ],
     },
 ]
@@ -192,6 +304,9 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
     const [gap, setGap] = useState<number>(24)
     const [isMobile, setIsMobile] = useState<boolean>(false)
     const containerRef = useRef<HTMLDivElement>(null)
+    const carouselRef = useRef<HTMLDivElement>(null)
+    const [isScrolling, setIsScrolling] = useState<boolean>(false)
+    const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     useEffect(() => {
         const handleResize = (): void => {
@@ -222,12 +337,35 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
         return rightImageVariants
     }
 
-//    const animationStyle = shouldReduceMotion? {} : {animation: `scroll-carousel ${duration}s linear infinite`,}
+    const handleScroll = (): void => {
+        setIsScrolling(true)
+
+        if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current)
+        }
+
+        scrollTimeoutRef.current = setTimeout(() => {
+            setIsScrolling(false)
+        }, 150)
+    }
+
+    useEffect(() => {
+        const carousel = carouselRef.current
+        if (carousel) {
+            carousel.addEventListener("scroll", handleScroll, { passive: true })
+            return () => {
+                carousel.removeEventListener("scroll", handleScroll)
+                if (scrollTimeoutRef.current) {
+                    clearTimeout(scrollTimeoutRef.current)
+                }
+            }
+        }
+    }, [])
 
     return (
         <div
             ref={containerRef}
-            className="relative w-full overflow-hidden py-12 group"
+            className="relative w-full py-8 px-2 group overflow-visible"
             style={
                 {
                     "--scroll-distance": `-${scrollDistance}px`,
@@ -249,8 +387,30 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
                     animation: scroll-carousel var(--duration) linear infinite;
                 }
 
+                .carousel-container.scrolling {
+                    animation-play-state: paused;
+                }
+
                 .carousel-container:hover {
                     animation-play-state: paused;
+                }
+
+                .carousel-wrapper {
+                    scroll-behavior: smooth;
+                }
+
+                .carousel-wrapper::-webkit-scrollbar {
+                    display: none;
+                }
+
+                .carousel-wrapper {
+                    -ms-overflow-style: auto;
+                    scrollbar-width: none;
+                }
+
+                .carousel-wrapper {
+                    overflow-x: auto;
+                    overflow-y: visible;
                 }
 
                 @media (prefers-reduced-motion: reduce) {
@@ -260,20 +420,26 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
                 }
             `}</style>
 
-            <div className="carousel-container flex gap-6 md:gap-28">
-                {duplicatedPeople.map((person, index) => (
-                    <motion.div
-                        key={index}
-                        className="shrink-0"
-                        style={{ width: `${cardWidth}px` }}
-                        variants={!shouldReduceMotion ? getVariant(index) : undefined}
-                        initial={!shouldReduceMotion ? "initial" : undefined}
-                        animate={!shouldReduceMotion ? "animate" : undefined}
-                        whileHover={!shouldReduceMotion ? "hover" : undefined}
-                    >
-                        <UserCard {...person} alwaysShowText={isMobile} />
-                    </motion.div>
-                ))}
+            <div
+                ref={carouselRef}
+                className="carousel-wrapper relative w-full py-12"            >
+                <div
+                    className={`carousel-container flex gap-6 md:gap-28 ${isScrolling ? "scrolling" : ""}`}
+                >
+                    {duplicatedPeople.map((person, index) => (
+                        <motion.div
+                            key={index}
+                            className="shrink-0"
+                            style={{ width: `${cardWidth}px` }}
+                            variants={!shouldReduceMotion ? getVariant(index) : undefined}
+                            initial={!shouldReduceMotion ? "initial" : undefined}
+                            animate={!shouldReduceMotion ? "animate" : undefined}
+                            whileHover={!shouldReduceMotion ? "hover" : undefined}
+                        >
+                            <UserCard {...person} alwaysShowText={isMobile} />
+                        </motion.div>
+                    ))}
+                </div>
             </div>
         </div>
     )
@@ -286,15 +452,14 @@ interface ColorMapType {
 export default function People(): React.ReactElement {
     const colorMap: ColorMapType = {
         "Event Coordinators": "#FF0055",
-        "Faculty Coordinators": "#00E0FF",
         "Dev Team": "#9D00FF",
     }
 
     return (
         <section className="relative w-full py-20 bg-zinc-950 text-white overflow-hidden">
-            <div className="relative max-w-[96rem] mx-auto px-4 md:px-8 w-full">
-                <div className="absolute top-0 bottom-0 left-4 md:left-8 w-px bg-gradient-to-b from-transparent via-[#9D00FF]/30 to-transparent" />
-                <div className="absolute top-0 bottom-0 right-4 md:right-8 w-px bg-gradient-to-b from-transparent via-[#FF0066]/30 to-transparent" />
+            <div className="relative max-w-384 mx-auto px-4 md:px-8 w-full">
+                <div className="absolute top-0 bottom-0 left-4 md:left-8 w-px bg-linear-to-b from-transparent via-[#9D00FF]/30 to-transparent" />
+                <div className="absolute top-0 bottom-0 right-4 md:right-8 w-px bg-linear-to-b from-transparent via-[#FF0066]/30 to-transparent" />
 
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -305,7 +470,7 @@ export default function People(): React.ReactElement {
                     <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Our Team
                     </h2>
-                    <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 -rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
+                    <div className="h-2 w-24 bg-linear-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 -rotate-2 shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
                 </motion.div>
 
                 <div className="space-y-16 relative">
@@ -316,7 +481,7 @@ export default function People(): React.ReactElement {
                         return (
                             <div key={index} className="relative">
                                 {index > 0 && (
-                                    <div className="absolute -top-8 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#9D00FF]/30 to-transparent" />
+                                    <div className="absolute -top-8 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#9D00FF]/30 to-transparent" />
                                 )}
                                 <HudSectionHeader
                                     title={section.title}
