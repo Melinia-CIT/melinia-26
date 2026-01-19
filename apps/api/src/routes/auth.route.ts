@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { generateOTPSchema, verifyOTPSchema, registrationSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@packages/shared";
+import { generateOTPSchema, verifyOTPSchema, registrationSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@melinia/shared";
 import { checkUserExists, getUserByMail, insertUser, updatePasswd } from "../db/queries";
 import { ioredis } from "../utils/redis";
 import { generateOTP, getEnv } from "../utils/lib";

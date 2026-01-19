@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import api from "../../../services/api";
 import { useNavigate } from "react-router-dom";
+import PaymentModal from "../../../components/payment/PaymentModal";
 
 interface Team {
     id: string;
@@ -35,6 +36,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
     const [errorMessage, setErrorMessage] = useState("");
     const [isSoloChoice, setIsSoloChoice] = useState(false);
     const registrationInitiated = useRef(false);
+    const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
 
     useEffect(() => {
         let isSubscribed = true;
@@ -120,10 +122,11 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
     const handlePaymentRedirect = async () => {
         setLoading(true);
         try {
-            const res = await api.post("/payment/register-melinia");
-            if (res.data.url) {
-                window.location.href = res.data.url;
-            }
+            // const res = await api.post("/payment/register-melinia");
+            // if (res.data.url) {
+            //     window.location.href = res.data.url;
+            // }
+            setShowPaymentModal(true)
         } catch (err: any) {
             setErrorMessage("Could not initialize payment. Please try again later.");
             setStep("error");
@@ -280,6 +283,15 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                             <p className="text-zinc-400">Success! You are now in {event.name}.</p>
                         </motion.div>
                     )}
+                    {
+                        showPaymentModal &&(
+                            <PaymentModal
+                                isOpen={showPaymentModal}
+                                onClose={()=>setShowPaymentModal(false)}
+                            />
+                        ) 
+                        
+                    }
                 </AnimatePresence>
             </motion.div>
         </div>

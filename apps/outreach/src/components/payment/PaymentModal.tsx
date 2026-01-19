@@ -71,7 +71,7 @@ export default function PaymentModal({
             toast.error("Failed to load payment gateway. Please refresh the page.")
         }
         document.body.appendChild(script)
-    }, [])
+    }, []);
 
     const createPaymentOrderMutation = useMutation({
         mutationFn: paymentService.createOrder,
@@ -163,13 +163,13 @@ export default function PaymentModal({
                         <h2 className="text-lg font-semibold text-white font-inst">Payment</h2>
                         {isRequired && <span className="text-xs text-zinc-400">Required</span>}
                     </div>
-                    {!isRequired && (
+                    {(
                         <button
                             onClick={onClose}
                             className="text-zinc-400 hover:text-white transition-colors"
                             disabled={isProcessing || paymentStatus === "processing"}
                         >
-                            <Xmark width={20} height={20} />
+                            <Xmark width={25} height={25} />
                         </button>
                     )}
                 </div>

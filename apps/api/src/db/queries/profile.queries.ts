@@ -5,7 +5,7 @@ interface IdResult {
     id: number
 }
 
-async function resolveDegreeId(degreeName: string): Promise<number> {
+export async function resolveDegreeId(degreeName: string): Promise<number> {
     const result = await sql<IdResult[]>`
         WITH ins AS (
             INSERT INTO degrees (name) 
@@ -26,7 +26,7 @@ async function resolveDegreeId(degreeName: string): Promise<number> {
     return result[0].id
 }
 
-async function resolveCollegeId(collegeName: string): Promise<number> {
+export async function resolveCollegeId(collegeName: string): Promise<number> {
     const result = await sql<IdResult[]>`
         WITH ins AS (
             INSERT INTO colleges (name) 
