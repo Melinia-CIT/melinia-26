@@ -1,5 +1,5 @@
 import sql from "../connection"
-import { baseUserSchema, userSchema, type User, type BaseUser } from "@packages/shared"
+import { baseUserSchema, userSchema, type User, type BaseUser } from "@melinia/shared"
 
 // User
 export async function checkUserExists(email: string): Promise<boolean> {

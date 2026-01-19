@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { couponExists, couponRedeemed, deleteCoupon, insertCoupon } from "../db/queries/coupons.queries";
 import { HTTPException } from "hono/http-exception";
 import { zValidator } from "@hono/zod-validator";
-import { createCouponRequestSchema, checkCouponRequestSchema } from "@packages/shared/dist";
+import { createCouponRequestSchema, checkCouponRequestSchema } from "@melinia/shared";
 import { adminOnlyMiddleware, authMiddleware } from "../middleware/auth.middleware";
 
 export const coupons = new Hono();

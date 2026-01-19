@@ -6,7 +6,7 @@ import {
     updateEventDetailsSchema,
     eventRegistrationSchema,
     unregisterEventSchema
-} from "@packages/shared";
+} from "@melinia/shared";
 import {
     createEvent, 
     getEvents, 

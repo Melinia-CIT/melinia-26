@@ -5,7 +5,7 @@ import {
     type User, 
     type Profile, 
     type CreateProfile 
-} from "@packages/shared"
+} from "@melinia/shared"
 
 interface IdResult {
     id: number;

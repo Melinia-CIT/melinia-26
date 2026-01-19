@@ -4,7 +4,7 @@ import {
     createProfileSchema,
     invitationStatusSchema,
     type InvitationStatus,
-} from "@packages/shared"
+} from "@melinia/shared"
 import {
     createProfile,
     getProfileById,

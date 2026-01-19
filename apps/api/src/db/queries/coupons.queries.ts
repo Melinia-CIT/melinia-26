@@ -1,4 +1,4 @@
-import { couponResponseSchema, redeemCouponSchema, type Coupon, type ReedeemCoupon } from "@packages/shared/dist";
+import { couponResponseSchema, redeemCouponSchema, type Coupon, type ReedeemCoupon } from "@melinia/shared";
 import sql from "../connection";
 
 export async function couponExists(code: string): Promise<boolean> {

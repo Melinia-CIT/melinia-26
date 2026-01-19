@@ -2,7 +2,7 @@ import { Hono } from "hono"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { HTTPException } from "hono/http-exception"
-import { createProfileSchema, createOrganizerAccountSchema } from "@packages/shared"
+import { createProfileSchema, createOrganizerAccountSchema } from "@melinia/shared"
 import { 
     checkUserExists, 
     checkPhoneNumberExists, 
