@@ -293,7 +293,7 @@ const PaymentStatusBadge = ({ status }: PaymentStatusBadgeProps) => {
         },
         PENDING: {
             icon: <Refresh width={14} height={14} className="animate-spin" />,
-            label: "Pending",
+            label: "Payment Pending",
             className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
         },
     }
