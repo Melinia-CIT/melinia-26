@@ -36,9 +36,10 @@ organizer.post(
     "/profile", 
     authMiddleware, 
     adminOnlyMiddleware, 
-    zValidator("json", createProfileSchema.extend({ user_id: z.string() })), 
+    zValidator("json", createProfileSchema), 
     async (c) => {
-        const { user_id, ...profileData } = c.req.valid("json")
+        const user_id = c.get('user_id');
+        const profileData = c.req.valid("json")
 
         try {
             const user = await getUserById(user_id)
