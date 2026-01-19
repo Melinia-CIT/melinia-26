@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { z } from "zod"
+import { check, z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { HTTPException } from "hono/http-exception"
 import { createProfileSchema, createOrganizerAccountSchema } from "@melinia/shared"
@@ -17,14 +17,13 @@ export const organizer = new Hono()
 
 organizer.post("", authMiddleware, adminOnlyMiddleware, zValidator("json", createOrganizerAccountSchema), async (c) => {
     try {
-        const { email, ph_no, password } = c.req.valid("json")
+        const { email, password } = c.req.valid("json")
 
         if (await checkUserExists(email)) {
             throw new HTTPException(409, { message: `Email ${email} is already registered` })
         }
-
         const passwdHash = await Bun.password.hash(password)
-        const newUser = await insertOrganizer(email, ph_no, passwdHash)
+        const newUser = await insertOrganizer(email, passwdHash)
 
         return c.json({ status: true, data: newUser }, 201)
     } catch (e: any) {
@@ -50,6 +49,11 @@ organizer.post(
             if (await checkProfileExists(user_id)) {
                 throw new HTTPException(409, { message: "Profile already exists for this user" })
             }
+            if(profileData.ph_no){
+                if(await checkPhoneNumberExists(profileData.ph_no)){
+                    throw new HTTPException(409, {message:"Phone number already registered!"})
+                }
+            }
 
             const profile = await createOrganizerProfile(user_id, profileData)
             await setProfileCompleted(user_id)
@@ -61,4 +65,5 @@ organizer.post(
             throw new HTTPException(500, { message: `Profile Error: ${e.message}` })
         }
     }
-)
+);
+

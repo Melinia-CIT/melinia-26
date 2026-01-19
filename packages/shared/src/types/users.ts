@@ -53,7 +53,6 @@ export const profileSchema = baseProfileSchema.omit({
 
 export const createOrganizerAccountSchema = z.object({
     email: z.string().email("Invalid email address"),
-    ph_no: z.string().length(10).regex(/^\d+$/),
     password: z.string().min(8, "Password too short"),
 });
 export const createOrganizerProfileSchema = createProfileSchema.extend({

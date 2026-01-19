@@ -12,12 +12,11 @@ interface IdResult {
 }
 export async function insertOrganizer(
     email: string,
-    ph_no: string,
     passwdHash: string
 ): Promise<User> {
     const [row] = await sql`
-        INSERT INTO users (email, ph_no, passwd_hash, role, payment_status)
-        VALUES (${email}, ${ph_no}, ${passwdHash}, 'ORGANIZER', 'EXEMPTED')
+        INSERT INTO users (email, passwd_hash, role, payment_status)
+        VALUES (${email}, ${passwdHash}, 'ORGANIZER', 'EXEMPTED')
         RETURNING *;
     `
     return userSchema.parse(row)
