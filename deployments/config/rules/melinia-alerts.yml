@@ -38,7 +38,7 @@ groups:
                 description: "Redis exporter on {{ $labels.instance }} is not responding"
 
           - alert: ContainerDown
-            expr: cadvisor_last_seen{name!=""} < time() - 300
+            expr: time() - cadvisor_last_seen{name!=""} > 300
             for: 5m
             labels:
                 severity: critical
@@ -66,7 +66,6 @@ groups:
 
           - alert: ContainerOOMKilled
             expr: increase(container_tasks_state{name="",state="oomkilled"}[1h]) > 0
-            for: 0m
             labels:
                 severity: critical
             annotations:
@@ -99,15 +98,6 @@ groups:
             annotations:
                 summary: "Redis memory usage critical"
                 description: "Redis memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
-
-          - alert: RedisDown
-            expr: redis_up == 0
-            for: 1m
-            labels:
-                severity: critical
-            annotations:
-                summary: "Redis is down"
-                description: "Redis on {{ $labels.instance }} is not responding"
 
           - alert: RedisQueueLengthHigh
             expr: redis_db_keys{db="1"} > 5000

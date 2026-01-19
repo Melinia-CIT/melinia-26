@@ -4,7 +4,7 @@ services:
         container_name: melinia-prometheus
         restart: unless-stopped
         expose:
-            - "9090"
+            - "127.0.0.1:9090:9090"
         volumes:
             - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
             - ./config/rules:/etc/prometheus/rules:ro
@@ -16,7 +16,7 @@ services:
             - "--storage.tsdb.max-block-duration=2d"
             - "--storage.tsdb.min-block-duration=1d"
             - "--web.enable-remote-write-receiver"
-            - "--web.enable-admin-api"
+            - "--web.read-timeout=30s"
 
     grafana:
         image: grafana/grafana:latest
@@ -39,7 +39,7 @@ services:
         container_name: melinia-alertmanager
         restart: unless-stopped
         expose:
-            - "9093"
+            - "127.0.0.1:9093:9093"
         volumes:
             - ./config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
             - alertmanager_data:/alertmanager
@@ -51,8 +51,8 @@ services:
         image: prom/node-exporter:v1.10.2
         container_name: melinia-monitoring-node-exporter
         restart: unless-stopped
-        ports:
-            - "9100:9100"
+        expose:
+            - "9100"
         volumes:
             - /proc:/host/proc:ro
             - /sys:/host/sys:ro
