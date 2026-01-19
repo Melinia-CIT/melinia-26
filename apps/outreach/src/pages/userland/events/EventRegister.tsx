@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import api from "../../../services/api";
 import { useNavigate } from "react-router-dom";
+import PaymentModal from "../../../components/payment/PaymentModal";
 
 interface Team {
     id: string;
@@ -120,10 +121,11 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
     const handlePaymentRedirect = async () => {
         setLoading(true);
         try {
-            const res = await api.post("/payment/register-melinia");
-            if (res.data.url) {
-                window.location.href = res.data.url;
-            }
+            // const res = await api.post("/payment/register-melinia");
+            // if (res.data.url) {
+            //     window.location.href = res.data.url;
+            // }
+
         } catch (err: any) {
             setErrorMessage("Could not initialize payment. Please try again later.");
             setStep("error");

@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom"
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import Navigator from "../../components/userland/Navigator"
 import { useQuery } from "@tanstack/react-query"
 import Profile from "./Profile"
@@ -7,11 +7,12 @@ import { paymentService } from "../../services/payment"
 import { motion, AnimatePresence } from "framer-motion"
 import { fetchUser } from "../../services/users"
 
-const restrictedRoutes = ["/teams", "/events"]
+const restrictedRoutes = ["/teams", "/leaderboard"]
 
 const AppLayout = () => {
     const location = useLocation()
-    const isRestrictedRoute = restrictedRoutes.some(route => location.pathname.includes(route))
+    const isRestrictedRoute = restrictedRoutes.some(route => location.pathname.includes(route));
+    const navigator = useNavigate();
 
     const { data: userData, isLoading: userLoading } = useQuery({
         queryKey: ["userMe"],
@@ -34,11 +35,7 @@ const AppLayout = () => {
     })
 
     const showProfileModal = !userLoading && userData && !userData.profile_completed
-    const showPaymentModal =
-        !import.meta.env.DEV &&
-        isRestrictedRoute &&
-        !paymentLoading &&
-        (!paymentStatus || !paymentStatus.paid)
+    const showPaymentModal =isRestrictedRoute && !paymentLoading && (!paymentStatus || !paymentStatus.paid)
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
@@ -97,7 +94,7 @@ const AppLayout = () => {
                 {showPaymentModal && (
                     <PaymentModal
                         isOpen={true}
-                        onClose={() => {}}
+                        onClose={() => {navigator("/app")}}
                         userName={userData?.name || ""}
                         userEmail={userData?.email || ""}
                         onPaymentSuccess={() => {}}
