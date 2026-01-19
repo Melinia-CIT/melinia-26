@@ -2,28 +2,28 @@ import sql from "../connection"
 import { type Profile, type CreateProfile, profileSchema } from "@melinia/shared"
 
 interface IdResult {
-    id: number;
+    id: number
 }
 
-async function resolveDegreeId(degreeName: string, collegeId: number): Promise<number> {
+async function resolveDegreeId(degreeName: string): Promise<number> {
     const result = await sql<IdResult[]>`
         WITH ins AS (
-            INSERT INTO degrees (name, college_id) 
-            VALUES (${degreeName}, ${collegeId}) 
-            ON CONFLICT (name, college_id) DO NOTHING 
+            INSERT INTO degrees (name) 
+            VALUES (${degreeName}) 
+            ON CONFLICT (name) DO NOTHING 
             RETURNING id
         )
         SELECT id FROM ins
         UNION ALL
-        SELECT id FROM degrees WHERE name = ${degreeName} and college_id = ${collegeId}
+        SELECT id FROM degrees WHERE name = ${degreeName}
         LIMIT 1;
-    `;
+    `
 
     if (!result[0]) {
-        throw new Error(`Failed to resolve ID for ${degreeName}`);
+        throw new Error(`Failed to resolve ID for ${degreeName}`)
     }
 
-    return result[0].id;
+    return result[0].id
 }
 
 async function resolveCollegeId(collegeName: string): Promise<number> {
@@ -38,19 +38,19 @@ async function resolveCollegeId(collegeName: string): Promise<number> {
         UNION ALL
         SELECT id FROM colleges WHERE name = ${collegeName}
         LIMIT 1;
-    `;
+    `
 
     if (!result[0]) {
-        throw new Error(`Failed to resolve ID for ${collegeName}`);
+        throw new Error(`Failed to resolve ID for ${collegeName}`)
     }
 
-    return result[0].id;
+    return result[0].id
 }
 
 export async function checkPhoneNumberExists(phone_number: string): Promise<boolean> {
     const number = await sql`SELECT 1 FROM  users WHERE ph_no = ${phone_number};`
 
-    return number.length > 0;
+    return number.length > 0
 }
 
 export async function getProfileById(id: string): Promise<Profile | null> {
@@ -67,24 +67,16 @@ export async function getProfileById(id: string): Promise<Profile | null> {
         LEFT JOIN degrees d ON p.degree_id = d.id
         INNER JOIN users u ON p.user_id = u.id
         WHERE u.id = ${id};
-    `;
+    `
 
-    return profile ? profileSchema.parse(profile) : null;
+    return profile ? profileSchema.parse(profile) : null
 }
 
-
 export async function createProfile(userId: string, profileData: CreateProfile): Promise<Profile> {
-    const {
-        first_name,
-        last_name,
-        college,
-        degree,
-        year,
-        ph_no
-    } = profileData;
+    const { first_name, last_name, college, degree, year, ph_no } = profileData
 
-    const collegeId = await resolveCollegeId(college);
-    const degreeId = await resolveDegreeId(degree, collegeId);
+    const collegeId = await resolveCollegeId(college)
+    const degreeId = await resolveDegreeId(degree)
 
     const [profile] = await sql`
             WITH p AS (
@@ -113,36 +105,29 @@ export async function createProfile(userId: string, profileData: CreateProfile):
         FROM p
         JOIN colleges c ON p.college_id = c.id
         JOIN degrees d ON p.degree_id = d.id;
-    `;
+    `
 
     await sql`
         UPDATE users
         SET ph_no = ${ph_no}
         WHERE id = ${userId};
-	`;
+	`
 
-    return profileSchema.parse(profile);
+    return profileSchema.parse(profile)
 }
 
 // TODO: This methods upserts, need refinement in the return.
 export async function updateProfile(userId: string, profileData: CreateProfile): Promise<Profile> {
-    const {
-        first_name,
-        last_name,
-        college,
-        degree,
-        year,
-        ph_no
-    } = profileData;
+    const { first_name, last_name, college, degree, year, ph_no } = profileData
 
-    const collegeId = await resolveCollegeId(college);
-    const degreeId = await resolveDegreeId(degree, collegeId);
+    const collegeId = await resolveCollegeId(college)
+    const degreeId = await resolveDegreeId(degree)
 
     await sql`
         UPDATE users
         SET ph_no = ${ph_no}
         WHERE id = ${userId};
-	`;
+	`
 
     const [profile] = await sql`
         WITH upsert AS (
@@ -179,9 +164,9 @@ export async function updateProfile(userId: string, profileData: CreateProfile):
         FROM upsert
         JOIN colleges c ON upsert.college_id = c.id
         JOIN degrees d ON upsert.degree_id = d.id;
-    `;
+    `
 
-    return profileSchema.parse(profile);
+    return profileSchema.parse(profile)
 }
 
 export async function setProfileCompleted(userId: string) {
@@ -190,7 +175,7 @@ export async function setProfileCompleted(userId: string) {
         SET profile_completed = true
         WHERE id = ${userId}
         RETURNING *;
-    `;
+    `
 
-    return result;
+    return result
 }
