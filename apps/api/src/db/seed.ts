@@ -24,8 +24,8 @@ export async function seedDegrees(): Promise<void> {
         .filter(name => name.length > 0)
 
     await sql`
-        INSERT INTO degrees (name, is_default, college_id)
-        SELECT unnest(${degrees}::text[]), TRUE, NULL
-        ON CONFLICT (name, college_id) DO NOTHING;
+        INSERT INTO degrees (name, is_default)
+        SELECT unnest(${degrees}::text[]), TRUE
+        ON CONFLICT (name) DO NOTHING;
     `;
 }

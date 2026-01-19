@@ -1,24 +1,34 @@
 import { Hono } from "hono"
-import { getColleges, searchColleges } from "../db/queries/colleges.queries"
+import {
+    searchColleges,
+    getColleges,
+    searchDegrees,
+    getDegrees,
+} from "../db/queries/colleges.queries"
 import {
     getCollegeCache,
     setCollegeCache,
     getCollegeCacheKey,
     invalidateCollegeCache,
+    getDegreeCache,
+    setDegreeCache,
+    getDegreeCacheKey,
+    invalidateDegreeCache,
     COLLEGE_SEARCH_TTL,
-    COLLEGE_ALL_TTL,
-} from "../utils/cache"
+    DEGREE_SEARCH_TTL,
+} from "../utils/cache/college.cache"
 import { sendSuccess, sendError } from "../utils/response"
+import { adminOnlyMiddleware, authMiddleware } from "../middleware/auth.middleware"
 
 export const college = new Hono()
 
-college.get("/", async c => {
+college.get("/", authMiddleware, async c => {
     try {
-        const search = c.req.query("search") || ""
+        const search = c.req.query("q")?.trim() || ""
         const limit = Math.min(Number(c.req.query("limit")) || 20, 50)
+        const isSearch = search.length >= 2
 
         const cacheKey = getCollegeCacheKey(search, limit)
-        const ttl = search.length >= 2 ? COLLEGE_SEARCH_TTL : COLLEGE_ALL_TTL
 
         try {
             const cached = await getCollegeCache(cacheKey)
@@ -27,32 +37,80 @@ college.get("/", async c => {
             }
         } catch (error) {
             console.warn(
-                "Cache read failed, falling back to DB:",
+                "College cache read failed, falling back to DB:",
                 error instanceof Error ? error.message : "Unknown error"
             )
         }
 
-        const data = search.length >= 2 ? await searchColleges(search, limit) : await getColleges()
+        const data = isSearch ? await searchColleges(search, limit) : await getColleges(limit)
 
-        setCollegeCache(cacheKey, data, ttl).catch(err =>
-            console.warn(
-                "Cache write failed:",
-                err instanceof Error ? err.message : "Unknown error"
+        setCollegeCache(cacheKey, data, COLLEGE_SEARCH_TTL)
+            .catch(err =>
+                console.warn("College cache write failed:", err instanceof Error ? err.message : "Unknown error")
             )
-        )
 
-        return sendSuccess(c, data, "Colleges fetched", true, 200)
+        return sendSuccess(
+            c,
+            data,
+            data.length === 0 ? "No colleges found" : `${data.length} colleges fetched`,
+            true,
+            200
+        )
     } catch (error) {
         console.error("College endpoint error:", error)
         return sendError(c, "Failed to fetch colleges", 500)
     }
 })
 
-college.post("/invalidate-cache", async c => {
+college.get("/degrees", authMiddleware, async c => {
+    try {
+        const search = c.req.query("q")?.trim() || ""
+        const limit = Math.min(Number(c.req.query("limit")) || 20, 50)
+        const isSearch = search.length >= 2
+
+        const cacheKey = getDegreeCacheKey(search, limit)
+
+        try {
+            const cached = await getDegreeCache(cacheKey)
+            if (cached) {
+                return sendSuccess(c, cached, "Degrees fetched from cache", true, 200)
+            }
+        } catch (error) {
+            console.warn(
+                "Degree cache read failed, falling back to DB:",
+                error instanceof Error ? error.message : "Unknown error"
+            )
+        }
+
+        const data = isSearch ? await searchDegrees(search, limit) : await getDegrees(limit)
+
+        setDegreeCache(cacheKey, data, DEGREE_SEARCH_TTL)
+            .catch(err =>
+                console.warn(
+                    "Degree cache write failed:",
+                    err instanceof Error ? err.message : "Unknown error"
+                )
+            )
+
+        return sendSuccess(
+            c,
+            data,
+            data.length === 0 ? "No degrees found" : `${data.length} degrees fetched`,
+            true,
+            200
+        )
+    } catch (error) {
+        console.error("Degrees endpoint error:", error)
+        return sendError(c, "Failed to fetch degrees", 500)
+    }
+})
+
+college.post("/invalidate-cache", authMiddleware, adminOnlyMiddleware, async c => {
     try {
         await invalidateCollegeCache()
-        return sendSuccess(c, null, "Cache invalidated", true, 200)
+        await invalidateDegreeCache()
+        return c.json("Cache invalidated", 200);
     } catch (error) {
-        return sendError(c, "Failed to invalidate cache", 500)
+        return c.json("Failed to invalidate cache", 500);
     }
 })

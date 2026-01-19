@@ -537,16 +537,30 @@ await runMigration("add round_name", async () => {
     `
 })
 
+await runMigration("add unique constraint for degrees name", async () => {
+    await sql`
+        ALTER TABLE degrees
+        ADD CONSTRAINT uniq_degree_name UNIQUE (name);
+    `
+})
+
+await runMigration("remove college_id ref from degrees", async () => {
+    await sql`
+        ALTER TABLE degrees
+        DROP COLUMN college_id;
+    `
+})
+
 await runMigration("seed colleges and degress", async () => {
     await seedColleges()
     await seedDegrees()
 })
 
-await runMigration("add college name index for search", async () => {
+await runMigration("add pg trigram", async () => {
     await sql`
-        CREATE INDEX IF NOT EXISTS idx_colleges_name_default 
-        ON colleges(name) WHERE is_default = true;
+        CREATE EXTENSION pg_trgm;
     `
 })
+
 
 await sql.end()

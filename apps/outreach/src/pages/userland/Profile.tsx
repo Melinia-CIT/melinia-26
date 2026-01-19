@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -6,7 +6,6 @@ import toast from "react-hot-toast"
 import { User, Mail, Phone, GraduationCap, NavArrowDown, Book } from "iconoir-react"
 import { createProfileSchema, type CreateProfile } from "@melinia/shared"
 import api from "../../services/api"
-import SearchableSelect from "../../components/ui/SearchableSelect"
 
 interface ProfileProps {
     initialData?: Record<string, unknown>
@@ -15,53 +14,178 @@ interface ProfileProps {
 interface College {
     id: number
     name: string
-    degrees: string[]
 }
 
-interface DegreeOption {
+interface Degree {
+    id: number
     name: string
 }
 
-function useCollegeSearch(debounceMs = 300) {
-    const [query, setQuery] = useState("")
-    const [results, setResults] = useState<College[]>([])
-    const [isLoading, setIsLoading] = useState(false)
+const yearOptions = [1, 2, 3, 4, 5]
 
-    const search = useCallback(async (searchTerm: string) => {
-        setIsLoading(true)
-        try {
-            const res = await api.get(`/colleges?search=${encodeURIComponent(searchTerm)}`)
-            const data = res.data.data || []
-
-            const seen = new Set<string>()
-            const deduplicated: College[] = []
-            for (const college of data) {
-                if (!seen.has(college.name)) {
-                    seen.add(college.name)
-                    deduplicated.push(college)
-                }
-            }
-            setResults(deduplicated)
-        } catch (err) {
-            console.error("College search failed:", err)
-            setResults([])
-        } finally {
-            setIsLoading(false)
-        }
-    }, [])
+const SearchableDropdown = ({
+    query,
+    setQuery,
+    results,
+    isOpen,
+    setIsOpen,
+    focusedIndex,
+    setFocusedIndex,
+    isLoading,
+    hasSearched,
+    onSelect,
+    inputClassName,
+    placeholder,
+    icon: Icon,
+}: {
+    query: string
+    setQuery: (val: string) => void
+    results: Array<{ id: number; name: string }>
+    isOpen: boolean
+    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+    focusedIndex: number | null
+    setFocusedIndex: React.Dispatch<React.SetStateAction<number | null>>
+    isLoading: boolean
+    hasSearched: boolean
+    onSelect: (item: { id: number; name: string }) => void
+    inputClassName: string
+    placeholder: string
+    icon?: React.ComponentType<{ className?: string; width?: number; height?: number }>
+}) => {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const dropdownRef = useRef<HTMLDivElement>(null)
+    const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            search(query)
-        }, debounceMs)
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false)
+            }
+        }
 
-        return () => clearTimeout(timer)
-    }, [query, debounceMs, search])
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [setIsOpen])
 
-    return { query, setQuery, results, isLoading }
+    useEffect(() => {
+        if (focusedIndex !== null && itemRefs.current[focusedIndex]) {
+            itemRefs.current[focusedIndex]?.scrollIntoView({ block: "nearest" })
+        }
+    }, [focusedIndex])
+
+    const showDropdown = isOpen && query.length >= 2
+
+    return (
+        <div ref={containerRef} className="relative">
+            <div className="relative">
+                {Icon && (
+                    <Icon
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 z-10"
+                        width={18}
+                        height={18}
+                    />
+                )}
+                <input
+                    type="text"
+                    value={query}
+                    onChange={e => {
+                        setQuery(e.target.value)
+                        if (e.target.value.length >= 2) {
+                            setIsOpen(true)
+                        }
+                    }}
+                    onFocus={() => {
+                        if (query.length >= 2) {
+                            setIsOpen(true)
+                        }
+                    }}
+                    onBlur={() => {
+                        setIsOpen(false)
+                    }}
+                    onKeyDown={e => {
+                        if (!isOpen || results.length === 0) {
+                            if (e.key === "Enter") {
+                                e.preventDefault()
+                                if (results.length > 0) {
+                                    setFocusedIndex(0)
+                                    setIsOpen(true)
+                                }
+                            }
+                            return
+                        }
+
+                        switch (e.key) {
+                            case "ArrowDown":
+                                e.preventDefault()
+                                setFocusedIndex((prev: number | null) => {
+                                    if (prev === null) return 0
+                                    return Math.min(prev + 1, results.length - 1)
+                                })
+                                break
+                            case "ArrowUp":
+                                e.preventDefault()
+                                setFocusedIndex((prev: number | null) => {
+                                    if (prev === null || prev === 0) return results.length - 1
+                                    return prev - 1
+                                })
+                                break
+                            case "Enter":
+                                e.preventDefault()
+                                if (focusedIndex !== null && results[focusedIndex]) {
+                                    onSelect(results[focusedIndex])
+                                } else if (results.length > 0) {
+                                    onSelect(results[0])
+                                }
+                                break
+                            case "Escape":
+                                setIsOpen(false)
+                                setFocusedIndex(null)
+                                break
+                        }
+                    }}
+                    className={inputClassName}
+                    placeholder={placeholder}
+                />
+            </div>
+
+            {showDropdown && (
+                <div
+                    ref={dropdownRef}
+                    tabIndex={-1}
+                    className="absolute z-50 w-full mt-1 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl max-h-60 overflow-auto outline-none"
+                >
+                    {isLoading && <div className="px-4 py-3 text-sm text-zinc-500">Loading...</div>}
+
+                    {!isLoading &&
+                        results.map((item, idx) => (
+                            <div
+                                key={item.id}
+                                ref={el => {
+                                    itemRefs.current[idx] = el
+                                }}
+                                tabIndex={-1}
+                                onPointerDown={e => e.preventDefault()}
+                                onClick={() => onSelect(item)}
+                                className={`px-4 py-3 text-sm cursor-pointer transition-colors ${
+                                    focusedIndex === idx
+                                        ? "bg-zinc-800 text-zinc-100"
+                                        : "text-zinc-300 hover:bg-zinc-800/50"
+                                }`}
+                            >
+                                {item.name}
+                            </div>
+                        ))}
+
+                    {hasSearched && !isLoading && results.length === 0 && (
+                        <div className="px-4 py-3 text-sm text-zinc-500">
+                            No results found. Your input will be taken.
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    )
 }
-
-const yearOptions = [1, 2, 3, 4, 5]
 
 const Profile = ({ initialData }: ProfileProps) => {
     const queryClient = useQueryClient()
@@ -84,39 +208,102 @@ const Profile = ({ initialData }: ProfileProps) => {
         },
     })
 
-    const watchedCollege = watch("college")
-    const watchedDegree = watch("degree")
     const watchedYear = watch("year")
 
-    const {
-        query,
-        setQuery,
-        results: colleges,
-        isLoading: isSearchingColleges,
-    } = useCollegeSearch(300)
+    const [activeDropdown, setActiveDropdown] = useState<"college" | "degree" | null>(null)
+
+    const [collegeQuery, setCollegeQuery] = useState((initialData?.college as string) || "")
+    const [collegeResults, setCollegeResults] = useState<College[]>([])
+    const [collegeFocused, setCollegeFocused] = useState<number | null>(null)
+    const [isCollegeSearching, setIsCollegeSearching] = useState(false)
+    const [hasCollegeSearched, setHasCollegeSearched] = useState(false)
+    const [collegeSelectedQuery, setCollegeSelectedQuery] = useState("")
+
+    const [degreeQuery, setDegreeQuery] = useState((initialData?.degree as string) || "")
+    const [degreeResults, setDegreeResults] = useState<Degree[]>([])
+    const [degreeFocused, setDegreeFocused] = useState<number | null>(null)
+    const [isDegreeSearching, setIsDegreeSearching] = useState(false)
+    const [hasDegreeSearched, setHasDegreeSearched] = useState(false)
+    const [degreeSelectedQuery, setDegreeSelectedQuery] = useState("")
+
+    const isCollegeOpen = activeDropdown === "college"
+    const isDegreeOpen = activeDropdown === "degree"
 
     useEffect(() => {
-        if (watchedCollege && query !== watchedCollege) {
-            setQuery(watchedCollege)
+        if (collegeQuery.length < 2 || collegeQuery === collegeSelectedQuery) {
+            setCollegeResults([])
+            setHasCollegeSearched(false)
+            return
         }
-    }, [watchedCollege, query, setQuery])
 
-    const selectedCollegeObj = colleges.find(c => c.name === watchedCollege)
-    const availableDegrees = selectedCollegeObj?.degrees || []
-    const degreeOptions: DegreeOption[] = useMemo(() => {
-        const seen = new Set<string>()
-        return availableDegrees
-            .filter(d => {
-                if (seen.has(d)) return false
-                seen.add(d)
-                return true
-            })
-            .map(d => ({ name: d }))
-    }, [availableDegrees])
+        const timer = setTimeout(async () => {
+            setIsCollegeSearching(true)
+            try {
+                const res = await api.get("/colleges", { q: encodeURIComponent(collegeQuery) })
+                const data = res.data.data || []
+                setCollegeResults(data)
+                setHasCollegeSearched(true)
+                if (data.length > 0) {
+                    setActiveDropdown("college")
+                    setCollegeFocused(0)
+                }
+            } catch {
+                setCollegeResults([])
+                setHasCollegeSearched(false)
+            } finally {
+                setIsCollegeSearching(false)
+            }
+        }, 300)
+
+        return () => clearTimeout(timer)
+    }, [collegeQuery, collegeSelectedQuery])
 
     useEffect(() => {
-        setValue("degree", "")
-    }, [watchedCollege, setValue])
+        if (degreeQuery.length < 2 || degreeQuery === degreeSelectedQuery) {
+            setDegreeResults([])
+            setHasDegreeSearched(false)
+            return
+        }
+
+        const timer = setTimeout(async () => {
+            setIsDegreeSearching(true)
+            try {
+                const res = await api.get("/colleges/degrees", {
+                    q: encodeURIComponent(degreeQuery),
+                })
+                const data = res.data.data || []
+                setDegreeResults(data)
+                setHasDegreeSearched(true)
+                if (data.length > 0) {
+                    setActiveDropdown("degree")
+                    setDegreeFocused(0)
+                }
+            } catch {
+                setDegreeResults([])
+                setHasDegreeSearched(false)
+            } finally {
+                setIsDegreeSearching(false)
+            }
+        }, 300)
+
+        return () => clearTimeout(timer)
+    }, [degreeQuery, degreeSelectedQuery])
+
+    const selectCollege = (college: College) => {
+        setCollegeQuery(college.name)
+        setCollegeSelectedQuery(college.name)
+        setValue("college", college.name)
+        setActiveDropdown(null)
+        setCollegeFocused(null)
+    }
+
+    const selectDegree = (degree: Degree) => {
+        setDegreeQuery(degree.name)
+        setDegreeSelectedQuery(degree.name)
+        setValue("degree", degree.name)
+        setActiveDropdown(null)
+        setDegreeFocused(null)
+    }
 
     const updateMutation = useMutation({
         mutationFn: async (values: CreateProfile) => {
@@ -167,7 +354,7 @@ const Profile = ({ initialData }: ProfileProps) => {
                             />
                             <input
                                 className={`${getInputClass("first_name")} pl-10`}
-                                placeholder="Spider"
+                                placeholder="Peter"
                                 {...register("first_name")}
                             />
                         </div>
@@ -183,7 +370,7 @@ const Profile = ({ initialData }: ProfileProps) => {
                         </label>
                         <input
                             className={getInputClass("last_name")}
-                            placeholder="Man"
+                            placeholder="Parker"
                             {...register("last_name")}
                         />
                     </div>
@@ -201,7 +388,7 @@ const Profile = ({ initialData }: ProfileProps) => {
                             type="email"
                             value={(initialData?.email as string) || ""}
                             readOnly
-                            className="w-full rounded-lg bg-zinc-900/50 border border-zinc-800 pl-10 pr-4 py-2 text-sm text-zinc-500 cursor-not-allowed"
+                            className="w-full rounded-lg bg-zinc-900/50 border border-zinc-800 pl-10 pr-4 py-2 text-sm text-zinc-400 cursor-not-allowed"
                         />
                     </div>
                 </div>
@@ -233,26 +420,26 @@ const Profile = ({ initialData }: ProfileProps) => {
                     <label className={`block text-xs font-medium mb-1 ${getLabelClass("college")}`}>
                         College *
                     </label>
-                    <div className="relative">
-                        <GraduationCap
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 z-10"
-                            width={18}
-                            height={18}
-                        />
-                        <SearchableSelect<College>
-                            data={colleges}
-                            searchKeys={["name"]}
-                            placeholder="Search college..."
-                            value={query}
-                            onChange={val => {
-                                setQuery(val)
-                                setValue("college", val)
-                            }}
-                            displayKey="name"
-                            isLoading={isSearchingColleges}
-                            inputClassName={`${getInputClass("college")} pl-10 pr-10`}
-                        />
-                    </div>
+                    <SearchableDropdown
+                        query={collegeQuery}
+                        setQuery={val => {
+                            setCollegeQuery(val)
+                            setValue("college", val)
+                        }}
+                        results={collegeResults}
+                        isOpen={isCollegeOpen}
+                        setIsOpen={open =>
+                            open ? setActiveDropdown("college") : setActiveDropdown(null)
+                        }
+                        focusedIndex={collegeFocused}
+                        setFocusedIndex={setCollegeFocused}
+                        isLoading={isCollegeSearching}
+                        hasSearched={hasCollegeSearched}
+                        onSelect={selectCollege}
+                        inputClassName={`${getInputClass("college")} pl-10 pr-10`}
+                        placeholder="Search college..."
+                        icon={GraduationCap}
+                    />
                     {errors.college && (
                         <p className="text-red-400 text-[10px] mt-1">{errors.college.message}</p>
                     )}
@@ -262,27 +449,26 @@ const Profile = ({ initialData }: ProfileProps) => {
                     <label className={`block text-xs font-medium mb-1 ${getLabelClass("degree")}`}>
                         Degree *
                     </label>
-                    <div className="relative">
-                        <Book
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 z-10"
-                            width={18}
-                            height={18}
-                        />
-                        <SearchableSelect<DegreeOption>
-                            data={degreeOptions}
-                            searchKeys={["name"]}
-                            placeholder={
-                                !watchedCollege
-                                    ? "Select college first"
-                                    : "Search or type degree..."
-                            }
-                            value={watchedDegree}
-                            onChange={val => setValue("degree", val)}
-                            disabled={!watchedCollege}
-                            displayKey="name"
-                            inputClassName={`${getInputClass("degree")} pl-10 pr-10`}
-                        />
-                    </div>
+                    <SearchableDropdown
+                        query={degreeQuery}
+                        setQuery={val => {
+                            setDegreeQuery(val)
+                            setValue("degree", val)
+                        }}
+                        results={degreeResults}
+                        isOpen={isDegreeOpen}
+                        setIsOpen={open =>
+                            open ? setActiveDropdown("degree") : setActiveDropdown(null)
+                        }
+                        focusedIndex={degreeFocused}
+                        setFocusedIndex={setDegreeFocused}
+                        isLoading={isDegreeSearching}
+                        hasSearched={hasDegreeSearched}
+                        onSelect={selectDegree}
+                        inputClassName={`${getInputClass("degree")} pl-10 pr-10`}
+                        placeholder="Search degree..."
+                        icon={Book}
+                    />
                     {errors.degree && (
                         <p className="text-red-400 text-[10px] mt-1">{errors.degree.message}</p>
                     )}
