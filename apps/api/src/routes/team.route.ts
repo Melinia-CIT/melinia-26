@@ -18,7 +18,8 @@ import {
     getTeamDetails,
     updateTeam,
     deleteInvitation,
-    inviteTeamMember
+    inviteTeamMember,
+    checkMemberInTeam
 } from "../db/queries/teams.queries";
 import { sendError, sendSuccess } from "../utils/response";
 import { authMiddleware } from "../middleware/auth.middleware";
@@ -48,6 +49,10 @@ teams.get("/:team_id", authMiddleware, async (c) => {
     try {
 
         const teamID = c.req.param('team_id');
+        const user_id = c.get('user_id');
+        if(await checkMemberInTeam(user_id, teamID)){
+            return sendError(c, "This is not your team", 403);
+        }
         if (!teamID) {
             throw new HTTPException(400, { message: "Invalid Team ID" })
         }
