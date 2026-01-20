@@ -563,4 +563,11 @@ await runMigration("add pg trigram", async () => {
 })
 
 
+await runMigration("remove event_id in teams table", async () => {
+    await sql`
+   ALTER TABLE teams DROP COLUMN event_id;  
+            `;
+})
+
+
 await sql.end()

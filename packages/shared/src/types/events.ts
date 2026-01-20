@@ -110,7 +110,7 @@ export const createEventSchema = withRefinements(
         .safeExtend({
             rounds: z.array(roundSchema).optional(),
             prizes: z.array(prizeSchema).optional(),
-            organizers: z.array(organizerSchema).optional(),
+            organizers:z.array(z.string().email("Invalid organizer email")).optional(),
             rules: z.array(eventRuleSchema.omit({ id: true, eventId: true, createdAt: true, updatedAt: true })).optional(), // Added rules for creation
         })
 );
@@ -189,3 +189,4 @@ export type EventRule = z.infer<typeof eventRuleSchema>;
 export type CreateEventRule = z.infer<typeof createEventRuleSchema>;
 export type UpdateEventRule = z.infer<typeof updateEventRuleSchema>;
 export type DeleteEventRule = z.infer<typeof deleteEventRuleSchema>;
+export type Prize = z.infer<typeof prizeSchema>;

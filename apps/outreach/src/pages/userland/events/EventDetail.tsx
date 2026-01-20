@@ -259,14 +259,14 @@ const EventDetail = () => {
                         <div className="flex items-start gap-2">
                             <Users className={`w-4 h-4 ${theme.icon} mt-0.5`} />
                             <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Size
-                                </p>
-                                <p className="text-xs text-white font-medium">
-                                    {event.participationType.toLowerCase() === "solo"
-                                        ? "Solo"
-                                        : `${event.minTeamSize} - ${event.maxTeamSize} per team`}
-                                </p>
+                                <p className="text-[10px] font-bold text-zinc-500 uppercase">Size</p>
+                                <p 
+                                className="text-xs text-white font-medium">
+                                    {
+                                    event.participationType.toLowerCase() === "solo" 
+                                    ? "Solo" 
+                                    : event.minTeamSize === event.maxTeamSize? `${event.maxTeamSize} per team` 
+                                    : `${event.minTeamSize} - ${event.maxTeamSize} per team`}</p>
                             </div>
                         </div>
                     </div>
