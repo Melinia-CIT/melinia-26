@@ -55,48 +55,43 @@ const dbEventToCamel = (e: any) => ({
     createdAt: e.created_at,
     updatedAt: e.updated_at,
 });
-
-// 1. Create Event
-export async function createEvent(input: CreateEvent) {
-    const validation = createEventSchema.safeParse(input);
-    
-    if (!validation.success) {
-        return {
-            status: false,
-            statusCode: 400,
-            message: validation.error.issues
-                .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-                .join(", "),
-            data: {}
-        };
-    }    
-    
+export async function createEvent(input: CreateEvent, user_id:string) {
+   
     const data = createEventSchema.parse(input);
     const minTeamSize = data.minTeamSize ?? 1;
     const maxTeamSize = data.maxTeamSize ?? null;
-    const createdBy = data.createdBy ?? null;
-
+    const createdBy = user_id;
+    
     try {
+        // Validate organizers by email
+        const organizerEmails: string[] = [];
+        const organizerIds: string[] = [];
+        
         if (data.organizers && data.organizers.length > 0) {
-            const orgIds = data.organizers.map(o => o.userId);
             const validOrganizers = await sql`
-                SELECT id FROM users 
-                WHERE id = ANY(${orgIds}::text[]) 
-                AND (participant_type = 'ORGANIZER' OR participant_type = 'ADMIN')
+                SELECT id, email FROM users 
+                WHERE email = ANY(${sql.array(data.organizers)})
+                AND (role = 'ORGANIZER' OR role = 'ADMIN')
             `;
-            if (validOrganizers.length !== orgIds.length) {
-                const validIds = validOrganizers.map(vo => vo.id);
-                const invalidIds = orgIds.filter(id => !validIds.includes(id));
-
+            
+            if (validOrganizers.length !== data.organizers.length) {
+                const validEmails = validOrganizers.map(vo => vo.email);
+                const invalidEmails = data.organizers.filter(email => !validEmails.includes(email));
                 return {
                     status: false,
                     statusCode: 400,
-                    message: `Invalid organizers: [${invalidIds.join(", ")}]. Users must exist and have ORGANIZER or ADMIN permissions.`,
-                    data: { invalidIds }
+                    message: `Invalid organizers: [${invalidEmails.join(", ")}]. Users must exist and have ORGANIZER or ADMIN permissions.`,
+                    data: { invalidEmails }
                 };
             }
+            
+            validOrganizers.forEach(org => {
+                organizerEmails.push(org.email);
+                organizerIds.push(org.id);
+            });
         }
-
+        
+        // Create event
         const [eventRow] = await sql`
             INSERT INTO events (
                 name, description, participation_type, event_type,
@@ -110,43 +105,64 @@ export async function createEvent(input: CreateEvent) {
             )
             RETURNING id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at;
         `;
-
+        
         if (!eventRow) {
             return { status: false, statusCode: 500, message: "Event creation failed", data: {} };
         }
-
+        
         const eventId = eventRow.id as string;
-
+        
+        // Insert rounds
         if (data.rounds && data.rounds.length > 0) {
             for (const r of data.rounds) {
-                await sql`INSERT INTO event_rounds (event_id, round_no, round_name, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundName ?? null}, ${r.roundDescription ?? null});`;
+                await sql`
+                    INSERT INTO event_rounds (event_id, round_no, round_name, round_description) 
+                    VALUES (${eventId}, ${r.roundNo}, ${r.roundName ?? null}, ${r.roundDescription ?? null})
+                `;
             }
         }
-
+        
+        // Insert prizes
         if (data.prizes && data.prizes.length > 0) {
             for (const p of data.prizes) {
-                await sql`INSERT INTO event_prizes (event_id, position, reward_value) VALUES (${eventId}, ${p.position}, ${p.rewardValue});`;
+                await sql`
+                    INSERT INTO event_prizes (event_id, position, reward_value) 
+                    VALUES (${eventId}, ${p.position}, ${p.rewardValue})
+                `;
             }
         }
-
-        if (data.organizers && data.organizers.length > 0) {
-            for (const o of data.organizers) {
-                await sql`INSERT INTO event_organizers (event_id, user_id, assigned_by) VALUES (${eventId}, ${o.userId}, ${o.assignedBy ?? createdBy});`;
+        
+        // Insert organizers using their user IDs
+        if (organizerIds.length > 0) {
+            for (const organizerId of organizerIds) {
+                await sql`
+                    INSERT INTO event_organizers (event_id, user_id, assigned_by) 
+                    VALUES (${eventId}, ${organizerId}, ${createdBy})
+                `;
             }
         }
-
+        
+        // Insert rules
         if (data.rules && data.rules.length > 0) {
             for (const rule of data.rules) {
-                await sql`INSERT INTO event_rules (event_id, round_no, rule_number, rule_description) VALUES (${eventId}, ${rule.roundNo ?? null}, ${rule.ruleNumber}, ${rule.ruleDescription ?? null});`;
+                await sql`
+                    INSERT INTO event_rules (event_id, round_no, rule_number, rule_description) 
+                    VALUES (${eventId}, ${rule.roundNo ?? null}, ${rule.ruleNumber}, ${rule.ruleDescription ?? null})
+                `;
             }
         }
-
+        
         return await getEventById({ id: eventId });
     } catch (error) {
-        throw error;
+        console.error("Error creating event:", error);
+        return {
+            status: false,
+            statusCode: 500,
+            message: "An error occurred while creating the event",
+            data: {}
+        };
     }
 }
-
 // 2. Get All Events
 export async function getEvents() {
     try {
@@ -312,7 +328,7 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
             const validOrganizers = await sql`
                 SELECT id FROM users 
                 WHERE id = ANY(${orgIds}::text[]) 
-                AND (participant_type = 'ORGANIZER' OR participant_type = 'ADMIN')
+                AND (role = 'ORGANIZER' OR role = 'ADMIN')
             `;
             if (validOrganizers.length !== orgIds.length) {
                 const validIds = validOrganizers.map((vo: any) => vo.id as string);

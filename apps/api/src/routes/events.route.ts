@@ -36,7 +36,8 @@ export const events = new Hono();
 events.post("", authMiddleware, adminOnlyMiddleware, zValidator("json", createEventSchema), async (c) => {
     try {
         const formData = await c.req.valid('json');
-        const { statusCode, status, data, message } = await createEvent(formData);
+        const user_id = c.get('user_id');
+        const { statusCode, status, data, message } = await createEvent(formData , user_id);
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error(error);

@@ -110,7 +110,7 @@ export const createEventSchema = withRefinements(
         .safeExtend({
             rounds: z.array(roundSchema).optional(),
             prizes: z.array(prizeSchema).optional(),
-            organizers: z.array(organizerSchema).optional(),
+            organizers:z.array(z.string().email("Invalid organizer email")).optional(),
             rules: z.array(eventRuleSchema.omit({ id: true, eventId: true, createdAt: true, updatedAt: true })).optional(), // Added rules for creation
         })
 );
