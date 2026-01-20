@@ -11,8 +11,8 @@ const restrictedRoutes = ["/teams", "/leaderboard"]
 
 const AppLayout = () => {
     const location = useLocation()
-    const isRestrictedRoute = restrictedRoutes.some(route => location.pathname.includes(route));
-    const navigator = useNavigate();
+    const isRestrictedRoute = restrictedRoutes.some(route => location.pathname.includes(route))
+    const navigator = useNavigate()
 
     const { data: userData, isLoading: userLoading } = useQuery({
         queryKey: ["userMe"],
@@ -35,19 +35,20 @@ const AppLayout = () => {
     })
 
     const showProfileModal = !userLoading && userData && !userData.profile_completed
-    const showPaymentModal =isRestrictedRoute && !paymentLoading && (!paymentStatus || !paymentStatus.paid)
+    const showPaymentModal =
+        isRestrictedRoute && !paymentLoading && (!paymentStatus || !paymentStatus.paid)
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
+        <div className="h-[100dvh] h-screen bg-zinc-950 text-white relative flex flex-col overflow-hidden overflow-x-hidden">
             <Navigator />
 
             {/* Desktop: Main content with left padding for dock */}
-            <main className="hidden md:block md:pl-32 md:pr-8 md:pt-6 pb-8 transition-all duration-300 relative z-0 min-h-screen">
+            <main className="hidden md:flex md:flex-col md:h-full md:overflow-y-auto md:pl-32 md:pr-8 md:py-6 relative z-0 flex-1">
                 <Outlet />
             </main>
 
-            {/* Mobile: Main content with bottom padding for mobile nav */}
-            <main className="md:hidden px-4 pt-6 pb-8 transition-all duration-300 relative z-0 min-h-screen">
+            {/* Mobile: Main content */}
+            <main className="md:hidden h-full overflow-y-auto px-4 pt-6 pb-24 relative flex-1">
                 <Outlet />
             </main>
 
@@ -55,7 +56,7 @@ const AppLayout = () => {
             <AnimatePresence>
                 {showProfileModal && (
                     <motion.div
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 font-geist"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-x-hidden font-geist"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -94,7 +95,9 @@ const AppLayout = () => {
                 {showPaymentModal && (
                     <PaymentModal
                         isOpen={true}
-                        onClose={() => {navigator("/app")}}
+                        onClose={() => {
+                            navigator("/app")
+                        }}
                         userName={userData?.name || ""}
                         userEmail={userData?.email || ""}
                         onPaymentSuccess={() => {}}

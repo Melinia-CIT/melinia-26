@@ -4,19 +4,18 @@ import { motion, AnimatePresence } from "framer-motion"
 import EventsCard from "../../../components/userland/events/EventsCard"
 import api from "../../../services/api"
 
-// Shimmer keyframes
 const shimmerStyle = `
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
+    @keyframes shimmer {
+        0% {
+        background-position: -200% 0;
+        }
+        100% {
+        background-position: 200% 0;
+        }
     }
-    100% {
-      background-position: 200% 0;
+    .animate-shimmer {
+        animation: shimmer 2s infinite;
     }
-  }
-  .animate-shimmer {
-    animation: shimmer 2s infinite;
-  }
 `
 
 // Inject styles
@@ -104,31 +103,31 @@ const Events = () => {
         <div className="flex-1 w-full transition-all duration-300 pb-12">
             {eventsLoading ? (
                 <motion.div
-                    className="flex items-start justify-center min-h-screen"
+                    className="flex items-start justify-center"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.3 }}
                 >
                     <div className="space-y-8 w-full px-4 md:px-6">
                         {/* Header Skeleton */}
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-                            <div className="h-12 w-40 rounded-lg bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer" />
-                            <div className="flex gap-3">
-                                {[1, 2, 3, 4].map(i => (
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="h-10 w-32 sm:h-12 sm:w-40 rounded-lg bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer" />
+                            <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto justify-center sm:justify-end px-2 sm:px-0">
+                                {[1, 2, 3].map(i => (
                                     <div
                                         key={i}
-                                        className="h-10 w-24 rounded-full bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer"
+                                        className="h-9 w-20 sm:h-10 sm:w-24 rounded-full bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer flex-shrink-0"
                                     />
                                 ))}
                             </div>
                         </div>
 
                         {/* Grid Skeleton */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                            {[1, 2, 3, 4, 5].map(i => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                                 <div
                                     key={i}
-                                    className="h-80 rounded-2xl bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer"
+                                    className="h-48 sm:h-64 md:h-72 lg:h-80 rounded-xl sm:rounded-2xl bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer"
                                 />
                             ))}
                         </div>

@@ -117,7 +117,7 @@ const QRCode = ({ userId, userName, logoUrl, size = 256 }: QRCodeProps) => {
 
         // Resize Observer to handle responsiveness
         const resizeObserver = new ResizeObserver((entries) => {
-            for (let entry of entries) {
+            for (const entry of entries) {
                 const { width } = entry.contentRect;
                 if (width > 0) {
                     updateQR(Math.floor(width));

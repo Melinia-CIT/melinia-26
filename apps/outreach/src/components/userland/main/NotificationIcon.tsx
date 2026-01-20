@@ -29,7 +29,7 @@ export const NotificationIcon = ({ onClick, isOpen }: NotificationIconProps) => 
             aria-label="Notifications"
         >
             <Bell
-                className={`w-6 h-6 transition-all duration-200 ${
+                className={`w-6 sm:h-6 transition-all duration-200 ${
                     hasNotifications ? "text-indigo-400 animate-pulse" : "text-zinc-500"
                 } ${isOpen ? "scale-110" : ""}`}
             />
