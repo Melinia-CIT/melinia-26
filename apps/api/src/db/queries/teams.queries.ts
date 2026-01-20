@@ -57,18 +57,15 @@ export async function isTeamRegistered(team_id: string): Promise<boolean> {
         throw new HTTPException(500, { message: "Internal Server Error" })
     }
 }
-export async function checkMemberInTeam(member_id:string, team_id:string):Promise<boolean>{
+export async function checkMemberInTeam(member_id: string, team_id: string): Promise<boolean> {
     try {
-        const [team] = await sql`
-            SELECT id from team_members WHERE team_id=${team_id} AND user_id=${member_id};
-        `
-        if(!team){
-            return false;
-        }
-        return team.id !==null
-    } catch (error) {
-       throw new HTTPException(500, {message:"Everything went wrong"}) 
-    }
+        const result = await sql`
+            SELECT 1 FROM team_members 
+            WHERE team_id = ${team_id} AND user_id = ${member_id}
+        `;
+        return result.length > 0;
+    } catch (error: unknown) {
+        throw error;   }
 }
 // Create Team with Member Invitations (Same College Only)
 export async function createTeam(input: CreateTeam, leader_id: string) {

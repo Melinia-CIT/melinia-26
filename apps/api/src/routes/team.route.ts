@@ -49,7 +49,7 @@ teams.post('/', authMiddleware, paymentStatusMiddleware, zValidator('json', crea
             // Verify user exists
             const member = await getUserByMail(email);
             if (!member) {
-                return sendError(c, `User with email "${email}" does not exist`, 400);
+                return sendError(c, `User with email "${email}" have not registered`, 400);
             }
         }
 
@@ -68,7 +68,8 @@ teams.get("/:team_id", authMiddleware, async (c) => {
 
         const teamID = c.req.param('team_id');
         const user_id = c.get('user_id');
-        if(await checkMemberInTeam(user_id, teamID)){
+        const isTeamMember = await checkMemberInTeam(user_id, teamID)
+        if(!isTeamMember){
             return sendError(c, "This is not your team", 403);
         }
         if (!teamID) {

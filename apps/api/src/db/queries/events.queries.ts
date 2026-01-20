@@ -424,94 +424,246 @@ export async function deleteEvent(input: DeleteEventInput) {
 }
 
 // 6. Register for Event
-export async function registerForEvent(input: EventRegistrationInput & { userId: string; id: string }) {
+export async function registerForEvent(input: EventRegistrationInput & { userId: string; id: string }) 
+{
     const validation = eventRegistrationSchema.safeParse(input);
     if (!validation.success) {
         return {
             status: false,
             statusCode: 400,
-            message: validation.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(", "),
+            message: validation.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', '),
             data: {}
         };
     }
 
     const { id: eventId, userId } = input;
     const { teamId, participationType } = validation.data;
+    console.log(participationType);
+
     try {
-        const rows = await sql<{
-            min_team_size: number | null;
-            max_team_size: number | null;
-            registration_start: string | Date;
-            registration_end: string | Date;
-        }[]>`
-            SELECT min_team_size, max_team_size, registration_start, registration_end
-            FROM events WHERE id = ${eventId}
+        // 1. Fetch event details
+        const eventRows = await sql`
+            SELECT 
+                id,
+                participation_type,
+                min_team_size,
+                max_team_size,
+                registration_start,
+                registration_end,
+                max_allowed
+            FROM events
+            WHERE id = ${eventId}
         `;
-        const eventRow = rows[0];
 
+        const eventRow = eventRows[0];
         if (!eventRow) {
-            return { status: false, statusCode: 404, message: "Event not found", data: {} };
+            return {
+                status: false,
+                statusCode: 404,
+                message: 'Event not found',
+                data: {}
+            };
         }
 
-        const { registration_start, registration_end, min_team_size, max_team_size } = eventRow;
+        // 2. Validate registration window
         const now = new Date();
-        const regStart = new Date(registration_start);
-        const regEnd = new Date(registration_end);
+        const regStart = new Date(eventRow.registration_start);
+        const regEnd = new Date(eventRow.registration_end);
 
-        if (now < regStart && now > regEnd) {
-            return { status: false, statusCode: 400, message: "Registration is not open for this event", data: {} };
+        if (now < regStart || now > regEnd) {
+            return {
+                status: false,
+                statusCode: 400,
+                message: 'Registration window is closed for this event',
+                data: {}
+            };
         }
-
-        const isTeamRegistration = participationType.toLowerCase() === "team";
-        if (!isTeamRegistration) {
+        // ========== SOLO REGISTRATION ==========
+        if (participationType==='solo') {
+            // 3a. Solo event: teamId should be null
             if (teamId) {
-                return { status: false, statusCode: 400, message: "Team registration not allowed for solo events", data: {} };
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: 'Team registration not allowed for solo events',
+                    data: {}
+                };
             }
-            const existing = await sql`SELECT id FROM event_registrations WHERE event_id = ${eventId} AND user_id = ${userId} AND team_id IS NULL`;
-            if (existing.length > 0) {
-                return { status: false, statusCode: 400, message: "User already registered for this event", data: {} };
+
+            // 3b. Check if user already registered
+            const existingRegistration = await sql`
+                SELECT id FROM event_registrations 
+                WHERE event_id = ${eventId} AND user_id = ${userId} AND team_id IS NULL
+            `;
+
+            if (existingRegistration.length > 0) {
+                return {
+                    status: false,
+                    statusCode: 409,
+                    message: 'User already registered for this event',
+                    data: {}
+                };
             }
-        } else {
+
+            // 3c. Check max registration limit
+            const registrationCount = await sql<[{ count: number }]>`
+                SELECT COUNT(*) as count FROM event_registrations 
+                WHERE event_id = ${eventId}
+            `;
+
+            if (registrationCount[0].count >= eventRow.max_allowed) {
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: `Event is full. Maximum ${eventRow.max_allowed} registrations allowed`,
+                    data: {}
+                };
+            }
+
+            // 3d. Register solo user
+            const [result] = await sql`
+                INSERT INTO event_registrations (event_id, team_id, user_id, registered_at)
+                VALUES (${eventId}, NULL, ${userId}, NOW())
+                RETURNING id, event_id, team_id, user_id, registered_at
+            `;
+
+            return {
+                status: true,
+                statusCode: 201,
+                message: 'Solo registration successful',
+                data: result
+            };
+        }
+
+        // ========== TEAM REGISTRATION ==========
+        if (participationType==='team') {
+            // 4a. Team event: teamId is required
             if (!teamId) {
-                return { status: false, statusCode: 400, message: "Team ID is required for team events", data: {} };
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: 'Team ID is required for team events',
+                    data: {}
+                };
             }
-            const [teamLeaderRow] = await sql`SELECT leader_id FROM teams WHERE id = ${teamId} AND leader_id = ${userId}`;
+
+            // 4b. Only team leader can register
+            const [teamLeaderRow] = await sql`
+                SELECT leader_id FROM teams WHERE id = ${teamId}
+            `;
+
             if (!teamLeaderRow) {
-                return { status: false, statusCode: 403, message: "Only team leader can register for events", data: {} };
+                return {
+                    status: false,
+                    statusCode: 404,
+                    message: 'Team not found',
+                    data: {}
+                };
             }
-            const teamMembers = await sql`SELECT user_id FROM team_members WHERE team_id = ${teamId}`;
-            const teamSize = teamMembers.length;
-            if (min_team_size && teamSize < min_team_size) {
-                return { status: false, statusCode: 400, message: `Team size ${teamSize} is less than minimum required ${min_team_size}`, data: {} };
+
+            if (teamLeaderRow.leader_id !== userId) {
+                return {
+                    status: false,
+                    statusCode: 403,
+                    message: 'Only team leader can register for events',
+                    data: {}
+                };
             }
-            if (max_team_size && teamSize > max_team_size) {
-                return { status: false, statusCode: 400, message: `Team size ${teamSize} exceeds maximum allowed ${max_team_size}`, data: {} };
+
+            // 4c. Fetch all team members (leader is also in team_members table)
+            const teamMembers = await sql<{ user_id: string }[]>`
+                SELECT user_id FROM team_members WHERE team_id = ${teamId}
+            `;
+
+            const memberIds = teamMembers.map((m) => m.user_id);
+            const teamSize = memberIds.length;
+
+            // 4d. Validate team size
+            if (eventRow.min_team_size && teamSize < eventRow.min_team_size) {
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: `Team size ${teamSize} is less than minimum required ${eventRow.min_team_size}`,
+                    data: {}
+                };
             }
-            const memberIds = teamMembers.map((row: any) => row.user_id);
-            if (memberIds.length > 0) {
-                const conflicts = await sql`SELECT er.user_id FROM event_registrations er WHERE er.event_id = ${eventId} AND er.user_id = ANY(${memberIds}::text[])`;
-                if (conflicts.length > 0) {
-                    return { status: false, statusCode: 400, message: "Team cannot register - one or more members already registered for this event", data: {} };
-                }
+
+            if (eventRow.max_team_size && teamSize > eventRow.max_team_size) {
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: `Team size ${teamSize} exceeds maximum allowed ${eventRow.max_team_size}`,
+                    data: {}
+                };
             }
+
+            // 4e. Check if any team member already registered
+            const conflictingRegistrations = await sql`
+                SELECT DISTINCT user_id FROM event_registrations 
+                WHERE event_id = ${eventId} AND user_id = ANY(${memberIds}::text[])
+            `;
+
+            if (conflictingRegistrations.length > 0) {
+                const conflictingEmails = conflictingRegistrations.map((r: any) => r.user_id).join(', ');
+                return {
+                    status: false,
+                    statusCode: 409,
+                    message: `Team cannot register - following members already registered: ${conflictingEmails}`,
+                    data: { conflicting_members: conflictingRegistrations }
+                };
+            }
+
+            // 4f. Check max registration limit (count teams, not individuals)
+            const teamRegistrationCount = await sql<[{ count: number }]>`
+                SELECT COUNT(DISTINCT team_id) as count FROM event_registrations 
+                WHERE event_id = ${eventId} AND team_id IS NOT NULL
+            `;
+
+            if (teamRegistrationCount[0].count >= eventRow.max_allowed) {
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: `Event is full. Maximum ${eventRow.max_allowed} teams allowed`,
+                    data: {}
+                };
+            }
+
+            // 4g. Register all team members individually with team_id
+            for (const memberId of memberIds) {
+                const [registration] = await sql`
+                    INSERT INTO event_registrations (event_id, team_id, user_id, registered_at)
+                    VALUES (${eventId}, ${teamId}, ${memberId}, NOW())
+                    RETURNING id, event_id, team_id, user_id, registered_at
+                `;
+            }
+
+            // 4h. Lock team by setting event_id
+            await sql`
+                UPDATE teams 
+                SET event_id = ${eventId}
+                WHERE id = ${teamId}
+            `;
+
+            return {
+                status: true,
+                statusCode: 201,
+                message: `Team registration successfull!`,
+                data: {
+                                 }
+            };
         }
 
-        const [result] = await sql`
-            INSERT INTO event_registrations (event_id, team_id, user_id, registered_at) 
-            VALUES (${eventId}, ${teamId || null}, ${userId}, NOW()) 
-            RETURNING id, event_id, team_id, user_id, registered_at
-        `;
-
-        if (isTeamRegistration && teamId) {
-            await sql`UPDATE teams SET event_id = ${eventId} WHERE id = ${teamId}`;
-        }
-
-        return { status: true, statusCode: 201, message: "Event registration successful", data: result };
+        return {
+            status: false,
+            statusCode: 400,
+            message: 'Invalid event participation type',
+            data: {}
+        };
     } catch (error) {
+        console.error('Event registration error:', error);
         throw error;
     }
 }
-
 // 7. Get User Status
 export async function getUserEventStatusbyEventId(userId: string, eventId: string, teamId?: string) {
     try {
