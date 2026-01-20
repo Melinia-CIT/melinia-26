@@ -11,7 +11,8 @@
         "dev": "bun --watch run src/index.ts && tsc --watch",
         "worker": "bun --watch run src/workers/email/worker.ts",
         "dev:all": "concurrently -n \"API,WORKER\" -c \"blue,green\" \"bun run dev\" \"bun run worker\"",
-        "db:migrate": "bun run src/db/migrations.ts"
+        "db:migrate": "bun run src/db/migrations.ts",
+        "db:seed:coupons": "bun run src/db/seed-coupons.ts"
     },
     "dependencies": {
         "@aws-sdk/client-ses": "^3.965.0",
