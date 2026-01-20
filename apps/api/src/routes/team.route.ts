@@ -25,24 +25,42 @@ import { sendError, sendSuccess } from "../utils/response";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware";
 import { HTTPException } from "hono/http-exception";
-import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { getUserById, getUserByMail } from "../db/queries";
 
 export const teams = new Hono();
 
 // Create Team //
-teams.post("/", authMiddleware, paymentStatusMiddleware,zValidator("json", createTeamSchema), async (c) => {
+teams.post('/', authMiddleware, paymentStatusMiddleware, zValidator('json', createTeamSchema), async (c) => {
     try {
         const user_id = c.get('user_id');
         const formData = await c.req.valid('json');
+        const user = await getUserById(user_id);
+        if(!user){
+            return sendError(c, "user not found", 401);
+        }
+        const currentUser = await getUserByMail(user?.email);
+        
+        // Validate member emails
+        for (const email of formData.member_emails) {
+            // Check if trying to invite themselves
+            if (email === currentUser?.email) {
+                return sendError(c, 'You cannot invite yourself!', 400);
+            }
+            // Verify user exists
+            const member = await getUserByMail(email);
+            if (!member) {
+                return sendError(c, `User with email "${email}" does not exist`, 400);
+            }
+        }
 
         const { statusCode, status, data, message } = await createTeam(formData, user_id);
-
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error(error);
         return sendError(c);
     }
-})
+});
+
 
 // Get Team details by team_id
 teams.get("/:team_id", authMiddleware, async (c) => {
