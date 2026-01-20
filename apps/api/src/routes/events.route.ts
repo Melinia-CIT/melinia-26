@@ -5,30 +5,34 @@ import {
     getEventDetailsSchema,
     updateEventDetailsSchema,
     eventRegistrationSchema,
-    unregisterEventSchema
+    unregisterEventSchema,
+    prizeSchema
 } from "@melinia/shared";
 import {
-    createEvent, 
-    getEvents, 
-    getEventById, 
-    deleteEvent, 
-    updateEvent, 
-    registerForEvent, 
+    createEvent,
+    getEvents,
+    getEventById,
+    deleteEvent,
+    updateEvent,
+    registerForEvent,
     getUserEventStatusbyEventId,
     getRegisteredEventsByUser,
-    unregisterFromEvent
+    unregisterFromEvent,
+    getPrizesForEvent,
+    
 } from "../db/queries";
 import { sendError, sendSuccess } from "../utils/response";
-import { 
-    authMiddleware, 
-    adminOnlyMiddleware, 
-    adminAndOrganizerMiddleware, 
-    participantOnlyMiddleware 
+import {
+    authMiddleware,
+    adminOnlyMiddleware,
+    adminAndOrganizerMiddleware,
+    participantOnlyMiddleware
 } from "../middleware/auth.middleware";
-import { 
+import {
     paymentStatusMiddleware
 } from "../middleware/paymentStatus.middleware";
 import { HTTPException } from "hono/http-exception";
+import { primitiveTypes } from "node_modules/zod/v4/core/util.cjs";
 
 export const events = new Hono();
 
@@ -37,7 +41,7 @@ events.post("", authMiddleware, adminOnlyMiddleware, zValidator("json", createEv
     try {
         const formData = await c.req.valid('json');
         const user_id = c.get('user_id');
-        const { statusCode, status, data, message } = await createEvent(formData , user_id);
+        const { statusCode, status, data, message } = await createEvent(formData, user_id);
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error(error);
@@ -50,7 +54,7 @@ events.get("/registered", authMiddleware, async (c) => {
     try {
         const userId = c.get('user_id');
         const { statusCode, status, data, message } = await getRegisteredEventsByUser(userId);
-        
+
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error("Error fetching user registered events:", error);
@@ -70,43 +74,47 @@ events.get("", async (c) => {
 });
 
 //To get the details of the specific event
-events.get("/:id", zValidator("param", getEventDetailsSchema), 
-  async (c) => {
-    try {
-      const { id } = c.req.valid('param'); 
-      const formData = { id }; 
-      const { statusCode, status, data, message } = await getEventById(formData);
-      
-      if (!data) {
-        throw new HTTPException(404, { message: "Event not found" });
-      }
-      
-      return sendSuccess(c, data, message, status, statusCode);
-    } catch (error: unknown) {
-      console.error(error);
-      return sendError(c);
+events.get("/:id", zValidator("param", getEventDetailsSchema),
+    async (c) => {
+        try {
+            const { id } = c.req.valid('param');
+            const formData = { id };
+            const { statusCode, status, data, message } = await getEventById(formData);
+
+            if (!data) {
+                throw new HTTPException(404, { message: "Event not found" });
+            }
+
+            return sendSuccess(c, data, message, status, statusCode);
+        } catch (error: unknown) {
+            console.error(error);
+            return sendError(c);
+        }
     }
-  }
 );
 
 // Update Event 
-events.patch("/:id", authMiddleware, adminAndOrganizerMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", updateEventDetailsSchema), async (c) => {
-    try {
-        const { id } = c.req.valid('param');
-        const updateData = await c.req.valid('json');
-        const formData = { ...updateData, id };
-        const { statusCode, status, data, message } = await updateEvent(formData);
-        
-        if (!data) {
-            return sendError(c, "Event not found", 404);
+events.patch("/:id",
+    authMiddleware,
+    adminAndOrganizerMiddleware,
+    zValidator("param", getEventDetailsSchema),
+    zValidator("json", updateEventDetailsSchema), async (c) => {
+        try {
+            const { id } = c.req.valid('param');
+            const updateData = await c.req.valid('json');
+            const formData = { ...updateData, id };
+            const { statusCode, status, data, message } = await updateEvent(formData);
+
+            if (!data) {
+                return sendError(c, "Event not found", 404);
+            }
+
+            return sendSuccess(c, data, message, status, statusCode);
+        } catch (error: unknown) {
+            console.error(error);
+            return sendError(c);
         }
-        
-        return sendSuccess(c, data, message, status, statusCode);
-    } catch (error: unknown) {
-        console.error(error);
-        return sendError(c);
-    }
-});
+    });
 
 // Delete Event
 events.delete("/:id", authMiddleware, adminOnlyMiddleware, zValidator("param", getEventDetailsSchema), async (c) => {
@@ -114,11 +122,11 @@ events.delete("/:id", authMiddleware, adminOnlyMiddleware, zValidator("param", g
         const { id } = c.req.valid('param');
         const formData = { id };
         const { statusCode, status, data, message } = await deleteEvent(formData);
-        
+
         if (!data) {
             throw new HTTPException(404, { message: "Event not found" });
         }
-        
+
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
         console.error(error);
@@ -127,16 +135,16 @@ events.delete("/:id", authMiddleware, adminOnlyMiddleware, zValidator("param", g
 });
 
 // Register for Event
-events.post("/:id/register", authMiddleware, participantOnlyMiddleware,paymentStatusMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", eventRegistrationSchema), async (c) => {
+events.post("/:id/register", authMiddleware, participantOnlyMiddleware, paymentStatusMiddleware, zValidator("param", getEventDetailsSchema), zValidator("json", eventRegistrationSchema), async (c) => {
     try {
         const userId = c.get('user_id');
         const { id } = c.req.valid('param');
-        const formData = await c.req.valid('json');  
-        
-        const { statusCode, status, data, message } = await registerForEvent({ 
-            ...formData, 
-            userId, 
-            id 
+        const formData = await c.req.valid('json');
+
+        const { statusCode, status, data, message } = await registerForEvent({
+            ...formData,
+            userId,
+            id
         });
         return sendSuccess(c, data, message, status, statusCode);
     } catch (error: unknown) {
@@ -146,14 +154,14 @@ events.post("/:id/register", authMiddleware, participantOnlyMiddleware,paymentSt
 });
 
 // Unregister from Event
-events.post("/:id/unregister", 
-    authMiddleware, 
-    participantOnlyMiddleware, 
-    zValidator("param", getEventDetailsSchema), 
-    zValidator("json", unregisterEventSchema), 
+events.post("/:id/unregister",
+    authMiddleware,
+    participantOnlyMiddleware,
+    zValidator("param", getEventDetailsSchema),
+    zValidator("json", unregisterEventSchema),
     async (c) => {
         try {
-            const userId = c.get('user_id'); 
+            const userId = c.get('user_id');
             const { id: eventId } = c.req.valid('param');
             const { participationType, teamId } = c.req.valid('json');
 
@@ -175,17 +183,17 @@ events.post("/:id/unregister",
 // Check Registration Status for a specific event
 events.get("/:id/status", authMiddleware, zValidator("param", getEventDetailsSchema), async (c) => {
     try {
-        const userId = c.get('user_id'); 
+        const userId = c.get('user_id');
         const { id: eventId } = c.req.valid('param');
         const teamId = c.req.query('teamId');
 
         const result = await getUserEventStatusbyEventId(userId, eventId, teamId);
-        
+
         return sendSuccess(
-            c, 
-            result.data, 
-            result.message, 
-            result.status, 
+            c,
+            result.data,
+            result.message,
+            result.status,
             result.statusCode
         );
     } catch (error: unknown) {
@@ -193,4 +201,8 @@ events.get("/:id/status", authMiddleware, zValidator("param", getEventDetailsSch
         return sendError(c);
     }
 });
+
+;
+
+export default events;
 

@@ -189,3 +189,4 @@ export type EventRule = z.infer<typeof eventRuleSchema>;
 export type CreateEventRule = z.infer<typeof createEventRuleSchema>;
 export type UpdateEventRule = z.infer<typeof updateEventRuleSchema>;
 export type DeleteEventRule = z.infer<typeof deleteEventRuleSchema>;
+export type Prize = z.infer<typeof prizeSchema>;

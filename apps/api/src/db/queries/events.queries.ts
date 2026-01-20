@@ -5,7 +5,8 @@ import {
     getEventDetailsSchema, type GetEventDetailsInput,
     type DeleteEventInput,
     type UpdateEventDetailsInput, updateEventDetailsSchema,
-    type EventRegistrationInput, eventRegistrationSchema
+    type EventRegistrationInput, eventRegistrationSchema,
+    prizeSchema, type Prize
 } from "@melinia/shared";
 
 const dbRoundToCamel = (r: any) => ({
@@ -55,25 +56,25 @@ const dbEventToCamel = (e: any) => ({
     createdAt: e.created_at,
     updatedAt: e.updated_at,
 });
-export async function createEvent(input: CreateEvent, user_id:string) {
-   
+export async function createEvent(input: CreateEvent, user_id: string) {
+
     const data = createEventSchema.parse(input);
     const minTeamSize = data.minTeamSize ?? 1;
     const maxTeamSize = data.maxTeamSize ?? null;
     const createdBy = user_id;
-    
+
     try {
         // Validate organizers by email
         const organizerEmails: string[] = [];
         const organizerIds: string[] = [];
-        
+
         if (data.organizers && data.organizers.length > 0) {
             const validOrganizers = await sql`
                 SELECT id, email FROM users 
                 WHERE email = ANY(${sql.array(data.organizers)})
                 AND (role = 'ORGANIZER' OR role = 'ADMIN')
             `;
-            
+
             if (validOrganizers.length !== data.organizers.length) {
                 const validEmails = validOrganizers.map(vo => vo.email);
                 const invalidEmails = data.organizers.filter(email => !validEmails.includes(email));
@@ -84,13 +85,13 @@ export async function createEvent(input: CreateEvent, user_id:string) {
                     data: { invalidEmails }
                 };
             }
-            
+
             validOrganizers.forEach(org => {
                 organizerEmails.push(org.email);
                 organizerIds.push(org.id);
             });
         }
-        
+
         // Create event
         const [eventRow] = await sql`
             INSERT INTO events (
@@ -105,13 +106,13 @@ export async function createEvent(input: CreateEvent, user_id:string) {
             )
             RETURNING id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at;
         `;
-        
+
         if (!eventRow) {
             return { status: false, statusCode: 500, message: "Event creation failed", data: {} };
         }
-        
+
         const eventId = eventRow.id as string;
-        
+
         // Insert rounds
         if (data.rounds && data.rounds.length > 0) {
             for (const r of data.rounds) {
@@ -121,7 +122,7 @@ export async function createEvent(input: CreateEvent, user_id:string) {
                 `;
             }
         }
-        
+
         // Insert prizes
         if (data.prizes && data.prizes.length > 0) {
             for (const p of data.prizes) {
@@ -131,7 +132,7 @@ export async function createEvent(input: CreateEvent, user_id:string) {
                 `;
             }
         }
-        
+
         // Insert organizers using their user IDs
         if (organizerIds.length > 0) {
             for (const organizerId of organizerIds) {
@@ -141,7 +142,7 @@ export async function createEvent(input: CreateEvent, user_id:string) {
                 `;
             }
         }
-        
+
         // Insert rules
         if (data.rules && data.rules.length > 0) {
             for (const rule of data.rules) {
@@ -151,7 +152,7 @@ export async function createEvent(input: CreateEvent, user_id:string) {
                 `;
             }
         }
-        
+
         return await getEventById({ id: eventId });
     } catch (error) {
         console.error("Error creating event:", error);
@@ -177,7 +178,7 @@ export async function getEvents() {
         }
 
         const eventIds = events.map((e) => e.id as string);
-        
+
         const [rounds, prizes, rules, organizers] = await Promise.all([
             sql`SELECT event_id, round_no, round_name, round_description FROM event_rounds WHERE event_id = ANY(${eventIds}::text[]);`,
             sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ANY(${eventIds}::text[]);`,
@@ -210,16 +211,16 @@ export async function getEvents() {
             };
             // Use safeParse to avoid crashing the whole list if one event is "dirty"
             const parsed = eventSchema.safeParse(eventObj);
-            return parsed.success ? parsed.data : eventObj; 
+            return parsed.success ? parsed.data : eventObj;
         });
 
         return { status: true, statusCode: 200, message: "Events fetched successfully", data: fullEvents };
     } catch (error: any) {
-        return { 
-            status: false, 
-            statusCode: 500, 
-            message: error.message || "Internal server error while fetching events", 
-            data: [] 
+        return {
+            status: false,
+            statusCode: 500,
+            message: error.message || "Internal server error while fetching events",
+            data: []
         };
     }
 }
@@ -250,7 +251,7 @@ export async function getEventById(input: GetEventDetailsInput) {
         }
 
         const eventRow = events[0];
-        if(!eventRow){
+        if (!eventRow) {
             throw new Error("Event not found");
         }
         const eventId = eventRow.id as string;
@@ -285,18 +286,18 @@ export async function getEventById(input: GetEventDetailsInput) {
             };
         }
 
-        return { 
-            status: true, 
-            statusCode: 200, 
-            message: "Event details retrieved successfully", 
+        return {
+            status: true,
+            statusCode: 200,
+            message: "Event details retrieved successfully",
             data: parsedEvent.data
         };
     } catch (error: any) {
-        return { 
-            status: false, 
-            statusCode: 500, 
-            message: error.message || "An unexpected error occurred", 
-            data: {} 
+        return {
+            status: false,
+            statusCode: 500,
+            message: error.message || "An unexpected error occurred",
+            data: {}
         };
     }
 }
@@ -304,7 +305,7 @@ export async function getEventById(input: GetEventDetailsInput) {
 // 4. Update Event
 export async function updateEvent(input: UpdateEventDetailsInput & { id: string }) {
     const validation = updateEventDetailsSchema.safeParse(input);
-    
+
     if (!validation.success) {
         return {
             status: false,
@@ -333,12 +334,12 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
             if (validOrganizers.length !== orgIds.length) {
                 const validIds = validOrganizers.map((vo: any) => vo.id as string);
                 const invalidIds = orgIds.filter(id => !validIds.includes(id));
-                
-                return { 
-                    status: false, 
-                    statusCode: 400, 
-                    message: `Invalid or unauthorized organizer IDs: [${invalidIds.join(", ")}]`, 
-                    data: { invalidIds } 
+
+                return {
+                    status: false,
+                    statusCode: 400,
+                    message: `Invalid or unauthorized organizer IDs: [${invalidIds.join(", ")}]`,
+                    data: { invalidIds }
                 };
             }
         }
@@ -409,6 +410,8 @@ export async function deleteEvent(input: DeleteEventInput) {
         await sql`DELETE FROM event_prizes WHERE event_id = ${id};`;
         await sql`DELETE FROM event_organizers WHERE event_id = ${id};`;
         await sql`DELETE FROM event_rules WHERE event_id = ${id};`;
+        await sql`DELETE FROM event_registration WHERE event_id=${id}`;
+
         const result = await sql`DELETE FROM events WHERE id = ${id};`;
         const affected = (result as any).count ?? 0;
         if (affected === 0) {
@@ -435,7 +438,7 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
     const { id: eventId, userId } = input;
     const { teamId, participationType } = validation.data;
     try {
-            const rows = await sql<{
+        const rows = await sql<{
             min_team_size: number | null;
             max_team_size: number | null;
             registration_start: string | Date;
@@ -454,11 +457,11 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
         const now = new Date();
         const regStart = new Date(registration_start);
         const regEnd = new Date(registration_end);
-        
+
         if (now < regStart && now > regEnd) {
             return { status: false, statusCode: 400, message: "Registration is not open for this event", data: {} };
         }
-        
+
         const isTeamRegistration = participationType.toLowerCase() === "team";
         if (!isTeamRegistration) {
             if (teamId) {
@@ -492,13 +495,13 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
                 }
             }
         }
-        
+
         const [result] = await sql`
             INSERT INTO event_registrations (event_id, team_id, user_id, registered_at) 
             VALUES (${eventId}, ${teamId || null}, ${userId}, NOW()) 
             RETURNING id, event_id, team_id, user_id, registered_at
         `;
-        
+
         if (isTeamRegistration && teamId) {
             await sql`UPDATE teams SET event_id = ${eventId} WHERE id = ${teamId}`;
         }
@@ -535,17 +538,17 @@ export async function getUserEventStatusbyEventId(userId: string, eventId: strin
 
         if (registration) {
             const isTeamMode = registration.team_id !== null;
-            return { 
-                status: true, 
-                statusCode: 200, 
-                message: isTeamMode ? "Registered via team" : "Registered solo", 
-                data: { 
+            return {
+                status: true,
+                statusCode: 200,
+                message: isTeamMode ? "Registered via team" : "Registered solo",
+                data: {
                     registration_status: "registered",
                     mode: isTeamMode ? "team" : "solo",
                     team_id: registration.team_id,
                     team_name: registration.team_name,
                     member_count: registration.member_count
-                } 
+                }
             };
         }
 
@@ -573,11 +576,11 @@ export async function getUserEventStatusbyEventId(userId: string, eventId: strin
             };
         }
 
-        return { 
-            status: true, 
-            statusCode: 200, 
-            message: "Not registered", 
-            data: { registration_status: "not_registered" } 
+        return {
+            status: true,
+            statusCode: 200,
+            message: "Not registered",
+            data: { registration_status: "not_registered" }
         };
 
     } catch (error) {
@@ -613,37 +616,37 @@ export async function getRegisteredEventsByUser(userId: string) {
         `;
 
         if (!data || data.length === 0) {
-            return { 
-                status: true, 
-                statusCode: 200, 
-                message: "No registered events found for this user.", 
-                data: [] 
+            return {
+                status: true,
+                statusCode: 200,
+                message: "No registered events found for this user.",
+                data: []
             };
         }
 
-        return { 
-            status: true, 
-            statusCode: 200, 
-            message: "Registered events fetched successfully", 
-            data 
+        return {
+            status: true,
+            statusCode: 200,
+            message: "Registered events fetched successfully",
+            data
         };
     } catch (error: any) {
         console.error("Database Error in getRegisteredEventsByUser:", error);
-        return { 
-            status: false, 
-            statusCode: 500, 
-            message: error.message || "Internal server error while fetching events", 
-            data: [] 
+        return {
+            status: false,
+            statusCode: 500,
+            message: error.message || "Internal server error while fetching events",
+            data: []
         };
     }
 }
 
 // Unregister from event
-export async function unregisterFromEvent(input: { 
-    eventId: string; 
-    userId: string; 
-    participationType: string; 
-    teamId?: string | null 
+export async function unregisterFromEvent(input: {
+    eventId: string;
+    userId: string;
+    participationType: string;
+    teamId?: string | null
 }) {
     const { eventId, userId, participationType, teamId } = input;
 
@@ -671,15 +674,14 @@ export async function unregisterFromEvent(input: {
                 SELECT name FROM teams 
                 WHERE id = ${teamId} 
                 AND leader_id = ${userId} 
-                AND event_id = ${eventId}
             `;
 
             if (!team) {
-                return { 
-                    status: false, 
-                    statusCode: 403, 
-                    message: "Only the team leader can unregister the team from this event", 
-                    data: {} 
+                return {
+                    status: false,
+                    statusCode: 403,
+                    message: "Only the team leader can unregister the team from this event",
+                    data: {}
                 };
             }
 
@@ -687,15 +689,27 @@ export async function unregisterFromEvent(input: {
 
             await sql`DELETE FROM event_registrations WHERE event_id = ${eventId} AND team_id = ${teamId};`;
 
-            return { 
-                status: true, 
-                statusCode: 200, 
-                message: `Team "${team.name}" has been successfully unregistered`, 
-                data: { teamName: team.name } 
+            return {
+                status: true,
+                statusCode: 200,
+                message: `Team "${team.name}" has been successfully unregistered`,
+                data: { teamName: team.name }
             };
         }
     } catch (error: any) {
         console.error("Unregister Error:", error);
         return { status: false, statusCode: 500, message: error.message || "Unregistration failed", data: {} };
     }
+}
+
+export async function getPrizesForEvent(event_id: string) {
+
+    const prizes = await sql`
+            SELECT id, event_id, position, reward_value 
+            FROM event_prizes 
+            WHERE event_id = ${event_id}
+            ORDER BY position ASC
+        `;
+
+    return prizes;
 }
