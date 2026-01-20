@@ -57,6 +57,16 @@ export async function isTeamRegistered(team_id: string): Promise<boolean> {
         throw new HTTPException(500, { message: "Internal Server Error" })
     }
 }
+export async function checkMemberInTeam(member_id: string, team_id: string): Promise<boolean> {
+    try {
+        const result = await sql`
+            SELECT 1 FROM team_members 
+            WHERE team_id = ${team_id} AND user_id = ${member_id}
+        `;
+        return result.length > 0;
+    } catch (error: unknown) {
+        throw error;   }
+}
 // Create Team with Member Invitations (Same College Only)
 export async function createTeam(input: CreateTeam, leader_id: string) {
     const data = createTeamSchema.parse(input)
@@ -467,6 +477,14 @@ export async function acceptTeamInvitation(input: RespondInvitationRequest) {
             }
         }
 
+        if(await isTeamRegistered(invitation.team_id)){
+            return {
+                status: false,
+                statusCode: 403,
+                message: "Invitation expired, team is already registered!"
+            }
+        }
+
         if (invitation.invitee_id !== user_id) {
             return {
                 status: false,
@@ -570,12 +588,10 @@ export async function getAllTeamsForUser(userId: string, filter?: "led" | "membe
                 SELECT
                     t.id,
                     t.name AS team_name,
-                    t.event_id,
                     e.name AS event_name,
                     t.leader_id,
                     (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
                 FROM teams AS t
-                LEFT JOIN events AS e ON e.id = t.event_id
                 WHERE t.leader_id = ${userId}
                 ORDER BY t.id DESC
             `
@@ -585,13 +601,10 @@ export async function getAllTeamsForUser(userId: string, filter?: "led" | "membe
                 SELECT
                     t.id,
                     t.name AS team_name,
-                    t.event_id,
-                    e.name AS event_name,
                     t.leader_id,
                     (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
                 FROM team_members AS tm
                 JOIN teams AS t ON t.id = tm.team_id
-                LEFT JOIN events AS e ON e.id = t.event_id
                 WHERE tm.user_id = ${userId} AND t.leader_id != ${userId}
                 ORDER BY t.id DESC
             `
@@ -601,24 +614,18 @@ export async function getAllTeamsForUser(userId: string, filter?: "led" | "membe
                 SELECT
                     t.id,
                     t.name AS team_name,
-                    t.event_id,
-                    e.name AS event_name,
                     t.leader_id,
                     (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
                 FROM teams AS t
-                LEFT JOIN events AS e ON e.id = t.event_id
                 WHERE t.leader_id = ${userId}
                 UNION ALL
                 SELECT
                     t.id,
                     t.name AS team_name,
-                    t.event_id,
-                    e.name AS event_name,
                     t.leader_id,
                     (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
                 FROM team_members AS tm
                 JOIN teams AS t ON t.id = tm.team_id
-                LEFT JOIN events AS e ON e.id = t.event_id
                 WHERE tm.user_id = ${userId} AND t.leader_id != ${userId}
                 ORDER BY id DESC
             `
