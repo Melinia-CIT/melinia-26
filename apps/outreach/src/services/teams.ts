@@ -12,7 +12,6 @@ export class TeamManagementService {
     }
 
     public createTeam = async (formData: CreateTeam) => {
-        console.log("form data:", formData)
         const response = await api.post("/teams", formData)
         return response
     }
