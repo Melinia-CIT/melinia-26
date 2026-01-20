@@ -45,7 +45,7 @@ export const updateTeamSchema = z.object({
   event_id: z.string().min(1, "Invalid Event ID").optional()
 });
 export const addNewMemberSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email address"),
 });
 
 export const memberSchema = z.object({

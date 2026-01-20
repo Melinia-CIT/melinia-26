@@ -26,9 +26,9 @@ const PreloaderCard = () => {
             <div className="flex flex-col gap-8 items-start relative z-10">
                 <div className="flex flex-col items-center shrink-0 w-full md:w-auto gap-6">
                     {/* Shining Image Placeholder */}
-                    <div className="relative w-[60vw] h-[60vw] max-w-[256px] max-h-[256px] bg-zinc-800/50 rounded-lg overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                    <div className="relative w-64 h-64 bg-zinc-800/50 rounded-lg overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
 
-                    <div className="relative w-3/4 h-6 bg-zinc-800/50 rounded md:hidden overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                    <div className="relative w-64 h-6 bg-zinc-800/50 rounded md:hidden overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
                 </div>
 
                 <div className="hidden md:flex flex-1 flex-col space-y-8 w-full">
@@ -145,7 +145,7 @@ const UserCard = () => {
                             onClick={() => setIsModalOpen(true)}
                             className="group p-1 bg-zinc-800/50 rounded-xl border border-zinc-700 shadow-inner cursor-pointer hover:border-zinc-500 hover:bg-zinc-800 transition-all duration-300"
                         >
-                            <div className="w-[60vw] h-[60vw] max-w-[256px] max-h-[256px] flex items-center justify-center bg-zinc-950 rounded-lg overflow-hidden relative">
+                            <div className="w-64 h-64 max-w-[256px] max-h-[256px] flex items-center justify-center bg-zinc-950 rounded-lg overflow-hidden relative">
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
                                     <span className="text-white text-xs font-medium uppercase tracking-widest border border-white/20 px-3 py-1 rounded-full backdrop-blur-md">
                                         Tap to Scan

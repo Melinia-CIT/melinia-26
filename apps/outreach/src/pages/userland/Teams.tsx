@@ -41,11 +41,11 @@ const TeamsPage: React.FC = () => {
     }, [])
 
     return (
-        <div className="flex flex-col justify-center h-screen bg-zinc-950 text-white">
+        <div className="flex flex-col bg-zinc-950 text-white h-full">
             {/* Desktop & Tablet Layout */}
-            <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 h-[calc(100vh-120px)]">
+            <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 h-full">
                 {/* Left Side - Teams List */}
-                <div className="md:col-span-1 flex flex-col border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50">
+                <div className="lg:col-span-1 flex flex-col border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 flex-1">
                     <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
                         <div>
                             <h2 className="text-2xl font-inst font-bold text-white">Teams</h2>
@@ -59,7 +59,6 @@ const TeamsPage: React.FC = () => {
                             className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 bg-zinc-200 text-zinc-800 text-xs sm:text-sm font-semibold rounded-md transition-colors"
                         >
                             <Plus size={12} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{" "}
-                            <span className="hidden sm:inline">New Team</span>
                         </button>
                     </div>
 
@@ -89,7 +88,7 @@ const TeamsPage: React.FC = () => {
                 </div>
 
                 {/* Right Side - Team Details */}
-                <div className="md:col-span-2 lg:col-span-3 border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50">
+                <div className="md:col-span-2 lg:col-span-3 border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 flex-1">
                     {selectedTeamId ? (
                         <TeamDetailsPanel
                             teamId={selectedTeamId}
@@ -107,7 +106,7 @@ const TeamsPage: React.FC = () => {
             </div>
 
             {/* Mobile Layout */}
-            <div className="md:hidden h-full flex flex-col gap-6 px-2">
+            <div className="md:hidden flex flex-col gap-6 px-2 h-full">
                 <div className="flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold font-inst text-white">Teams</h2>
@@ -124,7 +123,7 @@ const TeamsPage: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="flex-1 flex flex-col space-y-3">
+                <div className="flex-1 flex flex-col space-y-3 h-full">
                     {isLoading ? (
                         <>
                             {[1, 2, 3].map(i => (

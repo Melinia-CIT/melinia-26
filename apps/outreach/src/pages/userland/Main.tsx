@@ -4,16 +4,23 @@ import Notifications from "../../components/userland/main/Notifications"
 import RegisteredEvents from "../../components/userland/main/RegisteredEvents"
 import { NotificationIcon } from "../../components/userland/main/NotificationIcon"
 import { motion } from "framer-motion"
+import TimelineView, { TimelineEvent } from "../../components/ui/timeline-view"
+import { useNavigate } from "react-router-dom"
 
 const Main = () => {
+    const navigate = useNavigate()
     const [showNotifications, setShowNotifications] = useState(false)
     const [showDesktopNotifications, setShowDesktopNotifications] = useState(false)
     const desktopNotificationsRef = useRef<HTMLDivElement>(null)
 
+    const handleEventClick = (event: TimelineEvent) => {
+        navigate(`/app/events/${event.id}`)
+    }
+
     return (
-        <div className="w-full bg-zinc-950 flex flex-col items-center p-4 font-geist selection:bg-indigo-500/30 relative min-h-screen">
+        <div className="w-full bg-zinc-950 flex flex-col items-center font-geist selection:bg-indigo-500/30 relative overflow-hidden">
             {/* Desktop Layout */}
-            <div className="hidden lg:flex w-full flex-row items-start gap-8 relative h-screen">
+            <div className="hidden lg:flex w-full flex-row items-start gap-8 h-screen overflow-hidden">
                 {/* Notification Icon - Desktop */}
                 <div className="absolute top-0 right-0 z-50 cursor-pointer">
                     <NotificationIcon
@@ -22,11 +29,14 @@ const Main = () => {
                     />
                 </div>
 
-                <div className="flex-1 w-full">
-                    <RegisteredEvents />
+                <div className="flex-1 w-full overflow-y-auto overflow-x-hidden p-6">
+                    <div className="grid grid-cols-1 gap-6">
+                        <RegisteredEvents />
+                        <TimelineView onEventClick={handleEventClick} />
+                    </div>
                 </div>
 
-                <div className="my-auto w-md">
+                <div className="my-auto lg:max-w-md">
                     <UserCard />
                 </div>
 
@@ -52,7 +62,7 @@ const Main = () => {
                         damping: 30,
                         mass: 0.8,
                     }}
-                    className="fixed top-22 right-14 w-[418px] z-50"
+                    className="absolute top-0 right-0 w-sm max-w-[400px] z-50"
                     style={{ pointerEvents: showDesktopNotifications ? "auto" : "none" }}
                 >
                     <Notifications
@@ -64,7 +74,7 @@ const Main = () => {
             </div>
 
             {/* Mobile Layout */}
-            <div className="lg:hidden w-full relative flex flex-col items-center gap-6 pt-6">
+            <div className="lg:hidden w-full relative flex flex-col items-center gap-6 pt-12">
                 {/* Mobile Notification Backdrop */}
                 {showNotifications && (
                     <div
@@ -87,8 +97,13 @@ const Main = () => {
                     isDesktop={false}
                 />
 
-                {/* Vertical Stack: UserCard then RegisteredEvents */}
+                {/* Vertical Stack: UserCard then TimelineView then RegisteredEvents */}
                 <UserCard />
+
+                <div className="w-full">
+                    <TimelineView onEventClick={handleEventClick} />
+                </div>
+
                 <RegisteredEvents />
             </div>
         </div>
