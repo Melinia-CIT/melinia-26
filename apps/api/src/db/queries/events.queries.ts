@@ -424,8 +424,7 @@ export async function deleteEvent(input: DeleteEventInput) {
 }
 
 // 6. Register for Event
-export async function registerForEvent(input: EventRegistrationInput & { userId: string; id: string }) 
-{
+export async function registerForEvent(input: EventRegistrationInput & { userId: string; id: string }) {
     const validation = eventRegistrationSchema.safeParse(input);
     if (!validation.success) {
         return {
@@ -479,7 +478,7 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
             };
         }
         // ========== SOLO REGISTRATION ==========
-        if (participationType==='solo') {
+        if (participationType === 'solo') {
             // 3a. Solo event: teamId should be null
             if (teamId) {
                 return {
@@ -536,7 +535,7 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
         }
 
         // ========== TEAM REGISTRATION ==========
-        if (participationType==='team') {
+        if (participationType === 'team') {
             // 4a. Team event: teamId is required
             if (!teamId) {
                 return {
@@ -637,19 +636,12 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
                 `;
             }
 
-            // 4h. Lock team by setting event_id
-            await sql`
-                UPDATE teams 
-                SET event_id = ${eventId}
-                WHERE id = ${teamId}
-            `;
-
             return {
                 status: true,
                 statusCode: 201,
                 message: `Team registration successfull!`,
                 data: {
-                                 }
+                }
             };
         }
 
@@ -704,29 +696,29 @@ export async function getUserEventStatusbyEventId(userId: string, eventId: strin
             };
         }
 
-        const [syncedTeam] = await sql`
-            SELECT t.id, t.name, 
-            (SELECT count(*) FROM team_members WHERE team_id = t.id) as member_count
-            FROM teams t
-            JOIN team_members tm ON t.id = tm.team_id
-            WHERE tm.user_id = ${userId} AND t.event_id = ${eventId}
-            LIMIT 1
-        `;
+        // const [syncedTeam] = await sql`
+        //     SELECT t.id, t.name, 
+        //     (SELECT count(*) FROM team_members WHERE team_id = t.id) as member_count
+        //     FROM teams t
+        //     JOIN team_members tm ON t.id = tm.team_id
+        //     WHERE tm.user_id = ${userId} AND t.event_id = ${eventId}
+        //     LIMIT 1
+        // `;
 
-        if (syncedTeam) {
-            return {
-                status: true,
-                statusCode: 200,
-                message: "Registered (Synced via Team)",
-                data: {
-                    registration_status: "registered",
-                    mode: "team",
-                    team_id: syncedTeam.id,
-                    team_name: syncedTeam.name,
-                    member_count: syncedTeam.member_count
-                }
-            };
-        }
+        // if (syncedTeam) {
+        //     return {
+        //         status: true,
+        //         statusCode: 200,
+        //         message: "Registered (Synced via Team)",
+        //         data: {
+        //             registration_status: "registered",
+        //             mode: "team",
+        //             team_id: syncedTeam.id,
+        //             team_name: syncedTeam.name,
+        //             member_count: syncedTeam.member_count
+        //         }
+        //     };
+        // }
 
         return {
             status: true,
@@ -837,7 +829,6 @@ export async function unregisterFromEvent(input: {
                 };
             }
 
-            await sql`UPDATE teams SET event_id = NULL WHERE id = ${teamId};`;
 
             await sql`DELETE FROM event_registrations WHERE event_id = ${eventId} AND team_id = ${teamId};`;
 
