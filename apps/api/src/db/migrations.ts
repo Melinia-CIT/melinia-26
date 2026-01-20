@@ -558,7 +558,7 @@ await runMigration("seed colleges and degress", async () => {
 
 await runMigration("add pg trigram", async () => {
     await sql`
-        CREATE EXTENSION pg_trgm;
+        CREATE EXTENSION IF NOT EXISTS pg_trgm;
     `
 })
 
