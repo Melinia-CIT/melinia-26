@@ -45,9 +45,9 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
             queryClient.invalidateQueries({ queryKey: ["userInvitations"] })
             queryClient.invalidateQueries({ queryKey: ["teams"] })
         },
-        onError: (error: Error) => {
+        onError: (error: any) => {
             console.error(error)
-            toast.error("Failed to accept invitation")
+            toast.error(error.response.data.message)
         },
     })
 
@@ -60,9 +60,9 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
             toast.success("Invitation declined")
             queryClient.invalidateQueries({ queryKey: ["userInvitations"] })
         },
-        onError: (error: Error) => {
+        onError: (error: any) => {
             console.error(error)
-            toast.error("Failed to decline invitation")
+            toast.error(error.response.data.message)
         },
     })
 

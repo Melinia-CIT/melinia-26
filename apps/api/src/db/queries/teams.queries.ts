@@ -467,6 +467,14 @@ export async function acceptTeamInvitation(input: RespondInvitationRequest) {
             }
         }
 
+        if(await isTeamRegistered(invitation.team_id)){
+            return {
+                status: false,
+                statusCode: 403,
+                message: "Invitation expired, team is already registered!"
+            }
+        }
+
         if (invitation.invitee_id !== user_id) {
             return {
                 status: false,
