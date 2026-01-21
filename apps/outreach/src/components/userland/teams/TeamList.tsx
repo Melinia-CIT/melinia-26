@@ -11,7 +11,7 @@ export const TeamListItem: React.FC<TeamListItemProps> = ({ team, isSelected, on
     return (
         <button
             onClick={onClick}
-            className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group relative ${isSelected
+            className={`w-full text-left p-4 rounded-xl border transition-all hover:cursor-pointer duration-200 group relative ${isSelected
                 ? "bg-zinc-900 border-zinc-500/50 shadow-sm"
                 : "bg-zinc-950 border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700"
                 }`}
