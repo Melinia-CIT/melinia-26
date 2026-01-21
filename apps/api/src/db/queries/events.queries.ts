@@ -598,20 +598,32 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
 
             // 4e. Check if any team member already registered
             const conflictingRegistrations = await sql`
-                SELECT DISTINCT user_id FROM event_registrations 
-                WHERE event_id = ${eventId} AND user_id = ANY(${memberIds}::text[])
-            `;
+                SELECT DISTINCT 
+                    er.user_id,
+                    u.email
+                    FROM event_registrations er
+                    JOIN users u ON er.user_id = u.id
+                    WHERE er.event_id = ${eventId} 
+                    AND er.user_id = ANY(${memberIds}::text[]);
+                `;
 
             if (conflictingRegistrations.length > 0) {
-                const conflictingEmails = conflictingRegistrations.map((r: any) => r.user_id).join(', ');
+                const conflictingEmails = conflictingRegistrations
+                    .map((r: any) => r.email)
+                    .join(', ');
+
                 return {
                     status: false,
                     statusCode: 409,
                     message: `Team cannot register - following members already registered: ${conflictingEmails}`,
-                    data: { conflicting_members: conflictingRegistrations }
+                    data: {
+                        conflicting_members: conflictingRegistrations.map((r: any) => ({
+                            user_id: r.user_id,
+                            email: r.email
+                        }))
+                    }
                 };
             }
-
             // 4f. Check max registration limit (count teams, not individuals)
             const teamRegistrationCount = await sql<[{ count: number }]>`
                 SELECT COUNT(DISTINCT team_id) as count FROM event_registrations 
