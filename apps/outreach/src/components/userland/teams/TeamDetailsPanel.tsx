@@ -217,7 +217,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                 <div className="hidden md:flex flex-row gap-4">
                     <Button
                         onClick={() => setIsAddMemberOpen(true)}
-                        disabled={hasRegisteredEvents}
+                        disabled={hasRegisteredEvents || !isLeader}
                         variant="primary"
                         size="md"
                         className="flex gap-2 bg-white text-zinc-900 hover:bg-zinc-200 border-0"
@@ -230,7 +230,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         onClick={() =>
                             !hasRegisteredEvents && setDeleteConfirm({ type: "team", id: teamId })
                         }
-                        disabled={hasRegisteredEvents}
+                        disabled={hasRegisteredEvents || !isLeader}
                         variant="danger"
                         size="md"
                         className="flex gap-2 bg-red-600 text-white hover:bg-red-700"
@@ -238,6 +238,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         <Trash strokeWidth={2} className="h-4 w-4" />
                         <span className="text-xs sm:text-sm">Delete Team</span>
                     </Button>
+
                 </div>
             </div>
 
