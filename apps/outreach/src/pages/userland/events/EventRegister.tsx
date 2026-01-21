@@ -359,10 +359,12 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                 Final Confirmation
                             </h2>
                             <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
-                                Once registered, your participation details cannot be modified. Do
-                                you wish to proceed?<br></br>
-
-                                NOTE: if it is a team registeration, the team will be locked. All the pending invites will be expired
+                                {
+                                    isSoloChoice ? 
+                                    "Once registered, your participation details cannot be modified. Do you wish to proceed?" 
+                                    : "Team registrations will lock the team and expire pending invites. Do you wish to proceed?"
+                                     
+                                }
                             </p>
                             <div className="flex gap-2 sm:gap-3">
                                 <button
