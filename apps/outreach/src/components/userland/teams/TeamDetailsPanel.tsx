@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -19,6 +19,7 @@ import { useNavigate } from "react-router"
 import { type TeamDetails, type AddNewMemberRequest, addNewMemberSchema } from "@melinia/shared"
 import { Spinner } from "../../ui/spinner"
 import { team_management } from "../../../services/teams"
+import { fetchUser } from "../../../services/users"
 import Button from "../../ui/button"
 
 interface TeamDetailsPanelProps {
@@ -70,6 +71,22 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
     })
 
     const teamData = response
+
+    const { data: currentUser } = useQuery({
+        queryKey: ["userMe"],
+        queryFn: fetchUser,
+    })
+
+    const [isLeader, setIsLeader] = useState(false)
+
+    useEffect(() => {
+        if (currentUser && teamData) {
+            setIsLeader(currentUser.id === teamData.leader_id)
+        } else {
+            setIsLeader(false)
+        }
+    }, [currentUser, teamData])
+
     const hasRegisteredEvents = teamData?.events_registered && teamData.events_registered.length > 0
 
     const deleteTeamMutation = useMutation({
@@ -82,6 +99,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
         },
         onError: (err: any) => {
             toast.error(err?.response?.data?.message || "Failed to delete team")
+            setDeleteConfirm(null)
         },
     })
 
@@ -94,6 +112,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
         },
         onError: (err: any) => {
             toast.error(err?.response?.data?.message || "Failed to remove invitation")
+            setDeleteConfirm(null)
         },
     })
 
@@ -287,9 +306,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                             setDeleteMember(true)
                                             setSelectedMemberId(member.user_id)
                                         }}
-                                        disabled={hasRegisteredEvents}
+                                        disabled={hasRegisteredEvents || !isLeader}
                                         className={`p-2 rounded-md transition-colors ${
-                                            hasRegisteredEvents
+                                            hasRegisteredEvents || !isLeader
                                                 ? "text-zinc-700 cursor-not-allowed"
                                                 : "text-zinc-500 hover:text-white hover:bg-zinc-800"
                                         }`}
@@ -345,7 +364,12 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                                 id: invite.invitation_id,
                                             })
                                         }
-                                        className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-md transition-colors"
+                                        disabled={!isLeader}
+                                        className={`p-2 rounded-md transition-colors ${
+                                            !isLeader
+                                                ? "text-zinc-700 cursor-not-allowed"
+                                                : "text-zinc-500 hover:text-white hover:bg-zinc-800"
+                                        }`}
                                     >
                                         <Xmark className="h-4 w-4" strokeWidth={2} />
                                     </button>
@@ -391,7 +415,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                 <div className="flex flex-row gap-4 justify-end">
                     <Button
                         onClick={() => setIsAddMemberOpen(true)}
-                        disabled={hasRegisteredEvents}
+                        disabled={hasRegisteredEvents || !isLeader}
                         variant="primary"
                         size="md"
                         className="flex gap-2 bg-white text-zinc-900 hover:bg-zinc-200 border-0"
@@ -404,7 +428,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         onClick={() =>
                             !hasRegisteredEvents && setDeleteConfirm({ type: "team", id: teamId })
                         }
-                        disabled={hasRegisteredEvents}
+                        disabled={hasRegisteredEvents || !isLeader}
                         variant="danger"
                         size="md"
                         className="flex gap-2 bg-red-600 text-white hover:bg-red-700"

@@ -149,7 +149,7 @@ const TeamsPage: React.FC = () => {
                             <div
                                 key={team.id}
                                 onClick={() => handleMobileTeamSelect(team.id)}
-                                className="w-full text-left px-4 py-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors"
+                                className="w-full text-left px-4 py-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 hover:cursor-pointer transition-colors"
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex flex-col">
