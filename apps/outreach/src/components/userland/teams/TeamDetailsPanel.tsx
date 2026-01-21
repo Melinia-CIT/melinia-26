@@ -114,6 +114,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
         mutationFn: (member_id: string) => team_management.removeTeammate(teamId, member_id),
         onSuccess: () => {
             toast.success("Team member deleted!")
+            queryClient.invalidateQueries({ queryKey: ["team", teamId] })
             setDeleteMember(false)
         },
         onError: (err: any) => {
@@ -439,11 +440,13 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                 Cancel
                             </Button>
                             <Button
+                                type="button"
                                 onClick={() => handleDeleteMember(selectedMemberId)}
                                 variant="danger"
                                 size="md"
                                 fullWidth
-                                className="bg-red-600 text-white hover:bg-red-700 order-1 sm:order-2"
+                                disabled={deleteMemberMutation.isPending}
+                                className="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-md font-medium text-sm transition-colors disabled:opacity-50"
                             >
                                 {deleteMemberMutation.isPending ? "Removing..." : "Remove"}
                             </Button>
