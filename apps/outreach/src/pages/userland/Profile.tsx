@@ -388,6 +388,7 @@ const Profile = ({ initialData }: ProfileProps) => {
                             type="email"
                             value={(initialData?.email as string) || ""}
                             readOnly
+                            tabIndex={-1}
                             className="w-full rounded-lg bg-zinc-900/50 border border-zinc-800 pl-10 pr-4 py-2 text-sm text-zinc-400 cursor-not-allowed"
                         />
                     </div>

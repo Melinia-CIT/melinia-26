@@ -3,15 +3,16 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
+    SendMail,
     Trash,
     MessageAlert,
     Community,
-    Calendar,
     User,
     UserPlus,
     Xmark,
     Trophy,
     ArrowRight,
+    UserCrown,
 } from "iconoir-react"
 import toast from "react-hot-toast"
 import { useNavigate } from "react-router"
@@ -173,8 +174,8 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
             `}</style>
 
             {/* Header */}
-            <div className="flex-none border-b border-zinc-800 bg-zinc-950 shrink-0 z-20">
-                <div className="flex items-center justify-between px-4 py-5 sm:px-6">
+            <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-950 shrink-0 z-20 p-4">
+                <div className="flex-1 flex items-center justify-between">
                     <div>
                         <h2 className="text-xl font-semibold text-white tracking-tight">
                             {teamData.name}
@@ -192,22 +193,48 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         </button>
                     )}
                 </div>
+
+                <div className="hidden md:flex flex-row gap-4">
+                    <Button
+                        onClick={() => setIsAddMemberOpen(true)}
+                        disabled={hasRegisteredEvents}
+                        variant="primary"
+                        size="md"
+                        className="flex gap-2 bg-white text-zinc-900 hover:bg-zinc-200 border-0"
+                    >
+                        <UserPlus strokeWidth={2} className="h-4 w-4" />
+                        <span className="text-xs sm:text-sm">Add Member</span>
+                    </Button>
+
+                    <Button
+                        onClick={() =>
+                            !hasRegisteredEvents && setDeleteConfirm({ type: "team", id: teamId })
+                        }
+                        disabled={hasRegisteredEvents}
+                        variant="danger"
+                        size="md"
+                        className="flex gap-2 bg-red-600 text-white hover:bg-red-700"
+                    >
+                        <Trash strokeWidth={2} className="h-4 w-4" />
+                        <span className="text-xs sm:text-sm">Delete Team</span>
+                    </Button>
+                </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto custom-scroll p-4 sm:p-6 space-y-6 min-h-0 relative z-10">
-                
                 {/* Warning Banner */}
                 {hasRegisteredEvents && (
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
-                        <Calendar
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center gap-3">
+                        <Community
                             className="h-5 w-5 text-amber-500 shrink-0 mt-0.5"
                             strokeWidth={2}
                         />
                         <div className="text-sm">
                             <p className="font-semibold text-amber-100">Team Locked</p>
                             <p className="text-amber-200/60 mt-1 leading-relaxed">
-                                Cannot modify members or invites while registered for an active event.
+                                Cannot modify members or invites while registered for an active
+                                event.
                             </p>
                         </div>
                     </div>
@@ -215,11 +242,11 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
 
                 {/* Leader Card - Changed to zinc-900 to pop against zinc-950 background */}
                 <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800">
-                    <div className="h-12 w-12 rounded-full bg-zinc-950 border border-zinc-800 text-zinc-300 flex items-center justify-center shrink-0">
-                        <User className="h-6 w-6" strokeWidth={1.5} />
+                    <div className="h-12 w-12 rounded-full bg-zinc-950 border border-orange-800 text-orange-300 flex items-center justify-center shrink-0">
+                        <UserCrown className="h-6 w-6" strokeWidth={1.5} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-1">
+                        <p className="text-[11px] font-bold text-orange-500 uppercase tracking-widest mb-1">
                             Team Leader
                         </p>
                         <p className="text-base font-medium text-white truncate">
@@ -243,8 +270,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                 >
                                     <div className="flex items-center gap-3 min-w-0 pr-4">
                                         <div className="h-9 w-9 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center text-sm font-bold text-zinc-300">
-                                            {member.first_name?.[0]}
-                                            {member.last_name?.[0]}
+                                            <User />
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-sm font-medium text-white truncate">
@@ -274,7 +300,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                             ))
                         ) : (
                             <div className="p-6 rounded-xl border border-dashed border-zinc-800 text-center">
-                                <p className="text-sm text-zinc-500">No other members in this team.</p>
+                                <p className="text-sm text-zinc-500">
+                                    No other members in this team.
+                                </p>
                             </div>
                         )}
                     </div>
@@ -358,18 +386,17 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="flex-none p-4 sm:p-6 bg-zinc-950 border-t border-zinc-800 shrink-0 z-20">
-                <div className="grid grid-cols-2 gap-3">
+            <div className="md:hidden p-4 sm:p-6 bg-zinc-950 border-t border-zinc-800 shrink-0 z-20">
+                <div className="flex flex-row gap-4 justify-end">
                     <Button
                         onClick={() => setIsAddMemberOpen(true)}
                         disabled={hasRegisteredEvents}
                         variant="primary"
                         size="md"
-                        fullWidth
-                        className="gap-2 h-11 font-medium"
+                        className="flex gap-2 bg-white text-zinc-900 hover:bg-zinc-200 border-0"
                     >
-                        <UserPlus className="h-4 w-4" />
-                        Add Member
+                        <UserPlus strokeWidth={2} className="h-4 w-4" />
+                        <span className="text-xs sm:text-sm">Add Member</span>
                     </Button>
 
                     <Button
@@ -379,11 +406,10 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         disabled={hasRegisteredEvents}
                         variant="danger"
                         size="md"
-                        fullWidth
-                        className="gap-2 h-11 font-medium bg-red-600 text-white hover:bg-red-700"
+                        className="flex gap-2 bg-red-600 text-white hover:bg-red-700"
                     >
-                        <Trash className="h-4 w-4" />
-                        Delete Team
+                        <Trash strokeWidth={2} className="h-4 w-4" />
+                        <span className="text-xs sm:text-sm">Delete Team</span>
                     </Button>
                 </div>
             </div>
@@ -391,20 +417,24 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
             {/* Modals Container */}
             {/* Delete Member Modal */}
             {deleteMember && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-                    <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in duration-200">
-                        <div className="mb-5">
-                            <h3 className="text-xl font-semibold text-white mb-2">Remove Member</h3>
-                            <p className="text-sm text-zinc-200 leading-relaxed">
-                                Are you sure you want to remove this team member? They will lose access to team data immediately.
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6 backdrop-blur-sm">
+                    <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+                        <div className="mb-5 sm:mb-6">
+                            <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 tracking-tight">
+                                Remove Member
+                            </h3>
+                            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                                Are you sure you want to remove this team member? They will lose
+                                access to team data immediately.
                             </p>
                         </div>
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex gap-3 justify-end flex-col sm:flex-row">
                             <Button
                                 onClick={() => setDeleteMember(false)}
                                 variant="secondary"
                                 size="md"
-                                className="bg-zinc-950 border border-zinc-700 text-white hover:border-zinc-600"
+                                fullWidth
+                                className="bg-transparent border border-zinc-700 text-zinc-400 hover:bg-zinc-800/50 hover:text-white hover:border-zinc-600 text-sm sm:text-sm order-2 sm:order-1 transition-all duration-200"
                             >
                                 Cancel
                             </Button>
@@ -412,7 +442,8 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                 onClick={() => handleDeleteMember(selectedMemberId)}
                                 variant="danger"
                                 size="md"
-                                className="bg-red-600 text-white hover:bg-red-700"
+                                fullWidth
+                                className="bg-red-600 text-white hover:bg-red-700 order-1 sm:order-2"
                             >
                                 {deleteMemberMutation.isPending ? "Removing..." : "Remove"}
                             </Button>
@@ -423,24 +454,27 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
 
             {/* General Delete Confirm Modal */}
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-                    <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in duration-200">
-                        <div className="mb-6">
-                            <h3 className="text-xl font-semibold text-white mb-2">
-                                {deleteConfirm.type === "team" ? "Delete Team?" : "Revoke Invitation?"}
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6 backdrop-blur-sm">
+                    <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+                        <div className="mb-5 sm:mb-6">
+                            <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 tracking-tight">
+                                {deleteConfirm.type === "team"
+                                    ? "Delete Team?"
+                                    : "Revoke Invitation?"}
                             </h3>
-                            <p className="text-sm text-zinc-200 leading-relaxed mt-2">
+                            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed mt-2">
                                 {deleteConfirm.type === "team"
                                     ? "This action cannot be undone. All team data, events, and history will be permanently deleted."
                                     : "This invitation link will no longer work."}
                             </p>
                         </div>
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex gap-3 justify-between flex-col sm:flex-row">
                             <Button
                                 onClick={() => setDeleteConfirm(null)}
                                 variant="secondary"
                                 size="md"
-                                className="bg-zinc-950 border border-zinc-700 text-white hover:border-zinc-600"
+                                fullWidth
+                                className="bg-transparent border border-zinc-700 text-zinc-400 hover:bg-zinc-800/50 hover:text-white hover:border-zinc-600 text-sm sm:text-sm order-2 sm:order-1 transition-all duration-200"
                             >
                                 Keep Safe
                             </Button>
@@ -452,13 +486,16 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                 }
                                 variant="danger"
                                 size="md"
-                                className="bg-red-600 text-white hover:bg-red-700"
+                                fullWidth
+                                className="bg-red-600 text-white hover:bg-red-700 order-1 sm:order-2"
                                 loading={
                                     deleteTeamMutation.isPending ||
                                     deleteInvitationMutation.isPending
                                 }
                             >
-                                {deleteConfirm.type === "team" ? "Yes, Delete Team" : "Revoke Invite"}
+                                {deleteConfirm.type === "team"
+                                    ? "Yes, Delete Team"
+                                    : "Revoke Invite"}
                             </Button>
                         </div>
                     </div>
@@ -467,39 +504,56 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
 
             {/* Add Member Modal */}
             {isAddMemberOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-                    <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in duration-200">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-semibold text-white">Add New Member</h2>
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6 backdrop-blur-sm">
+                    <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-5 sm:mb-6">
+                            <div>
+                                <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight">
+                                    Send Invitation
+                                </h2>
+                                <p className="text-xs text-zinc-500 mt-0.5">
+                                    Invite team member via email
+                                </p>
+                            </div>
                             <button
                                 onClick={() => setIsAddMemberOpen(false)}
-                                className="text-zinc-500 hover:text-zinc-300 transition-colors"
+                                className="text-zinc-500 hover:text-white transition-colors p-1.5 -mr-1.5 rounded-lg hover:bg-zinc-800 sm:p-2"
                             >
-                                <Xmark width={25} height={25} />
+                                <Xmark width={22} height={22} strokeWidth={1.5} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmitMember(handleAddMember)} className="space-y-5">
-                            {/* Input Field matching Reference Style */}
+                        <form
+                            onSubmit={handleSubmitMember(handleAddMember)}
+                            className="space-y-4 sm:space-y-5"
+                        >
+                            {/* Input Field */}
                             <div>
-                                <label className="block text-xs font-medium mb-1.5 text-zinc-200">
-                                    Member Email Address
+                                <label className="block text-[11px] font-semibold uppercase tracking-wider mb-2 text-zinc-400">
+                                    Email
                                 </label>
-                                <input
-                                    type="email"
-                                    placeholder="colleague@example.com"
-                                    {...registerMember("email")}
-                                    className={`w-full bg-zinc-950 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 transition-colors
-                                        ${
-                                            memberErrors.email
-                                                ? "border-red-500 text-red-100 placeholder-red-300/50 focus:ring-red-500"
-                                                : "border-zinc-700 text-white placeholder-zinc-600 focus:border-white focus:ring-white"
-                                        }
-                                    `}
-                                />
+                                <div className="relative w-full">
+                                    <input
+                                        type="email"
+                                        placeholder="username@domain.tld"
+                                        {...registerMember("email")}
+                                        className={`w-full bg-zinc-950/50 border rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all duration-200
+                                            ${
+                                                memberErrors.email
+                                                    ? "border-red-500/50 text-red-100 placeholder-red-300/40 focus:ring-red-500/20 focus:border-red-500"
+                                                    : "border-zinc-700 text-white placeholder-zinc-600 focus:border-zinc-500 focus:ring-zinc-500/10"
+                                            }
+                                        `}
+                                    />
+                                    <SendMail
+                                        className="absolute top-1/2 left-3.5 -translate-y-1/2 text-zinc-500 h-5 w-5"
+                                        strokeWidth={1.5}
+                                    />
+                                </div>
                                 {memberErrors.email && (
-                                    <p className="text-red-400 text-[10px] mt-1 flex items-center gap-1">
-                                        <MessageAlert className="h-3 w-3" /> {memberErrors.email.message}
+                                    <p className="text-red-400 text-[11px] mt-2 flex items-center gap-1.5 font-medium">
+                                        <MessageAlert className="h-3.5 w-3.5" strokeWidth={2} />{" "}
+                                        {memberErrors.email.message}
                                     </p>
                                 )}
                             </div>
@@ -511,9 +565,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                 size="md"
                                 fullWidth
                                 loading={addMemberMutation.isPending}
-                                className="mt-6 gap-2"
+                                className="mt-5 sm:mt-6 gap-2 bg-white text-zinc-900 hover:bg-zinc-200 border-0"
                             >
-                                Send Invitation <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                                Invite
                             </Button>
                         </form>
                     </div>

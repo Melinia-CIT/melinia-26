@@ -9,11 +9,11 @@ import { CreateTeamForm } from "../../components/userland/teams/TeamForm"
 import type { Team } from "@melinia/shared"
 import { team_management } from "../../services/teams"
 
+type ActiveModal = "mobileDetails" | "createTeam" | null
+
 const TeamsPage: React.FC = () => {
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
-    const [mobileModalOpen, setMobileModalOpen] = useState<boolean>(false)
-    const [mobileSelectedId, setMobileSelectedId] = useState<string | null>(null)
-    const [isTeamCreation, setIsTeamCreation] = useState<boolean>(false)
+    const [activeModal, setActiveModal] = useState<ActiveModal>(null)
 
     const { data: response, isLoading } = useQuery<Team[]>({
         queryKey: ["teams"],
@@ -31,13 +31,13 @@ const TeamsPage: React.FC = () => {
     }, [response])
 
     const handleMobileTeamSelect = useCallback((teamId: string) => {
-        setMobileSelectedId(teamId)
-        setMobileModalOpen(true)
+        setSelectedTeamId(teamId)
+        setActiveModal("mobileDetails")
     }, [])
 
     const handleMobileModalClose = useCallback(() => {
-        setMobileModalOpen(false)
-        setMobileSelectedId(null)
+        setActiveModal(null)
+        setSelectedTeamId(null)
     }, [])
 
     return (
@@ -54,7 +54,7 @@ const TeamsPage: React.FC = () => {
 
                         <button
                             onClick={() => {
-                                setIsTeamCreation(true)
+                                setActiveModal("createTeam")
                             }}
                             className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 bg-zinc-200 text-zinc-800 text-xs sm:text-sm font-semibold rounded-md transition-colors"
                         >
@@ -114,7 +114,7 @@ const TeamsPage: React.FC = () => {
                     </div>
                     <button
                         onClick={() => {
-                            setIsTeamCreation(true)
+                            setActiveModal("createTeam")
                         }}
                         className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 bg-zinc-200 text-zinc-800 text-xs sm:text-sm font-semibold rounded-md transition-colors"
                     >
@@ -180,16 +180,18 @@ const TeamsPage: React.FC = () => {
             </div>
 
             {/* Mobile Modal */}
-            {mobileModalOpen && mobileSelectedId && (
+            {activeModal === "mobileDetails" && selectedTeamId && (
                 <TeamModal
-                    teamId={mobileSelectedId}
+                    teamId={selectedTeamId}
                     onClose={handleMobileModalClose}
                     onDelete={handleMobileModalClose}
                 />
             )}
 
-            {/* Create Team Modal - Updated here */}
-            {isTeamCreation && <CreateTeamForm onClose={() => setIsTeamCreation(false)} />}
+            {/* Create Team Modal */}
+            {activeModal === "createTeam" && (
+                <CreateTeamForm onClose={() => setActiveModal(null)} />
+            )}
         </div>
     )
 }

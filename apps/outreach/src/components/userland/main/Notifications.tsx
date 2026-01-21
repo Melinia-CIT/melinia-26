@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { team_management } from "../../../services/teams"
-import { User, Xmark, CheckCircle } from "iconoir-react"
+import { Group, Xmark, CheckCircle } from "iconoir-react"
 import { motion, AnimatePresence } from "framer-motion"
 import toast from "react-hot-toast"
 
@@ -74,9 +74,9 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-900/50">
                     <div className="flex items-center gap-2">
-                        <User className="w-5 h-5 text-indigo-400" />
+                        <Group className="w-5 h-5 text-neutral-400" />
                         <h2 className="text-sm font-semibold text-white">Team Invitations</h2>
-                        <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs font-semibold rounded-full">
+                        <span className="px-1.5 py-0.5 bg-neutral-500/20 text-neutral-300 text-xs font-semibold rounded-full">
                             {invitations.length}
                         </span>
                     </div>
@@ -101,7 +101,7 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                         </div>
                     ) : invitations.length === 0 ? (
                         <div className="p-6 text-center">
-                            <User className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
+                            <Group className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
                             <p className="text-zinc-500 text-sm">No pending invitations</p>
                         </div>
                     ) : (
@@ -176,9 +176,9 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-900/50">
                         <div className="flex items-center gap-2">
-                            <User className="w-5 h-5 text-indigo-400" />
+                            <Group className="w-5 h-5 text-neutral-400" />
                             <h2 className="text-sm font-semibold text-white">Team Invitations</h2>
-                            <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs font-semibold rounded-full">
+                            <span className="px-1.5 py-0.5 bg-neutral-500/20 text-neutral-300 text-xs font-semibold rounded-full">
                                 {invitations.length}
                             </span>
                         </div>
@@ -206,7 +206,7 @@ const Notifications = ({ isOpen, onClose, isDesktop = false }: NotificationsProp
                         ) : invitations.length === 0 ? (
                             // Empty State
                             <div className="p-6 text-center">
-                                <User className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
+                                <Group className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
                                 <p className="text-zinc-500 text-sm">No pending invitations</p>
                             </div>
                         ) : (

@@ -24,7 +24,7 @@ export const userSchema = baseUserSchema.omit({ passwd_hash: true });
 export const baseProfileSchema = z.object({
     id: z.number(),
     user_id: z.string(),
-    first_name: z.string().min(1, { error: "Firstname can't be empty" }).max(80).trim(),
+    first_name: z.string().min(1, { error: "Firstname is required" }).max(80).trim(),
     last_name: z.string().max(80).trim().optional(),
     college: z.string().min(1, { error: "College is required" }).trim(),
     degree: z.string().min(1, { error: "Degree is required" }).trim(),

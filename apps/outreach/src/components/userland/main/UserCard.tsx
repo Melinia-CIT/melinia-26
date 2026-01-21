@@ -100,31 +100,36 @@ const UserCard = () => {
         <>
             {isModalOpen && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-6 animate-in fade-in duration-200"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-md p-4 sm:p-6 animate-in fade-in duration-200"
                     onClick={() => setIsModalOpen(false)}
                 >
                     <div
-                        className="bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl p-8 sm:p-12 md:p-16 max-w-[90vw] sm:max-w-[400px] md:max-w-[450px] w-full flex flex-col items-center relative animate-in zoom-in-95 duration-200"
+                        className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-8 sm:p-12 md:p-16 max-w-[90vw] sm:max-w-[400px] md:max-w-[450px] w-full flex flex-col items-center relative animate-in zoom-in-95 duration-200"
                         onClick={e => e.stopPropagation()}
                     >
                         <button
                             onClick={() => setIsModalOpen(false)}
-                            className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors bg-zinc-950/50 rounded-full p-1"
+                            className="absolute top-3 right-3 sm:top-4 sm:right-4 text-zinc-500 hover:text-white transition-colors bg-zinc-950/50 rounded-full p-1 sm:p-2 w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center"
                         >
-                            <Xmark width={24} height={24} strokeWidth={2} />
+                            <Xmark
+                                width={16}
+                                height={16}
+                                strokeWidth={2}
+                                className="sm:w-6 sm:h-6"
+                            />
                         </button>
 
-                        <div className="mb-6 rounded-xl overflow-hidden">
+                        <div className="mb-6 w-[60vw] sm:w-[280px] md:w-[320px] rounded-xl overflow-hidden">
                             <QRCode
                                 userId={user.id}
                                 userName={`${user.profile?.first_name} ${user.profile?.last_name}`}
                                 logoUrl="https://cdn.melinia.in/melinia-qr-embed.png"
-                                size={280}
+                                size={264}
                             />
                         </div>
 
                         <div className="w-full text-center space-y-2">
-                            <p className="text-xl text-white font-geist bg-zinc-950 py-3 px-4 rounded-xl border border-zinc-800/50 select-all tracking-wide shadow-inner">
+                            <p className="text-xl text-white font-geist font-medium bg-zinc-950 py-3 px-4 rounded-xl border border-zinc-800/50 select-all tracking-wide shadow-inner">
                                 {user.id}
                             </p>
                         </div>

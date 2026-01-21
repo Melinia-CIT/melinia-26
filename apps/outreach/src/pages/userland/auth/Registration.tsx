@@ -113,15 +113,14 @@ const Registration = () => {
         <div className="min-h-screen bg-zinc-950 text-zinc-100 flex justify-center px-4 py-6 items-center font-geist text-base selection:bg-zinc-700">
             <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-4">
 
-                {/* --- LEFT: STEPPER (Same as before) --- */}
+                {/* --- LEFT: STEPPER --- */}
                 <div className="hidden md:flex flex-col justify-center order-1 md:order-1">
-                    {/* ... Stepper UI remains exactly the same ... */}
                     <div className="space-y-8 relative">
                         <div className="absolute left-[19px] top-8 bottom-8 w-[2px] bg-zinc-800 -z-10" />
                         {/* Step 1 */}
                         <div className={`flex items-center gap-4 transition-all duration-300 ${getStepStatus(1) === 'active' ? 'opacity-100' : 'opacity-50'}`}>
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors
-            ${getStepStatus(1) === 'completed' ? 'bg-green-500/20 border-green-500 text-green-500' :
+            ${getStepStatus(1) === 'completed' ? 'bg-teal-500/20 border-teal-500 text-teal-500' :
                                     getStepStatus(1) === 'active' ? 'bg-zinc-900 border-zinc-400 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}>
                                 {getStepStatus(1) === 'completed' ? <CheckCircle width={20} height={20} /> : <span className="text-sm font-bold">1</span>}
                             </div>
@@ -133,7 +132,7 @@ const Registration = () => {
                         {/* Step 2 */}
                         <div className={`flex items-center gap-4 transition-all duration-300 ${getStepStatus(2) === 'active' ? 'opacity-100' : 'opacity-50'}`}>
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors
-            ${getStepStatus(2) === 'completed' ? 'bg-green-500/20 border-green-500 text-green-500' :
+            ${getStepStatus(2) === 'completed' ? 'bg-teal-500/20 border-teal-500 text-teal-500' :
                                     getStepStatus(2) === 'active' ? 'bg-zinc-900 border-zinc-400 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}>
                                 {getStepStatus(2) === 'completed' ? <CheckCircle width={20} height={20} /> : <span className="text-sm font-bold">2</span>}
                             </div>
@@ -145,7 +144,7 @@ const Registration = () => {
                         {/* Step 3 */}
                         <div className={`flex items-center gap-4 transition-all duration-300 ${getStepStatus(3) === 'active' ? 'opacity-100' : 'opacity-50'}`}>
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors
-            ${getStepStatus(3) === 'completed' ? 'bg-green-500/20 border-green-500 text-green-500' :
+            ${getStepStatus(3) === 'completed' ? 'bg-teal-500/20 border-teal-500 text-teal-500' :
                                     getStepStatus(3) === 'active' ? 'bg-zinc-900 border-zinc-400 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}>
                                 {getStepStatus(3) === 'completed' ? <CheckCircle width={20} height={20} /> : <span className="text-sm font-bold">3</span>}
                             </div>
@@ -163,9 +162,9 @@ const Registration = () => {
 
                     {/* Mobile Slider Stepper */}
                     <div className="md:hidden flex justify-between items-center mb-8 px-2">
-                        <div className={`h-1 flex-1 mx-1 rounded-full transition-colors ${currentStep > 1 ? 'bg-[#04692d]' : currentStep >= 1 ? 'bg-white' : 'bg-zinc-800'}`} />
-                        <div className={`h-1 flex-1 mx-1 rounded-full transition-colors ${currentStep > 2 ? 'bg-[#04692d]' : currentStep >= 2 ? 'bg-white' : 'bg-zinc-800'}`} />
-                        <div className={`h-1 flex-1 mx-1 rounded-full transition-colors ${currentStep > 3 ? 'bg-[#04692d]' : currentStep >= 3 ? 'bg-white' : 'bg-zinc-800'}`} />
+                        <div className={`h-1 flex-1 mx-1 rounded-full transition-colors ${currentStep > 1 ? 'bg-teal-600' : currentStep >= 1 ? 'bg-white' : 'bg-zinc-800'}`} />
+                        <div className={`h-1 flex-1 mx-1 rounded-full transition-colors ${currentStep > 2 ? 'bg-teal-600' : currentStep >= 2 ? 'bg-white' : 'bg-zinc-800'}`} />
+                        <div className={`h-1 flex-1 mx-1 rounded-full transition-colors ${currentStep > 3 ? 'bg-teal-600' : currentStep >= 3 ? 'bg-white' : 'bg-zinc-800'}`} />
                     </div>
 
                     {/* Header */}

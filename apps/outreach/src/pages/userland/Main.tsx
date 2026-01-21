@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import { useQuery } from "@tanstack/react-query"
 import UserCard from "../../components/userland/main/UserCard"
 import Notifications from "../../components/userland/main/Notifications"
 import RegisteredEvents from "../../components/userland/main/RegisteredEvents"
@@ -6,12 +7,35 @@ import { NotificationIcon } from "../../components/userland/main/NotificationIco
 import { motion } from "framer-motion"
 import TimelineView, { TimelineEvent } from "../../components/ui/timeline-view"
 import { useNavigate } from "react-router-dom"
+import api from "../../services/api"
+
+interface RegisteredEvent {
+    eventId: string
+    eventName: string
+    eventType: string
+    participationType: string
+    startTime: string
+    venue: string
+    teamName: string | null
+    registrationMode: "solo" | "team"
+}
 
 const Main = () => {
     const navigate = useNavigate()
     const [showNotifications, setShowNotifications] = useState(false)
     const [showDesktopNotifications, setShowDesktopNotifications] = useState(false)
     const desktopNotificationsRef = useRef<HTMLDivElement>(null)
+
+    const { data: registeredEvents } = useQuery<RegisteredEvent[]>({
+        queryKey: ["user-registered-events"],
+        queryFn: async () => {
+            const response = await api.get("/events/registered")
+            return response.data.data
+        },
+        staleTime: 5 * 60 * 1000,
+    })
+
+    const hasEvents = registeredEvents && registeredEvents.length > 0
 
     const handleEventClick = (event: TimelineEvent) => {
         navigate(`/app/events/${event.id}`)
@@ -21,18 +45,19 @@ const Main = () => {
         <div className="flex-1 w-full transition-all duration-300">
             {/* Desktop Layout */}
             <div className="hidden lg:flex lg:gap-6 xl:gap-8 lg:px-6 xl:px-8 lg:py-6 relative">
-
                 {/* Left Content - Scrollable (Takes ~66% width) */}
                 <div className="flex-1 min-w-0 w-full">
                     <div className="flex flex-col gap-6">
                         {/* Timeline Section */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.1 }}
-                        >
-                            <TimelineView onEventClick={handleEventClick} />
-                        </motion.div>
+                        {hasEvents && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.1 }}
+                            >
+                                <TimelineView onEventClick={handleEventClick} />
+                            </motion.div>
+                        )}
 
                         {/* Registered Events Section */}
                         <motion.div
@@ -50,7 +75,7 @@ const Main = () => {
                         {/* Notification Icon */}
                         <div className="cursor-pointer">
                             <NotificationIcon
-                                onClick={() => setShowDesktopNotifications((v) => !v)}
+                                onClick={() => setShowDesktopNotifications(v => !v)}
                                 isOpen={showDesktopNotifications}
                             />
                         </div>
@@ -96,7 +121,6 @@ const Main = () => {
                         <UserCard />
                     </motion.div>
                 </div>
-
             </div>
 
             {/* Mobile Layout */}
@@ -139,19 +163,21 @@ const Main = () => {
                     </motion.div>
 
                     {/* Timeline Section */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.1 }}
-                    >
-                        <TimelineView onEventClick={handleEventClick} />
-                    </motion.div>
+                    {hasEvents && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.1 }}
+                        >
+                            <TimelineView onEventClick={handleEventClick} />
+                        </motion.div>
+                    )}
 
                     {/* Registered Events Section */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
+                        transition={{ duration: 0.4, delay: hasEvents ? 0.2 : 0.1 }}
                     >
                         <RegisteredEvents />
                     </motion.div>
