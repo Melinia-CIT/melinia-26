@@ -144,7 +144,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
 
     if (isLoading) {
         return (
-            <div className="flex flex-col items-center justify-center h-full bg-zinc-950 text-zinc-200">
+            <div className="flex flex-col items-center justify-center h-full bg-zinc-950 text-zinc-300">
                 <Spinner w={32} h={32} />
             </div>
         )
@@ -156,7 +156,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                 <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-full mb-4">
                     <MessageAlert className="h-6 w-6 text-zinc-400" strokeWidth={1.5} />
                 </div>
-                <p className="text-zinc-300 font-medium">Failed to load team details</p>
+                <p className="text-white font-medium">Failed to load team details</p>
             </div>
         )
     }
@@ -164,84 +164,93 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
     if (!teamData) return null
 
     return (
-        <div className="flex flex-col h-full bg-zinc-950 font-sans text-zinc-100 relative">
+        <div className="flex flex-col h-full bg-zinc-950 text-white font-sans antialiased">
             <style>{`
-                .mono-scroll::-webkit-scrollbar { width: 4px; }
-                .mono-scroll::-webkit-scrollbar-track { background: #09090b; }
-                .mono-scroll::-webkit-scrollbar-thumb { background-color: #27272a; border-radius: 4px; }
-                .mono-scroll::-webkit-scrollbar-thumb:hover { background-color: #3f3f46; }
+                .custom-scroll::-webkit-scrollbar { width: 6px; }
+                .custom-scroll::-webkit-scrollbar-track { background: #09090b; }
+                .custom-scroll::-webkit-scrollbar-thumb { background-color: #3f3f46; border-radius: 4px; }
+                .custom-scroll::-webkit-scrollbar-thumb:hover { background-color: #52525b; }
             `}</style>
 
             {/* Header */}
-            <div className="flex-none border-b border-white/5 bg-zinc-900/30 backdrop-blur-md shrink-0 z-10">
-                <div className="flex items-center justify-between px-4 py-3">
-                    <h2 className="text-2xl text-white font-inst">{teamData.name}</h2>
+            <div className="flex-none border-b border-zinc-800 bg-zinc-950 shrink-0 z-20">
+                <div className="flex items-center justify-between px-4 py-5 sm:px-6">
+                    <div>
+                        <h2 className="text-xl font-semibold text-white tracking-tight">
+                            {teamData.name}
+                        </h2>
+                        <p className="text-xs text-zinc-400 mt-0.5 font-medium uppercase tracking-wider">
+                            Team Overview
+                        </p>
+                    </div>
                     {onClose && (
                         <button
                             onClick={onClose}
-                            className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white transition-all shrink-0"
+                            className="text-zinc-500 hover:text-zinc-300 transition-colors shrink-0"
                         >
-                            <Xmark className="h-4 w-4" strokeWidth={2} />
+                            <Xmark width={25} height={25} />
                         </button>
                     )}
                 </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto mono-scroll p-4 space-y-6 min-h-0">
+            <div className="flex-1 overflow-y-auto custom-scroll p-4 sm:p-6 space-y-6 min-h-0 relative z-10">
+                
                 {/* Warning Banner */}
                 {hasRegisteredEvents && (
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-start gap-3">
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
                         <Calendar
-                            className="h-4 w-4 text-zinc-400 shrink-0 mt-0.5"
+                            className="h-5 w-5 text-amber-500 shrink-0 mt-0.5"
                             strokeWidth={2}
                         />
-                        <div className="text-xs">
-                            <p className="font-semibold text-zinc-300">Team Locked</p>
-                            <p className="text-zinc-500 mt-0.5">
-                                Cannot modify members while registered for an event.
+                        <div className="text-sm">
+                            <p className="font-semibold text-amber-100">Team Locked</p>
+                            <p className="text-amber-200/60 mt-1 leading-relaxed">
+                                Cannot modify members or invites while registered for an active event.
                             </p>
                         </div>
                     </div>
                 )}
 
-                {/* Leader Card */}
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800/50">
-                    <div className="h-10 w-10 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-700">
-                        <User className="h-5 w-5" strokeWidth={1.5} />
+                {/* Leader Card - Changed to zinc-900 to pop against zinc-950 background */}
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800">
+                    <div className="h-12 w-12 rounded-full bg-zinc-950 border border-zinc-800 text-zinc-300 flex items-center justify-center shrink-0">
+                        <User className="h-6 w-6" strokeWidth={1.5} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider mb-0.5">
-                            Leader
+                        <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-1">
+                            Team Leader
                         </p>
-                        <p className="text-sm font-medium text-white truncate">
+                        <p className="text-base font-medium text-white truncate">
                             {teamData.leader_first_name} {teamData.leader_last_name}
                         </p>
                     </div>
                 </div>
 
-                {/* Members */}
+                {/* Members Section */}
                 <section>
-                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <Community className="h-3.5 w-3.5" /> Members
+                    <h3 className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                        <Community className="h-3.5 w-3.5" />
+                        Members ({teamData.members?.length || 0})
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         {teamData.members && teamData.members.length > 0 ? (
                             teamData.members.map(member => (
                                 <div
                                     key={member.user_id}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/50 border border-transparent hover:border-zinc-700 hover:bg-zinc-900 transition-all"
+                                    className="flex items-center justify-between p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors"
                                 >
-                                    <div className="flex items-center gap-3 min-w-0 pr-2">
-                                        <div className="h-8 w-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-400">
+                                    <div className="flex items-center gap-3 min-w-0 pr-4">
+                                        <div className="h-9 w-9 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center text-sm font-bold text-zinc-300">
                                             {member.first_name?.[0]}
                                             {member.last_name?.[0]}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm text-zinc-200 truncate">
+                                            <p className="text-sm font-medium text-white truncate">
                                                 {member.first_name} {member.last_name}
                                             </p>
-                                            <p className="text-xs text-zinc-600 truncate">
+                                            <p className="text-xs text-zinc-400 truncate mt-0.5">
                                                 {member.email}
                                             </p>
                                         </div>
@@ -252,46 +261,53 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                             setSelectedMemberId(member.user_id)
                                         }}
                                         disabled={hasRegisteredEvents}
-                                        className={`p-1.5 rounded-md transition-colors ${
+                                        className={`p-2 rounded-md transition-colors ${
                                             hasRegisteredEvents
-                                                ? "text-zinc-700"
+                                                ? "text-zinc-700 cursor-not-allowed"
                                                 : "text-zinc-500 hover:text-white hover:bg-zinc-800"
                                         }`}
+                                        title="Remove member"
                                     >
-                                        <Trash className="h-3.5 w-3.5" strokeWidth={2} />
+                                        <Trash className="h-4 w-4" strokeWidth={2} />
                                     </button>
                                 </div>
                             ))
                         ) : (
-                            <p className="text-xs text-zinc-600 text-center py-4">
-                                No members yet.
-                            </p>
+                            <div className="p-6 rounded-xl border border-dashed border-zinc-800 text-center">
+                                <p className="text-sm text-zinc-500">No other members in this team.</p>
+                            </div>
                         )}
                     </div>
                 </section>
 
-                {/* Invites */}
+                {/* Invites Section */}
                 {teamData.pending_invites && teamData.pending_invites.length > 0 && (
                     <section>
-                        <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <MessageAlert className="h-3.5 w-3.5" /> Invites
+                        <h3 className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                            <MessageAlert className="h-3.5 w-3.5" />
+                            Pending Invites
                         </h3>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {teamData.pending_invites.map(invite => (
                                 <div
                                     key={invite.invitation_id}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/30 border border-zinc-800/30"
+                                    className="flex items-center justify-between p-4 rounded-xl bg-zinc-900 border border-zinc-800"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="h-8 w-8 rounded-full bg-zinc-800/50 flex items-center justify-center border border-zinc-800">
+                                        <div className="h-9 w-9 rounded-full bg-zinc-950 flex items-center justify-center border border-zinc-800">
                                             <UserPlus
-                                                className="h-3.5 w-3.5 text-zinc-500"
+                                                className="h-4 w-4 text-zinc-500"
                                                 strokeWidth={1.5}
                                             />
                                         </div>
-                                        <p className="text-sm text-zinc-400 truncate">
-                                            {invite.email}
-                                        </p>
+                                        <div className="min-w-0">
+                                            <p className="text-sm text-zinc-200 truncate">
+                                                {invite.email}
+                                            </p>
+                                            <p className="text-[10px] text-zinc-600 uppercase font-bold tracking-wider mt-0.5">
+                                                Pending
+                                            </p>
+                                        </div>
                                     </div>
                                     <button
                                         onClick={() =>
@@ -300,9 +316,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                                 id: invite.invitation_id,
                                             })
                                         }
-                                        className="p-1.5 text-zinc-600 hover:text-white hover:bg-zinc-800 rounded-md transition-colors"
+                                        className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-md transition-colors"
                                     >
-                                        <Xmark className="h-3.5 w-3.5" strokeWidth={2} />
+                                        <Xmark className="h-4 w-4" strokeWidth={2} />
                                     </button>
                                 </div>
                             ))}
@@ -310,10 +326,11 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                     </section>
                 )}
 
-                {/* Events */}
-                <section className="pb-2">
-                    <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <Trophy className="h-3.5 w-3.5" /> Events
+                {/* Events Section */}
+                <section className="pb-4">
+                    <h3 className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                        <Trophy className="h-3.5 w-3.5" />
+                        Registered Events
                     </h3>
                     <div className="space-y-2">
                         {teamData.events_registered && teamData.events_registered.length > 0 ? (
@@ -321,35 +338,37 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                 <button
                                     key={event.event_id}
                                     onClick={() => navigate(`/app/events/${event.event_id}`)}
-                                    className="w-full group flex items-center justify-between p-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors text-left"
+                                    className="w-full group flex items-center justify-between p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors text-left"
                                 >
-                                    <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">
+                                    <span className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">
                                         {event.event_name}
                                     </span>
-                                    <ArrowRight className="h-3.5 w-3.5 text-zinc-600 group-hover:text-zinc-300 transition-colors" />
+                                    <div className="h-8 w-8 rounded-full bg-zinc-950 flex items-center justify-center group-hover:bg-zinc-900 transition-colors border border-zinc-800">
+                                        <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-white transition-colors" />
+                                    </div>
                                 </button>
                             ))
                         ) : (
-                            <p className="text-xs text-zinc-600 text-center py-4">
-                                No events registered.
-                            </p>
+                            <div className="p-6 rounded-xl border border-dashed border-zinc-800 text-center">
+                                <p className="text-sm text-zinc-500">No events registered yet.</p>
+                            </div>
                         )}
                     </div>
                 </section>
             </div>
 
             {/* Footer */}
-            <div className="flex-none p-4 bg-zinc-950 border-t border-zinc-800/50 shrink-0 z-20">
+            <div className="flex-none p-4 sm:p-6 bg-zinc-950 border-t border-zinc-800 shrink-0 z-20">
                 <div className="grid grid-cols-2 gap-3">
                     <Button
                         onClick={() => setIsAddMemberOpen(true)}
                         disabled={hasRegisteredEvents}
                         variant="primary"
-                        size="sm"
+                        size="md"
                         fullWidth
-                        className="gap-2"
+                        className="gap-2 h-11 font-medium"
                     >
-                        <UserPlus className="h-3.5 w-3.5" />
+                        <UserPlus className="h-4 w-4" />
                         Add Member
                     </Button>
 
@@ -359,39 +378,41 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         }
                         disabled={hasRegisteredEvents}
                         variant="danger"
-                        size="sm"
+                        size="md"
                         fullWidth
-                        className="gap-2"
+                        className="gap-2 h-11 font-medium bg-red-600 text-white hover:bg-red-700"
                     >
-                        <Trash className="h-3.5 w-3.5" /> Delete Team
+                        <Trash className="h-4 w-4" />
+                        Delete Team
                     </Button>
                 </div>
             </div>
 
-            {/* Compact Delete Member Modal */}
+            {/* Modals Container */}
+            {/* Delete Member Modal */}
             {deleteMember && (
-                <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                        onClick={() => setDeleteMember(false)}
-                    />
-                    <div className="relative bg-zinc-900 border border-zinc-800 shadow-2xl max-w-xs w-full rounded-xl p-4 animate-in fade-in zoom-in-95 duration-150">
-                        <h3 className="text-sm font-medium text-white mb-2">Remove Member</h3>
-                        <p className="text-xs text-zinc-400 mb-4">
-                            Are you sure you want to remove this member? This cannot be undone.
-                        </p>
-                        <div className="flex gap-2 justify-end">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                    <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in duration-200">
+                        <div className="mb-5">
+                            <h3 className="text-xl font-semibold text-white mb-2">Remove Member</h3>
+                            <p className="text-sm text-zinc-200 leading-relaxed">
+                                Are you sure you want to remove this team member? They will lose access to team data immediately.
+                            </p>
+                        </div>
+                        <div className="flex gap-3 justify-end">
                             <Button
                                 onClick={() => setDeleteMember(false)}
                                 variant="secondary"
-                                size="sm"
+                                size="md"
+                                className="bg-zinc-950 border border-zinc-700 text-white hover:border-zinc-600"
                             >
                                 Cancel
                             </Button>
                             <Button
                                 onClick={() => handleDeleteMember(selectedMemberId)}
-                                variant="primary"
-                                size="sm"
+                                variant="danger"
+                                size="md"
+                                className="bg-red-600 text-white hover:bg-red-700"
                             >
                                 {deleteMemberMutation.isPending ? "Removing..." : "Remove"}
                             </Button>
@@ -400,33 +421,28 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                 </div>
             )}
 
-            {/* Compact Delete Confirm Modal */}
+            {/* General Delete Confirm Modal */}
             {deleteConfirm && (
-                <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                        onClick={() => setDeleteConfirm(null)}
-                    />
-                    <div className="relative bg-zinc-900 border border-zinc-800 shadow-2xl max-w-sm w-full rounded-2xl p-6 animate-in fade-in zoom-in-95 duration-150">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-2 bg-zinc-800 rounded-lg">
-                                <Trash className="h-5 w-5 text-zinc-300" strokeWidth={2} />
-                            </div>
-                            <h3 className="text-base font-medium text-white">Confirm Action</h3>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                    <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in duration-200">
+                        <div className="mb-6">
+                            <h3 className="text-xl font-semibold text-white mb-2">
+                                {deleteConfirm.type === "team" ? "Delete Team?" : "Revoke Invitation?"}
+                            </h3>
+                            <p className="text-sm text-zinc-200 leading-relaxed mt-2">
+                                {deleteConfirm.type === "team"
+                                    ? "This action cannot be undone. All team data, events, and history will be permanently deleted."
+                                    : "This invitation link will no longer work."}
+                            </p>
                         </div>
-                        <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
-                            {deleteConfirm.type === "team"
-                                ? "This will permanently delete the team. This action cannot be undone."
-                                : "Revoke this pending invitation?"}
-                        </p>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 justify-end">
                             <Button
                                 onClick={() => setDeleteConfirm(null)}
                                 variant="secondary"
                                 size="md"
-                                className="flex-1"
+                                className="bg-zinc-950 border border-zinc-700 text-white hover:border-zinc-600"
                             >
-                                Cancel
+                                Keep Safe
                             </Button>
                             <Button
                                 onClick={handleDeleteConfirm}
@@ -434,15 +450,15 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                     deleteTeamMutation.isPending ||
                                     deleteInvitationMutation.isPending
                                 }
-                                variant="primary"
+                                variant="danger"
                                 size="md"
-                                className="flex-1"
+                                className="bg-red-600 text-white hover:bg-red-700"
                                 loading={
                                     deleteTeamMutation.isPending ||
                                     deleteInvitationMutation.isPending
                                 }
                             >
-                                {deleteConfirm.type === "team" ? "Delete" : "Confirm"}
+                                {deleteConfirm.type === "team" ? "Yes, Delete Team" : "Revoke Invite"}
                             </Button>
                         </div>
                     </div>
@@ -451,39 +467,39 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
 
             {/* Add Member Modal */}
             {isAddMemberOpen && (
-                <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                        onClick={() => setIsAddMemberOpen(false)}
-                    />
-                    <div className="relative bg-zinc-900 border border-zinc-800 shadow-2xl sm:max-w-md max-w-sm w-full rounded-2xl p-5 sm:p-6 animate-in fade-in zoom-in-95 duration-150">
-                        <div className="flex justify-between items-center mb-5">
-                            <h3 className="text-base font-medium text-white">Add Member</h3>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                    <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-semibold text-white">Add New Member</h2>
                             <button
                                 onClick={() => setIsAddMemberOpen(false)}
-                                className="text-zinc-500 hover:text-white p-1.5 rounded-md hover:bg-zinc-800 transition-colors"
+                                className="text-zinc-500 hover:text-zinc-300 transition-colors"
                             >
-                                <Xmark width={18} height={18} strokeWidth={2} />
+                                <Xmark width={25} height={25} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmitMember(handleAddMember)} className="space-y-4">
+                        <form onSubmit={handleSubmitMember(handleAddMember)} className="space-y-5">
+                            {/* Input Field matching Reference Style */}
                             <div>
+                                <label className="block text-xs font-medium mb-1.5 text-zinc-200">
+                                    Member Email Address
+                                </label>
                                 <input
                                     type="email"
-                                    placeholder="username@domain.tld"
+                                    placeholder="colleague@example.com"
                                     {...registerMember("email")}
-                                    className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors placeholder:text-zinc-600
+                                    className={`w-full bg-zinc-950 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 transition-colors
                                         ${
                                             memberErrors.email
-                                                ? "border-white text-white"
-                                                : "border-zinc-700 text-white focus:border-white focus:ring-white/20"
+                                                ? "border-red-500 text-red-100 placeholder-red-300/50 focus:ring-red-500"
+                                                : "border-zinc-700 text-white placeholder-zinc-600 focus:border-white focus:ring-white"
                                         }
                                     `}
                                 />
                                 {memberErrors.email && (
-                                    <p className="text-zinc-400 text-xs text-red-500 mt-1.5">
-                                        {memberErrors.email.message}
+                                    <p className="text-red-400 text-[10px] mt-1 flex items-center gap-1">
+                                        <MessageAlert className="h-3 w-3" /> {memberErrors.email.message}
                                     </p>
                                 )}
                             </div>
@@ -495,9 +511,9 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                 size="md"
                                 fullWidth
                                 loading={addMemberMutation.isPending}
-                                className="gap-2"
+                                className="mt-6 gap-2"
                             >
-                                Send Invite <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                                Send Invitation <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
                             </Button>
                         </form>
                     </div>

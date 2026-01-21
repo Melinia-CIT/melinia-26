@@ -100,7 +100,7 @@ const Events = () => {
     ]
 
     return (
-        <div className="flex-1 w-full transition-all duration-300 pb-12">
+        <div className="flex-1 w-full transition-all duration-300">
             {eventsLoading ? (
                 <motion.div
                     className="flex items-start justify-center"

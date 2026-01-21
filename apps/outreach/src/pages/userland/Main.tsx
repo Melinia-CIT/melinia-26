@@ -18,64 +18,90 @@ const Main = () => {
     }
 
     return (
-        <div className="w-full bg-zinc-950 flex flex-col items-center font-geist selection:bg-indigo-500/30 relative overflow-hidden">
+        <div className="flex-1 w-full transition-all duration-300">
             {/* Desktop Layout */}
-            <div className="hidden lg:flex w-full flex-row items-start gap-8 h-screen overflow-hidden">
-                {/* Notification Icon - Desktop */}
-                <div className="absolute top-0 right-0 z-50 cursor-pointer">
-                    <NotificationIcon
-                        onClick={() => setShowDesktopNotifications(!showDesktopNotifications)}
-                        isOpen={showDesktopNotifications}
-                    />
-                </div>
+            <div className="hidden lg:flex lg:gap-6 xl:gap-8 lg:px-6 xl:px-8 lg:py-6 relative">
 
-                <div className="flex-1 w-full overflow-y-auto overflow-x-hidden p-6">
-                    <div className="grid grid-cols-1 gap-6">
-                        <RegisteredEvents />
-                        <TimelineView onEventClick={handleEventClick} />
+                {/* Left Content - Scrollable (Takes ~66% width) */}
+                <div className="flex-1 min-w-0 w-full">
+                    <div className="flex flex-col gap-6">
+                        {/* Timeline Section */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.1 }}
+                        >
+                            <TimelineView onEventClick={handleEventClick} />
+                        </motion.div>
+
+                        {/* Registered Events Section */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                        >
+                            <RegisteredEvents />
+                        </motion.div>
                     </div>
                 </div>
 
-                <div className="my-auto lg:max-w-md">
-                    <UserCard />
+                <div className="flex flex-col items-end gap-14">
+                    <div className="relative">
+                        {/* Notification Icon */}
+                        <div className="cursor-pointer">
+                            <NotificationIcon
+                                onClick={() => setShowDesktopNotifications((v) => !v)}
+                                isOpen={showDesktopNotifications}
+                            />
+                        </div>
+
+                        {/* Desktop Notifications Overlay */}
+                        {showDesktopNotifications && (
+                            <div
+                                className="fixed inset-0 z-40"
+                                onClick={() => setShowDesktopNotifications(false)}
+                            />
+                        )}
+
+                        {/* Notification Panel */}
+                        <motion.div
+                            ref={desktopNotificationsRef}
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={
+                                showDesktopNotifications
+                                    ? { opacity: 1, y: 8, scale: 1 }
+                                    : { opacity: 0, y: -10, scale: 0.95 }
+                            }
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                            className="
+                                absolute top-full right-0
+                                w-[360px] max-h-[70vh]
+                                z-50
+                            "
+                            style={{ pointerEvents: showDesktopNotifications ? "auto" : "none" }}
+                        >
+                            <Notifications
+                                isOpen={showDesktopNotifications}
+                                onClose={() => setShowDesktopNotifications(false)}
+                                isDesktop
+                            />
+                        </motion.div>
+                    </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.2 }}
+                    >
+                        <UserCard />
+                    </motion.div>
                 </div>
 
-                {/* Notification Backdrop */}
-                {showDesktopNotifications && (
-                    <div
-                        className="fixed inset-0 bg-black/20 z-40"
-                        onClick={() => setShowDesktopNotifications(false)}
-                    />
-                )}
-
-                <motion.div
-                    ref={desktopNotificationsRef}
-                    initial={{ x: 400, opacity: 0, scale: 0.95 }}
-                    animate={{
-                        x: showDesktopNotifications ? 0 : 400,
-                        opacity: showDesktopNotifications ? 1 : 0,
-                        scale: showDesktopNotifications ? 1 : 0.95,
-                    }}
-                    transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 30,
-                        mass: 0.8,
-                    }}
-                    className="absolute top-0 right-0 w-sm max-w-[400px] z-50"
-                    style={{ pointerEvents: showDesktopNotifications ? "auto" : "none" }}
-                >
-                    <Notifications
-                        isOpen={showDesktopNotifications}
-                        onClose={() => setShowDesktopNotifications(false)}
-                        isDesktop={true}
-                    />
-                </motion.div>
             </div>
 
             {/* Mobile Layout */}
-            <div className="lg:hidden w-full relative flex flex-col items-center gap-6 pt-12">
-                {/* Mobile Notification Backdrop */}
+            <div className="lg:hidden">
+                {/* Mobile Notifications Overlay */}
                 {showNotifications && (
                     <div
                         className="fixed inset-0 bg-black/20 z-40"
@@ -83,28 +109,53 @@ const Main = () => {
                     />
                 )}
 
-                <div className="flex justify-end fixed top-0 right-0 z-50">
-                    <div className="p-4">
-                        <NotificationIcon
-                            onClick={() => setShowNotifications(!showNotifications)}
-                            isOpen={showNotifications}
-                        />
-                    </div>
+                {/* Notification Icon - Fixed Position */}
+                <div className="fixed top-4 right-4 z-50">
+                    <NotificationIcon
+                        onClick={() => setShowNotifications(!showNotifications)}
+                        isOpen={showNotifications}
+                    />
                 </div>
+
+                {/* Mobile Notifications Panel */}
                 <Notifications
                     isOpen={showNotifications}
                     onClose={() => setShowNotifications(false)}
                     isDesktop={false}
                 />
 
-                {/* Vertical Stack: UserCard then TimelineView then RegisteredEvents */}
-                <UserCard />
+                {/* Mobile Content with Consistent Spacing */}
+                <div className="space-y-6 px-4 pt-4">
+                    {/* User Card Section */}
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4 }}
+                        className="flex justify-center pt-12"
+                    >
+                        <div className="w-full max-w-md">
+                            <UserCard />
+                        </div>
+                    </motion.div>
 
-                <div className="w-full">
-                    <TimelineView onEventClick={handleEventClick} />
+                    {/* Timeline Section */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.1 }}
+                    >
+                        <TimelineView onEventClick={handleEventClick} />
+                    </motion.div>
+
+                    {/* Registered Events Section */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.2 }}
+                    >
+                        <RegisteredEvents />
+                    </motion.div>
                 </div>
-
-                <RegisteredEvents />
             </div>
         </div>
     )

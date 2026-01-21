@@ -41,11 +41,11 @@ const TeamsPage: React.FC = () => {
     }, [])
 
     return (
-        <div className="flex flex-col bg-zinc-950 text-white h-full">
+        <div className="flex-1 flex flex-col bg-zinc-950 text-white sm:h-full font-geist">
             {/* Desktop & Tablet Layout */}
-            <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 h-full">
+            <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-6 gap-6 h-full">
                 {/* Left Side - Teams List */}
-                <div className="lg:col-span-1 flex flex-col border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 flex-1">
+                <div className="col-span-2 flex flex-col border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 flex-1">
                     <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
                         <div>
                             <h2 className="text-2xl font-inst font-bold text-white">Teams</h2>
@@ -88,7 +88,7 @@ const TeamsPage: React.FC = () => {
                 </div>
 
                 {/* Right Side - Team Details */}
-                <div className="md:col-span-2 lg:col-span-3 border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 flex-1">
+                <div className="md:col-span-2 lg:col-span-4 border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 flex-1">
                     {selectedTeamId ? (
                         <TeamDetailsPanel
                             teamId={selectedTeamId}

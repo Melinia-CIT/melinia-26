@@ -37,28 +37,35 @@ const RegisteredEvents = () => {
 
     if (!events || events.length === 0) {
         return (
-            <div className="w-full p-8 border border-dashed border-zinc-800 rounded-3xl flex flex-col items-center justify-center text-center bg-zinc-900/20">
-                <div className="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center mb-4">
-                    <Star className="w-5 h-5 text-zinc-600" />
+            <>
+                <div className="flex items-center justify-between mb-4 px-2">
+                    <h2 className="text-2xl font-bold font-inst text-white tracking-tight flex items-center gap-2">
+                        Your Events
+                    </h2>
                 </div>
-                <p className="text-zinc-400 font-medium">No event registrations yet.</p>
-                <div
-                    onClick={() => navigate("/app/events")}
-                    className="mt-4 text-xs hover:cursor-pointer transition-colors uppercase tracking-widest flex gap-2 items-center text-zinc-400 hover:text-white group"
-                >
-                    <span className="font-semibold">Explore Events</span>
-                    <ArrowRight
-                        width="14"
-                        height="14"
-                        className="group-hover:translate-x-1 transition-transform"
-                    />
+                <div className="w-full p-8 border border-dashed border-zinc-800 rounded-3xl flex flex-col items-center justify-center text-center bg-zinc-900/20">
+                    <div className="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center mb-4">
+                        <Star className="w-5 h-5 text-zinc-600" />
+                    </div>
+                    <p className="text-zinc-400 font-medium">No event registrations yet.</p>
+                    <div
+                        onClick={() => navigate("/app/events")}
+                        className="mt-4 text-xs hover:cursor-pointer transition-colors uppercase tracking-widest flex gap-2 items-center text-zinc-400 hover:text-white group"
+                    >
+                        <span className="font-semibold">Explore Events</span>
+                        <ArrowRight
+                            width="14"
+                            height="14"
+                            className="group-hover:translate-x-1 transition-transform"
+                        />
+                    </div>
                 </div>
-            </div>
+            </>
         )
     }
 
     return (
-        <section className="w-full pb-10">
+        <section className="w-full">
             <div className="flex items-center justify-between mb-6 px-2">
                 <h2 className="text-2xl font-bold font-inst text-white tracking-tight flex items-center gap-2">
                     Your Events
