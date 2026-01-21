@@ -1,73 +1,73 @@
-import { useForm } from "react-hook-form";
-import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Key, Lock, Eye, EyeClosed, CheckCircle } from "iconoir-react";
-import { ChevronDown, TicketPercent } from "lucide-react";
-import { registrationSchema, type RegistrationType } from "@melinia/shared";
-import { UseMutationResult } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import api from "../../services/api";
+import { useForm } from "react-hook-form"
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Key, Lock, Eye, EyeClosed, CheckCircle, InfoCircle } from "iconoir-react"
+import { TicketPercent } from "lucide-react"
+import { registrationSchema, type RegistrationType } from "@melinia/shared"
+import { UseMutationResult } from "@tanstack/react-query"
+import toast from "react-hot-toast"
+import api from "../../services/api"
 
 interface PasswordFormProps {
-    mutation: UseMutationResult<any, Error, RegistrationType, unknown>;
+    mutation: UseMutationResult<any, Error, RegistrationType, unknown>
 }
 
 const PasswordForm = ({ mutation }: PasswordFormProps) => {
-    const [showPassword, setShowPassword] = useState(false);
-    const [isCheckingCoupon, setIsCheckingCoupon] = useState(false);
-    const [couponValid, setCouponValid] = useState<boolean | null>(null);
-    const [showCoupon, setShowCoupon] = useState(false);
+    const [showPassword, setShowPassword] = useState(false)
+    const [isCheckingCoupon, setIsCheckingCoupon] = useState(false)
+    const [couponValid, setCouponValid] = useState<boolean | null>(null)
 
     const {
         register,
         handleSubmit,
         setValue,
+        watch,
         formState: { errors },
     } = useForm<RegistrationType>({
         resolver: zodResolver(registrationSchema),
         mode: "onBlur",
-    });
+    })
+
+    const couponCode = watch("couponCode")
 
     const onSubmit = (data: RegistrationType) => {
-        const payload = { ...data };
+        const payload = { ...data }
 
         if (!payload.couponCode || payload.couponCode.trim() === "") {
-            delete payload.couponCode;
+            delete payload.couponCode
         }
 
-        mutation.mutate(payload);
-    };
+        mutation.mutate(payload)
+    }
 
     const checkCoupon = async (code: string) => {
         if (!code || code.trim() === "") {
-            setCouponValid(null);
-            return;
+            setCouponValid(null)
+            return
         }
 
-        setIsCheckingCoupon(true);
+        setIsCheckingCoupon(true)
         try {
-            await api.get("/coupons/check", { code });
-            setCouponValid(true);
+            await api.get("/coupons/check", { code })
+            setCouponValid(true)
         } catch (error: any) {
-            const message = error.response?.data?.message || "Invalid coupon code.";
-            setCouponValid(false);
-            toast.error(message);
+            const message = error.response?.data?.message || "Invalid coupon code."
+            setCouponValid(false)
+            toast.error(message)
         } finally {
-            setIsCheckingCoupon(false);
+            setIsCheckingCoupon(false)
         }
-    };
+    }
 
     const inputClasses = (hasError?: boolean) => `
         w-full rounded-lg bg-zinc-900 border pl-10 pr-10 py-3 text-sm text-zinc-100 
         placeholder:text-zinc-600 focus:outline-none focus:ring-2 transition-colors duration-200
-        ${hasError ? 'border-red-500 focus:ring-red-500/50' : 'border-zinc-800 focus:ring-zinc-600'}
-    `;
+        ${hasError ? "border-red-500 focus:ring-red-500/50" : "border-zinc-800 focus:ring-zinc-600"}
+    `
 
     const IconWrapper = ({ children }: { children: React.ReactNode }) => (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
-            {children}
-        </div>
-    );
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">{children}</div>
+    )
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
@@ -86,6 +86,7 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors"
                     >
                         {showPassword ? (
@@ -118,52 +119,45 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
                 )}
             </div>
 
-            {/* Coupon Toggle Button */}
-            <button
-                type="button"
-                onClick={() => setShowCoupon(!showCoupon)}
-                className="flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors pt-1"
-            >
-                <ChevronDown
-                    strokeWidth={2}
-                    width={16}
-                    height={16}
-                    className={`transition-transform ${showCoupon ? 'rotate-180' : ''}`}
-                />
-                {showCoupon ? 'Hide' : 'Have a coupon code?'}
-            </button>
-
             {/* Coupon Code */}
-            {showCoupon && (
-                <div className="pt-2">
-                    <div className="relative">
-                        <IconWrapper>
-                            <TicketPercent strokeWidth={1.5} width={20} height={20} />
-                        </IconWrapper>
-                        <input
-                            type="text"
-                            placeholder="Coupon Code"
-                            className={`w-full rounded-lg bg-zinc-900 border pl-10 pr-10 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 transition-colors duration-200
-                                ${couponValid === false ? 'border-red-500 focus:ring-red-500/50' : 'border-zinc-700 focus:ring-zinc-500/50'}
-                            `}
-                            {...register("couponCode", {
-                                onChange: (e) => {
-                                    const uppercasedValue = e.target.value.toUpperCase();
-                                    e.target.value = uppercasedValue;
-                                    setValue("couponCode", uppercasedValue);
-                                },
-                                onBlur: (e) => checkCoupon(e.target.value),
-                            })}
+            <div>
+                <div className="relative">
+                    <IconWrapper>
+                        <TicketPercent strokeWidth={1.5} width={20} height={20} />
+                    </IconWrapper>
+                    <input
+                        type="text"
+                        placeholder="Coupon Code (if any)"
+                        className={`w-full rounded-lg bg-teal-950/30 border pl-10 pr-10 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 transition-colors duration-200
+                        ${couponValid === false ? "border-red-500 focus:ring-red-500/50" : "border-teal-500/30 focus:ring-teal-500/30"}
+                    `}
+                        {...register("couponCode", {
+                            onChange: e => {
+                                const uppercasedValue = e.target.value.toUpperCase()
+                                e.target.value = uppercasedValue
+                                setValue("couponCode", uppercasedValue)
+                            },
+                            onBlur: e => checkCoupon(e.target.value),
+                        })}
+                    />
+                    {isCheckingCoupon && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-zinc-500 border-t-zinc-200 rounded-full animate-spin" />
+                    )}
+                    {couponValid === true && (
+                        <CheckCircle
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 w-5 h-5"
+                            strokeWidth={2}
+                            tabIndex={-1}
                         />
-                        {isCheckingCoupon && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-zinc-500 border-t-zinc-200 rounded-full animate-spin" />
-                        )}
-                        {couponValid === true && (
-                            <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 w-5 h-5" strokeWidth={2} />
-                        )}
-                    </div>
+                    )}
                 </div>
-            )}
+                {!couponCode && (
+                    <p className="text-teal-400 text-xs mt-1.5 pl-1 flex items-center gap-1.5 bg-teal-500/5 border border-teal-500/10 px-2 py-1.5 rounded-md">
+                        <InfoCircle width={12} height={12} strokeWidth={1.5} />
+                        Optional - Have a coupon code?
+                    </p>
+                )}
+            </div>
 
             <button
                 type="submit"
@@ -173,8 +167,7 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
                 {mutation.isPending ? "Creating Account..." : "Create Account"}
             </button>
         </form>
-    );
-};
+    )
+}
 
-export default PasswordForm;
-
+export default PasswordForm

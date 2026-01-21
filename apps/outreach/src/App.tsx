@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from "react-router"
-
 import { PublicRoute, ProtectedRoute } from "./components/Router"
 
 import Home from "./pages/Home"
@@ -31,7 +30,7 @@ function App() {
                         <Route index element={<Main />} />
                         <Route path="events" element={<EventLayout />} />
                         <Route path="events/:id" element={<EventDetail />} />
-                        <Route path="leaderboard" element={<Leaderboard/>}/>
+                        <Route path="leaderboard" element={<Leaderboard />} />
                         <Route path="teams" element={<Teams />} />
                     </Route>
                 </Route>

@@ -40,21 +40,8 @@ const AppLayout = () => {
 
     return (
         <div className="h-[100dvh] w-screen bg-zinc-950 text-white relative overflow-hidden font-geist">
-            
-            {/* 
-                Navigator: 
-                Rendered outside the scrollable area so it stays fixed.
-                Assumed to handle its own positioning (fixed/absolute) via internal classes.
-            */}
             <Navigator />
 
-            {/* 
-                Main Content Area:
-                - h-full: Takes available height.
-                - overflow-y-auto: Enables scrolling ONLY for this container.
-                - Mobile: pb-24 adds padding for bottom navigator.
-                - Desktop: pl-32 adds padding for left navigator.
-            */}
             <main className="h-full w-full overflow-y-auto overflow-x-hidden scroll-smooth px-4 pt-4 pb-24 md:pl-32 md:pr-8 md:pb-6 md:pt-6">
                 <Outlet />
             </main>
@@ -70,7 +57,7 @@ const AppLayout = () => {
                     >
                         <motion.div
                             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                            onClick={() => {}}
+                            onClick={() => { }}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -107,7 +94,7 @@ const AppLayout = () => {
                         }}
                         userName={userData?.name || ""}
                         userEmail={userData?.email || ""}
-                        onPaymentSuccess={() => {}}
+                        onPaymentSuccess={() => { }}
                         isRequired={true}
                     />
                 )}

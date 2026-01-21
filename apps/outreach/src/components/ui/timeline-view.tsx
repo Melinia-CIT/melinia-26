@@ -155,8 +155,8 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
 
     return (
         <div className={cn("space-y-4", className)}>
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold font-inst text-white tracking-tight">Timeline</h2>
+            <div className="flex items-center justify-between font-geist">
+                <h2 className="text-2xl font-bold font-inst text-white tracking-tight">Your Timeline</h2>
                 <div className="flex items-center gap-2 bg-zinc-900/50 rounded-lg p-1 border border-white/5">
                     <button
                         onClick={goToPreviousDay}
@@ -200,15 +200,14 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
             ) : (
                 <div className="w-full bg-zinc-900/30 rounded-xl border border-white/5 p-8 flex flex-col items-center justify-center text-center">
                     <Clock className="w-12 h-12 text-zinc-600 mb-4" />
-                    <p className="text-zinc-400 font-medium">No events scheduled</p>
-                    <p className="text-zinc-500 text-sm mt-1">
+                    <p className="text-zinc-500 text-sm font-medium mt-1">
                         {isToday
                             ? "No events for today. Check other days or register for events."
-                            : `No events on ${formatDateHeader(selectedDate).toLowerCase()}.`}
+                            : `No events on ${formatDateHeader(selectedDate)}.`}
                     </p>
                     <button
                         onClick={() => navigate("/app/events")}
-                        className="mt-4 px4 py-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-sm hover:bg-indigo-500/20 transition-colors"
+                        className="mt-4 px-4 py-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-sm hover:bg-indigo-500/20 transition-colors"
                     >
                         Browse Events
                     </button>
