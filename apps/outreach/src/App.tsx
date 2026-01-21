@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router"
 import { PublicRoute, ProtectedRoute } from "./components/Router"
 
 import Home from "./pages/Home"
+import NotFound from "./pages/NotFound"
 import AppLayout from "./pages/userland/Layout"
 import Login from "./pages/userland/auth/Login"
 import Register from "./pages/userland/auth/Registration"
@@ -18,6 +19,7 @@ function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="*" element={<NotFound />} />
                 <Route element={<PublicRoute />}>
                     <Route path="/login" element={<Login />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -39,4 +41,4 @@ function App() {
     )
 }
 
-export default App;
+export default App

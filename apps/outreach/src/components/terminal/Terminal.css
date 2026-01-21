@@ -1,0 +1,245 @@
+.terminal {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: "SF Mono", "Fira Code", "Roboto Mono", monospace;
+    background-color: black;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #16213e;
+    border-bottom: 1px solid #0f3460;
+}
+
+.window-controls {
+    display: flex;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.window-controls li {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.start {
+    margin-right: auto;
+}
+
+.end {
+    margin-left: auto;
+}
+
+.adwaita .window-controls li {
+    background-color: #e0e0e0;
+    border: 1px solid #b0b0b0;
+}
+
+.macos .window-controls li {
+    background-color: #ff5f56;
+}
+
+.macos .window-controls li:nth-child(2) {
+    background-color: #ffbd2e;
+}
+
+.macos .window-controls li:nth-child(3) {
+    background-color: #27ca3f;
+}
+
+.circular-button {
+    border-radius: 50%;
+}
+
+.title {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    color: #ffffff;
+    background-color: black;
+    line-height: 1.4;
+}
+
+.content span {
+    color: #ffffff !important;
+}
+
+.content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+    background: #1a1a2e;
+}
+
+.content::-webkit-scrollbar-thumb {
+    background: #4a4a6a;
+    border-radius: 4px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+    background: #6a6a8a;
+}
+
+.disable-scrolling {
+    overflow: hidden;
+}
+
+.font-xtiny {
+    font-size: 9px;
+}
+
+.font-tiny {
+    font-size: 12px;
+}
+
+.font-small {
+    font-size: 14px;
+}
+
+.font-medium {
+    font-size: 16px;
+}
+
+.font-large {
+    font-size: 18px;
+}
+
+.hide-window-chrome .header {
+    display: none;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #16213e;
+    border-bottom: 1px solid #0f3460;
+}
+
+.windowControls {
+    display: flex;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.windowControls li {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.start {
+    margin-right: auto;
+}
+
+.end {
+    margin-left: auto;
+}
+
+.adwaita .windowControls li {
+    background-color: #e0e0e0;
+    border: 1px solid #b0b0b0;
+}
+
+.macos .windowControls li {
+    background-color: #ff5f56;
+}
+
+.macos .windowControls li:nth-child(2) {
+    background-color: #ffbd2e;
+}
+
+.macos .windowControls li:nth-child(3) {
+    background-color: #27ca3f;
+}
+
+.circularButton {
+    border-radius: 50%;
+}
+
+.title {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    color: #ffffff;
+    background-color: black;
+    line-height: 1.4;
+}
+
+.content span {
+    color: #ffffff !important;
+}
+
+.content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+    background: #1a1a2e;
+}
+
+.content::-webkit-scrollbar-thumb {
+    background: #4a4a6a;
+    border-radius: 4px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+    background: #6a6a8a;
+}
+
+.disableScrolling {
+    overflow: hidden;
+}
+
+.fontXTiny {
+    font-size: 9px;
+}
+
+.fontTiny {
+    font-size: 12px;
+}
+
+.fontSmall {
+    font-size: 14px;
+}
+
+.fontMedium {
+    font-size: 16px;
+}
+
+.fontLarge {
+    font-size: 18px;
+}
+
+.hideWindowChrome .header {
+    display: none;
+}
+
+.content > div {
+    white-space: pre;
+}
+
+.content .b {
+    color: #ffffff;
+}
