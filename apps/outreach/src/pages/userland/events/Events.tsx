@@ -19,55 +19,22 @@ if (typeof document !== "undefined") {
     document.head.appendChild(style);
 }
 
-interface Round {
-    roundNo: number;
-    roundDescription: string;
-}
-interface Prize {
-    position: number;
-    rewardValue: number;
-}
-interface Organizer {
-    userId: string;
-    assignedBy: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    phoneNo?: string | null;
-}
-interface Rule {
-    id: number;
-    roundNo: number | null;
-    ruleNumber: number;
-    ruleDescription: string;
-}
+interface Round { roundNo: number; roundDescription: string; startTime: string; endTime: string }
+interface Prize { position: number; rewardValue: number }
+interface Organizer { userId: string; assignedBy: string; firstName?: string | null; lastName?: string | null; phoneNo?: string | null }
+interface Rule { id: number; roundNo: number | null; ruleNumber: number; ruleDescription: string }
 
 export interface Event {
-    id: string;
-    name: string;
-    description: string;
-    participationType: string;
-    eventType: string;
-    maxAllowed: number;
-    minTeamSize: number;
-    maxTeamSize: number;
-    venue: string;
-    startTime: string;
-    endTime: string;
-    registrationStart: string;
-    registrationEnd: string;
-    createdBy: string;
-    createdAt: string;
-    updatedAt: string;
-    rounds: Round[];
-    prizes: Prize[];
-    organizers: Organizer[];
-    rules: Rule[];
+    id: string; name: string; description: string; participationType: string; eventType: string;
+    maxAllowed: number; minTeamSize: number; maxTeamSize: number; venue: string;
+    registrationStart: string; registrationEnd: string;
+    createdBy: string; createdAt: string; updatedAt: string;
+    rounds: Round[]; prizes: Prize[]; organizers: Organizer[]; rules: Rule[];
 }
 
 const Events = () => {
-    // State changed to array to support multiple categories
-    const [activeFilters, setActiveFilters] = useState<string[]>(["all"]);
-    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [activeFilters, setActiveFilters] = useState<string[]>(["all"])
+    const [searchQuery, setSearchQuery] = useState<string>("")
 
     const { data: eventsData, isLoading: eventsLoading } = useQuery<Event[]>({
         queryKey: ["events"],
@@ -77,6 +44,22 @@ const Events = () => {
         },
         staleTime: 5 * 60 * 1000,
     });
+
+    const processedEvents = useMemo(() => {
+        if (!eventsData) return [];
+        return eventsData.map(event => {
+            const derivedStartTime = event.rounds?.[0]?.startTime || null;
+            const derivedEndTime = event.rounds && event.rounds.length > 0 
+                ? event.rounds[event.rounds.length - 1].endTime 
+                : null;
+
+            return {
+                ...event,
+                startTime: derivedStartTime,
+                endTime: derivedEndTime
+            };
+        });
+    }, [eventsData])
 
     const filters = useMemo(() => {
         if (!eventsData) return [{ label: "All", value: "all" }];
@@ -90,7 +73,6 @@ const Events = () => {
         ];
     }, [eventsData]);
 
-    // Updated toggle logic to handle multi-select and "All" behavior
     const handleFilterClick = (value: string) => {
         setActiveFilters(prev => {
             if (value === "all") return ["all"];
@@ -104,12 +86,11 @@ const Events = () => {
         });
     };
 
-    const filteredEvents = eventsData?.filter(event => {
-        const matchesCategory =
-            activeFilters.includes("all") || activeFilters.includes(event.eventType);
-        const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-    });
+    const filteredEvents = processedEvents?.filter(event => {
+        const matchesCategory = activeFilters.includes("all") || activeFilters.includes(event.eventType)
+        const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase())
+        return matchesCategory && matchesSearch
+    })
 
     return (
         <div className="flex-1 w-full transition-all duration-300">
@@ -199,8 +180,7 @@ const Events = () => {
                                         transition={{ duration: 0.3, delay: index * 0.05 }}
                                     >
                                         <span className="relative z-10">{filter.label}</span>
-
-                                        {/* 3. CLOSE BUTTON DISPLAYED WHEN SELECTED */}
+                                        
                                         {isActive && filter.value !== "all" && (
                                             <span className="ml-1 w-4 h-4 flex items-center justify-center rounded-full bg-white/10 group-hover:bg-white/20 transition-colors">
                                                 <Xmark width={12} height={12} />

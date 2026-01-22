@@ -171,7 +171,7 @@ export async function createEvent(input: CreateEvent, user_id: string) {
     }
 }
 
-// 2. Get All Events
+// Get All Events
 export async function getEvents() {
     try {
         const events = await sql`
@@ -233,7 +233,7 @@ export async function getEvents() {
     }
 }
 
-// 3. Get Event By ID
+// Get Event By ID
 export async function getEventById(input: GetEventDetailsInput) {
     const validation = getEventDetailsSchema.safeParse(input);
     if (!validation.success) {
@@ -311,7 +311,7 @@ export async function getEventById(input: GetEventDetailsInput) {
     }
 }
 
-// 4. Update Event
+// Update Event
 export async function updateEvent(input: UpdateEventDetailsInput & { id: string }) {
     const validation = updateEventDetailsSchema.safeParse(input);
 
@@ -409,7 +409,7 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
     }
 }
 
-// 5. Delete Event
+// Delete Event
 export async function deleteEvent(input: DeleteEventInput) {
     const { id } = input;
     try {
@@ -430,7 +430,7 @@ export async function deleteEvent(input: DeleteEventInput) {
     }
 }
 
-// 6. Register for Event
+// Register for Event
 export async function registerForEvent(input: EventRegistrationInput & { userId: string; id: string }) {
     const validation = eventRegistrationSchema.safeParse(input);
     if (!validation.success) {
@@ -675,6 +675,7 @@ export async function registerForEvent(input: EventRegistrationInput & { userId:
         throw error;
     }
 }
+
 // 7. Get User Status
 export async function getUserEventStatusbyEventId(userId: string, eventId: string, teamId?: string) {
     try {
@@ -803,7 +804,7 @@ export async function getRegisteredEventsByUser(userId: string) {
     }
 }
 
-// Unregister from event
+// 9. Unregister from event
 export async function unregisterFromEvent(input: {
     eventId: string;
     userId: string;
@@ -863,6 +864,7 @@ export async function unregisterFromEvent(input: {
     }
 }
 
+//10. 
 export async function getPrizesForEvent(event_id: string) {
 
     const prizes = await sql`

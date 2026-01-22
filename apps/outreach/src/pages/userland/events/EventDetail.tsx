@@ -23,9 +23,11 @@ import EventRegister from "../../../components/userland/events/EventRegister";
 import EventUnRegister from "../../../components/userland/events/EventUnregister";
 
 interface Round {
-    roundNo: number;
-    roundName?: string;
-    roundDescription: string;
+    roundNo: number
+    roundName?: string
+    roundDescription: string
+    startTime: string
+    endTime: string
 }
 interface Prize {
     position: number;
@@ -45,23 +47,21 @@ interface Rule {
     ruleDescription: string;
 }
 interface Event {
-    id: string;
-    name: string;
-    description: string;
-    participationType: string;
-    eventType: string;
-    maxAllowed: number;
-    minTeamSize: number;
-    maxTeamSize: number;
-    venue: string;
-    startTime: string;
-    endTime: string;
-    registrationStart: string;
-    registrationEnd: string;
-    rounds: Round[];
-    prizes: Prize[];
-    organizers: Organizer[];
-    rules: Rule[];
+    id: string
+    name: string
+    description: string
+    participationType: string
+    eventType: string
+    maxAllowed: number
+    minTeamSize: number
+    maxTeamSize: number
+    venue: string
+    registrationStart: string
+    registrationEnd: string
+    rounds: Round[]
+    prizes: Prize[]
+    organizers: Organizer[]
+    rules: Rule[]
 }
 
 const EventDetail = () => {
@@ -74,7 +74,7 @@ const EventDetail = () => {
     const [isUnregisterModalOpen, setIsUnregisterModalOpen] = useState(false);
 
     const {
-        data: event,
+        data: eventData,
         isLoading,
         error,
     } = useQuery<Event>({
@@ -85,6 +85,16 @@ const EventDetail = () => {
         },
         enabled: !!id,
     });
+
+    const event = useMemo(() => {
+        if (!eventData) return null;
+        const sortedRounds = [...(eventData.rounds || [])].sort((a, b) => a.roundNo - b.roundNo);
+        return {
+            ...eventData,
+            startTime: sortedRounds[0]?.startTime || "",
+            endTime: sortedRounds[sortedRounds.length - 1]?.endTime || ""
+        };
+    }, [eventData]);
 
     const { data: registrationStatus } = useQuery({
         queryKey: ["event-status", id],
@@ -98,13 +108,14 @@ const EventDetail = () => {
     const isRegistered = registrationStatus?.registration_status === "registered";
 
     const formatDate = (dateString: string) =>
-        new Date(dateString).toLocaleDateString("en-US", {
+        dateString ? new Date(dateString).toLocaleDateString("en-US", {
             weekday: "short",
             month: "short",
             day: "numeric",
-        });
+        }) : "TBA"
+
     const formatTime = (dateString: string) =>
-        new Date(dateString).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+        dateString ? new Date(dateString).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "TBA"
 
     const getThemeStyles = (type: string) => {
         const typeLower = type?.toLowerCase();
@@ -141,12 +152,12 @@ const EventDetail = () => {
         };
     };
 
-    const getStatusInfo = (event: Event) => {
-        const now = new Date();
-        const start = new Date(event.startTime);
-        const end = new Date(event.endTime);
-        const regStart = new Date(event.registrationStart);
-        const regEnd = new Date(event.registrationEnd);
+    const getStatusInfo = (evt: any) => {
+        const now = new Date()
+        const start = new Date(evt.startTime)
+        const end = new Date(evt.endTime)
+        const regStart = new Date(evt.registrationStart)
+        const regEnd = new Date(evt.registrationEnd)
 
         if (now > end)
             return { text: "Completed", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" };
@@ -190,7 +201,7 @@ const EventDetail = () => {
         <div className="flex flex-col w-full md:px-8 md:py-6 relative">
             <motion.button
                 onClick={() => navigate("/app/events")}
-                className="pointer-events-auto flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-zinc-900/80 backdrop-blur-xl border border-white/10 text-zinc-100 hover:bg-zinc-800 hover:border-white/20 transition-all shadow-2xl z-99"
+                className="pointer-events-auto flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-zinc-900/80 backdrop-blur-xl border border-white/10 text-zinc-100 hover:bg-zinc-800 hover:border-white/20 transition-all shadow-2xl z-[99]"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
             >
@@ -205,14 +216,10 @@ const EventDetail = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/60 to-transparent" />
                 <div className="relative z-10">
                     <div className="flex flex-wrap gap-2 mb-3">
-                        <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${status.color}`}
-                        >
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${status.color}`}>
                             {status.text}
                         </span>
-                        <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${theme.badge}`}
-                        >
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${theme.badge}`}>
                             {event.eventType.toUpperCase()}
                         </span>
                     </div>
@@ -229,48 +236,34 @@ const EventDetail = () => {
                         <div className="flex items-start gap-2">
                             <Calendar className={`w-4 h-4 ${theme.icon} mt-0.5`} />
                             <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Date
-                                </p>
-                                <p className="text-xs text-white font-medium">
-                                    {formatDate(event.startTime)}
-                                </p>
+                                <p className="text-[10px] font-bold text-zinc-500 uppercase">Date</p>
+                                <p className="text-xs text-white font-medium">{formatDate(event.startTime)}</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-2">
                             <Clock className={`w-4 h-4 ${theme.icon} mt-0.5`} />
                             <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Time
-                                </p>
-                                <p className="text-xs text-white font-medium">
-                                    {formatTime(event.startTime)}
-                                </p>
+                                <p className="text-[10px] font-bold text-zinc-500 uppercase">Time</p>
+                                <p className="text-xs text-white font-medium">{formatTime(event.startTime)}</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-2">
                             <MapPin className={`w-4 h-4 ${theme.icon} mt-0.5`} />
                             <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Venue
-                                </p>
-                                <p className="text-xs text-white font-medium truncate w-24 md:w-auto">
-                                    {event.venue}
-                                </p>
+                                <p className="text-[10px] font-bold text-zinc-500 uppercase">Venue</p>
+                                <p className="text-xs text-white font-medium truncate w-24 md:w-auto">{event.venue}</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-2">
                             <Users className={`w-4 h-4 ${theme.icon} mt-0.5`} />
                             <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Size
-                                </p>
+                                <p className="text-[10px] font-bold text-zinc-500 uppercase">Size</p>
                                 <p className="text-xs text-white font-medium">
-                                    {event.participationType.toLowerCase() === "solo"
-                                        ? "Solo"
-                                        : event.minTeamSize === event.maxTeamSize
-                                          ? `${event.maxTeamSize} per team`
-                                          : `${event.minTeamSize} - ${event.maxTeamSize} per team`}
+                                    {event.participationType.toLowerCase() === "solo" 
+                                    ? "Solo" 
+                                    : event.minTeamSize === event.maxTeamSize 
+                                        ? `${event.maxTeamSize} per team` 
+                                        : `${event.minTeamSize} - ${event.maxTeamSize} per team`}
                                 </p>
                             </div>
                         </div>
@@ -282,11 +275,8 @@ const EventDetail = () => {
                                 <ShieldCheck className={`w-4 h-4 ${theme.icon}`} /> Guidelines
                             </h2>
                             <div className="space-y-2">
-                                {generalRules.map(rule => (
-                                    <div
-                                        key={rule.id}
-                                        className="flex gap-2 text-zinc-300 bg-white/5 p-2 rounded-lg border border-white/10 text-xs leading-relaxed"
-                                    >
+                                {generalRules.map((rule: Rule) => (
+                                    <div key={rule.id} className="flex gap-2 text-zinc-300 bg-white/5 p-2 rounded-lg border border-white/10 text-xs leading-relaxed">
                                         <span className={`${theme.accent} font-bold`}>/</span>
                                         {rule.ruleDescription}
                                     </div>
@@ -304,21 +294,12 @@ const EventDetail = () => {
                                 {event.rounds
                                     .sort((a, b) => a.roundNo - b.roundNo)
                                     .map(round => {
-                                        const roundRules =
-                                            event.rules?.filter(r => r.roundNo === round.roundNo) ||
-                                            [];
-                                        const isExpanded = expandedRound === round.roundNo;
+                                        const roundRules = event.rules?.filter(r => r.roundNo === round.roundNo) || []
+                                        const isExpanded = expandedRound === round.roundNo
                                         return (
-                                            <div
-                                                key={round.roundNo}
-                                                className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
-                                            >
+                                            <div key={round.roundNo} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
                                                 <button
-                                                    onClick={() =>
-                                                        setExpandedRound(
-                                                            isExpanded ? null : round.roundNo
-                                                        )
-                                                    }
+                                                    onClick={() => setExpandedRound(isExpanded ? null : round.roundNo)}
                                                     className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
                                                 >
                                                     <div className="flex items-center gap-4">
@@ -327,18 +308,14 @@ const EventDetail = () => {
                                                         </div>
                                                         <div>
                                                             <h3 className="text-xs font-bold text-white uppercase tracking-tight">
-                                                                {round.roundName ||
-                                                                    `Round ${round.roundNo}`}
+                                                                {round.roundName || `Round ${round.roundNo}`}
                                                             </h3>
                                                             <p className="text-[10px] text-zinc-500 uppercase mt-0.5">
                                                                 {round.roundDescription}
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <motion.div
-                                                        animate={{ rotate: isExpanded ? 180 : 0 }}
-                                                        transition={{ duration: 0.3 }}
-                                                    >
+                                                    <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
                                                         <ChevronDown className="w-4 h-4 text-zinc-500" />
                                                     </motion.div>
                                                 </button>
@@ -348,32 +325,29 @@ const EventDetail = () => {
                                                             initial={{ height: 0, opacity: 0 }}
                                                             animate={{ height: "auto", opacity: 1 }}
                                                             exit={{ height: 0, opacity: 0 }}
-                                                            transition={{
-                                                                duration: 0.35,
-                                                                ease: "easeInOut",
-                                                            }}
+                                                            transition={{ duration: 0.3, ease: "easeInOut" }}
                                                             className="overflow-hidden bg-black/20 border-t border-white/5"
                                                         >
                                                             <div className="px-4 pb-4 pt-3 space-y-2">
+                                                                <div className="grid grid-cols-2 gap-4 mb-3 pb-2 border-b border-white/5">
+                                                                    <div>
+                                                                        <p className="text-[9px] text-zinc-500 uppercase font-bold">Start</p>
+                                                                        <p className="text-[11px] text-zinc-300">{formatDate(round.startTime)} - {formatTime(round.startTime)}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-[9px] text-zinc-500 uppercase font-bold">End</p>
+                                                                        <p className="text-[11px] text-zinc-300">{formatDate(round.endTime)} - {formatTime(round.endTime)}</p>
+                                                                    </div>
+                                                                </div>
                                                                 {roundRules.length > 0 ? (
                                                                     roundRules.map(rule => (
-                                                                        <div
-                                                                            key={rule.id}
-                                                                            className="text-[11px] text-zinc-300 flex gap-2 bg-white/5 p-2 rounded border border-white/5"
-                                                                        >
-                                                                            <span
-                                                                                className={`${theme.accent} font-bold`}
-                                                                            >
-                                                                                {rule.ruleNumber}.
-                                                                            </span>
+                                                                        <div key={rule.id} className="text-[11px] text-zinc-300 flex gap-2 bg-white/5 p-2 rounded border border-white/5">
+                                                                            <span className={`${theme.accent} font-bold`}>{rule.ruleNumber}.</span>
                                                                             {rule.ruleDescription}
                                                                         </div>
                                                                     ))
                                                                 ) : (
-                                                                    <p className="text-[10px] text-zinc-600 italic px-2">
-                                                                        No specific rules listed for
-                                                                        this round.
-                                                                    </p>
+                                                                    <p className="text-[10px] text-zinc-600 italic px-2">No specific rules for this round.</p>
                                                                 )}
                                                             </div>
                                                         </motion.div>
@@ -393,37 +367,24 @@ const EventDetail = () => {
                                     <Trophy className="w-4 h-4 text-yellow-500" /> Rewards
                                 </h2>
                                 <div className="text-right">
-                                    <p className="text-[9px] font-bold text-zinc-500 uppercase">
-                                        Total Pool
-                                    </p>
-                                    <p className="text-base font-bold text-white">
-                                        ₹{totalPrizePool.toLocaleString()}
-                                    </p>
+                                    <p className="text-[9px] font-bold text-zinc-500 uppercase">Total Pool</p>
+                                    <p className="text-base font-bold text-white">₹{totalPrizePool.toLocaleString()}</p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {event.prizes
                                     .sort((a, b) => a.position - b.position)
                                     .map(prize => (
-                                        <div
-                                            key={prize.position}
-                                            className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg p-3"
-                                        >
+                                        <div key={prize.position} className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg p-3">
                                             <div className="flex items-center gap-2">
-                                                <div
-                                                    className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${prize.position === 1 ? "bg-yellow-500/20 text-yellow-500 border-yellow-500/30" : "bg-white/10 text-zinc-400"}`}
-                                                >
+                                                <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${prize.position === 1 ? "bg-yellow-500/20 text-yellow-500 border-yellow-500/30" : "bg-white/10 text-zinc-400"}`}>
                                                     {prize.position}
                                                 </div>
                                                 <span className="text-[10px] font-medium text-white uppercase tracking-wider">
-                                                    {prize.position === 1
-                                                        ? "Winner"
-                                                        : `Rank ${prize.position}`}
+                                                    {prize.position === 1 ? "Winner" : `Rank ${prize.position}`}
                                                 </span>
                                             </div>
-                                            <span className="text-xs font-bold text-yellow-500">
-                                                ₹{prize.rewardValue.toLocaleString()}
-                                            </span>
+                                            <span className="text-xs font-bold text-yellow-500">₹{prize.rewardValue.toLocaleString()}</span>
                                         </div>
                                     ))}
                             </div>
@@ -433,42 +394,26 @@ const EventDetail = () => {
 
                 <div className="space-y-4">
                     <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sticky top-20">
-                        <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
-                            Registration
-                        </h3>
+                        <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Registration</h3>
                         <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 mb-4">
                             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-                                <p className="text-[9px] font-bold text-zinc-500 uppercase">
-                                    Opens
-                                </p>
-                                <p className="text-xs text-white font-medium">
-                                    {formatDate(event.registrationStart)}
-                                </p>
+                                <p className="text-[9px] font-bold text-zinc-500 uppercase">Opens</p>
+                                <p className="text-xs text-white font-medium">{formatDate(event.registrationStart)}</p>
                             </div>
                             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-                                <p className="text-[9px] font-bold text-zinc-500 uppercase">
-                                    Closes
-                                </p>
-                                <p className="text-xs text-white font-medium">
-                                    {formatDate(event.registrationEnd)}
-                                </p>
+                                <p className="text-[9px] font-bold text-zinc-500 uppercase">Closes</p>
+                                <p className="text-xs text-white font-medium">{formatDate(event.registrationEnd)}</p>
                             </div>
                         </div>
 
                         <button
-                            onClick={() =>
-                                !isRegistered &&
-                                status.text === "Open" &&
-                                setIsRegisterModalOpen(true)
-                            }
+                            onClick={() => !isRegistered && status.text === "Open" && setIsRegisterModalOpen(true)}
                             disabled={isRegistered || status.text !== "Open"}
                             className={`w-full py-2.5 rounded-lg font-bold border text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 
                                 ${isRegistered ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" : status.text !== "Open" ? "bg-zinc-800/50 text-zinc-500 border-zinc-700 cursor-not-allowed" : theme.button}`}
                         >
                             {isRegistered ? (
-                                <>
-                                    <CheckCircle2 className="w-5 h-5" /> Registered
-                                </>
+                                <><CheckCircle2 className="w-5 h-5" /> Registered</>
                             ) : status.text === "Open" ? (
                                 "Register Now"
                             ) : (
@@ -480,18 +425,9 @@ const EventDetail = () => {
                             <div className="mt-4 space-y-3">
                                 <p className="text-[12px] text-center text-zinc-500 uppercase font-semibold tracking-tighter">
                                     {registrationStatus?.team_name ? (
-                                        <>
-                                            Registered via{" "}
-                                            <span className="text-zinc-100 font-bold">
-                                                {registrationStatus.team_name}
-                                            </span>{" "}
-                                            Team
-                                        </>
+                                        <>Registered via <span className="text-zinc-100 font-bold">{registrationStatus.team_name}</span> Team</>
                                     ) : (
-                                        <>
-                                            Registered as{" "}
-                                            <span className="text-zinc-100 font-bold">Solo</span>
-                                        </>
+                                        <>Registered as <span className="text-zinc-100 font-bold">Solo</span></>
                                     )}
                                 </p>
                                 <motion.button
@@ -512,19 +448,13 @@ const EventDetail = () => {
                             </h3>
                             <div className="space-y-2">
                                 {event.organizers.map((org, i) => (
-                                    <div
-                                        key={i}
-                                        className="bg-white/5 border border-white/10 rounded-xl p-3"
-                                    >
+                                    <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3">
                                         <p className="font-bold text-white text-[11px] uppercase tracking-tight">
                                             {org.firstName} {org.lastName}
                                         </p>
                                         <div className="flex items-center gap-2 mt-1.5 pt-1.5 border-t border-white/5">
                                             <Phone className="w-3 h-3 text-zinc-500" />
-                                            <a
-                                                href={`tel:${org.phoneNo}`}
-                                                className="text-[10px] text-zinc-400 font-medium hover:text-white transition-colors"
-                                            >
+                                            <a href={`tel:${org.phoneNo}`} className="text-[10px] text-zinc-400 font-medium hover:text-white transition-colors">
                                                 {org.phoneNo}
                                             </a>
                                         </div>
@@ -539,11 +469,9 @@ const EventDetail = () => {
             <AnimatePresence>
                 {isRegisterModalOpen && (
                     <EventRegister
-                        event={event}
+                        event={event as any}
                         onClose={() => setIsRegisterModalOpen(false)}
-                        onSuccess={() =>
-                            queryClient.invalidateQueries({ queryKey: ["event-status", id] })
-                        }
+                        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["event-status", id] })}
                     />
                 )}
                 {isUnregisterModalOpen && (
@@ -552,9 +480,7 @@ const EventDetail = () => {
                         eventId={event.id}
                         registrationStatus={registrationStatus}
                         onClose={() => setIsUnregisterModalOpen(false)}
-                        onSuccess={() => {
-                            queryClient.invalidateQueries({ queryKey: ["event-status", id] });
-                        }}
+                        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["event-status", id] })}
                     />
                 )}
             </AnimatePresence>
