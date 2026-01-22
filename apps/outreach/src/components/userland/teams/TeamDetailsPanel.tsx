@@ -238,7 +238,6 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         <Trash strokeWidth={2} className="h-4 w-4" />
                         <span className="text-xs sm:text-sm">Delete Team</span>
                     </Button>
-
                 </div>
             </div>
 
@@ -262,12 +261,12 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                 )}
 
                 {/* Leader Card - Changed to zinc-900 to pop against zinc-950 background */}
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800">
-                    <div className="h-12 w-12 rounded-full bg-zinc-950 border border-orange-800 text-orange-300 flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-zinc-700 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_0_0_1px_rgba(255,255,255,0.05)]">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-zinc-700 via-zinc-500 to-zinc-700 border border-zinc-400 text-white shadow-[inset_0_2px_4px_0_rgba(255,255,255,0.3),inset_0_-2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.3)] flex items-center justify-center shrink-0">
                         <UserCrown className="h-6 w-6" strokeWidth={1.5} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-orange-500 uppercase tracking-widest mb-1">
+                        <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-1">
                             Team Leader
                         </p>
                         <p className="text-base font-medium text-white truncate">
