@@ -109,7 +109,7 @@ const TeamsPage: React.FC = () => {
             <div className="md:hidden flex flex-col gap-6 px-2 h-full">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h2 className="text-2xl font-bold font-inst text-white">Teams</h2>
+                        <h2 className="text-2xl md:text-3xl font-bold font-inst text-white">Teams</h2>
                         <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
                     </div>
                     <button

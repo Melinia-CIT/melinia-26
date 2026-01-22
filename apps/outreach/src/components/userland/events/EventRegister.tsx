@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     CheckCircle,
     AlertTriangle,
@@ -9,26 +9,26 @@ import {
     PlusCircle,
     AlertCircle,
     User,
-} from "lucide-react"
-import api from "../../../services/api"
-import { useNavigate } from "react-router-dom"
-import PaymentModal from "../../../components/payment/PaymentModal"
+} from "lucide-react";
+import api from "../../../services/api";
+import { useNavigate } from "react-router-dom";
+import PaymentModal from "../../payment/PaymentModal";
 
 interface Team {
-    id: string
-    team_name: string
-    member_count: string | number
-    leader_id: string
+    id: string;
+    team_name: string;
+    member_count: string | number;
+    leader_id: string;
 }
 
 interface EventRegisterProps {
-    event: any
-    onClose: () => void
-    onSuccess: () => void
+    event: any;
+    onClose: () => void;
+    onSuccess: () => void;
 }
 
 const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
     const [step, setStep] = useState<
         | "checking"
         | "Payment required"
@@ -37,70 +37,70 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
         | "confirm"
         | "success"
         | "error"
-    >("checking")
-    const [teams, setTeams] = useState<Team[]>([])
-    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
-    const [loading, setLoading] = useState(false)
-    const [errorMessage, setErrorMessage] = useState("")
-    const [isSoloChoice, setIsSoloChoice] = useState(false)
-    const registrationInitiated = useRef(false)
-    const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false)
+    >("checking");
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isSoloChoice, setIsSoloChoice] = useState(false);
+    const registrationInitiated = useRef(false);
+    const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
 
     useEffect(() => {
-        let isSubscribed = true
+        let isSubscribed = true;
         const checkEligibilityAndProcess = async () => {
-            if (registrationInitiated.current) return
+            if (registrationInitiated.current) return;
             try {
                 // This call triggers the paymentStatusMiddleware on the backend
-                const payRes = await api.get("/payment/payment-status")
-                if (!isSubscribed) return
+                const payRes = await api.get("/payment/payment-status");
+                if (!isSubscribed) return;
 
-                const paymentStatus = payRes.data.paid
+                const paymentStatus = payRes.data.paid;
 
                 if (!paymentStatus) {
-                    setStep("Payment required")
-                    return
+                    setStep("Payment required");
+                    return;
                 }
 
                 if (event.participationType.toLowerCase() === "solo") {
-                    registrationInitiated.current = true
-                    handleFinalRegister(null, "solo")
+                    registrationInitiated.current = true;
+                    handleFinalRegister(null, "solo");
                 } else {
-                    const teamRes = await api.get("/teams")
-                    if (!isSubscribed) return
+                    const teamRes = await api.get("/teams");
+                    if (!isSubscribed) return;
 
-                    const userTeams = teamRes.data.data || []
-                    setTeams(userTeams)
+                    const userTeams = teamRes.data.data || [];
+                    setTeams(userTeams);
 
                     if (userTeams.length === 0 && event.minTeamSize > 1) {
-                        setStep("no_teams")
+                        setStep("no_teams");
                     } else {
-                        setStep("team_selection")
+                        setStep("team_selection");
                     }
                 }
             } catch (err: any) {
-                if (!isSubscribed) return
+                if (!isSubscribed) return;
 
                 // FIX: Check if the middleware threw a 402 Payment Required error
                 if (err.response?.status === 402) {
-                    setStep("Payment required")
+                    setStep("Payment required");
                 } else {
-                    setErrorMessage(err.response?.data?.message || "Failed to verify eligibility.")
-                    setStep("error")
+                    setErrorMessage(err.response?.data?.message || "Failed to verify eligibility.");
+                    setStep("error");
                 }
             }
-        }
+        };
 
-        checkEligibilityAndProcess()
+        checkEligibilityAndProcess();
 
         return () => {
-            isSubscribed = false
-        }
-    }, [event.id])
+            isSubscribed = false;
+        };
+    }, [event.id]);
 
     const handleFinalRegister = async (teamId: string | null, typeOverride?: string) => {
-        if (loading) return
-        setLoading(true)
+        if (loading) return;
+        setLoading(true);
         try {
             const response = await api.post(`/events/${event.id}/register`, {
                 teamId,
@@ -110,44 +110,40 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                 maxTeamSize: event.maxTeamSize,
                 registrationStart: event.registrationStart,
                 registrationEnd: event.registrationEnd,
-            })
+            });
 
             if (response.data.status) {
-                setStep("success")
-                onSuccess()
-                setTimeout(() => onClose(), 2500)
+                setStep("success");
+                onSuccess();
+                setTimeout(() => onClose(), 2500);
             }
         } catch (err: any) {
             // FIX: Also check for 402 here in case status changed mid-session
             if (err.response?.status === 402) {
-                setStep("Payment required")
+                setStep("Payment required");
             } else {
                 setErrorMessage(
                     err.response?.data?.message ||
-                        "Registration failed. One or more members might already be registered."
-                )
-                setStep("error")
+                    "Registration failed. One or more members might already be registered."
+                );
+                setStep("error");
             }
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     const handlePaymentRedirect = async () => {
-        setLoading(true)
+        setLoading(true);
         try {
-            // const res = await api.post("/payment/register-melinia");
-            // if (res.data.url) {
-            //     window.location.href = res.data.url;
-            // }
-            setShowPaymentModal(true)
+            setShowPaymentModal(true);
         } catch (err: any) {
-            setErrorMessage("Could not initialize payment. Please try again later.")
-            setStep("error")
+            setErrorMessage("Could not initialize payment. Please try again later.");
+            setStep("error");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -282,8 +278,8 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                                 name="team"
                                                 checked={isSoloChoice}
                                                 onChange={() => {
-                                                    setSelectedTeamId(null)
-                                                    setIsSoloChoice(true)
+                                                    setSelectedTeamId(null);
+                                                    setIsSoloChoice(true);
                                                 }}
                                                 className="accent-zinc-500 w-4 h-4"
                                             />
@@ -300,8 +296,8 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                 {teams.map(t => {
                                     const isValidSize =
                                         Number(t.member_count) >= event.minTeamSize &&
-                                        Number(t.member_count) <= event.maxTeamSize
-                                    const isSelected = selectedTeamId === t.id
+                                        Number(t.member_count) <= event.maxTeamSize;
+                                    const isSelected = selectedTeamId === t.id;
                                     return (
                                         <label
                                             key={t.id}
@@ -314,8 +310,8 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                                     disabled={!isValidSize}
                                                     checked={isSelected}
                                                     onChange={() => {
-                                                        setSelectedTeamId(t.id)
-                                                        setIsSoloChoice(false)
+                                                        setSelectedTeamId(t.id);
+                                                        setIsSoloChoice(false);
                                                     }}
                                                     className="accent-zinc-500 w-4 h-4"
                                                 />
@@ -332,7 +328,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                                 <AlertTriangle className="w-4 h-4 text-amber-500" />
                                             )}
                                         </label>
-                                    )
+                                    );
                                 })}
                             </div>
                             <button
@@ -416,7 +412,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                 </AnimatePresence>
             </motion.div>
         </div>
-    )
-}
+    );
+};
 
-export default EventRegister
+export default EventRegister;

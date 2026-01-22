@@ -40,7 +40,7 @@ const EVENT_TYPE_COLORS: Record<TimelineEventType, { bg: string; border: string;
 }
 
 const START_HOUR = 8
-const END_HOUR = 24
+const END_HOUR = 19
 
 function timeToPercentage(date: Date): number {
     const hours = date.getHours()

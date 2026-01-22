@@ -25,10 +25,8 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
         formState: { errors },
     } = useForm<RegistrationType>({
         resolver: zodResolver(registrationSchema),
-        mode: "onBlur",
-    })
-
-    const couponCode = watch("couponCode")
+        mode: "onChange",
+    });
 
     const onSubmit = (data: RegistrationType) => {
         const payload = { ...data }
