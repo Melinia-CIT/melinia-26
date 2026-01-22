@@ -10,13 +10,15 @@ import { resolveCollegeId, resolveDegreeId } from "./profile.queries";
 interface IdResult {
     id: number;
 }
-export async function insertOrganizer(
+
+export async function insertEventIncharge(
     email: string,
-    passwdHash: string
+    passwdHash: string,
+    role: string
 ): Promise<User> {
     const [row] = await sql`
         INSERT INTO users (email, passwd_hash, role, payment_status)
-        VALUES (${email}, ${passwdHash}, 'ORGANIZER', 'EXEMPTED')
+        VALUES (${email}, ${passwdHash}, ${role}, 'EXEMPTED')
         RETURNING *;
     `
     return userSchema.parse(row)
