@@ -280,13 +280,16 @@ function AnimatedTerminal({
 
 // --- New Draggable Window Component (Responsive & Blurry) ---
 
-function DraggableWindow({ title, children }: { title: string, children: React.ReactNode }) {
-    const [position, setPosition] = useState({ x: window.innerWidth / 2 - 250, y: window.innerHeight / 2 - 150 })
+function DraggableWindow({ title, children }: { title: string; children: React.ReactNode }) {
+    const [position, setPosition] = useState({
+        x: window.innerWidth / 2 - 250,
+        y: window.innerHeight / 2 - 150,
+    })
     const [size, setSize] = useState({ width: 500, height: 400 })
     const [isDragging, setIsDragging] = useState(false)
     const [isResizing, setIsResizing] = useState(false)
     const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
-    
+
     // Refs to track initial mouse offset
     const dragOffset = useRef({ x: 0, y: 0 })
     const resizeOffset = useRef({ x: 0, y: 0 })
@@ -294,54 +297,54 @@ function DraggableWindow({ title, children }: { title: string, children: React.R
     // 1. Handle Responsive Resizing
     useEffect(() => {
         const handleResize = () => {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            const isNowMobile = w < 640;
-            
-            setIsMobile(isNowMobile);
+            const w = window.innerWidth
+            const h = window.innerHeight
+            const isNowMobile = w < 640
+
+            setIsMobile(isNowMobile)
 
             if (isNowMobile) {
                 // Mobile Mode: Full Width Modal
-                const newW = w - 32; // 16px padding on sides
-                const newH = Math.min(h - 100, 400); // Max height 400, or fits screen
-                const newX = 16;
-                const newY = Math.max(0, (h - newH) / 2); // Center vertically
-                
-                setSize({ width: newW, height: newH });
-                setPosition({ x: newX, y: newY });
+                const newW = w - 32 // 16px padding on sides
+                const newH = Math.min(h - 100, 400) // Max height 400, or fits screen
+                const newX = 16
+                const newY = Math.max(0, (h - newH) / 2) // Center vertically
+
+                setSize({ width: newW, height: newH })
+                setPosition({ x: newX, y: newY })
             } else {
                 // Desktop Mode: Ensure window stays within bounds
-                let newX = position.x;
-                let newY = position.y;
-                let newW = size.width;
-                let newH = size.height;
+                let newX = position.x
+                let newY = position.y
+                let newW = size.width
+                let newH = size.height
 
                 // If we just came from mobile, window might be huge. Reset size.
-                if (size.width > 800) newW = 500;
-                if (size.height > 800) newH = 400;
+                if (size.width > 800) newW = 500
+                if (size.height > 800) newH = 400
 
                 // Keep window inside viewport
-                if (newX + newW > w) newX = w - newW - 20;
-                if (newY + newH > h) newY = h - newH - 20;
-                if (newX < 0) newX = 20;
-                if (newY < 0) newY = 20;
+                if (newX + newW > w) newX = w - newW - 20
+                if (newY + newH > h) newY = h - newH - 20
+                if (newX < 0) newX = 20
+                if (newY < 0) newY = 20
 
-                setPosition({ x: newX, y: newY });
-                setSize({ width: newW, height: newH });
+                setPosition({ x: newX, y: newY })
+                setSize({ width: newW, height: newH })
             }
-        };
-
-        window.addEventListener('resize', handleResize);
-        handleResize(); // Init on mount
-        
-        return () => {
-            window.removeEventListener('resize', handleResize);
         }
-    }, [position.x, position.y, size.width, size.height]); 
+
+        window.addEventListener("resize", handleResize)
+        handleResize() // Init on mount
+
+        return () => {
+            window.removeEventListener("resize", handleResize)
+        }
+    }, [position.x, position.y, size.width, size.height])
 
     // Drag Handlers (Disabled on Mobile)
     const startDrag = (e: React.MouseEvent) => {
-        if (isMobile) return; 
+        if (isMobile) return
         setIsDragging(true)
         dragOffset.current = {
             x: e.clientX - position.x,
@@ -351,7 +354,7 @@ function DraggableWindow({ title, children }: { title: string, children: React.R
 
     // Resize Handlers (Disabled on Mobile)
     const startResize = (e: React.MouseEvent) => {
-        if (isMobile) return; 
+        if (isMobile) return
         e.stopPropagation()
         setIsResizing(true)
         resizeOffset.current = {
@@ -382,54 +385,56 @@ function DraggableWindow({ title, children }: { title: string, children: React.R
         }
 
         if (isDragging || isResizing) {
-            window.addEventListener('mousemove', handleMouseMove)
-            window.addEventListener('mouseup', handleMouseUp)
+            window.addEventListener("mousemove", handleMouseMove)
+            window.addEventListener("mouseup", handleMouseUp)
         }
 
         return () => {
-            window.removeEventListener('mousemove', handleMouseMove)
-            window.removeEventListener('mouseup', handleMouseUp)
+            window.removeEventListener("mousemove", handleMouseMove)
+            window.removeEventListener("mouseup", handleMouseUp)
         }
     }, [isDragging, isResizing])
 
     return (
-        <div 
+        <div
             className="fixed z-50 flex flex-col font-mono rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/20"
-            style={{ 
-                left: position.x, 
-                top: position.y, 
-                width: size.width, 
+            style={{
+                left: position.x,
+                top: position.y,
+                width: size.width,
                 height: size.height,
-                overflow: 'hidden',
+                overflow: "hidden",
                 // CHANGED: Dark Frosted Glass Background
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                backdropFilter: 'blur(16px)', 
-                WebkitBackdropFilter: 'blur(16px)' // Safari support
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)", // Safari support
             }}
         >
             {/* Header / Drag Handle */}
-            <div 
-                className={`flex items-center px-3 py-2 border-b border-white/10 select-none backdrop-blur-md ${isMobile ? 'cursor-default' : 'cursor-move'}`}
+            <div
+                className={`flex items-center px-3 py-2 border-b border-white/10 select-none backdrop-blur-md ${isMobile ? "cursor-default" : "cursor-move"}`}
                 // CHANGED: Semi-transparent white for the header to match glass
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
                 onMouseDown={startDrag}
             >
                 <MacosButtons />
-                <span className="text-white text-[13px] font-medium ml-2 flex-1 text-center drop-shadow-md">{title}</span>
+                <span className="text-white text-[13px] font-medium ml-2 flex-1 text-center drop-shadow-md">
+                    {title}
+                </span>
             </div>
 
             {/* Content */}
-            <div 
+            <div
                 className="flex-1 relative flex items-center justify-center overflow-auto p-6"
                 // CHANGED: More transparent content area so background is very blurry but visible
-                style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+                style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
             >
                 {children}
             </div>
 
             {/* Resize Handle (Hidden on Mobile) */}
             {!isMobile && (
-                <div 
+                <div
                     className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize  opacity-50 hover:opacity-100"
                     onMouseDown={startResize}
                 />
@@ -437,7 +442,6 @@ function DraggableWindow({ title, children }: { title: string, children: React.R
         </div>
     )
 }
-
 
 const ROWS = 100
 const COLUMNS = 400
@@ -453,10 +457,14 @@ export default function NotFound() {
 
         const loadFrames = async () => {
             try {
-                const response = await fetch("/animation_frames/output.txt.gz")
+                let response = await fetch("https://cdn.melinia.in/output.txt.gz")
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`)
+                    console.log("CDN fetch failed, trying fallback to local path")
+                    response = await fetch("/animation_frames/output.txt.gz")
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`)
+                    }
                 }
 
                 const contentLength = response.headers.get("content-length")
@@ -500,8 +508,8 @@ export default function NotFound() {
                 }
 
                 // --- FIX: Check for Gzip Header (Magic Number 0x1f 0x8b) ---
-                let decompressedText = "";
-                const isGzipped = compressedData[0] === 0x1f && compressedData[1] === 0x8b;
+                let decompressedText = ""
+                const isGzipped = compressedData[0] === 0x1f && compressedData[1] === 0x8b
 
                 if (isGzipped) {
                     console.log("File is Gzipped. Decompressing in browser...")
@@ -515,7 +523,7 @@ export default function NotFound() {
                     decompressedText = await new Response(decompressedStream).text()
                 } else {
                     console.log("File is already decompressed. Parsing directly...")
-                    decompressedText = new TextDecoder().decode(compressedData);
+                    decompressedText = new TextDecoder().decode(compressedData)
                 }
                 // --------------------------------------------------------------
 
@@ -591,7 +599,6 @@ export default function NotFound() {
 
     return (
         <div className="relative w-screen h-screen bg-black flex flex-col items-center justify-center overflow-hidden p-0">
-            
             {/* Terminal Animation Layer (Background) */}
             {isLoading ? (
                 <Terminal
@@ -614,7 +621,7 @@ export default function NotFound() {
             ) : (
                 animationFrames.length > 0 && (
                     <AnimatedTerminal
-                        className="scale-140"
+                        className="scale-120"
                         fontSize="tiny"
                         whitespacePadding={0}
                         columns={COLUMNS}
@@ -626,25 +633,22 @@ export default function NotFound() {
                 )
             )}
 
-        {/* Draggable Terminal Window (Foreground) */}
+            {/* Draggable Terminal Window (Foreground) */}
             <DraggableWindow title="bash — 404">
                 <div className="text-center w-full font-mono">
-                    
                     {/* ASCII Style 404 Title - Responsive Sizing */}
-                    <h1 className="text-5xl sm:text-7xl md:text-[8rem] font-black mb-4 leading-none text-white" >
+                    <h1 className="text-5xl sm:text-7xl md:text-[8rem] font-black mb-4 leading-none text-white">
                         404
                     </h1>
 
                     <button
-                        onClick={() => window.location.href = '/'}
+                        onClick={() => (window.location.href = "/")}
                         className="px-4 py-2 sm:px-6 sm:py-2 border-2 border-white text-white font-bold text-lg sm:text-xl tracking-wider sm:tracking-widest hover:bg-white hover:text-black transition-colors duration-200"
                     >
                         [ BACK_HOME ]
                     </button>
                 </div>
             </DraggableWindow>
-
-                        
         </div>
     )
 }
