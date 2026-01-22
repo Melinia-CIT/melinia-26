@@ -28,6 +28,8 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
         mode: "onChange",
     });
 
+    const couponCode = watch("couponCode")
+
     const onSubmit = (data: RegistrationType) => {
         const payload = { ...data }
 
