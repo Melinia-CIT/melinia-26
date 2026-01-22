@@ -88,7 +88,6 @@ export default function NotFound() {
 
     return (
         <div className="not-found-page">
-            <div className="terminal-container">
                 {isLoading ? (
                     <Terminal
                         fontSize="tiny"
@@ -101,7 +100,8 @@ export default function NotFound() {
                 ) : (
                     animationFrames.length > 0 && (
                         <AnimatedTerminal
-                            fontSize="tiny"
+							className="sm:scale-140"
+                            fontSize="large"
                             whitespacePadding={0}
                             columns={COLUMNS}
                             rows={ROWS}
@@ -111,7 +111,6 @@ export default function NotFound() {
                         />
                     )
                 )}
-            </div>
         </div>
     )
 }

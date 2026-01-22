@@ -2,7 +2,7 @@ import classNames from "classnames"
 import React, { UIEvent, useEffect, useRef, useState } from "react"
 import "./Terminal.css"
 
-export type TerminalFontSize = "xtiny" | "tiny" | "small" | "medium" | "large"
+export type TerminalFontSize = "xtiny" | "tiny" | "small" | "medium" | "large" | "xlarge"
 
 export interface TerminalProps {
     className?: string
@@ -19,7 +19,7 @@ export interface TerminalProps {
 export default function Terminal({
     columns,
     rows,
-    fontSize = "medium",
+    fontSize = "large",
     className,
     title,
     lines,
@@ -68,6 +68,7 @@ export default function Terminal({
                     "font-small": fontSize === "small",
                     "font-medium": fontSize === "medium",
                     "font-large": fontSize === "large",
+                    "font-xlarge": fontSize === "xlarge",
                 },
                 {
                     adwaita: platformStyle === "adwaita",
