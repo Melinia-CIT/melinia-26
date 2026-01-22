@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
+import { Xmark } from "iconoir-react";
 import EventsCard from "../../../components/userland/events/EventsCard"
 import api from "../../../services/api"
 
@@ -98,7 +99,7 @@ const Events = () => {
                             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-zinc-200 via-white to-zinc-200 bg-clip-text text-transparent font-inst">
                                 Events
                             </h1>
-                            
+
                             <div className="relative w-full sm:w-72">
                                 <input
                                     type="text"
@@ -108,7 +109,7 @@ const Events = () => {
                                     className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-200 text-sm rounded-full px-5 py-2 focus:outline-none focus:border-zinc-600 transition-all"
                                 />
                                 {searchQuery && (
-                                    <button 
+                                    <button
                                         onClick={() => setSearchQuery("")}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-lg"
                                     >
@@ -125,11 +126,10 @@ const Events = () => {
                                     <motion.button
                                         key={filter.value}
                                         onClick={() => handleFilterClick(filter.value)}
-                                        className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border relative flex items-center gap-2 group ${
-                                            isActive 
-                                                ? "text-white border-white/40 bg-white/10" 
+                                        className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border relative flex justify-center items-center gap-2 group ${isActive
+                                                ? "text-white border-white/40 bg-white/10"
                                                 : "text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600"
-                                        }`}
+                                            }`}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         initial={{ opacity: 0, y: -10 }}
@@ -137,19 +137,20 @@ const Events = () => {
                                         transition={{ duration: 0.3, delay: index * 0.05 }}
                                     >
                                         <span className="relative z-10">{filter.label}</span>
-                                        
+
                                         {/* 3. CLOSE BUTTON DISPLAYED WHEN SELECTED */}
                                         {isActive && filter.value !== "all" && (
-                                            <span className="ml-1 w-4 h-4 flex items-center justify-center rounded-full bg-white/10 group-hover:bg-white/20 text-[14px] leading-none transition-colors">
-                                                ×
+                                            <span className="ml-1 w-4 h-4 flex items-center justify-center rounded-full bg-white/10 group-hover:bg-white/20 transition-colors">
+                                                <Xmark width={12} height={12} />
                                             </span>
+
                                         )}
-                                        
+
                                         {isActive && (
-                                            <motion.div 
-                                                layoutId="active-filter-bg" 
-                                                className="absolute inset-0 bg-white/[0.03] rounded-full -z-10" 
-                                                transition={{ duration: 0.3 }} 
+                                            <motion.div
+                                                layoutId="active-filter-bg"
+                                                className="absolute inset-0 bg-white/[0.03] rounded-full -z-10"
+                                                transition={{ duration: 0.3 }}
                                             />
                                         )}
                                     </motion.button>
