@@ -562,12 +562,28 @@ await runMigration("add pg trigram", async () => {
     `
 })
 
-
 await runMigration("remove event_id in teams table", async () => {
     await sql`
-   ALTER TABLE teams DROP COLUMN event_id;  
-            `;
+        ALTER TABLE teams DROP COLUMN event_id;  
+    `;
 })
 
+
+await runMigration("add start and end time to event_rounds", async () => {
+    await sql`
+        ALTER TABLE event_rounds
+        ADD COLUMN start_time TIMESTAMPTZ DEFAULT NULL,
+        ADD COLUMN end_time TIMESTAMPTZ DEFAULT NULL;
+    `;
+})
+
+// TODO: remove start and end time from events after rewriting events rounds with start and end time
+await runMigration("remove start and end time from events", async () => {
+    await sql`
+        ALTER TABLE events 
+        DROP COLUMN IF EXISTS start_time,
+        DROP COLUMN IF EXISTS end_time;
+    `;
+})
 
 await sql.end()

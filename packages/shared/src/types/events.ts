@@ -6,7 +6,9 @@ export const EventType = z.enum(["technical", "non-technical", "flagship"]);
 export const roundSchema = z.object({
     roundNo: z.number().int().min(1, "Round number must be positive"),
     roundDescription: z.string().min(1, "Round description is required"),
-    roundName:z.string().nullish()
+    roundName:z.string().nullish(),
+    startTime: z.coerce.date().nullable().optional(),
+    endTime: z.coerce.date().nullable().optional()
 });
 
 export const prizeSchema = z.object({
@@ -45,12 +47,6 @@ const baseEventObject = {
     minTeamSize: z.number().int().min(1).nullable().optional(),
     maxTeamSize: z.number().int().min(1).nullable().optional(),
     venue: z.string().min(1, "Venue is required"),
-    eventStatus: z
-        .enum(["not-started", "ongoing", "completed", "cancelled"])
-        .default("not-started"),
-    registrationStatus: z.boolean().default(false),
-    startTime: z.coerce.date(),
-    endTime: z.coerce.date(),
     registrationStart: z.coerce.date(),
     registrationEnd: z.coerce.date(),
     createdBy: z.string().nullable().optional(),
@@ -62,20 +58,8 @@ const rawEventSchema = z.object(baseEventObject);
 
 const withRefinements = <T extends z.ZodTypeAny>(schema: T) =>
     schema
-        .refine((data: any) => data.endTime > data.startTime, {
-            message: "Event end time must be after start time",
-            path: ["endTime"],
-        })
-        .refine((data: any) => data.registrationEnd <= data.startTime, {
-            message: "Registration must end before or when the event starts",
-            path: ["registrationEnd"],
-        })
         .refine((data: any) => data.registrationStart < data.registrationEnd, {
             message: "Registration start must be before registration end",
-            path: ["registrationStart"],
-        })
-        .refine((data: any) => data.registrationStart < data.startTime, {
-            message: "Registration must start before the event starts",
             path: ["registrationStart"],
         })
         .refine(

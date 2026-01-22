@@ -12,7 +12,9 @@ import {
 const dbRoundToCamel = (r: any) => ({
     roundNo: r.round_no,
     roundDescription: r.round_description,
-    roundName: r.round_name
+    roundName: r.round_name,
+    startTime: r.start_time,
+    endTime: r.end_time
 });
 
 const dbPrizeToCamel = (p: any) => ({
@@ -48,14 +50,13 @@ const dbEventToCamel = (e: any) => ({
     minTeamSize: e.min_team_size,
     maxTeamSize: e.max_team_size,
     venue: e.venue,
-    startTime: e.start_time,
-    endTime: e.end_time,
     registrationStart: e.registration_start,
     registrationEnd: e.registration_end,
     createdBy: e.created_by,
     createdAt: e.created_at,
     updatedAt: e.updated_at,
 });
+
 export async function createEvent(input: CreateEvent, user_id: string) {
 
     const data = createEventSchema.parse(input);
@@ -65,13 +66,12 @@ export async function createEvent(input: CreateEvent, user_id: string) {
 
     try {
         // Validate organizers by email
-        const organizerEmails: string[] = [];
         const organizerIds: string[] = [];
 
         if (data.organizers && data.organizers.length > 0) {
             const validOrganizers = await sql`
                 SELECT id, email FROM users 
-                WHERE email = ANY(${sql.array(data.organizers)})
+                WHERE email = ANY(${data.organizers})
                 AND (role = 'ORGANIZER' OR role = 'ADMIN')
             `;
 
@@ -87,7 +87,6 @@ export async function createEvent(input: CreateEvent, user_id: string) {
             }
 
             validOrganizers.forEach(org => {
-                organizerEmails.push(org.email);
                 organizerIds.push(org.id);
             });
         }
@@ -97,14 +96,14 @@ export async function createEvent(input: CreateEvent, user_id: string) {
             INSERT INTO events (
                 name, description, participation_type, event_type,
                 max_allowed, min_team_size, max_team_size, venue,
-                start_time, end_time, registration_start, registration_end, created_by
+                registration_start, registration_end, created_by
             )
             VALUES (
                 ${data.name}, ${data.description}, ${data.participationType}, ${data.eventType},
                 ${data.maxAllowed}, ${minTeamSize}, ${maxTeamSize}, ${data.venue},
-                ${data.startTime}, ${data.endTime}, ${data.registrationStart}, ${data.registrationEnd}, ${createdBy}
+                ${data.registrationStart}, ${data.registrationEnd}, ${createdBy}
             )
-            RETURNING id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at;
+            RETURNING id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, registration_start, registration_end, created_by, created_at, updated_at;
         `;
 
         if (!eventRow) {
@@ -117,8 +116,8 @@ export async function createEvent(input: CreateEvent, user_id: string) {
         if (data.rounds && data.rounds.length > 0) {
             for (const r of data.rounds) {
                 await sql`
-                    INSERT INTO event_rounds (event_id, round_no, round_name, round_description) 
-                    VALUES (${eventId}, ${r.roundNo}, ${r.roundName ?? null}, ${r.roundDescription ?? null})
+                    INSERT INTO event_rounds (event_id, round_no, round_name, round_description, start_time, end_time) 
+                    VALUES (${eventId}, ${r.roundNo}, ${r.roundName ?? null}, ${r.roundDescription ?? null}, ${r.startTime ?? null}, ${r.endTime ?? null})
                 `;
             }
         }
@@ -153,22 +152,30 @@ export async function createEvent(input: CreateEvent, user_id: string) {
             }
         }
 
-        return await getEventById({ id: eventId });
-    } catch (error) {
+        const fullEventData = await getEventById({ id: eventId });
+        
+        return {
+            status: true,
+            statusCode: 201,
+            message: "Event created Successfully", 
+            data: fullEventData.data 
+        };
+    }catch (error: any) {
         console.error("Error creating event:", error);
         return {
             status: false,
             statusCode: 500,
-            message: "An error occurred while creating the event",
+            message: error.message || "An error occurred while creating the event", 
             data: {}
         };
     }
 }
+
 // 2. Get All Events
 export async function getEvents() {
     try {
         const events = await sql`
-            SELECT id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at 
+            SELECT id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, registration_start, registration_end, created_by, created_at, updated_at 
             FROM events 
             ORDER BY name ASC;
         `;
@@ -180,7 +187,7 @@ export async function getEvents() {
         const eventIds = events.map((e) => e.id as string);
 
         const [rounds, prizes, rules, organizers] = await Promise.all([
-            sql`SELECT event_id, round_no, round_name, round_description FROM event_rounds WHERE event_id = ANY(${eventIds}::text[]) ORDER BY round_no ASC;`,
+            sql`SELECT event_id, round_no, round_name, round_description,start_time,end_time FROM event_rounds WHERE event_id = ANY(${eventIds}::text[]) ORDER BY round_no ASC;`,
             sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ANY(${eventIds}::text[]) ORDER BY position ASC;`,
             sql`SELECT id, event_id, round_no, rule_number, rule_description, created_at, updated_at FROM event_rules WHERE event_id = ANY(${eventIds}::text[]) ORDER BY round_no ASC, rule_number ASC;`,
             sql`SELECT eo.event_id, eo.user_id, eo.assigned_by, p.first_name, p.last_name, u.ph_no 
@@ -242,7 +249,7 @@ export async function getEventById(input: GetEventDetailsInput) {
 
     try {
         const events = await sql`
-            SELECT id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at 
+            SELECT id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, registration_start, registration_end, created_by, created_at, updated_at 
             FROM events 
             WHERE id = ${id};
         `;
@@ -258,7 +265,7 @@ export async function getEventById(input: GetEventDetailsInput) {
         const eventId = eventRow.id as string;
 
         const [rounds, prizes, rules, organizers] = await Promise.all([
-            sql`SELECT event_id, round_no, round_name, round_description FROM event_rounds WHERE event_id = ${eventId} ORDER BY round_no ASC;`,
+            sql`SELECT event_id, round_no, round_name, round_description, start_time, end_time FROM event_rounds WHERE event_id = ${eventId} ORDER BY round_no ASC;`,
             sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ${eventId} ORDER BY position ASC;`,
             sql`SELECT id, event_id, round_no, rule_number, rule_description, created_at, updated_at FROM event_rules WHERE event_id = ${eventId} ORDER BY round_no ASC, rule_number ASC;`,
             sql`SELECT eo.event_id, eo.user_id, eo.assigned_by, p.first_name, p.last_name, u.ph_no 
@@ -352,11 +359,10 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
                 participation_type = ${data.participationType}, event_type = ${data.eventType},
                 max_allowed = ${data.maxAllowed}, min_team_size = ${minTeamSize},
                 max_team_size = ${maxTeamSize}, venue = ${data.venue},
-                start_time = ${data.startTime}, end_time = ${data.endTime},
                 registration_start = ${data.registrationStart}, registration_end = ${data.registrationEnd},
                 created_by = ${createdBy}, updated_at = NOW()
             WHERE id = ${eventId} 
-            RETURNING id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at;
+            RETURNING id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, registration_start, registration_end, created_by, created_at, updated_at;
         `;
 
         if (!eventRow) {
@@ -370,7 +376,7 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
 
         if (data.rounds && data.rounds.length > 0) {
             for (const r of data.rounds) {
-                await sql`INSERT INTO event_rounds (event_id, round_no, round_name, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundName ?? null}, ${r.roundDescription ?? null});`;
+                await sql`INSERT INTO event_rounds (event_id, round_no, round_name, round_description) VALUES (${eventId}, ${r.roundNo}, ${r.roundName ?? null}, ${r.roundDescription ?? null},  ${r.startTime ?? null}, ${r.endTime ?? null});`;
             }
         }
 
@@ -411,7 +417,7 @@ export async function deleteEvent(input: DeleteEventInput) {
         await sql`DELETE FROM event_prizes WHERE event_id = ${id};`;
         await sql`DELETE FROM event_organizers WHERE event_id = ${id};`;
         await sql`DELETE FROM event_rules WHERE event_id = ${id};`;
-        await sql`DELETE FROM event_registration WHERE event_id=${id}`;
+        await sql`DELETE FROM event_registrations WHERE event_id=${id}`;
 
         const result = await sql`DELETE FROM events WHERE id = ${id};`;
         const affected = (result as any).count ?? 0;
@@ -755,7 +761,6 @@ export async function getRegisteredEventsByUser(userId: string) {
                 e.name AS "eventName",
                 e.event_type AS "eventType",
                 e.participation_type AS "participationType",
-                e.start_time AS "startTime",
                 e.venue,
                 t.name AS "teamName",
                 CASE 
@@ -769,7 +774,7 @@ export async function getRegisteredEventsByUser(userId: string) {
             -- that was registered by a leader, they still see the event.
             LEFT JOIN team_members tm ON t.id = tm.team_id
             WHERE er.user_id = ${userId} OR tm.user_id = ${userId}
-            ORDER BY e.start_time ASC
+            ORDER BY e.registration_start ASC
         `;
 
         if (!data || data.length === 0) {
