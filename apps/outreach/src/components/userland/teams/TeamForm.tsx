@@ -120,9 +120,8 @@ export const CreateTeamForm: React.FC<CreateTeamFormProps> = ({ onClose }) => {
                     {/* Team Name Field */}
                     <div>
                         <label
-                            className={`block text-xs font-medium mb-1.5 ${
-                                errors.name ? "text-red-400" : "text-zinc-200"
-                            }`}
+                            className={`block text-xs font-medium mb-1.5 ${errors.name ? "text-red-400" : "text-zinc-200"
+                                }`}
                         >
                             Team Name *
                         </label>
@@ -130,11 +129,10 @@ export const CreateTeamForm: React.FC<CreateTeamFormProps> = ({ onClose }) => {
                             type="text"
                             placeholder="Enter team name"
                             {...register("name")}
-                            className={`w-full bg-zinc-950 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 transition-colors ${
-                                errors.name
-                                    ? "border-red-500 text-red-100 placeholder-red-300/50 focus:ring-red-500"
-                                    : "border-zinc-700 text-white placeholder-zinc-600 focus:border-white focus:ring-white"
-                            }`}
+                            className={`w-full bg-zinc-950 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 transition-colors ${errors.name
+                                ? "border-red-500 text-red-100 placeholder-red-300/50 focus:ring-red-500"
+                                : "border-zinc-700 text-white placeholder-zinc-600 focus:border-white focus:ring-white"
+                                }`}
                         />
                         {errors.name && (
                             <p className="text-red-400 text-[10px] mt-1">{errors.name.message}</p>

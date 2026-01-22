@@ -25,8 +25,8 @@ const PasswordForm = ({ mutation }: PasswordFormProps) => {
         formState: { errors },
     } = useForm<RegistrationType>({
         resolver: zodResolver(registrationSchema),
-        mode: "onBlur",
-    })
+        mode: "onChange",
+    });
 
     const couponCode = watch("couponCode")
 

@@ -1,14 +1,14 @@
-import { motion, AnimatePresence } from "framer-motion"
-import { Trash2, Loader2, X, CheckCircle, ShieldAlert } from "lucide-react"
-import { useState } from "react"
-import api from "../../../services/api"
+import { motion, AnimatePresence } from "framer-motion";
+import { Trash2, Loader2, X, CheckCircle, ShieldAlert } from "lucide-react";
+import { useState } from "react";
+import api from "../../../services/api";
 
 interface EventUnRegisterProps {
-    eventName: string
-    eventId: string
-    registrationStatus: any
-    onClose: () => void
-    onSuccess: () => void
+    eventName: string;
+    eventId: string;
+    registrationStatus: any;
+    onClose: () => void;
+    onSuccess: () => void;
 }
 
 const EventUnRegister = ({
@@ -18,35 +18,35 @@ const EventUnRegister = ({
     onClose,
     onSuccess,
 }: EventUnRegisterProps) => {
-    const [loading, setLoading] = useState(false)
-    const [step, setStep] = useState<"confirm" | "success" | "unauthorized">("confirm")
-    const [errorMessage, setErrorMessage] = useState("")
+    const [loading, setLoading] = useState(false);
+    const [step, setStep] = useState<"confirm" | "success" | "unauthorized">("confirm");
+    const [errorMessage, setErrorMessage] = useState("");
 
     const handleUnregisterExecute = async () => {
-        setLoading(true)
+        setLoading(true);
         try {
             const response = await api.post(`/events/${eventId}/unregister`, {
                 participationType: registrationStatus?.mode || "solo",
                 teamId: registrationStatus?.team_id || null,
-            })
+            });
 
             if (response.data.status) {
-                setStep("success")
-                onSuccess()
-                setTimeout(() => onClose(), 2000)
+                setStep("success");
+                onSuccess();
+                setTimeout(() => onClose(), 2000);
             }
         } catch (err: any) {
             if (err.response?.status === 403) {
-                setErrorMessage("Only the team leader can unregister from the event.")
-                setStep("unauthorized")
+                setErrorMessage("Only the team leader can unregister from the event.");
+                setStep("unauthorized");
             } else {
-                console.error("Unregistration failed", err)
-                onClose()
+                console.error("Unregistration failed", err);
+                onClose();
             }
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -151,7 +151,7 @@ const EventUnRegister = ({
                 </AnimatePresence>
             </motion.div>
         </div>
-    )
-}
+    );
+};
 
-export default EventUnRegister
+export default EventUnRegister;

@@ -16,7 +16,7 @@ const EmailForm = ({ mutation, onSuccess }: EmailFormProps) => {
 		formState: { errors },
 	} = useForm<GenerateOTP>({
 		resolver: zodResolver(generateOTPSchema),
-		mode: "onBlur",
+		mode: "onChange",
 	});
 
 	const onSubmit = (data: GenerateOTP) => {

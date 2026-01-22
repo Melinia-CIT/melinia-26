@@ -170,7 +170,7 @@ export async function getEvents() {
         const events = await sql`
             SELECT id, name, description, participation_type, event_type, max_allowed, min_team_size, max_team_size, venue, start_time, end_time, registration_start, registration_end, created_by, created_at, updated_at 
             FROM events 
-            ORDER BY created_at DESC;
+            ORDER BY name ASC;
         `;
 
         if (!events || events.length === 0) {
@@ -180,14 +180,15 @@ export async function getEvents() {
         const eventIds = events.map((e) => e.id as string);
 
         const [rounds, prizes, rules, organizers] = await Promise.all([
-            sql`SELECT event_id, round_no, round_name, round_description FROM event_rounds WHERE event_id = ANY(${eventIds}::text[]);`,
-            sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ANY(${eventIds}::text[]);`,
-            sql`SELECT id, event_id, round_no, rule_number, rule_description, created_at, updated_at FROM event_rules WHERE event_id = ANY(${eventIds}::text[]);`,
+            sql`SELECT event_id, round_no, round_name, round_description FROM event_rounds WHERE event_id = ANY(${eventIds}::text[]) ORDER BY round_no ASC;`,
+            sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ANY(${eventIds}::text[]) ORDER BY position ASC;`,
+            sql`SELECT id, event_id, round_no, rule_number, rule_description, created_at, updated_at FROM event_rules WHERE event_id = ANY(${eventIds}::text[]) ORDER BY round_no ASC, rule_number ASC;`,
             sql`SELECT eo.event_id, eo.user_id, eo.assigned_by, p.first_name, p.last_name, u.ph_no 
                 FROM event_organizers eo
                 JOIN profile p ON eo.user_id = p.user_id
                 JOIN users u ON eo.user_id = u.id
-                WHERE eo.event_id = ANY(${eventIds}::text[]);`
+                WHERE eo.event_id = ANY(${eventIds}::text[])
+                ORDER BY p.first_name ASC;`
         ]);
 
         const roundsByEvent: Record<string, any[]> = {};
@@ -257,14 +258,15 @@ export async function getEventById(input: GetEventDetailsInput) {
         const eventId = eventRow.id as string;
 
         const [rounds, prizes, rules, organizers] = await Promise.all([
-            sql`SELECT event_id, round_no, round_name, round_description FROM event_rounds WHERE event_id = ${eventId};`,
-            sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ${eventId};`,
-            sql`SELECT id, event_id, round_no, rule_number, rule_description, created_at, updated_at FROM event_rules WHERE event_id = ${eventId};`,
+            sql`SELECT event_id, round_no, round_name, round_description FROM event_rounds WHERE event_id = ${eventId} ORDER BY round_no ASC;`,
+            sql`SELECT event_id, position, reward_value FROM event_prizes WHERE event_id = ${eventId} ORDER BY position ASC;`,
+            sql`SELECT id, event_id, round_no, rule_number, rule_description, created_at, updated_at FROM event_rules WHERE event_id = ${eventId} ORDER BY round_no ASC, rule_number ASC;`,
             sql`SELECT eo.event_id, eo.user_id, eo.assigned_by, p.first_name, p.last_name, u.ph_no 
                 FROM event_organizers eo
                 JOIN profile p ON eo.user_id = p.user_id
                 JOIN users u ON eo.user_id = u.id
-                WHERE eo.event_id = ${eventId};`
+                WHERE eo.event_id = ${eventId}
+                ORDER BY p.first_name ASC;`
         ]);
 
         const fullEvent = {
@@ -405,7 +407,6 @@ export async function updateEvent(input: UpdateEventDetailsInput & { id: string 
 export async function deleteEvent(input: DeleteEventInput) {
     const { id } = input;
     try {
-        await sql`UPDATE teams SET event_id = NULL WHERE event_id = ${id}`;
         await sql`DELETE FROM event_rounds WHERE event_id = ${id};`;
         await sql`DELETE FROM event_prizes WHERE event_id = ${id};`;
         await sql`DELETE FROM event_organizers WHERE event_id = ${id};`;
