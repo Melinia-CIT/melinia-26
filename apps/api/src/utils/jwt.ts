@@ -1,4 +1,4 @@
-import { sign, verify } from "hono/jwt";
+import { AlgorithmTypes, sign, verify } from "hono/jwt";
 import { getEnv } from "./lib";
 import { HTTPException } from "hono/http-exception";
 import type { JWTPayload } from "hono/utils/jwt/types";
@@ -17,7 +17,7 @@ export const createRefreshToken = async (id: string, role: string): Promise<stri
 
 export const verifyToken = async (token: string): Promise<JWTPayload> => {
 	try {
-		return await verify(token, getEnv("JWT_SECRET_KEY"));
+		return await verify(token, getEnv("JWT_SECRET_KEY"), AlgorithmTypes.HS256);
 	} catch {
 		throw new HTTPException(401, { message: "Invalid or expired token" });
 	}
