@@ -5,7 +5,7 @@ import { checkUserExists, getUserByMail, insertUser, updatePasswd } from "../db/
 import { ioredis } from "../utils/redis";
 import { generateOTP, getEnv } from "../utils/lib";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { sign, verify } from "hono/jwt";
+import { AlgorithmTypes, sign, verify } from "hono/jwt";
 import { HTTPException } from "hono/http-exception";
 import { createAccessToken, createRefreshToken, verifyToken } from "../utils/jwt";
 import { createHash } from "crypto";
@@ -159,7 +159,7 @@ auth.post("/logout", async (c) => {
     const refreshToken = getCookie(c, "refresh_token");
 
     if (refreshToken) {
-        const { id } = await verify(refreshToken, getEnv("JWT_SECRET_KEY"));
+        const { id } = await verify(refreshToken, getEnv("JWT_SECRET_KEY"), AlgorithmTypes.HS256);
         await ioredis.del(`refresh:${id}`);
     }
 

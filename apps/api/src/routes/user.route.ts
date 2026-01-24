@@ -13,6 +13,7 @@ import {
     checkPhoneNumberExists,
     getUserById,
     checkProfileExists,
+    getRegisteredEvents,
 } from "../db/queries"
 import { getPendingInvitationsForUser } from "../db/queries/teams.queries"
 
@@ -143,3 +144,16 @@ user.get("/me/invites", authMiddleware, zValidator("query", invitationStatusSche
 
     return c.json({ invitations: "" }, 200)
 })
+
+
+user.get(
+    "/me/events",
+    authMiddleware,
+    async (c) => {
+        const userId = c.get("user_id");
+        const registeredEvents = getRegisteredEvents(userId);
+        return c.json({
+            events: registeredEvents
+        }, 200);;
+    }
+);

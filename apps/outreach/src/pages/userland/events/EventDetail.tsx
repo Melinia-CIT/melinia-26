@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo } from "react"
+import { useParams, useNavigate } from "react-router-dom"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { motion, AnimatePresence } from "framer-motion"
 import {
     Calendar,
     Clock,
@@ -17,10 +17,10 @@ import {
     ChevronDown,
     CheckCircle2,
     Trash2,
-} from "lucide-react";
-import api from "../../../services/api";
-import EventRegister from "../../../components/userland/events/EventRegister";
-import EventUnRegister from "../../../components/userland/events/EventUnregister";
+} from "lucide-react"
+import api from "../../../services/api"
+import EventRegister from "../../../components/userland/events/EventRegister"
+import EventUnRegister from "../../../components/userland/events/EventUnregister"
 
 interface Round {
     roundNo: number;
@@ -28,23 +28,24 @@ interface Round {
     roundDescription: string;
 }
 interface Prize {
-    position: number;
-    rewardValue: number;
+    position: number
+    rewardValue: number
 }
 interface Organizer {
-    userId: string;
-    assignedBy: string;
-    firstName: string;
-    lastName: string;
-    phoneNo: string;
+    userId: string
+    assignedBy: string
+    firstName: string
+    lastName: string
+    phoneNo: string
 }
 interface Rule {
-    id: number;
-    roundNo: number | null;
-    ruleNumber: number;
-    ruleDescription: string;
+    id: number
+    roundNo: number | null
+    ruleNumber: number
+    ruleDescription: string
 }
 interface Event {
+<<<<<<< Updated upstream
     id: string;
     name: string;
     description: string;
@@ -62,16 +63,35 @@ interface Event {
     prizes: Prize[];
     organizers: Organizer[];
     rules: Rule[];
+=======
+    id: string
+    name: string
+    description: string
+    participationType: string
+    eventType: string
+    maxAllowed: number
+    minTeamSize: number
+    maxTeamSize: number
+    venue: string
+    registrationStart: string
+    registrationEnd: string
+    rounds: Round[]
+    prizes: Prize[]
+    organizers: Organizer[]
+    rules: Rule[]
+    startTime?: string
+    endTime?: string
+>>>>>>> Stashed changes
 }
 
 const EventDetail = () => {
-    const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
-    const queryClient = useQueryClient();
+    const { id } = useParams<{ id: string }>()
+    const navigate = useNavigate()
+    const queryClient = useQueryClient()
 
-    const [expandedRound, setExpandedRound] = useState<number | null>(null);
-    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-    const [isUnregisterModalOpen, setIsUnregisterModalOpen] = useState(false);
+    const [expandedRound, setExpandedRound] = useState<number | null>(null)
+    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
+    const [isUnregisterModalOpen, setIsUnregisterModalOpen] = useState(false)
 
     const {
         data: event,
@@ -80,24 +100,38 @@ const EventDetail = () => {
     } = useQuery<Event>({
         queryKey: ["event", id],
         queryFn: async () => {
-            const response = await api.get(`/events/${id}`);
-            return response.data.data;
+            const response = await api.get(`/events/${id}`)
+            return response.data.data
         },
         enabled: !!id,
-    });
+    })
 
+<<<<<<< Updated upstream
+=======
+    const event = useMemo(() => {
+        if (!eventData) return null
+        const sortedRounds = [...(eventData.rounds || [])].sort((a, b) => a.roundNo - b.roundNo)
+        return {
+            ...eventData,
+            startTime: sortedRounds[0]?.startTime || "",
+            endTime: sortedRounds[sortedRounds.length - 1]?.endTime || "",
+        }
+    }, [eventData])
+
+>>>>>>> Stashed changes
     const { data: registrationStatus } = useQuery({
         queryKey: ["event-status", id],
         queryFn: async () => {
-            const response = await api.get(`/events/${id}/status`);
-            return response.data.data;
+            const response = await api.get(`/events/${id}/status`)
+            return response.data.data
         },
         enabled: !!id,
-    });
+    })
 
-    const isRegistered = registrationStatus?.registration_status === "registered";
+    const isRegistered = registrationStatus?.registration_status === "registered"
 
     const formatDate = (dateString: string) =>
+<<<<<<< Updated upstream
         new Date(dateString).toLocaleDateString("en-US", {
             weekday: "short",
             month: "short",
@@ -105,9 +139,26 @@ const EventDetail = () => {
         });
     const formatTime = (dateString: string) =>
         new Date(dateString).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+=======
+        dateString
+            ? new Date(dateString).toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+              })
+            : "TBA"
+
+    const formatTime = (dateString: string) =>
+        dateString
+            ? new Date(dateString).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+              })
+            : "TBA"
+>>>>>>> Stashed changes
 
     const getThemeStyles = (type: string) => {
-        const typeLower = type?.toLowerCase();
+        const typeLower = type?.toLowerCase()
         if (typeLower === "technical")
             return {
                 banner: "from-rose-500/20 via-rose-600/10 to-transparent",
@@ -115,7 +166,7 @@ const EventDetail = () => {
                 accent: "text-rose-400",
                 button: "border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white",
                 icon: "text-rose-500",
-            };
+            }
         if (typeLower === "non-technical")
             return {
                 banner: "from-emerald-500/20 via-emerald-900/10 to-transparent",
@@ -123,7 +174,7 @@ const EventDetail = () => {
                 accent: "text-emerald-400",
                 button: "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white",
                 icon: "text-emerald-500",
-            };
+            }
         if (typeLower === "flagship")
             return {
                 banner: "from-blue-600/20 via-blue-900/10 to-transparent",
@@ -131,60 +182,70 @@ const EventDetail = () => {
                 accent: "text-blue-400",
                 button: "border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white",
                 icon: "text-blue-500",
-            };
+            }
         return {
             banner: "from-zinc-800/30 via-zinc-700/20 to-transparent",
             badge: "bg-zinc-800 text-zinc-400 border-zinc-700",
             accent: "text-zinc-400",
             button: "border-white/20 text-white hover:bg-white hover:text-black",
             icon: "text-zinc-500",
-        };
-    };
+        }
+    }
 
+<<<<<<< Updated upstream
     const getStatusInfo = (event: Event) => {
         const now = new Date();
         const start = new Date(event.startTime);
         const end = new Date(event.endTime);
         const regStart = new Date(event.registrationStart);
         const regEnd = new Date(event.registrationEnd);
+=======
+    const getStatusInfo = (evt: Event) => {
+        const now = new Date()
+        const start = evt.startTime ? new Date(evt.startTime) : null
+        const end = evt.endTime ? new Date(evt.endTime) : null
+        const regStart = new Date(evt.registrationStart)
+        const regEnd = new Date(evt.registrationEnd)
+>>>>>>> Stashed changes
 
-        if (now > end)
-            return { text: "Completed", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" };
-        if (now >= start && now <= end)
-            return { text: "Ongoing", color: "bg-green-500/10 text-green-400 border-green-500/20" };
+        if (end && now > end)
+            return { text: "Completed", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" }
+        if (start && end && now >= start && now <= end)
+            return { text: "Ongoing", color: "bg-green-500/10 text-green-400 border-green-500/20" }
         if (now >= regStart && now <= regEnd)
-            return { text: "Open", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" };
+            return { text: "Open", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" }
         if (now < regStart)
             return {
                 text: "Coming Soon",
                 color: "bg-zinc-600/10 text-zinc-300 border-zinc-600/20",
-            };
-        return { text: "Reg. Closed", color: "bg-rose-500/10 text-rose-400 border-rose-500/20" };
-    };
+            }
+        return { text: "Reg. Closed", color: "bg-rose-500/10 text-rose-400 border-rose-500/20" }
+    }
 
     if (isLoading)
         return (
             <div className="flex-1 w-full p-4">
                 <div className="h-48 rounded-xl bg-zinc-800 animate-pulse" />
             </div>
-        );
+        )
     if (error || !event)
         return (
             <div className="flex-1 w-full p-4 flex flex-col items-center justify-center min-h-[50vh]">
                 <AlertCircle className="w-12 h-12 text-red-400 mb-2" />
                 <button
+                    type="button"
                     onClick={() => navigate("/app/events")}
                     className="text-xs bg-zinc-800 px-3 py-1 rounded text-white"
                 >
                     Back
                 </button>
             </div>
-        );
+        )
 
-    const status = getStatusInfo(event);
-    const theme = getThemeStyles(event.eventType);
-    const totalPrizePool = event.prizes?.reduce((sum, prize) => sum + prize.rewardValue, 0) || 0;
-    const generalRules = event.rules?.filter(r => r.roundNo === null) || [];
+    const status = getStatusInfo(event)
+    const theme = getThemeStyles(event.eventType)
+    const totalPrizePool = event.prizes?.reduce((sum, prize) => sum + prize.rewardValue, 0) || 0
+    const generalRules = event.rules?.filter(r => r.roundNo === null) || []
 
     return (
         <div className="flex flex-col w-full md:px-8 md:py-6 relative">
@@ -282,7 +343,7 @@ const EventDetail = () => {
                                 <ShieldCheck className={`w-4 h-4 ${theme.icon}`} /> Guidelines
                             </h2>
                             <div className="space-y-2">
-                                {generalRules.map(rule => (
+                                {generalRules.map((rule: Rule) => (
                                     <div
                                         key={rule.id}
                                         className="flex gap-2 text-zinc-300 bg-white/5 p-2 rounded-lg border border-white/10 text-xs leading-relaxed"
@@ -306,14 +367,15 @@ const EventDetail = () => {
                                     .map(round => {
                                         const roundRules =
                                             event.rules?.filter(r => r.roundNo === round.roundNo) ||
-                                            [];
-                                        const isExpanded = expandedRound === round.roundNo;
+                                            []
+                                        const isExpanded = expandedRound === round.roundNo
                                         return (
                                             <div
                                                 key={round.roundNo}
                                                 className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
                                             >
                                                 <button
+                                                    type="button"
                                                     onClick={() =>
                                                         setExpandedRound(
                                                             isExpanded ? null : round.roundNo
@@ -337,7 +399,6 @@ const EventDetail = () => {
                                                     </div>
                                                     <motion.div
                                                         animate={{ rotate: isExpanded ? 180 : 0 }}
-                                                        transition={{ duration: 0.3 }}
                                                     >
                                                         <ChevronDown className="w-4 h-4 text-zinc-500" />
                                                     </motion.div>
@@ -349,12 +410,42 @@ const EventDetail = () => {
                                                             animate={{ height: "auto", opacity: 1 }}
                                                             exit={{ height: 0, opacity: 0 }}
                                                             transition={{
-                                                                duration: 0.35,
+                                                                duration: 0.3,
                                                                 ease: "easeInOut",
                                                             }}
                                                             className="overflow-hidden bg-black/20 border-t border-white/5"
                                                         >
                                                             <div className="px-4 pb-4 pt-3 space-y-2">
+                                                                <div className="grid grid-cols-2 gap-4 mb-3 pb-2 border-b border-white/5">
+                                                                    <div>
+                                                                        <p className="text-[9px] text-zinc-500 uppercase font-bold">
+                                                                            Start
+                                                                        </p>
+                                                                        <p className="text-[11px] text-zinc-300">
+                                                                            {formatDate(
+                                                                                round.startTime
+                                                                            )}{" "}
+                                                                            -{" "}
+                                                                            {formatTime(
+                                                                                round.startTime
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-[9px] text-zinc-500 uppercase font-bold">
+                                                                            End
+                                                                        </p>
+                                                                        <p className="text-[11px] text-zinc-300">
+                                                                            {formatDate(
+                                                                                round.endTime
+                                                                            )}{" "}
+                                                                            -{" "}
+                                                                            {formatTime(
+                                                                                round.endTime
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
                                                                 {roundRules.length > 0 ? (
                                                                     roundRules.map(rule => (
                                                                         <div
@@ -371,8 +462,7 @@ const EventDetail = () => {
                                                                     ))
                                                                 ) : (
                                                                     <p className="text-[10px] text-zinc-600 italic px-2">
-                                                                        No specific rules listed for
-                                                                        this round.
+                                                                        No specific rules for this round.
                                                                     </p>
                                                                 )}
                                                             </div>
@@ -380,7 +470,7 @@ const EventDetail = () => {
                                                     )}
                                                 </AnimatePresence>
                                             </div>
-                                        );
+                                        )
                                     })}
                             </div>
                         </div>
@@ -456,6 +546,7 @@ const EventDetail = () => {
                         </div>
 
                         <button
+                            type="button"
                             onClick={() =>
                                 !isRegistered &&
                                 status.text === "Open" &&
@@ -511,9 +602,9 @@ const EventDetail = () => {
                                 <User2 className="w-3.5 h-3.5" /> Help
                             </h3>
                             <div className="space-y-2">
-                                {event.organizers.map((org, i) => (
+                                {event.organizers.map(org => (
                                     <div
-                                        key={i}
+                                        key={org.userId}
                                         className="bg-white/5 border border-white/10 rounded-xl p-3"
                                     >
                                         <p className="font-bold text-white text-[11px] uppercase tracking-tight">
@@ -559,7 +650,7 @@ const EventDetail = () => {
                 )}
             </AnimatePresence>
         </div>
-    );
-};
+    )
+}
 
-export default EventDetail;
+export default EventDetail
