@@ -308,6 +308,14 @@ events.post(
     }
 );
 
+events.delete("/registration",
+    authMiddleware,
+    participantOnlyMiddleware,
+    paymentStatusMiddleware,
+    async (c)=>{
+        // WIP: deregistration, remove all the team members record from event_registraiton table
+    }
+);
 // // Fetch all the events that a user is registered to
 // events.get("/registered", authMiddleware, async (c) => {
 //     try {
