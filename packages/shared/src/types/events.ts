@@ -283,8 +283,13 @@ export const userRegisteredEventsSchema = z
             })
     )
     .optional()
-    .default([])
+    .default([]);
 
+
+export const eventRegistrationSchema = z.object({
+    registration_type: z.enum(['solo', 'team']),
+    team_id: z.string().optional()
+});
 
 export type CreateEvent = z.infer<typeof createEventSchema>;
 export type Event = z.infer<typeof baseEventSchema>;
@@ -304,3 +309,5 @@ export type Round = z.infer<typeof baseRoundSchema>;
 
 export type CreateRoundRules = z.infer<typeof createEventRoundRulesSchema>;
 export type Rule = z.infer<typeof baseRoundRulesSchema>;
+
+export type EventRegistration = z.infer<typeof eventRegistrationSchema>;

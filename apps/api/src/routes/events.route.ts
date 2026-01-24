@@ -1,12 +1,31 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { createEventSchema, EventParamSchema, getEventsQuerySchema } from "@melinia/shared";
-import { createEvent, deleteEvent, getEventById, getEvents, listEvents } from "../db/queries";
+import { createEventSchema, EventParamSchema, getEventsQuerySchema, eventRegistrationSchema, type EventRegistration } from "@melinia/shared";
+import { 
+    createEvent, 
+    deleteEvent, 
+    getEventById, 
+    getEvents, 
+    listEvents,
+    checkEventExists,
+    isTeamRegisteredAlready,
+    isUserRegisteredAlready,
+    getEventRegistrationCount,
+    getEventTeamRegistrationCount,
+    getConflictingTeamMembers,
+    insertSoloRegistration,
+    insertTeamRegistration,
+    getTeamLeaderId,
+    getTeamMemberIds,
+    getTeamMemberCount
+} from "../db/queries";
 import {
     authMiddleware,
     adminOnlyMiddleware,
+    participantOnlyMiddleware,
 } from "../middleware/auth.middleware";
 import { HTTPException } from "hono/http-exception";
+import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware";
 
 export const events = new Hono();
 
@@ -107,9 +126,187 @@ events.delete(
 // TODO: DELETE /events/:eventid/crews?user_id=:id&role='organizer|volunteer'
 // TODO: POST /events/:id/crews {user_id: user_id, role='organizer|volunteer'}
 
+events.post(
+    "/:id/registeration",
+    authMiddleware,
+    participantOnlyMiddleware,
+    paymentStatusMiddleware,
+    zValidator("json", eventRegistrationSchema),
+    async (c) => {
+        const userId = c.get("user_id");
+        const eventId = c.req.param('event_id')!;
+        const { team_id, registration_type } = c.req.valid("json");
 
+        // 1. Check if event exists
+        const event = await getEventById(eventId);
+        if (!event) {
+            throw new HTTPException(404, { message: "Event not found" });
+        }
 
+        // 2. Validate registration window
+        const now = new Date();
+        const regStart = new Date(event.registration_start);
+        const regEnd = new Date(event.registration_end);
 
+        if (now < regStart) {
+            throw new HTTPException(400, {
+                message: "Registration has not started yet for this event"
+            });
+        }
+
+        if (now > regEnd) {
+            throw new HTTPException(400, {
+                message: "Registration has ended for this event"
+            });
+        }
+
+        // 3. Validate participation type matches event type
+        if (event.participation_type !== registration_type) {
+            throw new HTTPException(400, {
+                message: `This event requires ${event.participation_type} participation`
+            });
+        }
+
+        // ========== SOLO REGISTRATION ==========
+        if (registration_type === "solo") {
+            // 3a. Solo event: teamId should not be provided
+            if (team_id) {
+                throw new HTTPException(400, {
+                    message: "Team registration not allowed for solo events"
+                });
+            }
+
+            // 3b. Check if user already registered for this event (solo)
+            const alreadyRegisteredSolo = await isUserRegisteredAlready(eventId, userId);
+            if (alreadyRegisteredSolo) {
+                throw new HTTPException(409, {
+                    message: "You are already registered for this event"
+                });
+            }
+
+            // // 3c. Check if user registered via team (edge case)
+            // const registeredViaTeam = await checkUserRegisteredForEvent(eventId, userId);
+            // if (registeredViaTeam) {
+            //     throw new HTTPException(409, {
+            //         message: "You are already registered for this event"
+            //     });
+            // }
+
+            // 3d. Check max registration limit
+            const registrationCount = await getEventRegistrationCount(eventId);
+            if (registrationCount >= event.max_allowed) {
+                throw new HTTPException(400, {
+                    message: `Event is full. Maximum ${event.max_allowed} registrations allowed`
+                });
+            }
+
+            // 3e. Register solo user
+            const registration = await insertSoloRegistration(eventId, userId);
+
+            return c.json(
+                {
+                    message: "Solo registration successful",
+                    data: registration
+                },
+                201
+            );
+        }
+
+        // ========== TEAM REGISTRATION ==========
+        if (registration_type === "team") {
+            // 4a. Team event: teamId is required
+            if (!team_id) {
+                throw new HTTPException(400, {
+                    message: "Team ID is required for team events"
+                });
+            }
+
+            // 4b. Check if team exists and get leader
+            const teamLeaderId = await getTeamLeaderId(team_id);
+            if (!teamLeaderId) {
+                throw new HTTPException(404, { message: "Team not found" });
+            }
+
+            // 4c. Only team leader can register
+            if (teamLeaderId !== userId) {
+                throw new HTTPException(403, {
+                    message: "Only team leader can register the team for events"
+                });
+            }
+
+            // 4d. Check if team already registered
+            const teamAlreadyRegistered = await isTeamRegisteredAlready(eventId, team_id);
+            if (teamAlreadyRegistered) {
+                throw new HTTPException(409, {
+                    message: "Team is already registered for this event"
+                });
+            }
+
+            // 4e. Get all team members
+            const memberIds = await getTeamMemberIds(team_id);
+            const teamSize = memberIds.length;
+
+            // Validate team has members
+            if (teamSize === 0) {
+                throw new HTTPException(400, {
+                    message: "Cannot register an empty team"
+                });
+            }
+
+            // 4f. Validate team size constraints
+            if (event.min_team_size && teamSize < event.min_team_size) {
+                throw new HTTPException(400, {
+                    message: `Team size (${teamSize}) is less than minimum required (${event.min_team_size})`
+                });
+            }
+
+            if (event.max_team_size && teamSize > event.max_team_size) {
+                throw new HTTPException(400, {
+                    message: `Team size (${teamSize}) exceeds maximum allowed (${event.max_team_size})`
+                });
+            }
+
+            // 4g. Check if any team member already registered for this event
+            const conflictingMembers = await getConflictingTeamMembers(eventId, memberIds);
+            if (conflictingMembers.length > 0) {
+                const conflictingEmails = conflictingMembers.map((r: any) => r.email).join(", ");
+                throw new HTTPException(409, {
+                    message: `Cannot register team. Following members are already registered for this event: ${conflictingEmails}`
+                });
+            }
+
+            // 4h. Check max team registration limit
+            const teamRegistrationCount = await getEventTeamRegistrationCount(eventId);
+            if (teamRegistrationCount >= event.max_allowed) {
+                throw new HTTPException(400, {
+                    message: `Event is full. Maximum ${event.max_allowed} teams allowed`
+                });
+            }
+
+            // 4i. Register all team members
+            for (const memberId of memberIds) {
+                await insertTeamRegistration(eventId, team_id, memberId);
+            }
+
+            return c.json(
+                {
+                    message: "Team registration successful",
+                    data: {
+                        team_id: team_id,
+                        team_size: teamSize,
+                        event_id: eventId
+                    }
+                },
+                201
+            );
+        }
+
+        // Edge case: invalid participation type
+        throw new HTTPException(400, {
+            message: "Invalid participation type. Must be 'solo' or 'team'"
+        });
+    }
+);
 
 // // Fetch all the events that a user is registered to
 // events.get("/registered", authMiddleware, async (c) => {

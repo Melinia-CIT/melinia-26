@@ -449,6 +449,99 @@ export async function getRegisteredEvents(userId: string): Promise<UserRegistere
         );
 }
 
+export async function checkEventExists(eventId: string): Promise<boolean> {
+    const result = await sql`
+        SELECT 1 FROM events WHERE id = ${eventId}
+    `;
+    return result.length > 0;
+}
+
+// ============= Event Registration Queries =============
+
+export async function isUserRegisteredAlready(eventId: string, userId: string): Promise<boolean> {
+    const result = await sql`
+        SELECT 1 FROM event_registrations 
+        WHERE event_id = ${eventId} AND user_id = ${userId}
+    `;
+    return result.length > 0;
+}
+
+export async function isTeamRegisteredAlready(eventId: string, teamId: string): Promise<boolean> {
+    const result = await sql`
+        SELECT 1 FROM event_registrations 
+        WHERE event_id = ${eventId} AND team_id = ${teamId}
+    `;
+    return result.length > 0;
+}
+
+export async function getEventRegistrationCount(eventId: string): Promise<number> {
+    const [result] = await sql<[{ count: number }]>`
+        SELECT COUNT(*) as count FROM event_registrations 
+        WHERE event_id = ${eventId}
+    `;
+    return result.count;
+}
+export async function getEventTeamRegistrationCount(eventId: string): Promise<number> {
+    const [result] = await sql<[{ count: number }]>`
+        SELECT COUNT(DISTINCT team_id) as count FROM event_registrations 
+        WHERE event_id = ${eventId} AND team_id IS NOT NULL
+    `;
+    return result.count;
+}
+
+export async function getConflictingTeamMembers(eventId: string, memberIds: string[]) {
+    const conflicts = await sql`
+        SELECT DISTINCT 
+            er.user_id,
+            u.email
+        FROM event_registrations er
+        JOIN users u ON er.user_id = u.id
+        WHERE er.event_id = ${eventId} 
+        AND er.user_id = ANY(${memberIds}::text[])
+    `;
+    return conflicts;
+}
+
+export async function insertSoloRegistration(eventId: string, userId: string) {
+    const [result] = await sql`
+        INSERT INTO event_registrations (event_id, team_id, user_id, registered_at)
+        VALUES (${eventId}, NULL, ${userId}, NOW())
+        RETURNING id, event_id, team_id, user_id, registered_at
+    `;
+    return result;
+}
+
+export async function insertTeamRegistration(eventId: string, teamId: string, userId: string) {
+    const [result] = await sql`
+        INSERT INTO event_registrations (event_id, team_id, user_id, registered_at)
+        VALUES (${eventId}, ${teamId}, ${userId}, NOW())
+        RETURNING id, event_id, team_id, user_id, registered_at
+    `;
+    return result;
+}
+
+// ============= Team Related Queries =============
+
+export async function getTeamLeaderId(teamId: string): Promise<string | null> {
+    const [team] = await sql`
+        SELECT leader_id FROM teams WHERE id = ${teamId}
+    `;
+    return team?.leader_id || null;
+}
+
+export async function getTeamMemberIds(teamId: string): Promise<string[]> {
+    const members = await sql<{ user_id: string }[]>`
+        SELECT user_id FROM team_members WHERE team_id = ${teamId}
+    `;
+    return members.map(m => m.user_id);
+}
+
+export async function getTeamMemberCount(teamId: string): Promise<number> {
+    const [result] = await sql<[{ count: number }]>`
+        SELECT COUNT(*) as count FROM team_members WHERE team_id = ${teamId}
+    `;
+    return result.count;
+}
 
 // // Update Event
 // export async function updateEvent(input: UpdateEventDetails & { id: string }) {
