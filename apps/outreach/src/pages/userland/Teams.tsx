@@ -10,15 +10,19 @@ import type { Team } from "@melinia/shared"
 import { team_management } from "../../services/teams"
 
 type ActiveModal = "mobileDetails" | "createTeam" | null
+type FilterType = "all" | "led" | "member"
 
 const TeamsPage: React.FC = () => {
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
     const [activeModal, setActiveModal] = useState<ActiveModal>(null)
+    
+    const [filter, setFilter] = useState<FilterType>("all")
 
     const { data: response, isLoading } = useQuery<Team[]>({
-        queryKey: ["teams"],
+        queryKey: ["teams", filter],
         queryFn: async () => {
-            const res = await team_management.teamList()
+            // Pass the filter state directly to the function
+            const res = await team_management.teamList(filter)
             return res.data
         },
     })
@@ -40,26 +44,52 @@ const TeamsPage: React.FC = () => {
         setSelectedTeamId(null)
     }, [])
 
+    const FilterTabs = () => (
+        <div className="flex items-center p-1 bg-zinc-800/50 rounded-lg w-fit">
+            {[
+                { id: "all" as FilterType, label: "All" },
+                { id: "led" as FilterType, label: "My Teams" },
+                { id: "member" as FilterType, label: "Other" }
+            ].map((option) => (
+                <button
+                    key={option.id}
+                    onClick={() => setFilter(option.id)}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                        filter === option.id
+                            ? "bg-zinc-200 text-zinc-900 shadow-sm"
+                            : "text-zinc-400 hover:text-zinc-200"
+                    }`}
+                >
+                    {option.label}
+                </button>
+            ))}
+        </div>
+    )
+
     return (
-        <div className="flex-1 flex flex-col bg-zinc-950 text-white sm:h-full font-geist">
+        <div className="flex-1 flex flex-col text-white sm:h-full font-geist p-1">
             {/* Desktop & Tablet Layout */}
             <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-6 gap-6 h-full">
                 {/* Left Side - Teams List */}
                 <div className="col-span-2 flex flex-col border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 flex-1">
-                    <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
-                        <div>
-                            <h2 className="text-2xl font-inst font-bold text-white">Teams</h2>
-                            <p className="text-xs text-zinc-400 mt-1">{teams.length} team(s)</p>
+                    <div className="p-6 border-b border-zinc-800">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 className="text-2xl font-inst font-bold text-white">Teams</h2>
+                                <p className="text-xs text-zinc-400 mt-1">{teams.length} team(s)</p>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    setActiveModal("createTeam")
+                                }}
+                                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 bg-zinc-200 text-zinc-800 text-xs sm:text-sm font-semibold rounded-md transition-colors"
+                            >
+                                <Plus size={12} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{" "}
+                            </button>
                         </div>
 
-                        <button
-                            onClick={() => {
-                                setActiveModal("createTeam")
-                            }}
-                            className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 bg-zinc-200 text-zinc-800 text-xs sm:text-sm font-semibold rounded-md transition-colors"
-                        >
-                            <Plus size={12} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{" "}
-                        </button>
+                        <FilterTabs />
                     </div>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
@@ -107,20 +137,24 @@ const TeamsPage: React.FC = () => {
 
             {/* Mobile Layout */}
             <div className="md:hidden flex flex-col gap-6 px-2 h-full">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2 className="text-2xl md:text-3xl font-bold font-inst text-white">Teams</h2>
-                        <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
+                <div className="flex flex-col gap-4">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h2 className="text-2xl md:text-3xl font-bold font-inst text-white">Teams</h2>
+                            <p className="text-sm text-zinc-400">{teams.length} team(s)</p>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setActiveModal("createTeam")
+                            }}
+                            className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 bg-zinc-200 text-zinc-800 text-xs sm:text-sm font-semibold rounded-md transition-colors"
+                        >
+                            <Plus size={12} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{" "}
+                            <span className="hidden sm:inline">New Team</span>
+                        </button>
                     </div>
-                    <button
-                        onClick={() => {
-                            setActiveModal("createTeam")
-                        }}
-                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-3 bg-zinc-200 text-zinc-800 text-xs sm:text-sm font-semibold rounded-md transition-colors"
-                    >
-                        <Plus size={12} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{" "}
-                        <span className="hidden sm:inline">New Team</span>
-                    </button>
+
+                    <FilterTabs />
                 </div>
 
                 <div className="flex-1 flex flex-col space-y-3 h-full">
