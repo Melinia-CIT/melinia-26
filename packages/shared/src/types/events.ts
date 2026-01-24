@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// Base
 export const baseEventSchema = z.object({
     id: z.string(),
     name: z.string()
@@ -31,6 +32,8 @@ export const baseEventSchema = z.object({
         .trim(),
     registration_start: z.coerce.date(),
     registration_end: z.coerce.date(),
+    start_time: z.coerce.date(),
+    end_time: z.coerce.date(),
     created_by: z.string().min(1, "created_by can't be empty"),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
@@ -52,7 +55,7 @@ export const baseRoundRulesSchema = z.object({
     id: z.number().int(),
     event_id: z.string(),
     round_id: z.number().int().positive("Invalid round number"),
-    rule_number: z.number().int().positive("Invalid rule sequence number"),
+    rule_no: z.number().int().positive("Invalid rule sequence number"),
     rule_description: z.string().min(1, "Invalid rule description"),
     created_at: z.coerce.date(),
     updated_at: z.coerce.date()
@@ -67,24 +70,16 @@ export const basePrizeSchema = z.object({
     updated_at: z.coerce.date()
 });
 
-export const baseOrganizerSchema = z.object({
+export const baseCrewSchema = z.object({
     event_id: z.string(),
     user_id: z.string(),
     assigned_by: z.string(), // user_id MLNUxxxXXX
     created_at: z.coerce.date(),
-    updated_at: z.coerce.date()
-});
-
-export const baseVolunteerSchema = z.object({
-    event_id: z.string(),
-    user_id: z.string(),
-    assigned_by: z.string(), // user_id MLNUxxxXXX
-    created_at: z.coerce.date(),
-    updated_at: z.coerce.date()
 });
 
 
-export const createEventRoundSchema = 
+// Rounds
+export const createEventRoundSchema =
     baseRoundSchema.omit({
         id: true,
         event_id: true,
@@ -93,43 +88,40 @@ export const createEventRoundSchema =
     });
 export const createEventRoundsSchema = z.array(createEventRoundSchema);
 
-export const createEventRoundRuleSchema = 
+// Rules
+export const createEventRoundRuleSchema =
     baseRoundRulesSchema.omit({
         id: true,
         event_id: true,
-        round_id: true, 
+        round_id: true,
         created_at: true,
         updated_at: true
     });
 export const createEventRoundRulesSchema = z.array(createEventRoundRuleSchema);
 
-export const createEventPrizesSchema = z.array(
-    basePrizeSchema.omit({
-        id: true,
-        event_id: true,
-        created_at: true,
-        updated_at: true
-    })
-);
+// Prizes
+export const createEventPrizeSchema =
+    basePrizeSchema
+        .omit({
+            id: true,
+            event_id: true,
+            created_at: true,
+            updated_at: true
+        })
+export const createEventPrizesSchema = z.array(createEventPrizeSchema);
 
-export const addEventOrganizerSchema =  
-    baseOrganizerSchema
-    .omit({
-        user_id: true,
-        event_id: true,
-        assigned_by: true,
-        created_at: true,
-        updated_at: true
-    })
-    .extend({
-        email: z.email()
-    });
+// Crew    
+export const assignEventCrewSchema = z.object({ email: z.string() });
+export const assignEventCrewsSchema = z.array(assignEventCrewSchema);
+export const getCrewSchema =
+    baseCrewSchema
+        .extend({
+            first_name: z.string(),
+            last_name: z.string(),
+            ph_no: z.string()
+        })
 
-export const addEventOrganizersSchema = z.array(addEventOrganizerSchema);
-
-export const addEventVolunteerSchema = addEventOrganizerSchema
-export const addEventVolunteersSchema = z.array(addEventVolunteerSchema);
-
+// Event
 export const createEventSchema =
     baseEventSchema
         .omit({
@@ -141,14 +133,19 @@ export const createEventSchema =
         .extend({
             rounds: z.array(
                 createEventRoundSchema
-                .extend({
-                    rules: z.array(
-                        createEventRoundRuleSchema
-                    )
+                    .extend({
+                        rules: z.array(
+                            createEventRoundRuleSchema
+                        ).optional()
+                    })
+            ).optional(),
+            prizes: createEventPrizesSchema.optional(),
+            crew: z
+                .object({
+                    organizers: assignEventCrewsSchema.optional(),
+                    volunteers: assignEventCrewsSchema.optional()
                 })
-            ),
-            prizes: createEventPrizesSchema,
-            organizers: addEventOrganizersSchema.optional()
+                .optional()
         })
         .refine(
             (data) => data.max_team_size >= data.min_team_size,
@@ -186,128 +183,124 @@ export const createEventSchema =
             }
         );
 
-export const fullEventSchema =
+export const verboseEventSchema =
     baseEventSchema
         .extend({
-            rounds: z.array(
-                baseRoundSchema
-                    .omit({
-                        event_id: true
+            rounds: z
+                .array(
+                    baseRoundSchema
+                        .omit({
+                            event_id: true
+                        })
+                        .extend({
+                            rules: z
+                                .array(
+                                    baseRoundRulesSchema
+                                        .omit({
+                                            round_id: true,
+                                            event_id: true
+                                        })
+                                )
+                                .optional()
+                                .default([])
+                        })
+                )
+                .optional()
+                .default([]),
+            prizes: z
+                .array(
+                    basePrizeSchema.omit({
+                        event_id: true,
                     })
-                    .extend({
-                        rules: z.array(
-                            baseRoundRulesSchema
+                )
+                .optional()
+                .default([]),
+            crew: z
+                .object({
+                    organizers: z
+                        .array(
+                            baseCrewSchema
                                 .omit({
-                                    round_id: true,
                                     event_id: true
                                 })
                         )
-                    })
-            ),
-            prizes: z.array(
-                basePrizeSchema
-                    .omit({
-                        event_id: true,
-                    })
-            ),
-            organizers: z.array(
-                baseOrganizerSchema
-                    .omit({
-                        event_id: true
-                    })
-            )
+                        .optional()
+                        .default([]),
+                    volunteers: z
+                        .array(
+                            baseCrewSchema
+                                .omit({
+                                    event_id: true
+                                })
+                        )
+                        .optional()
+                        .default([])
+                })
         });
 
-//export const updateEventDetailsSchema = withRefinements(
-//    z.object({
-//        name: z.string().min(1, "Event name is required"),
-//        description: z.string().min(1, "Description is required"),
-//        participationType: ParticipationType.default("solo"),
-//        eventType: EventType,
-//        maxAllowed: z
-//            .number()
-//            .int()
-//            .positive("Maximum participants must be positive"),
-//        minTeamSize: z.number().int().min(1).nullable().optional(),
-//        maxTeamSize: z.number().int().min(1).nullable().optional(),
-//        venue: z.string().min(1, "Venue is required"),
-//        startTime: z.coerce.date(),
-//        endTime: z.coerce.date(),
-//        registrationStart: z.coerce.date(),
-//        registrationEnd: z.coerce.date(),
-//        createdBy: z.string().nullable().optional(),
-//    })
-//        .safeExtend({
-//            rounds: z.array(roundSchema).optional(),
-//            prizes: z.array(prizeSchema).optional(),
-//            organizers: z.array(organizerSchema).optional(),
-//            rules: z.array(eventRuleSchema.omit({ id: true, eventId: true, createdAt: true, updatedAt: true })).optional(),
-//        })
-//);
-//
-//export const deleteEventSchema = z.object({
-//    id: z.string().min(1, "Event id is required"),
-//});
-//
-//export const eventRegistrationSchema = z.object({
-//    teamId: z.string().optional().nullable(),
-//    participationType: z.enum(["solo", "team"])
-//});
-//
-//export const unregisterEventSchema = z.object({
-//    participationType: z.enum(["solo", "team"]),
-//    teamId: z.string().optional().nullable(),
-//});
-//
-//export const getEventDetailsSchema = z.object({
-//    id: z.string().min(1, "Event id is required"),
-//});
-//
-//export const createEventRuleSchema = z.object({
-//    eventId: z.string().min(1, "Event ID is required"),
-//    roundNo: z.number().int().nullable().optional(),
-//    ruleNumber: z.number().int().min(1, "Rule number must be positive"),
-//    ruleDescription: z.string().min(1, "Rule description is required"),
-//});
-//
-//export const updateEventRuleSchema = z.object({
-//    id: z.number().int().min(1, "Rule ID is required"),
-//    roundNo: z.number().int().nullable().optional(),
-//    ruleNumber: z.number().int().min(1, "Rule number must be positive"),
-//    ruleDescription: z.string().min(1, "Rule description is required"),
-//});
-//
-//export const deleteEventRuleSchema = z.object({
-//    id: z.number().int().min(1, "Rule ID is required"),
-//});
-//
-//export type UnregisterEventInput = z.infer<typeof unregisterEventSchema>;
-//export type DeleteEventInput = z.infer<typeof deleteEventSchema>;
-//export type EventRegistrationInput = z.infer<typeof eventRegistrationSchema>;
-//export type GetEventDetailsInput = z.infer<typeof getEventDetailsSchema>;
-//export type Event = z.infer<typeof eventSchema>;
-//export type CreateEvent = z.infer<typeof createEventSchema>;
-//export type UpdateEventDetailsInput = z.infer<typeof updateEventDetailsSchema>;
-//export type EventRule = z.infer<typeof eventRuleSchema>;
-//export type CreateEventRule = z.infer<typeof createEventRuleSchema>;
-//export type UpdateEventRule = z.infer<typeof updateEventRuleSchema>;
-//export type DeleteEventRule = z.infer<typeof deleteEventRuleSchema>;
-//export type Prize = z.infer<typeof prizeSchema>;
+export const getEventsQuerySchema = z
+    .object({
+        expand: z
+            .enum(["all"])
+            .optional()
+    })
+
+export const EventParamSchema = z
+    .object({
+        id: z.string()
+    })
+
+export const getVerboseEventResponseSchema =
+    verboseEventSchema
+        .extend({
+            crew: z
+                .object({
+                    organizers: z
+                        .array(
+                            baseCrewSchema
+                                .omit({
+                                    event_id: true,
+                                    assigned_by: true
+                                })
+                                .extend({
+                                    first_name: z.string(),
+                                    last_name: z.string(),
+                                    ph_no: z.string()
+                                })
+                        )
+                })
+        })
+
+export const userRegisteredEventsSchema = z
+    .array(
+        baseEventSchema
+            .extend({
+                rounds: baseRoundSchema
+                    .omit({
+                        event_id: true,
+                        round_description: true,
+                    })
+            })
+    )
+    .optional()
+    .default([])
+
 
 export type CreateEvent = z.infer<typeof createEventSchema>;
-export type FullEvent = z.infer<typeof fullEventSchema>;
+export type Event = z.infer<typeof baseEventSchema>;
+export type VerboseEvent = z.infer<typeof verboseEventSchema>;
+export type GetVerboseEvent = z.infer<typeof getVerboseEventResponseSchema>;
+export type UserRegisteredEvents = z.infer<typeof userRegisteredEventsSchema>;
 
 export type CreateEventPrizes = z.infer<typeof createEventPrizesSchema>;
-
-export type addEventOrganziers = z.infer<typeof addEventOrganizersSchema>;
-export type addEventVolunteers = z.infer<typeof addEventVolunteersSchema>;
-
-export type createRounds = z.infer<typeof createEventRoundsSchema>;
-export type createRoundRules = z.infer<typeof createEventRoundRulesSchema>;
-
-export type Event = z.infer<typeof baseEventSchema>;
 export type Prize = z.infer<typeof basePrizeSchema>;
-export type Organizer = z.infer<typeof baseOrganizerSchema>;
-export type Volunteer = z.infer<typeof baseVolunteerSchema>;
+
+export type AssignEventCrews = z.infer<typeof assignEventCrewsSchema>;
+export type GetCrew = z.infer<typeof getCrewSchema>;
+export type Crew = z.infer<typeof baseCrewSchema>;
+
+export type CreateRounds = z.infer<typeof createEventRoundsSchema>;
 export type Round = z.infer<typeof baseRoundSchema>;
+
+export type CreateRoundRules = z.infer<typeof createEventRoundRulesSchema>;
 export type Rule = z.infer<typeof baseRoundRulesSchema>;

@@ -45,25 +45,6 @@ interface Rule {
     ruleDescription: string
 }
 interface Event {
-<<<<<<< Updated upstream
-    id: string;
-    name: string;
-    description: string;
-    participationType: string;
-    eventType: string;
-    maxAllowed: number;
-    minTeamSize: number;
-    maxTeamSize: number;
-    venue: string;
-    startTime: string;
-    endTime: string;
-    registrationStart: string;
-    registrationEnd: string;
-    rounds: Round[];
-    prizes: Prize[];
-    organizers: Organizer[];
-    rules: Rule[];
-=======
     id: string
     name: string
     description: string
@@ -81,7 +62,6 @@ interface Event {
     rules: Rule[]
     startTime?: string
     endTime?: string
->>>>>>> Stashed changes
 }
 
 const EventDetail = () => {
@@ -106,19 +86,16 @@ const EventDetail = () => {
         enabled: !!id,
     })
 
-<<<<<<< Updated upstream
-=======
-    const event = useMemo(() => {
-        if (!eventData) return null
-        const sortedRounds = [...(eventData.rounds || [])].sort((a, b) => a.roundNo - b.roundNo)
-        return {
-            ...eventData,
-            startTime: sortedRounds[0]?.startTime || "",
-            endTime: sortedRounds[sortedRounds.length - 1]?.endTime || "",
-        }
-    }, [eventData])
+    // const event = useMemo(() => {
+    //     if (!eventData) return null
+    //     const sortedRounds = [...(eventData.rounds || [])].sort((a, b) => a.roundNo - b.roundNo)
+    //     return {
+    //         ...eventData,
+    //         startTime: sortedRounds[0]?.startTime || "",
+    //         endTime: sortedRounds[sortedRounds.length - 1]?.endTime || "",
+    //     }
+    // }, [eventData])
 
->>>>>>> Stashed changes
     const { data: registrationStatus } = useQuery({
         queryKey: ["event-status", id],
         queryFn: async () => {
@@ -131,15 +108,6 @@ const EventDetail = () => {
     const isRegistered = registrationStatus?.registration_status === "registered"
 
     const formatDate = (dateString: string) =>
-<<<<<<< Updated upstream
-        new Date(dateString).toLocaleDateString("en-US", {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-        });
-    const formatTime = (dateString: string) =>
-        new Date(dateString).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-=======
         dateString
             ? new Date(dateString).toLocaleDateString("en-US", {
                   weekday: "short",
@@ -155,7 +123,6 @@ const EventDetail = () => {
                   minute: "2-digit",
               })
             : "TBA"
->>>>>>> Stashed changes
 
     const getThemeStyles = (type: string) => {
         const typeLower = type?.toLowerCase()
@@ -192,21 +159,12 @@ const EventDetail = () => {
         }
     }
 
-<<<<<<< Updated upstream
-    const getStatusInfo = (event: Event) => {
-        const now = new Date();
-        const start = new Date(event.startTime);
-        const end = new Date(event.endTime);
-        const regStart = new Date(event.registrationStart);
-        const regEnd = new Date(event.registrationEnd);
-=======
     const getStatusInfo = (evt: Event) => {
         const now = new Date()
         const start = evt.startTime ? new Date(evt.startTime) : null
         const end = evt.endTime ? new Date(evt.endTime) : null
         const regStart = new Date(evt.registrationStart)
         const regEnd = new Date(evt.registrationEnd)
->>>>>>> Stashed changes
 
         if (end && now > end)
             return { text: "Completed", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" }

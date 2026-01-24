@@ -52,7 +52,7 @@ export const profileSchema = baseProfileSchema.omit({
 });
 
 export const createOrganizerSchema = createProfileSchema.extend({
-    email: z.string().email("Invalid email address"),
+    email: z.email("Invalid email address"),
     password: z.string().min(8, "Password too short"),
 });
 
