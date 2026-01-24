@@ -13,6 +13,7 @@ import {
 import api from "../../../services/api";
 import { useNavigate } from "react-router-dom";
 import PaymentModal from "../../payment/PaymentModal";
+import { team_management } from "../../../services/teams";
 
 interface Team {
     id: string;
@@ -66,7 +67,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                     registrationInitiated.current = true;
                     handleFinalRegister(null, "solo");
                 } else {
-                    const teamRes = await api.get("/teams");
+                    const teamRes = await team_management.teamList('led');
                     if (!isSubscribed) return;
 
                     const userTeams = teamRes.data.data || [];
