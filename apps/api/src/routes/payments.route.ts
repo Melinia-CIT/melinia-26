@@ -1,9 +1,7 @@
 import { Hono } from "hono"
-
 import Razorpay from "razorpay"
-
 import crypto from "crypto"
-
+import { HTTPException } from "hono/http-exception"
 import { authMiddleware } from "../middleware/auth.middleware"
 import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
 import {
@@ -22,6 +20,7 @@ const secretKey = process.env.RAZORPAY_KEY_SECRET
 if (!keyId || !secretKey) {
     throw new Error("Razorpay keys missing")
 }
+
 const razorpay = new Razorpay({
     key_id: keyId,
     key_secret: secretKey,
@@ -30,15 +29,15 @@ const razorpay = new Razorpay({
 export const payment = new Hono()
 
 payment.post("/register-melinia", authMiddleware, async c => {
+    const user_id = c.get("user_id")
+
+    const user = await getUserEmail(user_id)
+
+    if (!user) {
+        throw new HTTPException(404, { message: "User not found" })
+    }
+
     try {
-        const user_id = c.get("user_id")
-
-        const user = await getUserEmail(user_id)
-
-        if (!user) {
-            return c.json({ error: "User not found" }, 404)
-        }
-
         const order = await razorpay.orders.create({
             amount: 100,
             currency: "INR",
@@ -54,7 +53,7 @@ payment.post("/register-melinia", authMiddleware, async c => {
         })
     } catch (err) {
         console.error("Order creation failed:", err)
-        return c.json({ error: "Failed to create order" }, 500)
+        throw new HTTPException(500, { message: "Failed to create order" })
     }
 })
 
@@ -68,7 +67,7 @@ payment.post("/webhook", async c => {
     const expectedSignature = crypto.createHmac("sha256", webhookSecret).update(body).digest("hex")
 
     if (expectedSignature !== signature) {
-        return c.json({ error: "Invalid signature" }, 400)
+        throw new HTTPException(400, { message: "Invalid signature" })
     }
 
     const event = JSON.parse(body)
@@ -97,6 +96,6 @@ payment.get("/payment-status", authMiddleware, paymentStatusMiddleware, async c 
         return c.json({ paid: true }, 200)
     } catch (err) {
         console.error("Payment status check failed:", err)
-        return c.json({ error: "Internal server error" }, 500)
+        throw new HTTPException(500, { message: "Internal server error" })
     }
 })

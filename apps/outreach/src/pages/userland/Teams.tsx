@@ -41,7 +41,7 @@ const TeamsPage: React.FC = () => {
     }, [])
 
     return (
-        <div className="flex-1 flex flex-col bg-zinc-950 text-white sm:h-full font-geist">
+        <div className="flex-1 flex flex-col text-white sm:h-full font-geist p-1">
             {/* Desktop & Tablet Layout */}
             <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-6 gap-6 h-full">
                 {/* Left Side - Teams List */}
