@@ -1,53 +1,14 @@
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Calendar, MapPin, Clock } from "lucide-react"
+import { Calendar, MapPin, Clock, Users, User } from "lucide-react"
+import { Event } from "@melinia/shared"
 
-interface Round {
-    roundNo: number
-    roundDescription: string
-}
-interface Prize {
-    position: number
-    rewardValue: number
-}
-interface Organizer {
-    userId: string
-    assignedBy: string
-}
-interface Rule {
-    id: number
-    roundNo: number | null
-    ruleNumber: number
-    ruleDescription: string
-}
-
-interface Event {
-    id: string
-    name: string
-    description: string
-    participationType: string
-    eventType: string
-    maxAllowed: number
-    minTeamSize: number
-    maxTeamSize: number
-    venue?: string
-    startTime?: string
-    endTime?: string
-    registrationStart?: string
-    registrationEnd?: string
-    rounds: Round[]
-    prizes: Prize[]
-    organizers: Organizer[]
-    rules: Rule[]
-}
-
-interface EventsCardProps {
+type EventCardProps = {
     event: Event
 }
 
-const EventsCard = ({ event }: EventsCardProps) => {
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString)
+const EventsCard = ({ event }: EventCardProps) => {
+    const formatDate = (date: Date) => {
         return date.toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -55,8 +16,7 @@ const EventsCard = ({ event }: EventsCardProps) => {
         })
     }
 
-    const formatTime = (dateString: string) => {
-        const date = new Date(dateString)
+    const formatTime = (date: Date) => {
         return date.toLocaleTimeString("en-US", {
             hour: "2-digit",
             minute: "2-digit",
@@ -93,7 +53,29 @@ const EventsCard = ({ event }: EventsCardProps) => {
         }
     }
 
-    const theme = getThemeStyles(event.eventType)
+    const getParticipationStyles = (type: string) => {
+        const normalizedType = type?.toLowerCase() || ""
+        switch (normalizedType) {
+            case "solo":
+                return {
+                    badge: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+                    icon: User,
+                }
+            case "team":
+                return {
+                    badge: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+                    icon: Users,
+                }
+            default:
+                return {
+                    badge: "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50",
+                    icon: User,
+                }
+        }
+    }
+
+    const theme = getThemeStyles(event.event_type)
+    const participationStyles = getParticipationStyles(event.participation_type)
 
     return (
         <Link to={`/app/events/${event.id}`} className="h-full block">
@@ -103,7 +85,12 @@ const EventsCard = ({ event }: EventsCardProps) => {
                 initial="initial"
             >
                 <div className="absolute inset-0 z-50 pointer-events-none">
-                    <svg className="w-full h-full" fill="none" preserveAspectRatio="none">
+                    <svg
+                        className="w-full h-full"
+                        fill="none"
+                        preserveAspectRatio="none"
+                        aria-hidden="true"
+                    >
                         <defs>
                             <filter
                                 id={`video-glow-${event.id}`}
@@ -179,11 +166,19 @@ const EventsCard = ({ event }: EventsCardProps) => {
                 {/* Header Section */}
                 <div className={`relative h-28 overflow-hidden bg-gradient-to-br ${theme.header}`}>
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/40 to-transparent" />
-                    <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                    <div className="absolute top-4 left-4">
                         <motion.span
-                            className={`px-3 py-1 rounded-lg text-xs font-semibold border ${theme.badge}`}
+                            className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${participationStyles.badge}`}
                         >
-                            {event.eventType.toUpperCase()}
+                            <participationStyles.icon className="w-3 h-3" />
+                            {event.participation_type?.toUpperCase() || "SOLO"}
+                        </motion.span>
+                    </div>
+                    <div className="absolute top-4 right-4">
+                        <motion.span
+                            className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold border ${theme.badge}`}
+                        >
+                            {event.event_type.toUpperCase()}
                         </motion.span>
                     </div>
                 </div>
@@ -200,9 +195,9 @@ const EventsCard = ({ event }: EventsCardProps) => {
                     <div className="space-y-2.5 mt-auto">
                         <div className="flex items-center gap-2 text-sm text-zinc-400">
                             <Calendar className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                            <span>{event.startTime ? formatDate(event.startTime) : "TBA"}</span>
+                            <span>{event.start_time ? formatDate(event.start_time) : "TBA"}</span>
                             <Clock className="w-4 h-4 text-zinc-400 ml-2 flex-shrink-0" />
-                            <span>{event.startTime ? formatTime(event.startTime) : "TBA"}</span>
+                            <span>{event.start_time ? formatTime(event.start_time) : "TBA"}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-zinc-400">
                             <MapPin className="w-4 h-4 text-zinc-400 flex-shrink-0" />

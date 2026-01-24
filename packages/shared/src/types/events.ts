@@ -275,15 +275,44 @@ export const userRegisteredEventsSchema = z
     .array(
         baseEventSchema
             .extend({
-                rounds: baseRoundSchema
-                    .omit({
-                        event_id: true,
-                        round_description: true,
-                    })
+                team_name: z.string(),
+                mode: z.enum(["solo", "team"]),
+                rounds: z.array(
+                    baseRoundSchema
+                        .omit({
+                            event_id: true,
+                            round_description: true,
+                        })
+                )
             })
     )
-    .optional()
-    .default([]);
+    .default([])
+
+export const RegisteredSolo = z.object({
+    registered: z.literal(true),
+    mode: z.literal("solo"),
+    registered_at: z.coerce.date()
+})
+
+const RegisteredTeam = z.object({
+    registered: z.literal(true),
+    mode: z.literal("team"),
+    registered_at: z.coerce.date(),
+    team: z.object({
+        id: z.string(),
+        name: z.string()
+    })
+})
+
+const NotRegistered = z.object({
+    registered: z.literal(false)
+})
+
+export const userRegistrationStatus = z.union([
+    RegisteredSolo,
+    RegisteredTeam,
+    NotRegistered
+])
 
 
 export const eventRegistrationSchema = z.object({
@@ -296,6 +325,7 @@ export type Event = z.infer<typeof baseEventSchema>;
 export type VerboseEvent = z.infer<typeof verboseEventSchema>;
 export type GetVerboseEvent = z.infer<typeof getVerboseEventResponseSchema>;
 export type UserRegisteredEvents = z.infer<typeof userRegisteredEventsSchema>;
+export type UserRegistrationStatus = z.infer<typeof userRegistrationStatus>;
 
 export type CreateEventPrizes = z.infer<typeof createEventPrizesSchema>;
 export type Prize = z.infer<typeof basePrizeSchema>;

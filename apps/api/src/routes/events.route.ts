@@ -33,29 +33,6 @@ import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
 
 export const events = new Hono();
 
-events.post(
-    "/",
-    authMiddleware,
-    adminOnlyMiddleware,
-    zValidator("json", createEventSchema),
-    async (c) => {
-        try {
-            const data = c.req.valid("json");
-            const userId = c.get("user_id");
-
-            const event = await createEvent(userId, data);
-
-            return c.json({
-                data: event,
-                message: "Event created successfully"
-            }, 201);
-        } catch (err) {
-            console.error(err);
-            throw new HTTPException(500, { message: "Failed to create event" });
-        }
-    }
-);
-
 events.get(
     "/",
     zValidator("query", getEventsQuerySchema),
@@ -95,6 +72,50 @@ events.get(
     }
 )
 
+events.get(
+    "/:id/status",
+    authMiddleware,
+    zValidator("param", EventParamSchema),
+    async (c) => {
+        try {
+            const { id } = c.req.valid("param");
+            const userId = c.get("user_id");
+            const regStatus = await getUserRegStatus(id, userId);
+            return c.json({ ...regStatus }, 200);
+        } catch (err) {
+            console.error(err);
+            if (err instanceof HTTPException) {
+                throw err;
+            }
+            throw new HTTPException(500, { message: "Failed to fetch event registration status" });
+        }
+    }
+)
+
+events.post(
+    "/",
+    authMiddleware,
+    adminOnlyMiddleware,
+    zValidator("json", createEventSchema),
+    async (c) => {
+        try {
+            const data = c.req.valid("json");
+            const userId = c.get("user_id");
+
+            const event = await createEvent(userId, data);
+
+            return c.json({
+                data: event,
+                message: "Event created successfully"
+            }, 201);
+        } catch (err) {
+            console.error(err);
+            throw new HTTPException(500, { message: "Failed to create event" });
+        }
+    }
+);
+
+
 events.delete(
     "/:id",
     authMiddleware,
@@ -118,6 +139,7 @@ events.delete(
         }
     }
 )
+
 
 // TODO: PATCH /events/:id 
 // TODO: POST /events/:id/registrations ==> [DONE]

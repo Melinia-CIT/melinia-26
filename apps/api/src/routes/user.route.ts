@@ -13,7 +13,7 @@ import {
     checkPhoneNumberExists,
     getUserById,
     checkProfileExists,
-    getRegisteredEvents,
+    getUserRegisteredEvents,
 } from "../db/queries"
 import { getPendingInvitationsForUser } from "../db/queries/teams.queries"
 
@@ -150,10 +150,15 @@ user.get(
     "/me/events",
     authMiddleware,
     async (c) => {
-        const userId = c.get("user_id");
-        const registeredEvents = getRegisteredEvents(userId);
-        return c.json({
-            events: registeredEvents
-        }, 200);;
+        try {
+            const userId = c.get("user_id");
+            const registeredEvents = await getUserRegisteredEvents(userId);
+            return c.json({
+                events: registeredEvents
+            }, 200);;
+        } catch (err) {
+            console.error(err);
+            throw new HTTPException(500, { message: "Failed to fetch registered events" })
+        }
     }
 );

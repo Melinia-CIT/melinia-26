@@ -4,26 +4,23 @@ import { Calendar, MapPin, Trophy, ArrowRight, Star, User, Community } from "ico
 import { Spinner } from "../../ui/spinner"
 import api from "../../../services/api"
 import { useNavigate } from "react-router-dom"
+import { UserRegisteredEvents, userRegisteredEventsSchema } from "@melinia/shared"
 
-interface RegisteredEvent {
-    eventId: string
-    eventName: string
-    eventType: string
-    participationType: string
-    startTime: string
-    venue: string
-    teamName: string | null
-    registrationMode: "solo" | "team"
+type UserRegEvents = {
+    events: UserRegisteredEvents
 }
 
 const RegisteredEvents = () => {
     const navigate = useNavigate()
 
-    const { data: events, isLoading } = useQuery<RegisteredEvent[]>({
+    const {
+        data: events,
+        isLoading
+    } = useQuery<UserRegisteredEvents>({
         queryKey: ["user-registered-events"],
         queryFn: async () => {
-            const response = await api.get("/events/registered")
-            return response.data.data
+            const response = await api.get<UserRegEvents>("/users/me/events")
+            return userRegisteredEventsSchema.parse(response.data.events);
         },
     })
 
@@ -79,13 +76,13 @@ const RegisteredEvents = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {events.map((event, index) => (
                     <motion.div
-                        key={event.eventId}
+                        key={event.id}
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: index * 0.05 }}
                         whileHover={{ y: -4 }}
-                        onClick={() => navigate(`/app/events/${event.eventId}`)}
+                        onClick={() => navigate(`/app/events/${event.id}`)}
                         className="group bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-5 rounded-3xl hover:bg-zinc-900 hover:border-white/10 transition-all cursor-pointer relative overflow-hidden"
                     >
                         {/* Registration Mode Badge */}
@@ -94,34 +91,33 @@ const RegisteredEvents = () => {
                                 Confirmed
                             </div>
                             <div
-                                className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider ${
-                                    event.registrationMode === "team"
-                                        ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                                        : "bg-zinc-800 text-zinc-400 border border-zinc-700"
-                                }`}
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider ${event.mode === "team"
+                                    ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                    : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+                                    }`}
                             >
-                                {event.registrationMode === "team" ? (
+                                {event.mode === "team" ? (
                                     <Community width="10" height="10" />
                                 ) : (
                                     <User width="10" height="10" />
                                 )}
-                                {event.registrationMode}
+                                {event.mode}
                             </div>
                         </div>
 
                         <h3 className="text-lg font-bold text-white mb-1 transition-colors pr-20">
-                            {event.eventName}
+                            {event.name}
                         </h3>
 
                         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight mb-4 truncate pr-20">
-                            {event.teamName ? `Team: ${event.teamName}` : "Solo Entry"}
+                            {event.team_name ? `Team: ${event.team_name}` : "Solo Entry"}
                         </p>
 
                         <div className="space-y-2.5">
                             <div className="flex items-center gap-2 text-zinc-400">
                                 <Calendar width="14" height="14" className="text-zinc-500" />
                                 <span className="text-xs font-medium">
-                                    {new Date(event.startTime).toLocaleDateString("en-US", {
+                                    {new Date(event.start_time).toLocaleDateString("en-US", {
                                         weekday: "short",
                                         month: "short",
                                         day: "numeric",
@@ -138,7 +134,7 @@ const RegisteredEvents = () => {
                             <div className="flex items-center gap-1.5">
                                 <Trophy width="14" height="14" className="text-amber-500/80" />
                                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
-                                    {event.eventType}
+                                    {event.event_type}
                                 </span>
                             </div>
                             <div className="flex items-center gap-1 text-[10px] font-bold text-white/40 group-hover:text-white transition-colors">

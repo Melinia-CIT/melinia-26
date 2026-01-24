@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
@@ -21,47 +21,14 @@ import {
 import api from "../../../services/api"
 import EventRegister from "../../../components/userland/events/EventRegister"
 import EventUnRegister from "../../../components/userland/events/EventUnregister"
+import {
+    GetVerboseEvent,
+    getVerboseEventResponseSchema,
+    UserRegistrationStatus,
+} from "@melinia/shared"
 
-interface Round {
-    roundNo: number;
-    roundName?: string;
-    roundDescription: string;
-}
-interface Prize {
-    position: number
-    rewardValue: number
-}
-interface Organizer {
-    userId: string
-    assignedBy: string
-    firstName: string
-    lastName: string
-    phoneNo: string
-}
-interface Rule {
-    id: number
-    roundNo: number | null
-    ruleNumber: number
-    ruleDescription: string
-}
-interface Event {
-    id: string
-    name: string
-    description: string
-    participationType: string
-    eventType: string
-    maxAllowed: number
-    minTeamSize: number
-    maxTeamSize: number
-    venue: string
-    registrationStart: string
-    registrationEnd: string
-    rounds: Round[]
-    prizes: Prize[]
-    organizers: Organizer[]
-    rules: Rule[]
-    startTime?: string
-    endTime?: string
+type VerboseEvent = {
+    event: GetVerboseEvent
 }
 
 const EventDetail = () => {
@@ -77,51 +44,41 @@ const EventDetail = () => {
         data: event,
         isLoading,
         error,
-    } = useQuery<Event>({
+    } = useQuery<GetVerboseEvent>({
         queryKey: ["event", id],
         queryFn: async () => {
-            const response = await api.get(`/events/${id}`)
-            return response.data.data
+            const response = await api.get<VerboseEvent>(`/events/${id}`)
+            return getVerboseEventResponseSchema.parse(response.data.event)
         },
         enabled: !!id,
     })
 
-    // const event = useMemo(() => {
-    //     if (!eventData) return null
-    //     const sortedRounds = [...(eventData.rounds || [])].sort((a, b) => a.roundNo - b.roundNo)
-    //     return {
-    //         ...eventData,
-    //         startTime: sortedRounds[0]?.startTime || "",
-    //         endTime: sortedRounds[sortedRounds.length - 1]?.endTime || "",
-    //     }
-    // }, [eventData])
-
-    const { data: registrationStatus } = useQuery({
+    const { data: regStatus } = useQuery<UserRegistrationStatus>({
         queryKey: ["event-status", id],
         queryFn: async () => {
-            const response = await api.get(`/events/${id}/status`)
-            return response.data.data
+            const response = await api.get<UserRegistrationStatus>(`/events/${id}/status`)
+            return response.data
         },
         enabled: !!id,
     })
 
-    const isRegistered = registrationStatus?.registration_status === "registered"
+    const isRegistered = regStatus?.registered
 
     const formatDate = (dateString: string) =>
         dateString
             ? new Date(dateString).toLocaleDateString("en-US", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-              })
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+            })
             : "TBA"
 
     const formatTime = (dateString: string) =>
         dateString
             ? new Date(dateString).toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-              })
+                hour: "2-digit",
+                minute: "2-digit",
+            })
             : "TBA"
 
     const getThemeStyles = (type: string) => {
@@ -159,12 +116,12 @@ const EventDetail = () => {
         }
     }
 
-    const getStatusInfo = (evt: Event) => {
+    const getStatusInfo = (evt: GetVerboseEvent) => {
         const now = new Date()
-        const start = evt.startTime ? new Date(evt.startTime) : null
-        const end = evt.endTime ? new Date(evt.endTime) : null
-        const regStart = new Date(evt.registrationStart)
-        const regEnd = new Date(evt.registrationEnd)
+        const start = evt.start_time ? new Date(evt.start_time) : null
+        const end = evt.end_time ? new Date(evt.end_time) : null
+        const regStart = new Date(evt.registration_start)
+        const regEnd = new Date(evt.registration_end)
 
         if (end && now > end)
             return { text: "Completed", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" }
@@ -188,8 +145,11 @@ const EventDetail = () => {
         )
     if (error || !event)
         return (
-            <div className="flex-1 w-full p-4 flex flex-col items-center justify-center min-h-[50vh]">
+            <div className="w-full p-4 flex flex-col items-center justify-center h-full gap-4">
                 <AlertCircle className="w-12 h-12 text-red-400 mb-2" />
+                <p className="text-sm sm:text-md font-medium font-geist text-zinc-400">
+                    Something went wrong. Snap!
+                </p>
                 <button
                     type="button"
                     onClick={() => navigate("/app/events")}
@@ -201,9 +161,13 @@ const EventDetail = () => {
         )
 
     const status = getStatusInfo(event)
-    const theme = getThemeStyles(event.eventType)
-    const totalPrizePool = event.prizes?.reduce((sum, prize) => sum + prize.rewardValue, 0) || 0
-    const generalRules = event.rules?.filter(r => r.roundNo === null) || []
+    const theme = getThemeStyles(event.event_type)
+    const totalPrizePool = event.prizes?.reduce((sum, prize) => sum + prize.reward_value, 0) || 0
+    // // General rules are rules with round_no === null - collect from all rounds
+    // const generalRules =
+    //     event.rounds?.flatMap(
+    //         (round: any) => round.rules?.filter((r: any) => r.round_no === null) || []
+    //     ) || []
 
     return (
         <div className="flex flex-col w-full md:px-8 md:py-6 relative">
@@ -232,7 +196,7 @@ const EventDetail = () => {
                         <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${theme.badge}`}
                         >
-                            {event.eventType.toUpperCase()}
+                            {event.event_type.toUpperCase()}
                         </span>
                     </div>
                     <h1 className="text-2xl md:text-3xl font-bold mb-2 text-white">{event.name}</h1>
@@ -252,7 +216,7 @@ const EventDetail = () => {
                                     Date
                                 </p>
                                 <p className="text-xs text-white font-medium">
-                                    {formatDate(event.startTime)}
+                                    {formatDate(event.start_time.toString())}
                                 </p>
                             </div>
                         </div>
@@ -263,7 +227,7 @@ const EventDetail = () => {
                                     Time
                                 </p>
                                 <p className="text-xs text-white font-medium">
-                                    {formatTime(event.startTime)}
+                                    {formatTime(event.start_time.toString())}
                                 </p>
                             </div>
                         </div>
@@ -285,23 +249,23 @@ const EventDetail = () => {
                                     Size
                                 </p>
                                 <p className="text-xs text-white font-medium">
-                                    {event.participationType.toLowerCase() === "solo"
+                                    {event.participation_type.toLowerCase() === "solo"
                                         ? "Solo"
-                                        : event.minTeamSize === event.maxTeamSize
-                                          ? `${event.maxTeamSize} per team`
-                                          : `${event.minTeamSize} - ${event.maxTeamSize} per team`}
+                                        : event.min_team_size === event.max_team_size
+                                            ? `${event.max_team_size} per team`
+                                            : `${event.min_team_size} - ${event.max_team_size} per team`}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {generalRules.length > 0 && (
+                    {/* {generalRules.length > 0 && (
                         <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-xl p-5">
                             <h2 className="text-sm font-bold mb-4 flex items-center gap-2 uppercase tracking-tight text-zinc-200">
                                 <ShieldCheck className={`w-4 h-4 ${theme.icon}`} /> Guidelines
                             </h2>
                             <div className="space-y-2">
-                                {generalRules.map((rule: Rule) => (
+                                {generalRules.map((rule: any) => (
                                     <div
                                         key={rule.id}
                                         className="flex gap-2 text-zinc-300 bg-white/5 p-2 rounded-lg border border-white/10 text-xs leading-relaxed"
@@ -312,7 +276,7 @@ const EventDetail = () => {
                                 ))}
                             </div>
                         </div>
-                    )}
+                    )} */}
 
                     {event.rounds?.length > 0 && (
                         <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-xl p-5">
@@ -321,37 +285,35 @@ const EventDetail = () => {
                             </h2>
                             <div className="space-y-3">
                                 {event.rounds
-                                    .sort((a, b) => a.roundNo - b.roundNo)
+                                    .sort((a: any, b: any) => a.round_no - b.round_no)
                                     .map(round => {
-                                        const roundRules =
-                                            event.rules?.filter(r => r.roundNo === round.roundNo) ||
-                                            []
-                                        const isExpanded = expandedRound === round.roundNo
+                                        const roundRules = round.rules
+                                        const isExpanded = expandedRound === round.round_no
                                         return (
                                             <div
-                                                key={round.roundNo}
+                                                key={round.round_no}
                                                 className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
                                             >
                                                 <button
                                                     type="button"
                                                     onClick={() =>
                                                         setExpandedRound(
-                                                            isExpanded ? null : round.roundNo
+                                                            isExpanded ? null : round.round_no
                                                         )
                                                     }
                                                     className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div className="flex items-center justify-center w-8 h-8 rounded-lg font-bold text-xs border border-white/10 bg-white/5 text-white">
-                                                            {round.roundNo}
+                                                            {round.round_no}
                                                         </div>
                                                         <div>
                                                             <h3 className="text-xs font-bold text-white uppercase tracking-tight">
-                                                                {round.roundName ||
-                                                                    `Round ${round.roundNo}`}
+                                                                {round.round_name ||
+                                                                    `Round ${round.round_no}`}
                                                             </h3>
                                                             <p className="text-[10px] text-zinc-500 uppercase mt-0.5">
-                                                                {round.roundDescription}
+                                                                {round.round_description}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -381,11 +343,11 @@ const EventDetail = () => {
                                                                         </p>
                                                                         <p className="text-[11px] text-zinc-300">
                                                                             {formatDate(
-                                                                                round.startTime
+                                                                                round.start_time.toString()
                                                                             )}{" "}
                                                                             -{" "}
                                                                             {formatTime(
-                                                                                round.startTime
+                                                                                round.start_time.toString()
                                                                             )}
                                                                         </p>
                                                                     </div>
@@ -395,11 +357,11 @@ const EventDetail = () => {
                                                                         </p>
                                                                         <p className="text-[11px] text-zinc-300">
                                                                             {formatDate(
-                                                                                round.endTime
+                                                                                round.end_time.toString()
                                                                             )}{" "}
                                                                             -{" "}
                                                                             {formatTime(
-                                                                                round.endTime
+                                                                                round.end_time.toString()
                                                                             )}
                                                                         </p>
                                                                     </div>
@@ -413,9 +375,9 @@ const EventDetail = () => {
                                                                             <span
                                                                                 className={`${theme.accent} font-bold`}
                                                                             >
-                                                                                {rule.ruleNumber}.
+                                                                                {rule.rule_no}.
                                                                             </span>
-                                                                            {rule.ruleDescription}
+                                                                            {rule.rule_description}
                                                                         </div>
                                                                     ))
                                                                 ) : (
@@ -470,7 +432,7 @@ const EventDetail = () => {
                                                 </span>
                                             </div>
                                             <span className="text-xs font-bold text-yellow-500">
-                                                ₹{prize.rewardValue.toLocaleString()}
+                                                ₹{prize.reward_value.toLocaleString()}
                                             </span>
                                         </div>
                                     ))}
@@ -490,7 +452,7 @@ const EventDetail = () => {
                                     Opens
                                 </p>
                                 <p className="text-xs text-white font-medium">
-                                    {formatDate(event.registrationStart)}
+                                    {formatDate(event.registration_start.toString())}
                                 </p>
                             </div>
                             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
@@ -498,7 +460,7 @@ const EventDetail = () => {
                                     Closes
                                 </p>
                                 <p className="text-xs text-white font-medium">
-                                    {formatDate(event.registrationEnd)}
+                                    {formatDate(event.registration_end.toString())}
                                 </p>
                             </div>
                         </div>
@@ -528,11 +490,11 @@ const EventDetail = () => {
                         {isRegistered && (
                             <div className="mt-4 space-y-3">
                                 <p className="text-[12px] text-center text-zinc-500 uppercase font-semibold tracking-tighter">
-                                    {registrationStatus?.team_name ? (
+                                    {regStatus && "team" in regStatus && regStatus.team?.name ? (
                                         <>
                                             Registered via{" "}
                                             <span className="text-zinc-100 font-bold">
-                                                {registrationStatus.team_name}
+                                                {regStatus.team.name}
                                             </span>{" "}
                                             Team
                                         </>
@@ -554,27 +516,27 @@ const EventDetail = () => {
                         )}
                     </div>
 
-                    {event.organizers?.length > 0 && (
+                    {event.crew?.organizers?.length > 0 && (
                         <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
                             <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
                                 <User2 className="w-3.5 h-3.5" /> Help
                             </h3>
                             <div className="space-y-2">
-                                {event.organizers.map(org => (
+                                {event.crew?.organizers?.map((org: any) => (
                                     <div
                                         key={org.userId}
                                         className="bg-white/5 border border-white/10 rounded-xl p-3"
                                     >
                                         <p className="font-bold text-white text-[11px] uppercase tracking-tight">
-                                            {org.firstName} {org.lastName}
+                                            {org.first_name} {org.last_name}
                                         </p>
                                         <div className="flex items-center gap-2 mt-1.5 pt-1.5 border-t border-white/5">
                                             <Phone className="w-3 h-3 text-zinc-500" />
                                             <a
-                                                href={`tel:${org.phoneNo}`}
+                                                href={`tel:${org.ph_no}`}
                                                 className="text-[10px] text-zinc-400 font-medium hover:text-white transition-colors"
                                             >
-                                                {org.phoneNo}
+                                                +91 {org.ph_no}
                                             </a>
                                         </div>
                                     </div>
@@ -599,10 +561,10 @@ const EventDetail = () => {
                     <EventUnRegister
                         eventName={event.name}
                         eventId={event.id}
-                        registrationStatus={registrationStatus}
+                        registrationStatus={regStatus}
                         onClose={() => setIsUnregisterModalOpen(false)}
                         onSuccess={() => {
-                            queryClient.invalidateQueries({ queryKey: ["event-status", id] });
+                            queryClient.invalidateQueries({ queryKey: ["event-status", id] })
                         }}
                     />
                 )}

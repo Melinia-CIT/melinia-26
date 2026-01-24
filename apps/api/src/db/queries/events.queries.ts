@@ -24,6 +24,8 @@ import {
     type GetCrew,
     type UserRegisteredEvents,
     userRegisteredEventsSchema,
+    userRegistrationStatus,
+    type UserRegistrationStatus,
 } from "@melinia/shared";
 
 export async function insertEvent(created_by: string, data: CreateEvent, tx = sql): Promise<Event> {
@@ -405,47 +407,48 @@ export async function deleteEvent(eventId: string): Promise<Event> {
     return baseEventSchema.parse(deletedEvent);
 }
 
-export async function getRegisteredEvents(userId: string): Promise<UserRegisteredEvents> {
-    const registeredEvent = await sql`
-        SELECT event_id
-        FROM event_registrations
-        WHERE user_id = ${userId};
-    `
-
-    const registeredEventIds = registeredEvent.map(re => re.event_id);
-
-    const events = await sql`
+export async function getUserRegisteredEvents(userId: string): Promise<UserRegisteredEvents> {
+    const regEvents = await sql`
         SELECT
-            id,
-            name,
-            description,
-            participation_type,
-            event_type,
-            max_allowed,
-            min_team_size,
-            max_team_size,
-            venue,
-            registration_start,
-            registration_end,
-            start_time,
-            end_time,
-            created_by,
-            created_at,
-            updated_at
-        FROM events e
-        WHERE e.id = ANY(${registeredEventIds});
+            e.id,
+            e.name,
+            e.description,
+            e.participation_type,
+            e.event_type,
+            e.max_allowed,
+            e.min_team_size,
+            e.max_team_size,
+            e.venue,
+            e.registration_start,
+            e.registration_end,
+            e.start_time,
+            e.end_time,
+            e.created_by,
+            e.created_at,
+            e.updated_at,
+
+            er.team_id,
+            t.name AS team_name,
+            CASE
+            WHEN er.team_id IS NULL THEN 'solo'
+            ELSE 'team'
+            END AS mode
+        FROM event_registrations er
+        JOIN events e ON e.id = er.event_id
+        LEFT JOIN teams t ON t.id = er.team_id
+        WHERE er.user_id = ${userId};
     `
-    const rounds = await getRounds(registeredEventIds);
+    const rounds = await getRounds(regEvents.map(regEvent => regEvent.id));
 
     return userRegisteredEventsSchema
         .parse(
-            events
-            .map(event => {
-                return {
-                    ...event,
-                    rounds: rounds.filter(round => round.event_id == event.id)
-                }
-            })
+            regEvents
+                .map(event => {
+                    return {
+                        ...event,
+                        rounds: rounds.filter(round => round.event_id == event.id)
+                    }
+                })
         );
 }
 
@@ -567,6 +570,47 @@ export async function isTeamLeader(userId: string, teamId: string): Promise<bool
         SELECT 1 FROM teams WHERE id = ${teamId} AND leader_id = ${userId}
     `;
     return !!team;
+export async function getUserRegStatus(eventId: string, userId: string): Promise<UserRegistrationStatus> {
+    const [event] = await sql`
+        SELECT 1 FROM events WHERE id = ${eventId};
+    `
+    if (!event) {
+        throw new HTTPException(404, { message: "Event not found" });
+    }
+
+    const [eventReg] = await sql`
+        SELECT
+            er.team_id,
+            t.name,
+            er.registered_at
+        FROM event_registrations er
+        LEFT JOIN teams t ON t.id = er.team_id
+        WHERE er.user_id = ${userId} AND er.event_id = ${eventId};
+    `
+
+    if (!eventReg) {
+        return userRegistrationStatus.parse({
+            registered: false
+        });
+    }
+
+    if (eventReg.team_id) {
+        return userRegistrationStatus.parse({
+            registered: true,
+            mode: "team",
+            registered_at: eventReg.registered_at,
+            team: {
+                id: eventReg.team_id,
+                name: eventReg.name
+            }
+        });
+    } else {
+        return userRegistrationStatus.parse({
+            registered: true,
+            mode: "solo",
+            registered_at: eventReg.registered_at
+        });
+    }
 }
 
 // // Update Event
