@@ -11,7 +11,6 @@ import {
     Target,
     ArrowLeft,
     AlertCircle,
-    ShieldCheck,
     Phone,
     User2,
     ChevronDown,
@@ -163,11 +162,6 @@ const EventDetail = () => {
     const status = getStatusInfo(event)
     const theme = getThemeStyles(event.event_type)
     const totalPrizePool = event.prizes?.reduce((sum, prize) => sum + prize.reward_value, 0) || 0
-    // // General rules are rules with round_no === null - collect from all rounds
-    // const generalRules =
-    //     event.rounds?.flatMap(
-    //         (round: any) => round.rules?.filter((r: any) => r.round_no === null) || []
-    //     ) || []
 
     return (
         <div className="flex flex-col w-full md:px-8 md:py-6 relative">
@@ -258,25 +252,6 @@ const EventDetail = () => {
                             </div>
                         </div>
                     </div>
-
-                    {/* {generalRules.length > 0 && (
-                        <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-xl p-5">
-                            <h2 className="text-sm font-bold mb-4 flex items-center gap-2 uppercase tracking-tight text-zinc-200">
-                                <ShieldCheck className={`w-4 h-4 ${theme.icon}`} /> Guidelines
-                            </h2>
-                            <div className="space-y-2">
-                                {generalRules.map((rule: any) => (
-                                    <div
-                                        key={rule.id}
-                                        className="flex gap-2 text-zinc-300 bg-white/5 p-2 rounded-lg border border-white/10 text-xs leading-relaxed"
-                                    >
-                                        <span className={`${theme.accent} font-bold`}>/</span>
-                                        {rule.ruleDescription}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )} */}
 
                     {event.rounds?.length > 0 && (
                         <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-xl p-5">

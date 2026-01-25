@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Calendar, MapPin, Clock, Users, User } from "lucide-react"
+import { Calendar, MapPin, Clock } from "lucide-react"
+import { Community, User } from "iconoir-react";
 import { Event } from "@melinia/shared"
 
 type EventCardProps = {
@@ -53,29 +54,8 @@ const EventsCard = ({ event }: EventCardProps) => {
         }
     }
 
-    const getParticipationStyles = (type: string) => {
-        const normalizedType = type?.toLowerCase() || ""
-        switch (normalizedType) {
-            case "solo":
-                return {
-                    badge: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-                    icon: User,
-                }
-            case "team":
-                return {
-                    badge: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-                    icon: Users,
-                }
-            default:
-                return {
-                    badge: "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50",
-                    icon: User,
-                }
-        }
-    }
-
     const theme = getThemeStyles(event.event_type)
-    const participationStyles = getParticipationStyles(event.participation_type)
+    const Icon = event.participation_type === "solo" ? User : Community
 
     return (
         <Link to={`/app/events/${event.id}`} className="h-full block">
@@ -168,9 +148,9 @@ const EventsCard = ({ event }: EventCardProps) => {
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/40 to-transparent" />
                     <div className="absolute top-4 left-4">
                         <motion.span
-                            className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${participationStyles.badge}`}
+                            className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${theme.badge}`}
                         >
-                            <participationStyles.icon className="w-3 h-3" />
+                            <Icon className="w-3 h-3" />
                             {event.participation_type?.toUpperCase() || "SOLO"}
                         </motion.span>
                     </div>
