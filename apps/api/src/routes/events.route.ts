@@ -201,7 +201,7 @@ events.post(
                 });
             }
 
-            if(event.max_team_size!==1){
+            if(event.min_team_size > 1){
                 throw new HTTPException(400, {message:"Solo registration not applicable for this event"})
             }
 
