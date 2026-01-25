@@ -275,7 +275,7 @@ export const userRegisteredEventsSchema = z
     .array(
         baseEventSchema
             .extend({
-                team_name: z.string(),
+                team_name: z.string().nullable(),
                 mode: z.enum(["solo", "team"]),
                 rounds: z.array(
                     baseRoundSchema
