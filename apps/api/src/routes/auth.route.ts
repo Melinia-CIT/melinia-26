@@ -159,7 +159,7 @@ auth.post("/logout", async (c) => {
     const refreshToken = getCookie(c, "refresh_token");
 
     if (refreshToken) {
-        const { id } = await verify(refreshToken, getEnv("JWT_SECRET_KEY"), AlgorithmTypes.HS256);
+        const { id } = await verifyToken(refreshToken);
         await ioredis.del(`refresh:${id}`);
     }
 

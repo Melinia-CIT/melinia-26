@@ -26,8 +26,8 @@ export class TeamManagementService {
         return response
     }
 
-    public teamList = async () => {
-        const response = await api.get(`/teams?filter=all`)
+    public teamList = async (filter:string) => {
+        const response = await api.get(`/teams?filter=${filter}`)
         return response.data
     }
 

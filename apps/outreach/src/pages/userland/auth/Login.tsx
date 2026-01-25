@@ -95,7 +95,7 @@ const Login = () => {
                     </div>
 
                     <div className="self-end -mt-2">
-                        <Link to="/forgot-password" className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
+                        <Link to="/forgot-password" className="text-sm text-zinc-300 hover:text-zinc-200 hover:underline transition-colors">
                             Forgot Password?
                         </Link>
                     </div>
@@ -108,7 +108,7 @@ const Login = () => {
                     </button>
                 </form>
 
-                <p className="text-sm text-zinc-500 mt-4">
+                <p className="text-sm text-zinc-400 mt-4">
                     Don't have an account?{" "}
                     <Link to="/register" className="text-zinc-100 hover:text-white hover:underline transition-colors">
                         Register

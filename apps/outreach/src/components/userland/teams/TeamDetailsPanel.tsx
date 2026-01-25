@@ -185,7 +185,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
     if (!teamData) return null
 
     return (
-        <div className="flex flex-col h-full bg-zinc-950 text-white font-sans antialiased">
+        <div className="flex flex-col h-full text-white font-sans antialiased">
             <style>{`
                 .custom-scroll::-webkit-scrollbar { width: 6px; }
                 .custom-scroll::-webkit-scrollbar-track { background: #09090b; }
@@ -194,7 +194,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
             `}</style>
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-950 shrink-0 z-20 p-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 shrink-0 z-20 p-4">
                 <div className="flex-1 flex items-center justify-between">
                     <div>
                         <h2 className="text-xl font-semibold text-white tracking-tight">
@@ -226,18 +226,16 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         <span className="text-xs sm:text-sm">Add Member</span>
                     </Button>
 
-                    <Button
+                    <button
                         onClick={() =>
                             !hasRegisteredEvents && setDeleteConfirm({ type: "team", id: teamId })
                         }
                         disabled={hasRegisteredEvents || !isLeader}
-                        variant="danger"
-                        size="md"
-                        className="flex gap-2 bg-red-600 text-white hover:bg-red-700"
+                        className="flex gap-2 px-3.5 py-2 text-sm  text-red-400 border border-red-800 rounded-md disabled:cursor-not-allowed disabled:border-zinc-400 disabled:text-zinc-400"
                     >
                         <Trash strokeWidth={2} className="h-4 w-4" />
                         <span className="text-xs sm:text-sm">Delete Team</span>
-                    </Button>
+                    </button>
                 </div>
             </div>
 
@@ -424,18 +422,16 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         <span className="text-xs sm:text-sm">Add Member</span>
                     </Button>
 
-                    <Button
+                    <button
                         onClick={() =>
                             !hasRegisteredEvents && setDeleteConfirm({ type: "team", id: teamId })
                         }
                         disabled={hasRegisteredEvents || !isLeader}
-                        variant="danger"
-                        size="md"
-                        className="flex gap-2 bg-red-600 text-white hover:bg-red-700"
+                        className="flex gap-2 px-3.5 py-2 text-sm  text-red-400 border border-red-800 rounded-md disabled:cursor-not-allowed disabled:border-zinc-400 disabled:text-zinc-400"
                     >
                         <Trash strokeWidth={2} className="h-4 w-4" />
                         <span className="text-xs sm:text-sm">Delete Team</span>
-                    </Button>
+                    </button>
                 </div>
             </div>
 
@@ -514,7 +510,6 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                 variant="danger"
                                 size="md"
                                 fullWidth
-                                className="bg-red-600 text-white hover:bg-red-700 order-1 sm:order-2"
                                 loading={
                                     deleteTeamMutation.isPending ||
                                     deleteInvitationMutation.isPending
@@ -536,10 +531,10 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                         <div className="flex justify-between items-center mb-5 sm:mb-6">
                             <div>
                                 <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight">
-                                    Send Invitation
+                                    Invite Member
                                 </h2>
                                 <p className="text-xs text-zinc-500 mt-0.5">
-                                    Invite team member via email
+                                    
                                 </p>
                             </div>
                             <button
@@ -562,7 +557,7 @@ export const TeamDetailsPanel: React.FC<TeamDetailsPanelProps> = ({
                                 <div className="relative w-full">
                                     <input
                                         type="email"
-                                        placeholder="username@domain.tld"
+                                        placeholder="peterparker@tuta.com"
                                         {...registerMember("email")}
                                         className={`w-full bg-zinc-950/50 border rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all duration-200
                                             ${
