@@ -536,7 +536,6 @@ const EventDetail = () => {
                     <EventUnRegister
                         eventName={event.name}
                         eventId={event.id}
-                        registrationStatus={regStatus}
                         onClose={() => setIsUnregisterModalOpen(!isUnregisterModalOpen)}
                         onSuccess={() => {
                             queryClient.invalidateQueries({ queryKey: ["event-status", id] })

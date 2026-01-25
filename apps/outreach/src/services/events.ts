@@ -1,4 +1,3 @@
-import { EventRegistrationInput, UnregisterEventInput } from '@melinia/shared';
 import api from './api';
 
 export class EventManagementService{
@@ -20,14 +19,6 @@ export class EventManagementService{
     }
     public getRegisteredEvents = async ()=>{
         const response = api.get(`/events/registered`);
-        return response;
-    }
-    public registerEvent = async (input: EventRegistrationInput, event_id:string)=>{
-        const response = api.post(`/events/:${event_id}/register`, input);
-        return response;
-    }
-    public deregisterEvent = async (input: UnregisterEventInput, event_id:string)=>{
-        const response = api.post(`/events/:${event_id}/unregister`, input)
         return response;
     }
      public isRegistered = async(event_id:string, team_id:string)=>{

@@ -12,7 +12,7 @@ import { Plus, Minus, MapPin, Clock, Trophy, User, Box, Award } from "lucide-rea
 import { HudButton } from "../ui/hud-button"
 import { HudCard, HudCardHeader, HudTag } from "../ui/hud-card"
 import api from "../../services/api"
-import { GetVerboseEvent, Event, getVerboseEventResponseSchema } from "@melinia/shared"
+import { GetVerboseEvent, getVerboseEventResponseSchema } from "@melinia/shared"
 
 type EventFilter = "flagship" | "technical" | "non-technical"
 
@@ -201,9 +201,9 @@ const Events = () => {
 
     const groupedEvents = useMemo(() => {
         const groups = {
-            flagship: [] as Event[],
-            technical: [] as Event[],
-            "non-technical": [] as Event[],
+            flagship: [] as GetVerboseEvent[],
+            technical: [] as GetVerboseEvent[],
+            "non-technical": [] as GetVerboseEvent[],
         }
         sortedEvents?.forEach(event => {
             const type = event.event_type?.toLowerCase()

@@ -6,7 +6,7 @@ import api from "../../../services/api";
 interface EventUnRegisterProps {
     eventName: string;
     eventId: string;
-    registrationStatus: any;
+    //registrationStatus: any;
     onClose: () => void;
     onSuccess: () => void;
 }
@@ -14,7 +14,6 @@ interface EventUnRegisterProps {
 const EventUnRegister = ({
     eventName,
     eventId,
-    registrationStatus,
     onClose,
     onSuccess,
 }: EventUnRegisterProps) => {
