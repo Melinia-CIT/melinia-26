@@ -317,7 +317,7 @@ export const userRegistrationStatus = z.union([
 
 export const eventRegistrationSchema = z.object({
     registration_type: z.enum(['solo', 'team']),
-    team_id: z.string().optional()
+    team_id: z.string().optional().nullable()
 });
 
 export type CreateEvent = z.infer<typeof createEventSchema>;
