@@ -445,7 +445,7 @@ const EventDetail = () => {
                             onClick={() =>
                                 !isRegistered &&
                                 status.text === "Open" &&
-                                setIsRegisterModalOpen(true)
+                                setIsRegisterModalOpen(!isRegisterModalOpen)
                             }
                             disabled={isRegistered || status.text !== "Open"}
                             className={`w-full py-2.5 rounded-lg font-bold border text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 
@@ -482,7 +482,7 @@ const EventDetail = () => {
                                 </p>
                                 <motion.button
                                     whileTap={{ scale: 0.98 }}
-                                    onClick={() => setIsUnregisterModalOpen(true)}
+                                    onClick={() => setIsUnregisterModalOpen(!isUnregisterModalOpen)}
                                     className="w-full py-2 rounded-lg font-bold border border-rose-500/20 bg-rose-500/5 text-rose-500 text-[9px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center gap-2"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" /> Unregister from Event
@@ -526,7 +526,7 @@ const EventDetail = () => {
                 {isRegisterModalOpen && (
                     <EventRegister
                         event={event}
-                        onClose={() => setIsRegisterModalOpen(false)}
+                        onClose={() => setIsRegisterModalOpen(!isRegisterModalOpen)}
                         onSuccess={() =>
                             queryClient.invalidateQueries({ queryKey: ["event-status", id] })
                         }
@@ -537,7 +537,7 @@ const EventDetail = () => {
                         eventName={event.name}
                         eventId={event.id}
                         registrationStatus={regStatus}
-                        onClose={() => setIsUnregisterModalOpen(false)}
+                        onClose={() => setIsUnregisterModalOpen(!isUnregisterModalOpen)}
                         onSuccess={() => {
                             queryClient.invalidateQueries({ queryKey: ["event-status", id] })
                         }}

@@ -588,6 +588,8 @@ export async function isTeamLeader(userId: string, teamId: string): Promise<bool
         SELECT 1 FROM teams WHERE id = ${teamId} AND leader_id = ${userId}
     `;
     return !!team;
+}
+
 export async function getUserRegStatus(eventId: string, userId: string): Promise<UserRegistrationStatus> {
     const [event] = await sql`
         SELECT 1 FROM events WHERE id = ${eventId};
