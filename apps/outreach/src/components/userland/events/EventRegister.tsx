@@ -13,6 +13,7 @@ import {
 import api from "../../../services/api";
 import { useNavigate } from "react-router-dom";
 import PaymentModal from "../../payment/PaymentModal";
+import { Event } from "@melinia/shared";
 import { team_management } from "../../../services/teams";
 
 interface Team {
@@ -23,7 +24,7 @@ interface Team {
 }
 
 interface EventRegisterProps {
-    event: any;
+    event: Event;
     onClose: () => void;
     onSuccess: () => void;
 }
@@ -63,7 +64,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                     return;
                 }
 
-                if (event.participationType.toLowerCase() === "solo") {
+                if (event.participation_type.toLowerCase() === "solo") {
                     registrationInitiated.current = true;
                     handleFinalRegister(null, "solo");
                 } else {
@@ -73,7 +74,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                     const userTeams = teamRes.data.data || [];
                     setTeams(userTeams);
 
-                    if (userTeams.length === 0 && event.minTeamSize > 1) {
+                    if (userTeams.length === 0 && event.min_team_size > 1) {
                         setStep("no_teams");
                     } else {
                         setStep("team_selection");
@@ -103,20 +104,15 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
         if (loading) return;
         setLoading(true);
         try {
-            const response = await api.post(`/events/${event.id}/register`, {
-                teamId,
-                participationType:
-                    typeOverride || (isSoloChoice ? "solo" : event.participationType),
-                minTeamSize: event.minTeamSize,
-                maxTeamSize: event.maxTeamSize,
-                registrationStart: event.registrationStart,
-                registrationEnd: event.registrationEnd,
+            const response = await api.post(`/events/${event.id}/registrations`, {
+                registration_type: typeOverride || (isSoloChoice ? "solo" : event.participation_type),
+                team_id: teamId
             });
 
-            if (response.data.status) {
+            if (response.status === 201) {
                 setStep("success");
                 onSuccess();
-                setTimeout(() => onClose(), 2500);
+                setTimeout(() => onClose(), 2000);
             }
         } catch (err: any) {
             // FIX: Also check for 402 here in case status changed mid-session
@@ -269,7 +265,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                 Select Participation
                             </h2>
                             <div className="space-y-3 max-h-60 overflow-y-auto pr-2 mb-6 custom-scrollbar">
-                                {event.minTeamSize === 1 && (
+                                {event.min_team_size === 1 && (
                                     <label
                                         className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${isSoloChoice ? "border-zinc-500 bg-zinc-500/5" : "bg-white/5 border-white/10 hover:border-white/20"}`}
                                     >
@@ -296,8 +292,8 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
 
                                 {teams.map(t => {
                                     const isValidSize =
-                                        Number(t.member_count) >= event.minTeamSize &&
-                                        Number(t.member_count) <= event.maxTeamSize;
+                                        Number(t.member_count) >= event.min_team_size &&
+                                        Number(t.member_count) <= event.max_team_size;
                                     const isSelected = selectedTeamId === t.id;
                                     return (
                                         <label
@@ -357,10 +353,10 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                             </h2>
                             <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
                                 {
-                                    isSoloChoice ? 
-                                    "Once registered, your participation details cannot be modified. Do you wish to proceed?" 
-                                    : "Team registrations will lock the team and expire pending invites. Do you wish to proceed?"
-                                     
+                                    isSoloChoice ?
+                                        "Once registered, your participation details cannot be modified. Do you wish to proceed?"
+                                        : "Team registrations will lock the team and expire pending invites. Do you wish to proceed?"
+
                                 }
                             </p>
                             <div className="flex gap-2 sm:gap-3">

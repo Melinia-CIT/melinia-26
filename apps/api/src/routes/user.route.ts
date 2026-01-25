@@ -13,6 +13,7 @@ import {
     checkPhoneNumberExists,
     getUserById,
     checkProfileExists,
+    getUserRegisteredEvents,
 } from "../db/queries"
 import { getPendingInvitationsForUser } from "../db/queries/teams.queries"
 
@@ -143,3 +144,21 @@ user.get("/me/invites", authMiddleware, zValidator("query", invitationStatusSche
 
     return c.json({ invitations: "" }, 200)
 })
+
+
+user.get(
+    "/me/events",
+    authMiddleware,
+    async (c) => {
+        try {
+            const userId = c.get("user_id");
+            const registeredEvents = await getUserRegisteredEvents(userId);
+            return c.json({
+                events: registeredEvents
+            }, 200);;
+        } catch (err) {
+            console.error(err);
+            throw new HTTPException(500, { message: "Failed to fetch registered events" })
+        }
+    }
+);

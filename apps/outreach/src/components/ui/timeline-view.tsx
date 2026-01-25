@@ -6,19 +6,13 @@ import api from "../../services/api"
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { useNavigate } from "react-router-dom"
+import { UserRegisteredEvents, userRegisteredEventsSchema } from "@melinia/shared"
+
+type UserRegEvents = {
+    events: UserRegisteredEvents
+}
 
 export type { TimelineEvent }
-
-interface RegisteredEvent {
-    eventId: string
-    eventName: string
-    eventType: string
-    participationType: string
-    startTime: string
-    venue: string
-    teamName: string | null
-    registrationMode: "solo" | "team"
-}
 
 const EVENT_DURATIONS: Record<string, number> = {
     technical: 2,
@@ -26,10 +20,9 @@ const EVENT_DURATIONS: Record<string, number> = {
     flagship: 4,
 }
 
-function estimateEventEndTime(startTime: string, eventType: string): Date {
-    const start = new Date(startTime)
+function estimateEventEndTime(startTime: Date, eventType: string): Date {
     const duration = EVENT_DURATIONS[eventType.toLowerCase()] || 2
-    return new Date(start.getTime() + duration * 60 * 60 * 1000)
+    return new Date(startTime.getTime() + duration * 60 * 60 * 1000)
 }
 
 function mapEventType(type: string): TimelineEventType {
@@ -78,11 +71,11 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
         return date
     })
 
-    const { data: registeredEvents, isLoading } = useQuery<RegisteredEvent[]>({
+    const { data: registeredEvents, isLoading } = useQuery<UserRegisteredEvents>({
         queryKey: ["user-registered-events"],
         queryFn: async () => {
-            const response = await api.get("/events/registered")
-            return response.data.data
+            const response = await api.get<UserRegEvents>("/events/registered")
+            return userRegisteredEventsSchema.parse(response.data.events);
         },
         staleTime: 5 * 60 * 1000,
     })
@@ -90,11 +83,11 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
     const allTimelineEvents: TimelineEvent[] = useMemo(() => {
         if (!registeredEvents) return []
         return registeredEvents.map(event => ({
-            id: event.eventId,
-            name: event.eventName,
-            startTime: new Date(event.startTime),
-            endTime: estimateEventEndTime(event.startTime, event.eventType),
-            eventType: mapEventType(event.eventType),
+            id: event.id,
+            name: event.name,
+            startTime: new Date(event.start_time),
+            endTime: estimateEventEndTime(event.start_time, event.event_type),
+            eventType: mapEventType(event.event_type),
             venue: event.venue,
         }))
     }, [registeredEvents])

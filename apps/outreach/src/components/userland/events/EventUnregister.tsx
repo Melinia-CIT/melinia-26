@@ -25,12 +25,9 @@ const EventUnRegister = ({
     const handleUnregisterExecute = async () => {
         setLoading(true);
         try {
-            const response = await api.post(`/events/${eventId}/unregister`, {
-                participationType: registrationStatus?.mode || "solo",
-                teamId: registrationStatus?.team_id || null,
-            });
+            const response = await api.delete(`/events/${eventId}/registrations`);
 
-            if (response.data.status) {
+            if (response.status) {
                 setStep("success");
                 onSuccess();
                 setTimeout(() => onClose(), 2000);

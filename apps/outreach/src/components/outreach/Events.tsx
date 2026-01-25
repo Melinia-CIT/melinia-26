@@ -12,42 +12,13 @@ import { Plus, Minus, MapPin, Clock, Trophy, User, Box, Award } from "lucide-rea
 import { HudButton } from "../ui/hud-button"
 import { HudCard, HudCardHeader, HudTag } from "../ui/hud-card"
 import api from "../../services/api"
-
-// --- Types ---
-interface Round {
-    roundNo: number
-    roundName: string
-    roundDescription: string
-}
-interface Prize {
-    position: number
-    rewardValue: number
-}
-interface Organizer {
-    userId: string
-    assignedBy: string
-    phoneNo: number
-    firstName?: string | null
-    lastName?: string | null
-}
-interface Event {
-    id: string
-    name: string
-    description: string
-    participationType: string
-    eventType: string
-    venue: string
-    startTime: string
-    endTime: string
-    minTeamSize: number
-    maxTeamSize: number
-    maxAllowed: number
-    rounds: Round[]
-    prizes: Prize[]
-    organizers: Organizer[]
-}
+import { GetVerboseEvent, Event, getVerboseEventResponseSchema } from "@melinia/shared"
 
 type EventFilter = "flagship" | "technical" | "non-technical"
+
+type GetEvents = {
+    events: GetVerboseEvent[]
+}
 
 const Events = () => {
     const navigate = useNavigate()
@@ -80,11 +51,14 @@ const Events = () => {
 
     const maskImage = useMotionTemplate`radial-gradient(350px circle at ${mouseX}px ${mouseY}px, white 0%, transparent 80%)`
 
-    const { data: allEvents, isLoading } = useQuery<Event[]>({
+    const { data: allEvents, isLoading } = useQuery<GetVerboseEvent[]>({
         queryKey: ["events"],
         queryFn: async () => {
-            const response = await api.get("/events")
-            return response.data.data
+            const response = await api.get<GetEvents>("/events", { expand: "all" })
+            return response
+                .data
+                .events
+                .map(event => getVerboseEventResponseSchema.parse(event));
         },
         staleTime: 5 * 60 * 1000,
     })
@@ -99,15 +73,15 @@ const Events = () => {
     const sortedEvents = useMemo(() => {
         if (!allEvents) return []
         return [...allEvents].sort((a, b) => {
-            const priorityA = categoryPriority[a.eventType?.toLowerCase() || ""] ?? 99
-            const priorityB = categoryPriority[b.eventType?.toLowerCase() || ""] ?? 99
+            const priorityA = categoryPriority[a.event_type?.toLowerCase() || ""] ?? 99
+            const priorityB = categoryPriority[b.event_type?.toLowerCase() || ""] ?? 99
             return priorityA - priorityB
         })
     }, [allEvents])
 
     useEffect(() => {
         if (sortedEvents && sortedEvents[currentEventIndex]) {
-            const type = sortedEvents[currentEventIndex].eventType?.toLowerCase()
+            const type = sortedEvents[currentEventIndex].event_type?.toLowerCase()
             if (type === "flagship" || type === "technical" || type === "non-technical") {
                 setActiveFilter(type as EventFilter)
             }
@@ -115,7 +89,7 @@ const Events = () => {
     }, [currentEventIndex, sortedEvents])
 
     useEffect(() => {
-        const currentType = sortedEvents?.[currentEventIndex]?.eventType?.toLowerCase() as
+        const currentType = sortedEvents?.[currentEventIndex]?.event_type?.toLowerCase() as
             | EventFilter
             | undefined
         if (currentType && currentType !== activeFilter) {
@@ -171,16 +145,16 @@ const Events = () => {
         navigate(`/app/events/${currentEvent?.id}`)
     }
 
-    const getEventTypeColor = (eventType: string) => {
-        const t = eventType?.toLowerCase()
+    const getEventTypeColor = (event_type: string) => {
+        const t = event_type?.toLowerCase()
         if (t === "flagship") return "#FF0066" // Red
         if (t === "technical") return "#9D00FF" // Purple
         if (t === "non-technical") return "#FF69B4" // Pink
         return "#FFFFFF"
     }
 
-    const getContrastingVariant = (eventType: string): "purple" | "pink" | "red" | undefined => {
-        const t = eventType?.toLowerCase()
+    const getContrastingVariant = (event_type: string): "purple" | "pink" | "red" | undefined => {
+        const t = event_type?.toLowerCase()
         if (t === "flagship") {
             return "red"
         } else if (t === "technical") {
@@ -191,16 +165,16 @@ const Events = () => {
         return undefined
     }
 
-    const getContrastingColor = (eventType: string) => {
-        const t = eventType?.toLowerCase()
+    const getContrastingColor = (event_type: string) => {
+        const t = event_type?.toLowerCase()
         if (t === "flagship") return "#FF0066"
         if (t === "technical") return "#9D00FF"
         if (t === "non-technical") return "#FF69B4"
         return "#FFFFFF"
     }
 
-    const getEventVariant = (eventType: string) => {
-        const t = eventType?.toLowerCase()
+    const getEventVariant = (event_type: string) => {
+        const t = event_type?.toLowerCase()
         if (t === "flagship") return "red"
         if (t === "technical") return "purple"
         if (t === "non-technical") return "pink"
@@ -214,8 +188,8 @@ const Events = () => {
         return "#FF0066"
     }
 
-    const formatDateTime = (dateString: string) => {
-        return new Date(dateString)
+    const formatDateTime = (date: Date) => {
+        return date
             .toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
@@ -232,7 +206,7 @@ const Events = () => {
             "non-technical": [] as Event[],
         }
         sortedEvents?.forEach(event => {
-            const type = event.eventType?.toLowerCase()
+            const type = event.event_type?.toLowerCase()
             if (type === "flagship") groups.flagship.push(event)
             else if (type === "technical") groups.technical.push(event)
             else if (type === "non-technical") groups["non-technical"].push(event)
@@ -255,7 +229,7 @@ const Events = () => {
         <section
             ref={containerRef}
             onMouseMove={handleMouseMove}
-            className="relative min-h-screen w-full overflow-hidden bg-zinc-950 text-white font-body selection:bg-[#FF0066] selection:text-white"
+            className="relative w-full overflow-hidden bg-zinc-950 text-white font-body selection:bg-[#FF0066] selection:text-white"
         >
             {/* Animated Grid Background */}
             <div className="absolute inset-0 z-0 opacity-[0.15] pointer-events-none">
@@ -285,11 +259,11 @@ const Events = () => {
                 {/* Filter Tabs */}
                 <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 md:mb-16">
                     {(["flagship", "technical", "non-technical"] as EventFilter[]).map(filter => (
-                        <motion.button
+                        <motion.div
                             key={filter}
                             onClick={() => {
                                 const firstIndex = sortedEvents?.findIndex(
-                                    event => event.eventType?.toLowerCase() === filter
+                                    event => event.event_type?.toLowerCase() === filter
                                 )
                                 if (firstIndex !== undefined && firstIndex !== -1) {
                                     setCurrentEventIndex(firstIndex)
@@ -310,7 +284,7 @@ const Events = () => {
                             >
                                 {filter}
                             </HudButton>
-                        </motion.button>
+                        </motion.div>
                     ))}
                 </div>
 
@@ -321,11 +295,11 @@ const Events = () => {
                         <div className="w-auto mb-3 md:mb-4">
                             <HudCardHeader
                                 title="Rounds"
-                                variant={getContrastingVariant(currentEvent?.eventType || "")}
+                                variant={getContrastingVariant(currentEvent?.event_type || "")}
                                 icon={
                                     <Box
                                         size={18}
-                                        className={`text-[${getContrastingColor(currentEvent?.eventType || "")}]`}
+                                        className={`text-[${getContrastingColor(currentEvent?.event_type || "")}]`}
                                     />
                                 }
                             />
@@ -333,17 +307,17 @@ const Events = () => {
 
                         <div className="flex flex-col gap-3 md:gap-4 w-full">
                             {[...(currentEvent?.rounds || [])]
-                                .sort((a, b) => a.roundNo - b.roundNo)
+                                .sort((a, b) => a.round_no - b.round_no)
                                 .map(round => (
                                     <motion.div
-                                        key={round.roundNo}
+                                        key={round.round_no}
                                         initial={{ x: -20, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
                                         className="relative group flex-1"
                                     >
                                         <HudCard
                                             variant={getContrastingVariant(
-                                                currentEvent?.eventType || ""
+                                                currentEvent?.event_type || ""
                                             )}
                                             widthClass="w-full"
                                             hoverEffect="glow"
@@ -353,42 +327,42 @@ const Events = () => {
                                             <div className="relative w-full bg-transparent overflow-hidden">
                                                 <button
                                                     onClick={() =>
-                                                        toggleRoundExpansion(round.roundNo)
+                                                        toggleRoundExpansion(round.round_no)
                                                     }
                                                     className="w-full flex items-center justify-between p-3 md:p-4 text-left hover:bg-white/5 transition-colors"
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div
-                                                            className={`w-8 h-8 md:w-10 md:h-10 rounded bg-[${getContrastingColor(currentEvent?.eventType || "")}]/20 flex items-center justify-center flex-shrink-0`}
+                                                            className={`w-8 h-8 md:w-10 md:h-10 rounded bg-[${getContrastingColor(currentEvent?.event_type || "")}]/20 flex items-center justify-center flex-shrink-0`}
                                                         >
                                                             <span
-                                                                className={`font-heading text-lg md:text-xl font-bold text-[${getContrastingColor(currentEvent?.eventType || "")}]`}
+                                                                className={`font-heading text-lg md:text-xl font-bold text-[${getContrastingColor(currentEvent?.event_type || "")}]`}
                                                             >
-                                                                0{round.roundNo}
+                                                                0{round.round_no}
                                                             </span>
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="font-heading text-sm md:text-base font-bold text-white">
-                                                                {round.roundName}
+                                                                {round.round_name}
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div className="p-1 rounded bg-white/10">
-                                                        {expandedRounds.has(round.roundNo) ? (
+                                                        {expandedRounds.has(round.round_no) ? (
                                                             <Minus
                                                                 size={14}
-                                                                className={`text-[${getContrastingColor(currentEvent?.eventType || "")}]`}
+                                                                className={`text-[${getContrastingColor(currentEvent?.event_type || "")}]`}
                                                             />
                                                         ) : (
                                                             <Plus
                                                                 size={14}
-                                                                className={`text-[${getContrastingColor(currentEvent?.eventType || "")}]`}
+                                                                className={`text-[${getContrastingColor(currentEvent?.event_type || "")}]`}
                                                             />
                                                         )}
                                                     </div>
                                                 </button>
                                                 <AnimatePresence>
-                                                    {expandedRounds.has(round.roundNo) && (
+                                                    {expandedRounds.has(round.round_no) && (
                                                         <motion.div
                                                             initial={{ height: 0 }}
                                                             animate={{ height: "auto" }}
@@ -396,7 +370,7 @@ const Events = () => {
                                                             className="overflow-hidden bg-white/5 border-t border-white/10"
                                                         >
                                                             <p className="p-3 md:p-4 text-xs md:text-sm text-gray-300 font-mono leading-relaxed">
-                                                                {round.roundDescription}
+                                                                {round.round_description}
                                                             </p>
                                                         </motion.div>
                                                     )}
@@ -423,7 +397,7 @@ const Events = () => {
                                     onTouchMove={handleTouchMove}
                                 >
                                     <HudCard
-                                        variant={getEventVariant(currentEvent.eventType)}
+                                        variant={getEventVariant(currentEvent.event_type)}
                                         widthClass="w-full max-w-xl"
                                         hoverEffect="glitch"
                                         glitchOnHover
@@ -437,11 +411,11 @@ const Events = () => {
                                                 className="absolute top-2 md:top-4 left-2 md:left-4 z-20 px-2 py-1 md:px-3 md:py-1 rounded text-white font-heading font-bold text-[10px] md:text-xs uppercase tracking-wider skew-x-[-10deg]"
                                                 style={{
                                                     backgroundColor: getEventTypeColor(
-                                                        currentEvent?.eventType || ""
+                                                        currentEvent?.event_type || ""
                                                     ),
                                                 }}
                                             >
-                                                {currentEvent?.eventType}
+                                                {currentEvent?.event_type}
                                             </div>
 
                                             <div className="absolute inset-0 flex items-center justify-center z-0">
@@ -463,7 +437,7 @@ const Events = () => {
                                                 className="text-gray-400 font-body leading-relaxed mb-3 md:mb-4 border-l-4 pl-3 md:pl-4 text-sm md:text-base flex-shrink-0 h-24 overflow-y-auto custom-scrollbar"
                                                 style={{
                                                     borderColor: getEventTypeColor(
-                                                        currentEvent?.eventType || ""
+                                                        currentEvent?.event_type || ""
                                                     ),
                                                 }}
                                             >
@@ -498,43 +472,43 @@ const Events = () => {
                                                             Start
                                                         </span>
                                                         <span className="text-xs md:text-sm font-medium">
-                                                            {formatDateTime(currentEvent.startTime)}
+                                                            {formatDateTime(currentEvent.start_time)}
                                                         </span>
                                                     </div>
                                                 </div>
                                                 {/* Team Size */}
                                                 {!(
-                                                    currentEvent.minTeamSize === 1 &&
-                                                    currentEvent.maxTeamSize === 1
+                                                    currentEvent.min_team_size === 1 &&
+                                                    currentEvent.max_team_size === 1
                                                 ) && (
-                                                    <div className="flex items-center gap-2 md:gap-3 text-white">
-                                                        <div
-                                                            className={`p-1.5 md:p-2 rounded-full ${currentEvent.minTeamSize === currentEvent.maxTeamSize ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`}
-                                                        >
-                                                            <User size={16} />
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
-                                                                Team Size
-                                                            </span>
-                                                            <span
-                                                                className={`text-xs md:text-sm font-medium ${currentEvent.minTeamSize === currentEvent.maxTeamSize ? "text-red-400" : ""}`}
+                                                        <div className="flex items-center gap-2 md:gap-3 text-white">
+                                                            <div
+                                                                className={`p-1.5 md:p-2 rounded-full ${currentEvent.min_team_size === currentEvent.max_team_size ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`}
                                                             >
-                                                                {currentEvent.minTeamSize ===
-                                                                currentEvent.maxTeamSize ? (
-                                                                    <>
-                                                                        {currentEvent.minTeamSize}
-                                                                        <sup className="text-[0.5em] ml-0.5 align-super">
-                                                                            *
-                                                                        </sup>
-                                                                    </>
-                                                                ) : (
-                                                                    `${currentEvent.minTeamSize} - ${currentEvent.maxTeamSize}`
-                                                                )}
-                                                            </span>
+                                                                <User size={16} />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                                                                    Team Size
+                                                                </span>
+                                                                <span
+                                                                    className={`text-xs md:text-sm font-medium ${currentEvent.min_team_size === currentEvent.max_team_size ? "text-red-400" : ""}`}
+                                                                >
+                                                                    {currentEvent.min_team_size ===
+                                                                        currentEvent.max_team_size ? (
+                                                                        <>
+                                                                            {currentEvent.min_team_size}
+                                                                            <sup className="text-[0.5em] ml-0.5 align-super">
+                                                                                *
+                                                                            </sup>
+                                                                        </>
+                                                                    ) : (
+                                                                        `${currentEvent.min_team_size} - ${currentEvent.max_team_size}`
+                                                                    )}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
                                                 {/* Type */}
                                                 <div className="flex items-center gap-2 md:gap-3 text-white">
                                                     <div className="p-1.5 md:p-2 rounded-full bg-red-500/20 text-red-400">
@@ -545,23 +519,23 @@ const Events = () => {
                                                             Type
                                                         </span>
                                                         <span className="text-xs md:text-sm font-medium capitalize">
-                                                            {currentEvent.participationType}
+                                                            {currentEvent.participation_type}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Register Button */}
+                                            {/* Know More Button */}
                                             <div className="w-full flex-shrink-0">
                                                 <HudButton
                                                     variant={getEventVariant(
-                                                        currentEvent?.eventType || ""
+                                                        currentEvent?.event_type || ""
                                                     )}
                                                     style="style1"
                                                     size="default"
                                                     onClick={handleRegister}
                                                 >
-                                                    Register Now ▸
+                                                    Know More ▸
                                                 </HudButton>
                                             </div>
                                         </div>
@@ -572,7 +546,7 @@ const Events = () => {
                         {/* Navigation Controls */}
                         <div className="w-full max-w-xl flex items-center justify-center gap-2 sm:gap-3 md:gap-8 mt-3 sm:mt-4 md:mt-8 px-2 sm:px-4">
                             <HudButton
-                                variant={getEventVariant(currentEvent?.eventType || "")}
+                                variant={getEventVariant(currentEvent?.event_type || "")}
                                 style="style2"
                                 size="small"
                                 onClick={handlePrevEvent}
@@ -587,7 +561,7 @@ const Events = () => {
                             </div>
 
                             <HudButton
-                                variant={getEventVariant(currentEvent?.eventType || "")}
+                                variant={getEventVariant(currentEvent?.event_type || "")}
                                 style="style2"
                                 size="small"
                                 onClick={handleNextEvent}
@@ -605,7 +579,7 @@ const Events = () => {
                             <div className="w-auto">
                                 <HudCardHeader
                                     title="Prize Pool"
-                                    variant={getContrastingVariant(currentEvent?.eventType || "")}
+                                    variant={getContrastingVariant(currentEvent?.event_type || "")}
                                     icon={<Trophy size={18} className="text-yellow-400" />}
                                 />
                             </div>
@@ -618,7 +592,7 @@ const Events = () => {
                                     >
                                         <HudCard
                                             variant={getContrastingVariant(
-                                                currentEvent?.eventType || ""
+                                                currentEvent?.event_type || ""
                                             )}
                                             widthClass="w-full"
                                             hoverEffect="glow"
@@ -637,10 +611,10 @@ const Events = () => {
                                                             {prize.position === 1
                                                                 ? "1st"
                                                                 : prize.position === 2
-                                                                  ? "2nd"
-                                                                  : prize.position === 3
-                                                                    ? "3rd"
-                                                                    : `${prize.position}th`}
+                                                                    ? "2nd"
+                                                                    : prize.position === 3
+                                                                        ? "3rd"
+                                                                        : `${prize.position}th`}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -648,7 +622,7 @@ const Events = () => {
                                                     className="font-mono text-lg md:text-xl font-bold drop-shadow-[0_0_8px_rgba(255,0,102,0.5)]"
                                                     style={{ color: getPrizeColor(prize.position) }}
                                                 >
-                                                    ₹{prize.rewardValue.toLocaleString()}
+                                                    ₹{prize.reward_value.toLocaleString()}
                                                 </span>
                                             </div>
                                         </HudCard>
@@ -662,20 +636,20 @@ const Events = () => {
                             <div className="w-auto">
                                 <HudCardHeader
                                     title="Organizers"
-                                    variant={getContrastingVariant(currentEvent?.eventType || "")}
+                                    variant={getContrastingVariant(currentEvent?.event_type || "")}
                                     icon={<User size={18} />}
                                 />
                             </div>
                             <div className="space-y-2 md:space-y-3 w-full">
-                                {currentEvent?.organizers?.map((org, i) => (
+                                {currentEvent?.crew?.organizers?.map((org, i) => (
                                     <motion.div
-                                        key={org.firstName}
+                                        key={org.first_name}
                                         initial={{ x: 20, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
                                     >
                                         <HudCard
                                             variant={getContrastingVariant(
-                                                currentEvent?.eventType || ""
+                                                currentEvent?.event_type || ""
                                             )}
                                             widthClass="w-full"
                                             hoverEffect="glow"
@@ -685,17 +659,17 @@ const Events = () => {
                                                 <HudTag
                                                     key={i}
                                                     variant={getContrastingVariant(
-                                                        currentEvent?.eventType || ""
+                                                        currentEvent?.event_type || ""
                                                     )}
                                                     size="medium"
                                                 >
-                                                    {org.firstName} {org.lastName}
+                                                    {org.first_name} {org.last_name}
                                                 </HudTag>
                                                 <a
-                                                    href={`tel:+91${org.phoneNo}`}
+                                                    href={`tel:+91${org.ph_no}`}
                                                     className="font-heading text-sm sm:text-base md:text-lg text-white ml-auto hover:text-purple-400 transition-colors"
                                                 >
-                                                    +91 {org.phoneNo}
+                                                    +91 {org.ph_no}
                                                 </a>
                                             </div>
                                         </HudCard>
@@ -743,13 +717,13 @@ const Events = () => {
                                                     className="absolute inset-0 rounded-full transition-all duration-300"
                                                     style={{
                                                         backgroundColor: getEventTypeColor(
-                                                            event.eventType || ""
+                                                            event.event_type || ""
                                                         ),
                                                         width: "100%",
                                                         height: "100%",
                                                         opacity: isActive ? 1 : 0.4,
                                                         boxShadow: isActive
-                                                            ? `0 0 8px ${getEventTypeColor(event.eventType || "")}`
+                                                            ? `0 0 8px ${getEventTypeColor(event.event_type || "")}`
                                                             : "none",
                                                         transform: isActive
                                                             ? "scale(1.1)"

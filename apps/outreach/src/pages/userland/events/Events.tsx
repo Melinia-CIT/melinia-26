@@ -4,83 +4,34 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Xmark, Search } from "iconoir-react";
 import EventsCard from "../../../components/userland/events/EventsCard";
 import api from "../../../services/api";
+import { baseEventSchema, Event } from "@melinia/shared";
 
-const shimmerStyle = `
-    @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
-    }
-    .animate-shimmer { animation: shimmer 2s infinite; }
-`;
-
-if (typeof document !== "undefined") {
-    const style = document.createElement("style");
-    style.innerHTML = shimmerStyle;
-    document.head.appendChild(style);
-}
-
-interface Round {
-    roundNo: number;
-    roundDescription: string;
-}
-interface Prize {
-    position: number;
-    rewardValue: number;
-}
-interface Organizer {
-    userId: string;
-    assignedBy: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    phoneNo?: string | null;
-}
-interface Rule {
-    id: number;
-    roundNo: number | null;
-    ruleNumber: number;
-    ruleDescription: string;
-}
-
-export interface Event {
-    id: string;
-    name: string;
-    description: string;
-    participationType: string;
-    eventType: string;
-    maxAllowed: number;
-    minTeamSize: number;
-    maxTeamSize: number;
-    venue: string;
-    startTime: string;
-    endTime: string;
-    registrationStart: string;
-    registrationEnd: string;
-    createdBy: string;
-    createdAt: string;
-    updatedAt: string;
-    rounds: Round[];
-    prizes: Prize[];
-    organizers: Organizer[];
-    rules: Rule[];
+type Events = {
+    events: Event[]
 }
 
 const Events = () => {
-    // State changed to array to support multiple categories
     const [activeFilters, setActiveFilters] = useState<string[]>(["all"]);
     const [searchQuery, setSearchQuery] = useState<string>("");
 
-    const { data: eventsData, isLoading: eventsLoading } = useQuery<Event[]>({
+    const {
+        data: eventsData,
+        isLoading: eventsLoading
+    } = useQuery<Event[]>({
         queryKey: ["events"],
         queryFn: async () => {
-            const response = await api.get("/events");
-            return response.data.data;
+            const response = await api.get<Events>("/events");
+            return response
+                .data
+                .events
+                .map(e => baseEventSchema.parse(e));
         },
         staleTime: 5 * 60 * 1000,
     });
 
     const filters = useMemo(() => {
         if (!eventsData) return [{ label: "All", value: "all" }];
-        const types = Array.from(new Set(eventsData.map(e => e.eventType)));
+        const types = Array.from(new Set(eventsData.map(e => e.event_type)));
         return [
             { label: "All", value: "all" },
             ...types.map(t => ({
@@ -106,7 +57,7 @@ const Events = () => {
 
     const filteredEvents = eventsData?.filter(event => {
         const matchesCategory =
-            activeFilters.includes("all") || activeFilters.includes(event.eventType);
+            activeFilters.includes("all") || activeFilters.includes(event.event_type);
         const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
     });
@@ -187,11 +138,10 @@ const Events = () => {
                                     <motion.button
                                         key={filter.value}
                                         onClick={() => handleFilterClick(filter.value)}
-                                        className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border relative flex justify-center items-center gap-2 group ${
-                                            isActive
-                                                ? "text-white border-white/40 bg-white/10"
-                                                : "text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600"
-                                        }`}
+                                        className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border relative flex justify-center items-center gap-2 group ${isActive
+                                            ? "text-white border-white/40 bg-white/10"
+                                            : "text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600"
+                                            }`}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         initial={{ opacity: 0, y: -10 }}
@@ -237,7 +187,7 @@ const Events = () => {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: index * 0.05 }}
                                         >
-                                            <EventsCard event={event as any} />
+                                            <EventsCard event={event} />
                                         </motion.div>
                                     ))}
                                 </motion.div>
