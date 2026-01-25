@@ -456,8 +456,7 @@ export async function checkEventExists(eventId: string): Promise<boolean> {
     return result.length > 0;
 }
 
-// ============= Event Registration Queries =============
-
+// Event Registration Queries 
 export async function isUserRegisteredAlready(eventId: string, userId: string): Promise<boolean> {
     const result = await sql`
         SELECT 1 FROM event_registrations 
@@ -520,8 +519,7 @@ export async function insertTeamRegistration(eventId: string, teamId: string, us
     return result;
 }
 
-// ============= Team Related Queries =============
-
+// Team Related Queries 
 export async function getTeamLeaderId(teamId: string): Promise<string | null> {
     const [team] = await sql`
         SELECT leader_id FROM teams WHERE id = ${teamId}
@@ -541,7 +539,7 @@ export async function getTeamMemberCount(teamId: string): Promise<number> {
         SELECT COUNT(*) as count FROM team_members WHERE team_id = ${teamId}
     `;
     return result.count;
-};
+}
 
 export async function getRegistrationRecordForUser(userId: string, eventId: string) {
     const [result] = await sql`

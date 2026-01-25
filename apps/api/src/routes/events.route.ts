@@ -120,8 +120,8 @@ events.delete(
 )
 
 // TODO: PATCH /events/:id 
-// TODO: POST /events/:id/registrations
-// TODO: DELETE /events/:id/registrations/:id
+// TODO: POST /events/:id/registrations ==> [DONE]
+// TODO: DELETE /events/:id/registrations ==> [DONE]
 // TODO: GET /users/me/events define this endpoint in users.routes.ts
 // TODO: POST /events/:eventid/rounds "createEventRoundsSchema" ZOD Schema
 // TODO: DELETE /events/:eventid/rounds/:roundid
@@ -131,23 +131,22 @@ events.delete(
 // TODO: POST /events/:id/crews {user_id: user_id, role='organizer|volunteer'}
 
 events.post(
-    "/:id/registeration",
+    "/:id/registrations",
     authMiddleware,
-    participantOnlyMiddleware,
     paymentStatusMiddleware,
     zValidator("json", eventRegistrationSchema),
     async (c) => {
         const userId = c.get("user_id");
-        const eventId = c.req.param('event_id')!;
+        const eventId = c.req.param('id')!;
         const { team_id, registration_type } = c.req.valid("json");
 
-        // 1. Check if event exists
+        // Check if event exists
         const event = await getEventById(eventId);
         if (!event) {
             throw new HTTPException(404, { message: "Event not found" });
         }
 
-        // 2. Validate registration window
+        // Validate registration window
         const now = new Date();
         const regStart = new Date(event.registration_start);
         const regEnd = new Date(event.registration_end);
@@ -164,23 +163,23 @@ events.post(
             });
         }
 
-        // 3. Validate participation type matches event type
+        // Validate participation type matches event type
         if (event.participation_type !== registration_type) {
             throw new HTTPException(400, {
                 message: `This event requires ${event.participation_type} participation`
             });
         }
 
-        // ========== SOLO REGISTRATION ==========
+        // SOLO REGISTRATION 
         if (registration_type === "solo") {
-            // 3a. Solo event: teamId should not be provided
+            // Solo event: teamId should not be provided
             if (team_id) {
                 throw new HTTPException(400, {
                     message: "Team registration not allowed for solo events"
                 });
             }
 
-            // 3b. Check if user already registered for this event (solo)
+            //Check if user already registered for this event (solo)
             const alreadyRegisteredSolo = await isUserRegisteredAlready(eventId, userId);
             if (alreadyRegisteredSolo) {
                 throw new HTTPException(409, {
@@ -188,15 +187,7 @@ events.post(
                 });
             }
 
-            // // 3c. Check if user registered via team (edge case)
-            // const registeredViaTeam = await checkUserRegisteredForEvent(eventId, userId);
-            // if (registeredViaTeam) {
-            //     throw new HTTPException(409, {
-            //         message: "You are already registered for this event"
-            //     });
-            // }
-
-            // 3d. Check max registration limit
+            //Check max registration limit
             const registrationCount = await getEventRegistrationCount(eventId);
             if (registrationCount >= event.max_allowed) {
                 throw new HTTPException(400, {
@@ -204,7 +195,7 @@ events.post(
                 });
             }
 
-            // 3e. Register solo user
+            //Register solo user
             const registration = await insertSoloRegistration(eventId, userId);
 
             return c.json(
@@ -216,29 +207,29 @@ events.post(
             );
         }
 
-        // ========== TEAM REGISTRATION ==========
+        // TEAM REGISTRATION 
         if (registration_type === "team") {
-            // 4a. Team event: teamId is required
+            // Team event: teamId is required
             if (!team_id) {
                 throw new HTTPException(400, {
                     message: "Team ID is required for team events"
                 });
             }
 
-            // 4b. Check if team exists and get leader
+            //Check if team exists and get leader
             const teamLeaderId = await getTeamLeaderId(team_id);
             if (!teamLeaderId) {
                 throw new HTTPException(404, { message: "Team not found" });
             }
 
-            // 4c. Only team leader can register
+            // Only team leader can register
             if (teamLeaderId !== userId) {
                 throw new HTTPException(403, {
                     message: "Only team leader can register the team for events"
                 });
             }
 
-            // 4d. Check if team already registered
+            // Check if team already registered
             const teamAlreadyRegistered = await isTeamRegisteredAlready(eventId, team_id);
             if (teamAlreadyRegistered) {
                 throw new HTTPException(409, {
@@ -246,7 +237,7 @@ events.post(
                 });
             }
 
-            // 4e. Get all team members
+            // Get all team members
             const memberIds = await getTeamMemberIds(team_id);
             const teamSize = memberIds.length;
 
@@ -257,7 +248,7 @@ events.post(
                 });
             }
 
-            // 4f. Validate team size constraints
+            // Validate team size constraints
             if (event.min_team_size && teamSize < event.min_team_size) {
                 throw new HTTPException(400, {
                     message: `Team size (${teamSize}) is less than minimum required (${event.min_team_size})`
@@ -270,7 +261,7 @@ events.post(
                 });
             }
 
-            // 4g. Check if any team member already registered for this event
+            // Check if any team member already registered for this event
             const conflictingMembers = await getConflictingTeamMembers(eventId, memberIds);
             if (conflictingMembers.length > 0) {
                 const conflictingEmails = conflictingMembers.map((r: any) => r.email).join(", ");
@@ -279,7 +270,7 @@ events.post(
                 });
             }
 
-            // 4h. Check max team registration limit
+            // Check max team registration limit
             const teamRegistrationCount = await getEventTeamRegistrationCount(eventId);
             if (teamRegistrationCount >= event.max_allowed) {
                 throw new HTTPException(400, {
@@ -287,7 +278,7 @@ events.post(
                 });
             }
 
-            // 4i. Register all team members
+            // Register all team members
             for (const memberId of memberIds) {
                 await insertTeamRegistration(eventId, team_id, memberId);
             }
@@ -305,28 +296,27 @@ events.post(
             );
         }
 
-        // Edge case: invalid participation type
+        // invalid participation type
         throw new HTTPException(400, {
             message: "Invalid participation type. Must be 'solo' or 'team'"
         });
     }
 );
 events.delete(
-    "/:id/registration",
+    "/:id/registrations",
     authMiddleware,
-    participantOnlyMiddleware,
     paymentStatusMiddleware,
     async (c) => {
         const userId = c.get("user_id");
         const eventId = c.req.param("id");
 
-        // 1. Check if event exists
+        // Check if event exists
         const event = await getEventById(eventId);
         if (!event) {
             throw new HTTPException(404, { message: "Event not found" });
         }
 
-        // 2. Check if user is registered
+        // Check if user is registered
         const record = await getRegistrationRecordForUser(userId, eventId);
         if (!record) {
             throw new HTTPException(400, {
@@ -353,12 +343,8 @@ events.delete(
             );
         }
 
-        // Handle solo registration
-        else{
+        // else solo registration
             await deregisterUser(userId, eventId);
-        }
-        
-        
         
         return c.json(
             { message: "Unregistered successfully from the event" },
