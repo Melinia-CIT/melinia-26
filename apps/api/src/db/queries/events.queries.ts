@@ -541,6 +541,34 @@ export async function getTeamMemberCount(teamId: string): Promise<number> {
         SELECT COUNT(*) as count FROM team_members WHERE team_id = ${teamId}
     `;
     return result.count;
+};
+
+export async function getRegistrationRecordForUser(userId: string, eventId: string) {
+    const [result] = await sql`
+        SELECT * FROM event_registrations WHERE user_id = ${userId} AND event_id = ${eventId}
+    `;
+    return result || null;
+}
+
+export async function deregisterTeam(teamId: string, eventId: string): Promise<void> {
+    await sql`
+        DELETE FROM event_registrations 
+        WHERE event_id = ${eventId} AND team_id = ${teamId}
+    `;
+}
+
+export async function deregisterUser(userId: string, eventId: string): Promise<void> {
+    await sql`
+        DELETE FROM event_registrations 
+        WHERE event_id = ${eventId} AND user_id = ${userId} AND team_id IS NULL
+    `;
+}
+
+export async function isTeamLeader(userId: string, teamId: string): Promise<boolean> {
+    const [team] = await sql`
+        SELECT 1 FROM teams WHERE id = ${teamId} AND leader_id = ${userId}
+    `;
+    return !!team;
 }
 
 // // Update Event

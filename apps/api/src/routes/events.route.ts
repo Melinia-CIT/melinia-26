@@ -17,7 +17,11 @@ import {
     insertTeamRegistration,
     getTeamLeaderId,
     getTeamMemberIds,
-    getTeamMemberCount
+    getTeamMemberCount,
+    getRegistrationRecordForUser,
+    isTeamLeader,
+    deregisterTeam,
+    deregisterUser
 } from "../db/queries";
 import {
     authMiddleware,
@@ -307,15 +311,62 @@ events.post(
         });
     }
 );
-
-events.delete("/registration",
+events.delete(
+    "/:id/registration",
     authMiddleware,
     participantOnlyMiddleware,
     paymentStatusMiddleware,
-    async (c)=>{
-        // WIP: deregistration, remove all the team members record from event_registraiton table
+    async (c) => {
+        const userId = c.get("user_id");
+        const eventId = c.req.param("id");
+
+        // 1. Check if event exists
+        const event = await getEventById(eventId);
+        if (!event) {
+            throw new HTTPException(404, { message: "Event not found" });
+        }
+
+        // 2. Check if user is registered
+        const record = await getRegistrationRecordForUser(userId, eventId);
+        if (!record) {
+            throw new HTTPException(400, {
+                message: "You are not registered for this event"
+            });
+        }
+
+        // Handle team registration
+        if (record.team_id) {
+            // Check if user is team leader
+            const isLeader = await isTeamLeader(userId, record.team_id);
+            if (!isLeader) {
+                throw new HTTPException(403, {
+                    message: "Only team leader can unregister the team"
+                });
+            }
+            
+            // Deregister entire team
+            await deregisterTeam(record.team_id, eventId);
+            
+            return c.json(
+                { message: "Team unregistered successfully from the event" },
+                200
+            );
+        }
+
+        // Handle solo registration
+        else{
+            await deregisterUser(userId, eventId);
+        }
+        
+        
+        
+        return c.json(
+            { message: "Unregistered successfully from the event" },
+            200
+        );
     }
 );
+
 // // Fetch all the events that a user is registered to
 // events.get("/registered", authMiddleware, async (c) => {
 //     try {
