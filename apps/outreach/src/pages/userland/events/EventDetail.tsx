@@ -26,7 +26,12 @@ import {
     getVerboseEventResponseSchema,
     UserRegistrationStatus,
 } from "@melinia/shared"
-import { hackathon_event_id, hackathon_unstop_url, pitch_pit_event_id, pitch_pit_unstop_url } from "../../../types/event"
+import {
+    hackathon_event_id,
+    hackathon_unstop_url,
+    pitch_pit_event_id,
+    pitch_pit_unstop_url,
+} from "../../../types/event"
 
 type VerboseEvent = {
     event: GetVerboseEvent
@@ -69,18 +74,18 @@ const EventDetail = () => {
     const formatDate = (dateString: string) =>
         dateString
             ? new Date(dateString).toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-            })
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+              })
             : "TBA"
 
     const formatTime = (dateString: string) =>
         dateString
             ? new Date(dateString).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-            })
+                  hour: "2-digit",
+                  minute: "2-digit",
+              })
             : "TBA"
 
     const getThemeStyles = (type: string) => {
@@ -149,8 +154,9 @@ const EventDetail = () => {
     }
 
     const handleRedirectConfirm = () => {
-        const unstop_url = event?.id === hackathon_event_id ? hackathon_unstop_url : pitch_pit_unstop_url
-        window.open(unstop_url, '_blank', 'noopener,noreferrer')
+        const unstop_url =
+            event?.id === hackathon_event_id ? hackathon_unstop_url : pitch_pit_unstop_url
+        window.open(unstop_url, "_blank", "noopener,noreferrer")
         setIsRedirectModalOpen(false)
     }
 
@@ -264,8 +270,8 @@ const EventDetail = () => {
                                     {event.participation_type.toLowerCase() === "solo"
                                         ? "Solo"
                                         : event.min_team_size === event.max_team_size
-                                            ? `${event.max_team_size} per team`
-                                            : `${event.min_team_size} - ${event.max_team_size} per team`}
+                                          ? `${event.max_team_size} per team`
+                                          : `${event.min_team_size} - ${event.max_team_size} per team`}
                                 </p>
                             </div>
                         </div>
@@ -375,7 +381,8 @@ const EventDetail = () => {
                                                                     ))
                                                                 ) : (
                                                                     <p className="text-[10px] text-zinc-600 italic px-2">
-                                                                        No specific rules for this round.
+                                                                        No specific rules for this
+                                                                        round.
                                                                     </p>
                                                                 )}
                                                             </div>
@@ -435,7 +442,7 @@ const EventDetail = () => {
                 </div>
 
                 <div className="space-y-4">
-                    <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sticky top-20">
+                    <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
                         <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
                             Registration
                         </h3>
@@ -556,7 +563,7 @@ const EventDetail = () => {
                         }}
                     />
                 )}
-                
+
                 {/* Redirect Confirmation Modal */}
                 {isRedirectModalOpen && (
                     <motion.div
@@ -580,17 +587,20 @@ const EventDetail = () => {
                                         Redirect to Unstop
                                     </h3>
                                     <p className="text-sm text-zinc-300 mt-2">
-                                        Flagship events are organised in Unstop platform. Can we redirect to Unstop?
+                                        Flagship events are organised in Unstop platform. Can we
+                                        redirect to Unstop?
                                     </p>
                                 </div>
                                 <div className="flex w-full gap-3 pt-2">
                                     <button
+                                        type="button"
                                         onClick={() => setIsRedirectModalOpen(false)}
                                         className="flex-1 py-2.5 rounded-lg bg-zinc-800 text-white text-sm font-medium hover:bg-zinc-700 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={handleRedirectConfirm}
                                         className="flex-1 py-2.5 rounded-lg bg-blue-900 text-zinc-200 text-sm font-medium transition-colors flex items-center justify-center gap-2 hover:cursor-pointer"
                                     >

@@ -12,7 +12,7 @@ import { Plus, Minus, MapPin, Clock, Trophy, User, Box, Award } from "lucide-rea
 import { HudButton } from "../ui/hud-button"
 import { HudCard, HudCardHeader, HudTag } from "../ui/hud-card"
 import api from "../../services/api"
-import { GetVerboseEvent, getVerboseEventResponseSchema } from "@melinia/shared";
+import { GetVerboseEvent, getVerboseEventResponseSchema } from "@melinia/shared"
 // import { hackathon_event_id, hackathon_unstop_url, pitch_pit_event_id, pitch_pit_unstop_url } from "../../types/event"
 
 type EventFilter = "flagship" | "technical" | "non-technical"
@@ -56,10 +56,7 @@ const Events = () => {
         queryKey: ["events"],
         queryFn: async () => {
             const response = await api.get<GetEvents>("/events", { expand: "all" })
-            return response
-                .data
-                .events
-                .map(event => getVerboseEventResponseSchema.parse(event));
+            return response.data.events.map(event => getVerboseEventResponseSchema.parse(event))
         },
         staleTime: 5 * 60 * 1000,
     })
@@ -143,8 +140,8 @@ const Events = () => {
     }
 
     const handleRegister = () => {
-        navigate(`/app/events/${currentEvent?.id}`);
-   }
+        navigate(`/app/events/${currentEvent?.id}`)
+    }
 
     const getEventTypeColor = (event_type: string) => {
         const t = event_type?.toLowerCase()
@@ -251,7 +248,7 @@ const Events = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-8 md:mb-12 relative"
                 >
-                    <h1 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
+                    <h1 className="font-space text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Events
                     </h1>
                     <div className="h-2 w-24 bg-linear-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[-2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
@@ -447,7 +444,7 @@ const Events = () => {
                                             </div>
 
                                             {/* Meta Info Grid */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8 flex-shrink-0">
+                                            <div className="grid grid-cols-1 md:grid-cols-1 gap-3 md:gap-4 mb-6 md:mb-8 flex-shrink-0">
                                                 {/* Venue */}
                                                 <div className="flex items-center gap-2 md:gap-3 text-white">
                                                     <div className="p-1.5 md:p-2 rounded-full bg-purple-500/20 text-purple-400">
@@ -469,10 +466,12 @@ const Events = () => {
                                                     </div>
                                                     <div className="flex flex-col">
                                                         <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
-                                                            Start
+                                                            Date
                                                         </span>
                                                         <span className="text-xs md:text-sm font-medium">
-                                                            {formatDateTime(currentEvent.start_time)}
+                                                            {formatDateTime(
+                                                                currentEvent.start_time
+                                                            )}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -481,34 +480,34 @@ const Events = () => {
                                                     currentEvent.min_team_size === 1 &&
                                                     currentEvent.max_team_size === 1
                                                 ) && (
-                                                        <div className="flex items-center gap-2 md:gap-3 text-white">
-                                                            <div
-                                                                className={`p-1.5 md:p-2 rounded-full ${currentEvent.min_team_size === currentEvent.max_team_size ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`}
-                                                            >
-                                                                <User size={16} />
-                                                            </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
-                                                                    Team Size
-                                                                </span>
-                                                                <span
-                                                                    className={`text-xs md:text-sm font-medium ${currentEvent.min_team_size === currentEvent.max_team_size ? "text-red-400" : ""}`}
-                                                                >
-                                                                    {currentEvent.min_team_size ===
-                                                                        currentEvent.max_team_size ? (
-                                                                        <>
-                                                                            {currentEvent.min_team_size}
-                                                                            <sup className="text-[0.5em] ml-0.5 align-super">
-                                                                                *
-                                                                            </sup>
-                                                                        </>
-                                                                    ) : (
-                                                                        `${currentEvent.min_team_size} - ${currentEvent.max_team_size}`
-                                                                    )}
-                                                                </span>
-                                                            </div>
+                                                    <div className="flex items-center gap-2 md:gap-3 text-white">
+                                                        <div
+                                                            className={`p-1.5 md:p-2 rounded-full ${currentEvent.min_team_size === currentEvent.max_team_size ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`}
+                                                        >
+                                                            <User size={16} />
                                                         </div>
-                                                    )}
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                                                                Team Size
+                                                            </span>
+                                                            <span
+                                                                className={`text-xs md:text-sm font-medium ${currentEvent.min_team_size === currentEvent.max_team_size ? "text-red-400" : ""}`}
+                                                            >
+                                                                {currentEvent.min_team_size ===
+                                                                currentEvent.max_team_size ? (
+                                                                    <>
+                                                                        {currentEvent.min_team_size}
+                                                                        <sup className="text-[0.5em] ml-0.5 align-super">
+                                                                            *
+                                                                        </sup>
+                                                                    </>
+                                                                ) : (
+                                                                    `${currentEvent.min_team_size} - ${currentEvent.max_team_size}`
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 {/* Type */}
                                                 <div className="flex items-center gap-2 md:gap-3 text-white">
                                                     <div className="p-1.5 md:p-2 rounded-full bg-red-500/20 text-red-400">
@@ -611,10 +610,10 @@ const Events = () => {
                                                             {prize.position === 1
                                                                 ? "1st"
                                                                 : prize.position === 2
-                                                                    ? "2nd"
-                                                                    : prize.position === 3
-                                                                        ? "3rd"
-                                                                        : `${prize.position}th`}
+                                                                  ? "2nd"
+                                                                  : prize.position === 3
+                                                                    ? "3rd"
+                                                                    : `${prize.position}th`}
                                                         </span>
                                                     </div>
                                                 </div>

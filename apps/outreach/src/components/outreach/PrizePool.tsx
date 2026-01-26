@@ -85,10 +85,10 @@ export default function PrizePool() {
                     viewport={{ once: true }}
                     className="text-center mb-8 md:mb-12 relative"
                 >
-                    <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
+                    <h2 className="font-space text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Prize Pool
                     </h2>
-                    <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 -rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
+                    <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
                 </motion.div>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -143,7 +143,10 @@ export default function PrizePool() {
                             +
                         </motion.span>
                     </div>
-                    <p className="text-xs md:text-sm text-white/60 font-body tracking-wider uppercase">
+                    <p
+                        className="text-xs md:text-sm text-white/60 font-body tracking-wider uppercase"
+                        style={{ fontFamily: "Inter, sans-serif" }}
+                    >
                         Worth of prizes to be won
                     </p>
                 </motion.div>

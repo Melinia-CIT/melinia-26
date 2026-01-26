@@ -14,7 +14,7 @@ const faqData: FAQItem[] = [
     {
         id: "1",
         question: "How do I register for events?",
-        answer: "Registration is simple! Navigate to the Events section, browse through our Flagship, Technical, and Non-Technical events. Click on any event to view details and click the 'Register Now' button. You'll be redirected to the registration page where you can complete the process. Make sure you're logged in to register.",
+        answer: "Registration is simple! Navigate to the Events section, browse through our Flagship, Technical, and Non-Technical events. Click on 'Know More' button. You'll be redirected to the registration page where you can complete the process. Make sure you're logged in to register.",
     },
     {
         id: "2",
@@ -23,7 +23,8 @@ const faqData: FAQItem[] = [
     },
     {
         id: "3",
-        question: "Is Flagship event registrations are different from Melinia main track registration?",
+        question:
+            "Is Flagship event registrations are different from Melinia main track registration?",
         answer: "Flagship-event registration is separate from Melinia registration, Flagship events are hosted on Unstop platform and require their own payment, To enter the main-track events, login & pay inside the Melinia web app.",
     },
     {
@@ -140,7 +141,7 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
                 className="relative bg-zinc-900/90 overflow-hidden"
                 style={{
                     clipPath:
-                        "polygon(2% 0%, 98% 0%, 100% 8%, 100% 92%, 98% 100%, 2% 100%, 0% 92%, 0% 8%)",
+                        "polygon(12px 0%, calc(100% - 12px) 0%, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0% calc(100% - 12px), 0% 12px)",
                 }}
             >
                 {/* Grouped Dots - Bottom Right Corner */}
@@ -203,7 +204,7 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
                     onClick={onToggle}
                     className="relative w-full flex items-center justify-between p-5 md:p-6 text-left cursor-pointer"
                 >
-                    <span className="flex-1 font-heading text-lg md:text-xl font-semibold text-white tracking-wide pr-4">
+                    <span className="flex-1 font-space text-lg md:text-xl font-semibold text-white tracking-wide pr-4">
                         {item.question}
                     </span>
                     <motion.div
@@ -234,7 +235,8 @@ function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps) {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.1, duration: 0.3 }}
-                                    className="px-5 md:px-6 pt-4 md:pt-6 pb-8 md:pb-10 font-body text-base md:text-lg text-gray-300 leading-relaxed"
+                                    className="px-5 md:px-6 pt-4 md:pt-6 pb-8 md:pb-10 text-base md:text-lg text-gray-300 leading-relaxed"
+                                    style={{ fontFamily: "Inter, sans-serif" }}
                                 >
                                     {item.answer}
                                 </motion.p>
@@ -274,7 +276,7 @@ export default function FAQ() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-8 md:mb-12 relative"
                 >
-                    <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
+                    <h2 className="font-space text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Frequently Asked Questions
                     </h2>
                     <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />

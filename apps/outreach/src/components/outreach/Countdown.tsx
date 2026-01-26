@@ -16,7 +16,7 @@ export default function Countdown() {
                 className="relative z-10 max-w-7xl mx-auto px-6"
             >
                 <div className="flex flex-col items-center gap-8 md:gap-12">
-                    <h2 className="text-center text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
+                    <h2 className="text-center text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide font-space">
                         Ready. Set. Fest.
                     </h2>
 

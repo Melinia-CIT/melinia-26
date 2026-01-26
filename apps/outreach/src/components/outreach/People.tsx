@@ -1,4 +1,4 @@
-'use strict'
+"use strict"
 
 import { motion, useReducedMotion, Variants } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
@@ -133,7 +133,10 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
         if (carouselContainer) {
             carouselContainer.addEventListener("animationiteration", handleAnimationIteration)
             return () => {
-                carouselContainer.removeEventListener("animationiteration", handleAnimationIteration)
+                carouselContainer.removeEventListener(
+                    "animationiteration",
+                    handleAnimationIteration
+                )
             }
         }
     }, [shouldReduceMotion])
@@ -268,7 +271,7 @@ export default function People(): React.ReactElement {
                     viewport={{ once: true }}
                     className="mb-16 text-center relative"
                 >
-                    <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
+                    <h2 className="font-space text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide">
                         Our Team
                     </h2>
                     <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 -rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
