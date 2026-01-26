@@ -271,23 +271,6 @@ export const getVerboseEventResponseSchema =
                 })
         })
 
-export const userRegisteredEventsSchema = z
-    .array(
-        baseEventSchema
-            .extend({
-                team_name: z.string().nullable(),
-                mode: z.enum(["solo", "team"]),
-                rounds: z.array(
-                    baseRoundSchema
-                        .omit({
-                            event_id: true,
-                            round_description: true,
-                        })
-                )
-            })
-    )
-    .default([])
-
 export const RegisteredSolo = z.object({
     registered: z.literal(true),
     mode: z.literal("solo"),
@@ -314,6 +297,30 @@ export const userRegistrationStatus = z.union([
     NotRegistered
 ])
 
+export const userRegisteredEventsSchema = z
+    .array(
+        baseEventSchema
+            .extend({
+                registration: z.union([
+                    RegisteredSolo
+                        .omit({
+                            registered: true
+                        }),
+                    RegisteredTeam
+                        .omit({
+                            registered: true
+                        })
+                ]),
+                rounds: z.array(
+                    baseRoundSchema
+                        .omit({
+                            event_id: true,
+                            round_description: true,
+                        })
+                )
+            })
+    )
+    .default([])
 
 export const eventRegistrationSchema = z.object({
     registration_type: z.enum(['solo', 'team']),

@@ -434,16 +434,51 @@ export async function getUserRegisteredEvents(userId: string): Promise<UserRegis
             e.created_at,
             e.updated_at,
 
-            er.team_id,
-            t.name AS team_name,
+            /* registration object */
             CASE
-            WHEN er.team_id IS NULL THEN 'solo'
-            ELSE 'team'
-            END AS mode
+                WHEN er.team_id IS NULL THEN
+                    jsonb_build_object(
+                        'mode', 'solo',
+                        'registered_at', er.registered_at
+                    )
+                ELSE
+                    jsonb_build_object(
+                        'mode', 'team',
+                        'registered_at', er.registered_at,
+                        'team', jsonb_build_object(
+                            'id', t.id,
+                            'name', t.name
+                        )
+                    )
+            END AS registration,
+
+            /* rounds array */
+            COALESCE(
+                jsonb_agg(
+                    DISTINCT jsonb_build_object(
+                        'id', r.id,
+                        'round_name', r.round_name,
+                        'start_time', r.start_time,
+                        'end_time', r.end_time,
+                        'created_at', r.created_at,
+                        'updated_at', r.updated_at
+                    )
+                ) FILTER (WHERE r.id IS NOT NULL),
+                '[]'::jsonb
+            ) AS rounds
+
         FROM event_registrations er
         JOIN events e ON e.id = er.event_id
         LEFT JOIN teams t ON t.id = er.team_id
+        LEFT JOIN event_rounds r ON r.event_id = e.id
+
         WHERE er.user_id = ${userId}
+
+        GROUP BY
+            e.id,
+            er.id,
+            t.id
+
         ORDER BY 
             CASE e.event_type
                 WHEN 'flagship' THEN 1
@@ -451,10 +486,8 @@ export async function getUserRegisteredEvents(userId: string): Promise<UserRegis
                 WHEN 'non-technical' THEN 3
                 ELSE 4
             END,
-            e.event_type,
             e.start_time,
-            e.name 
-        ;
+            e.name;
     `
     const rounds = await getRounds(regEvents.map(regEvent => regEvent.id));
 

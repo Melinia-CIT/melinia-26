@@ -274,7 +274,7 @@ const EventDetail = () => {
                     {event.rounds?.length > 0 && (
                         <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-xl p-5">
                             <h2 className="text-sm font-bold mb-4 flex items-center gap-2 uppercase tracking-tight text-zinc-200">
-                                <Target className={`w-4 h-4 ${theme.icon}`} /> Timeline
+                                <Target className={`w-4 h-4 ${theme.icon}`} /> Rounds
                             </h2>
                             <div className="space-y-3">
                                 {event.rounds
@@ -508,7 +508,7 @@ const EventDetail = () => {
                     {event.crew?.organizers?.length > 0 && (
                         <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
                             <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
-                                <User2 className="w-3.5 h-3.5" /> Help
+                                <User2 className="w-3.5 h-3.5" /> Organizers
                             </h3>
                             <div className="space-y-2">
                                 {event.crew?.organizers?.map((org: any) => (

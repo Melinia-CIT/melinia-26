@@ -8,16 +8,10 @@ import { motion } from "framer-motion"
 import TimelineView, { TimelineEvent } from "../../components/ui/timeline-view"
 import { useNavigate } from "react-router-dom"
 import api from "../../services/api"
+import { type UserRegisteredEvents } from "@melinia/shared"
 
-interface RegisteredEvent {
-    eventId: string
-    eventName: string
-    eventType: string
-    participationType: string
-    startTime: string
-    venue: string
-    teamName: string | null
-    registrationMode: "solo" | "team"
+type RegEvents = {
+    events: UserRegisteredEvents
 }
 
 const Main = () => {
@@ -26,11 +20,11 @@ const Main = () => {
     const [showDesktopNotifications, setShowDesktopNotifications] = useState(false)
     const desktopNotificationsRef = useRef<HTMLDivElement>(null)
 
-    const { data: registeredEvents } = useQuery<RegisteredEvent[]>({
+    const { data: registeredEvents } = useQuery<UserRegisteredEvents>({
         queryKey: ["user-registered-events"],
         queryFn: async () => {
-            const response = await api.get("/users/me/events")
-            return response.data.data
+            const response = await api.get<RegEvents>("/users/me/events")
+            return response.data.events
         },
         staleTime: 5 * 60 * 1000,
     })
@@ -38,7 +32,8 @@ const Main = () => {
     const hasEvents = registeredEvents && registeredEvents.length > 0
 
     const handleEventClick = (event: TimelineEvent) => {
-        navigate(`/app/events/${event.id}`)
+        const eventId = event.eventId || event.id
+        navigate(`/app/events/${eventId}`)
     }
 
     return (

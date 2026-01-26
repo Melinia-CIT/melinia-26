@@ -91,17 +91,17 @@ const RegisteredEvents = () => {
                                 Confirmed
                             </div>
                             <div
-                                className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider ${event.mode === "team"
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider ${event.registration.mode === "team"
                                     ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
                                     : "bg-zinc-800 text-zinc-400 border border-zinc-700"
                                     }`}
                             >
-                                {event.mode === "team" ? (
+                                {event.registration.mode === "team" ? (
                                     <Community width="10" height="10" />
                                 ) : (
                                     <User width="10" height="10" />
                                 )}
-                                {event.mode}
+                                {event.registration.mode}
                             </div>
                         </div>
 
@@ -110,7 +110,7 @@ const RegisteredEvents = () => {
                         </h3>
 
                         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight mb-4 truncate pr-20">
-                            {event.team_name ? `Team: ${event.team_name}` : "Solo Entry"}
+                            {event.registration.mode === "team" ? `Team: ${event.registration.team.name}` : "Solo Entry"}
                         </p>
 
                         <div className="space-y-2.5">
