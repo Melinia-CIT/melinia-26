@@ -215,7 +215,6 @@ export default function PaymentModal({
                                             features
                                         </p>
                                     </div>
-
                                     <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="text-zinc-400">Registration Fee</span>
@@ -236,6 +235,15 @@ export default function PaymentModal({
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Attention Box */}
+                                    <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                        <InfoCircle width={20} height={20} className="text-yellow-500 shrink-0 mt-0.5" />
+                                        <p className="text-sm text-yellow-100 font-xs leading-relaxed">
+                                            This payment covers only the Melinia’26 Main Track, Flagship events are hosted on Unstop and require separate payment.
+                                        </p>
+                                    </div>
+
 
                                     <button
                                         onClick={handlePay}

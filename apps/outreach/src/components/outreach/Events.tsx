@@ -13,7 +13,7 @@ import { HudButton } from "../ui/hud-button"
 import { HudCard, HudCardHeader, HudTag } from "../ui/hud-card"
 import api from "../../services/api"
 import { GetVerboseEvent, getVerboseEventResponseSchema } from "@melinia/shared";
-import { hackathon_event_id, hackathon_unstop_url, pitch_pit_event_id, pitch_pit_unstop_url } from "../../types/event"
+// import { hackathon_event_id, hackathon_unstop_url, pitch_pit_event_id, pitch_pit_unstop_url } from "../../types/event"
 
 type EventFilter = "flagship" | "technical" | "non-technical"
 
@@ -143,17 +143,8 @@ const Events = () => {
     }
 
     const handleRegister = () => {
-        if (currentEvent.event_type !== 'flagship') {
-            navigate(`/app/events/${currentEvent?.id}`)
-        }
-        // navigate Flagship event to Unstop
-        else if (currentEvent.id === hackathon_event_id) {
-            navigate(hackathon_unstop_url);
-        }
-        else if (currentEvent.id === pitch_pit_event_id) {
-            navigate(pitch_pit_unstop_url)
-        }
-    }
+        navigate(`/app/events/${currentEvent?.id}`);
+   }
 
     const getEventTypeColor = (event_type: string) => {
         const t = event_type?.toLowerCase()

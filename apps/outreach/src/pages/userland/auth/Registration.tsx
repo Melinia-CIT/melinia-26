@@ -228,9 +228,9 @@ const Registration = () => {
                     {
                         currentStep === 1 && (
                             <div className="mt-8 text-center">
-                                <p className="text-sm text-white">
+                                <p className="text-sm text-zinc-400">
                                     Already have an account?{" "}
-                                    <button onClick={() => navigate("/login")} className="text-zinc-300 hover:text-white hover:underline transition-colors">
+                                    <button onClick={() => navigate("/login")} className="text-zinc-100 hover:text-white hover:underline transition-colors">
                                         Login
                                     </button>
                                 </p>
