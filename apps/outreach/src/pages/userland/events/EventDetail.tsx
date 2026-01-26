@@ -16,6 +16,7 @@ import {
     ChevronDown,
     CheckCircle2,
     Trash2,
+    ExternalLink,
 } from "lucide-react"
 import api from "../../../services/api"
 import EventRegister from "../../../components/userland/events/EventRegister"
@@ -25,6 +26,7 @@ import {
     getVerboseEventResponseSchema,
     UserRegistrationStatus,
 } from "@melinia/shared"
+import { hackathon_event_id, hackathon_unstop_url, pitch_pit_event_id, pitch_pit_unstop_url } from "../../../types/event"
 
 type VerboseEvent = {
     event: GetVerboseEvent
@@ -38,6 +40,7 @@ const EventDetail = () => {
     const [expandedRound, setExpandedRound] = useState<number | null>(null)
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
     const [isUnregisterModalOpen, setIsUnregisterModalOpen] = useState(false)
+    const [isRedirectModalOpen, setIsRedirectModalOpen] = useState(false) // New state for redirect dialog
 
     const {
         data: event,
@@ -134,6 +137,21 @@ const EventDetail = () => {
                 color: "bg-zinc-600/10 text-zinc-300 border-zinc-600/20",
             }
         return { text: "Reg. Closed", color: "bg-rose-500/10 text-rose-400 border-rose-500/20" }
+    }
+
+    // New handler to check event type before opening modal
+    const handleRegisterClick = () => {
+        if (event?.id === hackathon_event_id || event?.id === pitch_pit_event_id) {
+            setIsRedirectModalOpen(true)
+        } else {
+            setIsRegisterModalOpen(true)
+        }
+    }
+
+    const handleRedirectConfirm = () => {
+        const unstop_url = event?.id === hackathon_event_id ? hackathon_unstop_url : pitch_pit_unstop_url
+        window.open(unstop_url, '_blank', 'noopener,noreferrer')
+        setIsRedirectModalOpen(false)
     }
 
     if (isLoading)
@@ -442,11 +460,7 @@ const EventDetail = () => {
 
                         <button
                             type="button"
-                            onClick={() =>
-                                !isRegistered &&
-                                status.text === "Open" &&
-                                setIsRegisterModalOpen(!isRegisterModalOpen)
-                            }
+                            onClick={handleRegisterClick} // Updated to use handler
                             disabled={isRegistered || status.text !== "Open"}
                             className={`w-full py-2.5 rounded-lg font-bold border text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 
                                 ${isRegistered ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" : status.text !== "Open" ? "bg-zinc-800/50 text-zinc-500 border-zinc-700 cursor-not-allowed" : theme.button}`}
@@ -541,6 +555,52 @@ const EventDetail = () => {
                             queryClient.invalidateQueries({ queryKey: ["event-status", id] })
                         }}
                     />
+                )}
+                
+                {/* Redirect Confirmation Modal */}
+                {isRedirectModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+                        >
+                            <div className="flex flex-col items-center text-center space-y-4">
+                                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                                    <ExternalLink className="w-6 h-6 text-zinc-200" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-white">
+                                        Redirect to Unstop
+                                    </h3>
+                                    <p className="text-sm text-zinc-300 mt-2">
+                                        Flagship events are organised in Unstop platform. Can we redirect to Unstop?
+                                    </p>
+                                </div>
+                                <div className="flex w-full gap-3 pt-2">
+                                    <button
+                                        onClick={() => setIsRedirectModalOpen(false)}
+                                        className="flex-1 py-2.5 rounded-lg bg-zinc-800 text-white text-sm font-medium hover:bg-zinc-700 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleRedirectConfirm}
+                                        className="flex-1 py-2.5 rounded-lg bg-blue-900 text-zinc-200 text-sm font-medium transition-colors flex items-center justify-center gap-2 hover:cursor-pointer"
+                                    >
+                                        Redirect
+                                        <ExternalLink className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>

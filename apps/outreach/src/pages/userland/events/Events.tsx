@@ -107,7 +107,7 @@ const Events = () => {
                             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-zinc-200 via-white to-zinc-200 bg-clip-text text-transparent font-inst self-start">
                                 Events
                             </h1>
-
+                            {/* Search bar */}
                             <div className="relative w-full sm:w-72">
                                 <input
                                     type="text"
@@ -130,7 +130,7 @@ const Events = () => {
                                 />
                             </div>
                         </div>
-
+                        {/*Filters*/}
                         <div className="flex flex-wrap justify-center sm:justify-start gap-3">
                             {filters.map((filter, index) => {
                                 const isActive = activeFilters.includes(filter.value);
