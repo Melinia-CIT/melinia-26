@@ -67,6 +67,10 @@ export async function getUserCollegeId(userId: string): Promise<string | null> {
     return profile?.college_id || null;
 }
 
+export async function noOfTeamsUserCreated(userId:string):Promise<number>{
+    const teams = await sql`SELECT id FROM teams WHERE leader_id=${userId};`
+    return teams.length;
+}
 // ============= Team CRUD Operations =============
 
 export async function insertTeam(name: string, leaderId: string): Promise<string> {
@@ -274,7 +278,7 @@ export async function getAllTeamsLedByUser(userId: string) {
             (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count
         FROM teams AS t
         WHERE t.leader_id = ${userId}
-        ORDER BY t.id DESC
+        ORDER BY t.name ASC
     `;
     return teams;
 }
@@ -289,7 +293,7 @@ export async function getAllTeamsUserIsMemberOf(userId: string) {
         FROM team_members AS tm
         JOIN teams AS t ON t.id = tm.team_id
         WHERE tm.user_id = ${userId} AND t.leader_id != ${userId}
-        ORDER BY t.id DESC
+        ORDER BY t.name ASC
     `;
     return teams;
 }
@@ -312,7 +316,7 @@ export async function getAllTeamsForUser(userId: string) {
         FROM team_members AS tm
         JOIN teams AS t ON t.id = tm.team_id
         WHERE tm.user_id = ${userId} AND t.leader_id != ${userId}
-        ORDER BY id DESC
+        ORDER BY team_name ASC
     `;
     return teams;
 }

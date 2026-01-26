@@ -9,7 +9,7 @@ import { HTTPException } from "hono/http-exception";
 
 import { authMiddleware } from "../middleware/auth.middleware";
 import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware";
-import { getUserById, getUserByMail, checkProfileExists } from "../db/queries";
+import { getUserById, getUserByMail, checkProfileExists, noOfTeamsUserCreated } from "../db/queries";
 import {
     insertTeam,
     addTeamMember,
@@ -63,7 +63,7 @@ teams.post(
             });
         }
 
-
+        
 
         // Get leader's college
         const leaderCollegeId = await getUserCollegeId(userId);
@@ -71,6 +71,12 @@ teams.post(
             throw new HTTPException(400, {
                 message: "College information not found in your profile"
             });
+        }
+        
+        // A user can create only 12 & below teams;
+        const teams_count:number = await noOfTeamsUserCreated(userId);
+        if(teams_count >= 12){
+            throw new HTTPException(403, {message:"A participant can create only 12 teams"})
         }
 
         // Check if team name is unique
