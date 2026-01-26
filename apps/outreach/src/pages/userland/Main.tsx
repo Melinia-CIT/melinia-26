@@ -29,7 +29,7 @@ const Main = () => {
     const { data: registeredEvents } = useQuery<RegisteredEvent[]>({
         queryKey: ["user-registered-events"],
         queryFn: async () => {
-            const response = await api.get("/events/registered")
+            const response = await api.get("/users/me/events")
             return response.data.data
         },
         staleTime: 5 * 60 * 1000,

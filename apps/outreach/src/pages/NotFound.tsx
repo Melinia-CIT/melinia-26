@@ -460,7 +460,6 @@ export default function NotFound() {
                 let response = await fetch("https://cdn.melinia.in/output.txt.gz")
 
                 if (!response.ok) {
-                    console.log("CDN fetch failed, trying fallback to local path")
                     response = await fetch("/animation_frames/output.txt.gz")
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`)
@@ -512,7 +511,6 @@ export default function NotFound() {
                 const isGzipped = compressedData[0] === 0x1f && compressedData[1] === 0x8b
 
                 if (isGzipped) {
-                    console.log("File is Gzipped. Decompressing in browser...")
                     const decompressedStream = new Response(compressedData).body?.pipeThrough(
                         new DecompressionStream("gzip")
                     )
@@ -522,7 +520,6 @@ export default function NotFound() {
                     }
                     decompressedText = await new Response(decompressedStream).text()
                 } else {
-                    console.log("File is already decompressed. Parsing directly...")
                     decompressedText = new TextDecoder().decode(compressedData)
                 }
                 // --------------------------------------------------------------
@@ -538,7 +535,6 @@ export default function NotFound() {
                 if (mounted) {
                     setAnimationFrames(parsedFrames)
                     setIsLoading(false)
-                    console.log(`Loaded ${parsedFrames.length} frames from compressed file.`)
                 }
             } catch (err) {
                 console.error("Failed to load animation frames:", err)

@@ -12,7 +12,8 @@ import { Plus, Minus, MapPin, Clock, Trophy, User, Box, Award } from "lucide-rea
 import { HudButton } from "../ui/hud-button"
 import { HudCard, HudCardHeader, HudTag } from "../ui/hud-card"
 import api from "../../services/api"
-import { GetVerboseEvent, getVerboseEventResponseSchema } from "@melinia/shared"
+import { GetVerboseEvent, getVerboseEventResponseSchema } from "@melinia/shared";
+// import { hackathon_event_id, hackathon_unstop_url, pitch_pit_event_id, pitch_pit_unstop_url } from "../../types/event"
 
 type EventFilter = "flagship" | "technical" | "non-technical"
 
@@ -142,8 +143,8 @@ const Events = () => {
     }
 
     const handleRegister = () => {
-        navigate(`/app/events/${currentEvent?.id}`)
-    }
+        navigate(`/app/events/${currentEvent?.id}`);
+   }
 
     const getEventTypeColor = (event_type: string) => {
         const t = event_type?.toLowerCase()
@@ -419,7 +420,7 @@ const Events = () => {
                                             </div>
 
                                             <div className="absolute inset-0 flex items-center justify-center z-0">
-                                                <span className="font-heading text-3xl md:text-6xl text-white/5 font-black uppercase select-none text-center px-4">
+                                                <span className="font-heading text-3xl md:text-6xl text-white font-black uppercase select-none text-center px-4">
                                                     {currentEvent?.name}
                                                 </span>
                                             </div>
@@ -429,10 +430,9 @@ const Events = () => {
                                         <div className="flex-1 p-4 md:p-8 relative flex flex-col overflow-hidden">
                                             <div className="absolute -right-10 -top-10 w-40 h-40 bg-gradient-to-br from-pink-600/10 to-purple-600/10 rounded-full blur-3xl pointer-events-none" />
 
-                                            <h2 className="font-heading text-2xl md:text-4xl font-black text-white mb-3 md:mb-4 uppercase leading-none">
+                                            {/* <h2 className="font-heading text-2xl md:text-4xl font-black text-white mb-3 md:mb-4 uppercase leading-none">
                                                 {currentEvent.name}
-                                            </h2>
-
+                                            </h2>*/}
                                             <div
                                                 className="text-gray-400 font-body leading-relaxed mb-3 md:mb-4 border-l-4 pl-3 md:pl-4 text-sm md:text-base flex-shrink-0 h-24 overflow-y-auto custom-scrollbar"
                                                 style={{

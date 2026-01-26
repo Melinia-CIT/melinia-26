@@ -24,7 +24,6 @@ const AppLayout = () => {
         queryKey: ["paymentStatus"],
         queryFn: async () => {
             const response = await paymentService.getPaymentStatus()
-            console.log(response)
             return response
         },
         staleTime: isRestrictedRoute ? 0 : 5 * 60 * 1000,

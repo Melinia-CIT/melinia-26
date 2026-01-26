@@ -23,8 +23,8 @@ const faqData: FAQItem[] = [
     },
     {
         id: "3",
-        question: "What payment methods are accepted?",
-        answer: "We accept payments through UPI, credit/debit cards, and net banking. All transactions are secure and processed through Razorpay. If you face any issues during payment, please contact our helpdesk at helpdesk@melinia.in for assistance.",
+        question: "Is Flagship event registrations are different from Melinia main track registration?",
+        answer: "Flagship-event registration is separate from Melinia registration, Flagship events are hosted on Unstop platform and require their own payment, To enter the main-track events, login & pay inside the Melinia web app.",
     },
     {
         id: "4",
@@ -39,7 +39,7 @@ const faqData: FAQItem[] = [
     {
         id: "6",
         question: "Who should I contact for additional queries?",
-        answer: "For any queries, you can reach out to our team via email at helpdesk@melinia.in or call us at +91 9597970123. You can also visit our campus at Civil Aerodrome Post, Coimbatore, Tamilnadu, India – 641 014. Our team is available to assist you throughout the fest period.",
+        answer: "For any queries, you can reach out to our team via email at helpdesk@melinia.in or call the respective event organizers mentioned. You can also visit our campus at Civil Aerodrome Post, Coimbatore, Tamilnadu, India – 641 014. Our team is available to assist you throughout the fest period.",
     },
 ]
 

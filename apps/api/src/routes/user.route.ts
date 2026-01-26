@@ -155,7 +155,7 @@ user.get(
             const registeredEvents = await getUserRegisteredEvents(userId);
             return c.json({
                 events: registeredEvents
-            }, 200);;
+            }, 200);
         } catch (err) {
             console.error(err);
             throw new HTTPException(500, { message: "Failed to fetch registered events" })

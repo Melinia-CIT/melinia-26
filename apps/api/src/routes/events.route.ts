@@ -186,11 +186,11 @@ events.post(
         }
 
         // Validate participation type matches event type
-        if (event.participation_type !== registration_type) {
-            throw new HTTPException(400, {
-                message: `This event requires ${event.participation_type} participation`
-            });
-        }
+        // if (event.participation_type !== registration_type) {
+        //     throw new HTTPException(400, {
+        //         message: `This event requires ${event.participation_type} participation`
+        //     });
+        // }
 
         // SOLO REGISTRATION 
         if (registration_type === "solo") {
@@ -199,6 +199,10 @@ events.post(
                 throw new HTTPException(400, {
                     message: "Team registration not allowed for solo events"
                 });
+            }
+
+            if(event.min_team_size > 1){
+                throw new HTTPException(400, {message:"Solo registration not applicable for this event"})
             }
 
             //Check if user already registered for this event (solo)

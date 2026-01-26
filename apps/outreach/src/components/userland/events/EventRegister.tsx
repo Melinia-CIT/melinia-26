@@ -71,7 +71,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                     const teamRes = await team_management.teamList('led');
                     if (!isSubscribed) return;
 
-                    const userTeams = teamRes.data.data || [];
+                    const userTeams = teamRes.data || [];
                     setTeams(userTeams);
 
                     if (userTeams.length === 0 && event.min_team_size > 1) {
