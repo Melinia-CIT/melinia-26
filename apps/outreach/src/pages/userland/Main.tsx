@@ -14,7 +14,6 @@ type RegEvents = {
     events: UserRegisteredEvents
 }
 
-
 const Main = () => {
     const navigate = useNavigate()
     const [showNotifications, setShowNotifications] = useState(false)
@@ -24,8 +23,8 @@ const Main = () => {
     const { data: registeredEvents } = useQuery<UserRegisteredEvents>({
         queryKey: ["user-registered-events"],
         queryFn: async () => {
-            const response = await api.get<RegEvents>("/users/me/events");
-            return response.data.events;
+            const response = await api.get<RegEvents>("/users/me/events")
+            return response.data.events
         },
         staleTime: 5 * 60 * 1000,
     })
@@ -33,7 +32,8 @@ const Main = () => {
     const hasEvents = registeredEvents && registeredEvents.length > 0
 
     const handleEventClick = (event: TimelineEvent) => {
-        navigate(`/app/events/${event.id}`)
+        const eventId = event.eventId || event.id
+        navigate(`/app/events/${eventId}`)
     }
 
     return (

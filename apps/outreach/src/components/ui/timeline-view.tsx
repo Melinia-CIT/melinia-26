@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
-import Timeline, { TimelineEvent, TimelineEventType } from "./timeline"
+import Timeline, { TimelineEvent } from "./timeline"
 import TimelineShimmer from "./timeline-shimmer"
 import api from "../../services/api"
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react"
@@ -13,24 +13,6 @@ type UserRegEvents = {
 }
 
 export type { TimelineEvent }
-
-const EVENT_DURATIONS: Record<string, number> = {
-    technical: 2,
-    "non-technical": 3,
-    flagship: 4,
-}
-
-function estimateEventEndTime(startTime: Date, eventType: string): Date {
-    const duration = EVENT_DURATIONS[eventType.toLowerCase()] || 2
-    return new Date(startTime.getTime() + duration * 60 * 60 * 1000)
-}
-
-function mapEventType(type: string): TimelineEventType {
-    const normalized = type?.toLowerCase()
-    if (normalized === "technical") return "technical"
-    if (normalized === "non-technical") return "non-technical"
-    return "flagship"
-}
 
 function isSameDay(date1: Date, date2: Date): boolean {
     return (
@@ -75,21 +57,24 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
         queryKey: ["user-registered-events"],
         queryFn: async () => {
             const response = await api.get<UserRegEvents>("/events/registered")
-            return userRegisteredEventsSchema.parse(response.data.events);
+            return userRegisteredEventsSchema.parse(response.data.events)
         },
         staleTime: 5 * 60 * 1000,
     })
 
     const allTimelineEvents: TimelineEvent[] = useMemo(() => {
         if (!registeredEvents) return []
-        return registeredEvents.map(event => ({
-            id: event.id,
-            name: event.name,
-            startTime: new Date(event.start_time),
-            endTime: estimateEventEndTime(event.start_time, event.event_type),
-            eventType: mapEventType(event.event_type),
-            venue: event.venue,
-        }))
+        return registeredEvents.flatMap(event =>
+            (event.rounds || []).map((round, index) => ({
+                id: `${event.id}-${index}`,
+                eventId: event.id,
+                name: `${event.name} - ${round.round_name}`,
+                startTime: round.start_time,
+                endTime: round.end_time,
+                eventType: event.event_type,
+                venue: event.venue,
+            }))
+        )
     }, [registeredEvents])
 
     const todaysEvents = useMemo(() => {
@@ -102,7 +87,8 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
         if (onEventClick) {
             onEventClick(event)
         } else {
-            navigate(`/app/events/${event.id}`)
+            const eventId = event.eventId || event.id
+            navigate(`/app/events/${eventId}`)
         }
     }
 
@@ -149,15 +135,19 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
     return (
         <div className={cn("space-y-4", className)}>
             <div className="flex items-center justify-between font-geist">
-                <h2 className="text-2xl font-bold font-inst text-white tracking-tight">Your Timeline</h2>
+                <h2 className="text-2xl font-bold font-inst text-white tracking-tight">
+                    Your Timeline
+                </h2>
                 <div className="flex items-center gap-2 bg-zinc-900/50 rounded-lg p-1 border border-white/5">
                     <button
+                        type="button"
                         onClick={goToPreviousDay}
                         className="p-2 hover:bg-white/5 rounded-md transition-colors text-zinc-400 hover:text-white"
                     >
                         <ChevronLeft className="w-4 h-4" />
                     </button>
                     <button
+                        type="button"
                         onClick={goToToday}
                         className={cn(
                             "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
@@ -169,6 +159,7 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
                         Today
                     </button>
                     <button
+                        type="button"
                         onClick={goToNextDay}
                         className="p-2 hover:bg-white/5 rounded-md transition-colors text-zinc-400 hover:text-white"
                     >
@@ -191,7 +182,7 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
                     onEventClick={handleEventClick}
                 />
             ) : (
-                <div className="w-full bg-zinc-900/30 rounded-xl border border-white/5 p-8 flex flex-col items-center justify-center text-center">
+                <div className="w-full bg-zinc-900/30 rounded-xl border border-white/5 p-8 flex flex-col items-center justify-center text-center h-xl">
                     <Clock className="w-12 h-12 text-zinc-600 mb-4" />
                     <p className="text-zinc-500 text-sm font-medium mt-1">
                         {isToday
@@ -199,6 +190,7 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
                             : `No events on ${formatDateHeader(selectedDate)}.`}
                     </p>
                     <button
+                        type="button"
                         onClick={() => navigate("/app/events")}
                         className="mt-4 px-4 py-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-sm hover:bg-indigo-500/20 transition-colors"
                     >

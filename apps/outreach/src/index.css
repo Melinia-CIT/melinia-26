@@ -25,7 +25,6 @@
 
     /* Keyframe Definitions */
     @keyframes pulse-slow {
-
         0%,
         100% {
             opacity: 1;
@@ -39,7 +38,6 @@
     }
 
     @keyframes bounce-subtle {
-
         0%,
         100% {
             transform: translateY(0);
@@ -61,7 +59,6 @@
     }
 
     @keyframes dotPulse {
-
         0%,
         100% {
             opacity: 0.7;
@@ -113,6 +110,33 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(139, 139, 139, 0.8);
+}
+
+/* Timeline Custom Scrollbar - Grey/Zinc theme */
+.timeline-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.timeline-scrollbar::-webkit-scrollbar-track {
+    background: rgba(39, 39, 42, 0.5);
+    border-radius: 4px;
+}
+
+.timeline-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(113, 113, 122, 0.4);
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.timeline-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(161, 161, 170, 0.6);
+}
+
+/* Firefox */
+.timeline-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(113, 113, 122, 0.4) rgba(39, 39, 42, 0.5);
 }
 
 /* Helper Class */
