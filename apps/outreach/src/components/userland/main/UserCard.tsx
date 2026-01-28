@@ -119,12 +119,12 @@ const UserCard = () => {
                             />
                         </button>
 
-                        <div className="mb-6 w-[60vw] sm:w-[280px] md:w-[320px] rounded-xl overflow-hidden">
+                        <div className="mb-6 w-[62vw] sm:w-[280px] md:w-[320px] h-[62vw] sm:h-[280px] md:h-[320px] rounded-xl overflow-hidden">
                             <QRCode
                                 userId={user.id}
                                 userName={`${user.profile?.first_name} ${user.profile?.last_name}`}
                                 logoUrl="https://cdn.melinia.in/melinia-qr-embed.png"
-                                size={264}
+                                size={320}
                             />
                         </div>
 
