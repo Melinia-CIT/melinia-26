@@ -250,12 +250,12 @@ const EventDetail = () => {
                             </div>
                         </div>
                         <div className="flex items-start gap-2">
-                            <MapPin className={`w-4 h-4 ${theme.icon} mt-0.5`} />
-                            <div>
+                            <MapPin className={`w-4 h-4 ${theme.icon} mt-0.5 flex-shrink-0`} />
+                            <div className="flex-1 min-w-0">
                                 <p className="text-[10px] font-bold text-zinc-500 uppercase">
                                     Venue
                                 </p>
-                                <p className="text-xs text-white font-medium truncate w-24 md:w-auto">
+                                <p className="text-xs text-white font-medium break-words">
                                     {event.venue}
                                 </p>
                             </div>
@@ -286,8 +286,15 @@ const EventDetail = () => {
                                 {event.rounds
                                     .sort((a: any, b: any) => a.round_no - b.round_no)
                                     .map(round => {
-                                        const roundRules = round.rules
+                                        const roundRules = round.rules ?? []
+                                        const hasRules = roundRules.length > 0
                                         const isExpanded = expandedRound === round.round_no
+                                        const timeLabel =
+                                            round.start_time && round.end_time
+                                                ? `${formatTime(round.start_time.toString())} - ${formatTime(round.end_time.toString())}`
+                                                : round.start_time
+                                                  ? formatTime(round.start_time.toString())
+                                                  : "TBA"
                                         return (
                                             <div
                                                 key={round.round_no}
@@ -302,18 +309,18 @@ const EventDetail = () => {
                                                     }
                                                     className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
                                                 >
-                                                    <div className="flex items-center gap-4">
+                                                    <div className="flex items-center gap-4 flex-1">
                                                         <div className="flex items-center justify-center w-8 h-8 rounded-lg font-bold text-xs border border-white/10 bg-white/5 text-white">
                                                             {round.round_no}
                                                         </div>
-                                                        <div>
+                                                        <div className="flex-1">
                                                             <h3 className="text-xs font-bold text-white uppercase tracking-tight">
                                                                 {round.round_name ||
                                                                     `Round ${round.round_no}`}
                                                             </h3>
-                                                            <p className="text-[10px] text-zinc-500 uppercase mt-0.5">
-                                                                {round.round_description}
-                                                            </p>
+                                                            <span className="inline-block px-2 py-0.5 mt-1 rounded-full text-[9px] font-medium bg-white/10 text-zinc-400 border border-white/10">
+                                                                {timeLabel}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                     <motion.div
@@ -334,56 +341,37 @@ const EventDetail = () => {
                                                             }}
                                                             className="overflow-hidden bg-black/20 border-t border-white/5"
                                                         >
-                                                            <div className="px-4 pb-4 pt-3 space-y-2">
-                                                                <div className="grid grid-cols-2 gap-4 mb-3 pb-2 border-b border-white/5">
-                                                                    <div>
-                                                                        <p className="text-[9px] text-zinc-500 uppercase font-bold">
-                                                                            Start
-                                                                        </p>
-                                                                        <p className="text-[11px] text-zinc-300">
-                                                                            {formatDate(
-                                                                                round.start_time.toString()
-                                                                            )}{" "}
-                                                                            -{" "}
-                                                                            {formatTime(
-                                                                                round.start_time.toString()
-                                                                            )}
+                                                            <div className="px-4 pb-4 pt-3 space-y-3">
+                                                                {round.round_description && (
+                                                                    <div className="bg-white/5 p-3 rounded-lg border border-white/10">
+                                                                        <p className="text-[11px] text-zinc-300 leading-relaxed">
+                                                                            {
+                                                                                round.round_description
+                                                                            }
                                                                         </p>
                                                                     </div>
-                                                                    <div>
+                                                                )}
+                                                                {hasRules && (
+                                                                    <div className="space-y-2">
                                                                         <p className="text-[9px] text-zinc-500 uppercase font-bold">
-                                                                            End
+                                                                            Rules
                                                                         </p>
-                                                                        <p className="text-[11px] text-zinc-300">
-                                                                            {formatDate(
-                                                                                round.end_time.toString()
-                                                                            )}{" "}
-                                                                            -{" "}
-                                                                            {formatTime(
-                                                                                round.end_time.toString()
-                                                                            )}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                                {roundRules.length > 0 ? (
-                                                                    roundRules.map(rule => (
-                                                                        <div
-                                                                            key={rule.id}
-                                                                            className="text-[11px] text-zinc-300 flex gap-2 bg-white/5 p-2 rounded border border-white/5"
-                                                                        >
-                                                                            <span
-                                                                                className={`${theme.accent} font-bold`}
+                                                                        {roundRules.map(rule => (
+                                                                            <div
+                                                                                key={rule.id}
+                                                                                className="text-[11px] text-zinc-300 flex gap-2 bg-white/5 p-2 rounded border border-white/5"
                                                                             >
-                                                                                {rule.rule_no}.
-                                                                            </span>
-                                                                            {rule.rule_description}
-                                                                        </div>
-                                                                    ))
-                                                                ) : (
-                                                                    <p className="text-[10px] text-zinc-600 italic px-2">
-                                                                        No specific rules for this
-                                                                        round.
-                                                                    </p>
+                                                                                <span
+                                                                                    className={`${theme.accent} font-bold`}
+                                                                                >
+                                                                                    {rule.rule_no}.
+                                                                                </span>
+                                                                                {
+                                                                                    rule.rule_description
+                                                                                }
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         </motion.div>
