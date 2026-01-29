@@ -672,19 +672,7 @@ await runMigration("add necessary indexes", async (tx) => {
 
 await runMigration("remove second check constraint from events table ", async (tx) => {
 
-
-	const result = await tx`
-		SELECT con.conname
-		FROM pg_constraint con
-		JOIN pg_class rel ON rel.oid = con.conrelid
-		WHERE rel.relname = 'events'
-		AND con.contype = 'c'
-		AND pg_get_constraintdef(con.oid) LIKE '%registration_end <= start_time%';
-	`
-
-	if (result[0]?.conname) {
-		await tx`ALTER TABLE events DROP CONSTRAINT ${tx(result[0].conname)}`;
-	}
+	await tx`ALTER TABLE events DROP CONSTRAINT events_check2`;
 
 })
 
