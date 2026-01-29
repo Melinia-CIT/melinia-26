@@ -1,5 +1,5 @@
-import { HTTPException } from "hono/http-exception";
-import sql from "../connection";
+import { HTTPException } from "hono/http-exception"
+import sql from "../connection"
 import {
     baseEventSchema,
     basePrizeSchema,
@@ -23,10 +23,13 @@ import {
     type GetVerboseEvent,
     type GetCrew,
     type UserRegisteredEvents,
+    type EventPatch,
+    type RoundPatch,
     userRegisteredEventsSchema,
     userRegistrationStatus,
     type UserRegistrationStatus,
-} from "@melinia/shared";
+    roundPatchSchema,
+} from "@melinia/shared"
 
 export async function insertEvent(created_by: string, data: CreateEvent, tx = sql): Promise<Event> {
     const [event] = await tx`
@@ -60,20 +63,24 @@ export async function insertEvent(created_by: string, data: CreateEvent, tx = sq
             ${created_by}
         )
         RETURNING *;
-    `;
+    `
 
-    return baseEventSchema.parse(event);
-};
+    return baseEventSchema.parse(event)
+}
 
-export async function insertPrizes(eventId: string, data: CreateEventPrizes, tx = sql): Promise<Prize[]> {
+export async function insertPrizes(
+    eventId: string,
+    data: CreateEventPrizes,
+    tx = sql
+): Promise<Prize[]> {
     const prizes = await tx`
         INSERT INTO event_prizes (event_id, position, reward_value)
         VALUES ${sql(data.map(prize => [eventId, prize.position, prize.reward_value]))}
         RETURNING *;
-    `;
+    `
 
-    return prizes.map(prize => basePrizeSchema.parse(prize));
-};
+    return prizes.map(prize => basePrizeSchema.parse(prize))
+}
 
 export async function insertCrew(
     eventId: string,
@@ -90,78 +97,83 @@ export async function insertCrew(
         FROM users u
         WHERE u.email IN ${sql(data.map(organizer => organizer.email))} AND u.role = ${role}
         RETURNING *;
-    `;
+    `
 
-    return crews.map(crew => baseCrewSchema.parse(crew));
-};
+    return crews.map(crew => baseCrewSchema.parse(crew))
+}
 
-export async function insertRounds(eventId: string, data: CreateRounds, tx = sql): Promise<Round[]> {
+export async function insertRounds(
+    eventId: string,
+    data: CreateRounds,
+    tx = sql
+): Promise<Round[]> {
     const rounds = await tx`
         INSERT INTO event_rounds
         (event_id, round_no, round_name, round_description, start_time, end_time)
         VALUES ${sql(
-        data.map(round => [
-            eventId,
-            round.round_no,
-            round.round_name,
-            round.round_description,
-            round.start_time.toISOString(),
-            round.end_time.toISOString()
-        ])
-    )}
+            data.map(round => [
+                eventId,
+                round.round_no,
+                round.round_name,
+                round.round_description,
+                round.start_time.toISOString(),
+                round.end_time.toISOString(),
+            ])
+        )}
         RETURNING *;
-    `;
+    `
 
-    return rounds.map(round => baseRoundSchema.parse(round));
-};
+    return rounds.map(round => baseRoundSchema.parse(round))
+}
 
-export async function insertRoundRules(eventId: string, roundId: number, data: CreateRoundRules, tx = sql): Promise<Rule[]> {
+export async function insertRoundRules(
+    eventId: string,
+    roundId: number,
+    data: CreateRoundRules,
+    tx = sql
+): Promise<Rule[]> {
     const rules = await tx`
         INSERT INTO round_rules
         (event_id, round_id, rule_no, rule_description)
         VALUES ${sql(data.map(rule => [eventId, roundId, rule.rule_no, rule.rule_description]))}
         RETURNING *;
-    `;
+    `
 
-    return rules.map(rule => baseRoundRulesSchema.parse(rule));
+    return rules.map(rule => baseRoundRulesSchema.parse(rule))
 }
 
 export async function createEvent(userId: string, data: CreateEvent): Promise<VerboseEvent> {
-    const result = await sql.begin(async (tx) => {
-        const event = await insertEvent(userId, data, tx);
-        const prizes = data.prizes?.length ? await insertPrizes(event.id, data.prizes, tx) : [];
+    const result = await sql.begin(async tx => {
+        const event = await insertEvent(userId, data, tx)
+        const prizes = data.prizes?.length ? await insertPrizes(event.id, data.prizes, tx) : []
 
         const rounds = data.rounds?.length
             ? await Promise.all(
-                data.rounds.map(async (roundData) => {
-                    const { rules, ...round } = roundData;
+                  data.rounds.map(async roundData => {
+                      const { rules, ...round } = roundData
 
-                    const [insertedRound] = await insertRounds(event.id, [round], tx);
+                      const [insertedRound] = await insertRounds(event.id, [round], tx)
 
-                    const insertedRules = insertedRound && rules?.length
-                        ? await insertRoundRules(
-                            event.id,
-                            insertedRound.id,
-                            rules,
-                            tx
-                        )
-                        : [];
+                      const insertedRules =
+                          insertedRound && rules?.length
+                              ? await insertRoundRules(event.id, insertedRound.id, rules, tx)
+                              : []
 
-                    return {
-                        ...insertedRound,
-                        rules: insertedRules
-                    };
-                })
-            )
-            : [];
+                      return {
+                          ...insertedRound,
+                          rules: insertedRules,
+                      }
+                  })
+              )
+            : []
 
         const organizers = data?.crew?.organizers?.length
             ? await insertCrew(event.id, userId, data.crew?.organizers, "ORGANIZER", tx)
-            : [];
+            : []
 
         const volunteers = data?.crew?.volunteers?.length
             ? await insertCrew(event.id, userId, data?.crew?.volunteers, "VOLUNTEER", tx)
-            : [];
+            : []
 
         return {
             ...event,
@@ -169,12 +181,12 @@ export async function createEvent(userId: string, data: CreateEvent): Promise<Ve
             prizes,
             crew: {
                 organizers,
-                volunteers
-            }
+                volunteers,
+            },
         }
-    });
+    })
 
-    return verboseEventSchema.parse(result);
+    return verboseEventSchema.parse(result)
 }
 
 export async function listEvents(): Promise<Event[]> {
@@ -207,12 +219,12 @@ export async function listEvents(): Promise<Event[]> {
             e.name ASC;
     `
 
-    return events.map(event => baseEventSchema.parse(event));
+    return events.map(event => baseEventSchema.parse(event))
 }
 
 export async function getPrizes(eventIds: string[]): Promise<Prize[]> {
     if (eventIds.length === 0) {
-        return [];
+        return []
     }
 
     const prizes = await sql`
@@ -228,12 +240,12 @@ export async function getPrizes(eventIds: string[]): Promise<Prize[]> {
         ORDER BY event_id, position ASC;
     `
 
-    return prizes.map(pz => basePrizeSchema.parse(pz));
+    return prizes.map(pz => basePrizeSchema.parse(pz))
 }
 
 export async function getRounds(eventIds: string[]): Promise<Round[]> {
     if (eventIds.length === 0) {
-        return [];
+        return []
     }
 
     const rounds = await sql`
@@ -252,12 +264,12 @@ export async function getRounds(eventIds: string[]): Promise<Round[]> {
         ORDER BY event_id, round_no ASC;
     `
 
-    return rounds.map(round => baseRoundSchema.parse(round));
+    return rounds.map(round => baseRoundSchema.parse(round))
 }
 
 export async function getRoundRules(roundIds: number[]): Promise<Rule[]> {
     if (roundIds.length === 0) {
-        return [];
+        return []
     }
 
     const rules = await sql`
@@ -274,12 +286,12 @@ export async function getRoundRules(roundIds: number[]): Promise<Rule[]> {
         ORDER BY round_id, rule_no ASC;
     `
 
-    return rules.map(rule => baseRoundRulesSchema.parse(rule));
+    return rules.map(rule => baseRoundRulesSchema.parse(rule))
 }
 
 export async function getOrganizers(eventIds: string[]): Promise<GetCrew[]> {
     if (eventIds.length === 0) {
-        return [];
+        return []
     }
 
     const organizers = await sql`
@@ -296,50 +308,51 @@ export async function getOrganizers(eventIds: string[]): Promise<GetCrew[]> {
         JOIN profile p ON p.user_id = u.id
         WHERE ec.event_id = ANY(${eventIds}) AND u.role = 'ORGANIZER'
         ORDER BY ec.event_id;
-    `;
+    `
 
-    return organizers.map(og => getCrewSchema.parse(og));
+    return organizers.map(og => getCrewSchema.parse(og))
 }
 
 export async function getEvents(): Promise<GetVerboseEvent[]> {
-    const events = await listEvents();
+    const events = await listEvents()
 
     if (events.length === 0) {
-        return [];
+        return []
     }
 
-    const eventIds = events.map(event => event.id);
-    const prizes = await getPrizes(eventIds);
-    const rounds = await getRounds(eventIds);
+    const eventIds = events.map(event => event.id)
+    const prizes = await getPrizes(eventIds)
+    const rounds = await getRounds(eventIds)
 
-    const roundIds = rounds.map(rnd => rnd.id);
-    const rules = roundIds.length ? await getRoundRules(roundIds) : [];
+    const roundIds = rounds.map(rnd => rnd.id)
+    const rules = roundIds.length ? await getRoundRules(roundIds) : []
 
-    const organizers = await getOrganizers(eventIds);
+    const organizers = await getOrganizers(eventIds)
 
-    const verboseEvents = events
-        .map(event => {
-            const eventRounds = rounds
-                .filter(round => round.event_id === event.id)
-                .map(round => {
-                    const roundRules = rules.filter(rule => rule.round_id === round.id)
-                    return {
-                        ...round,
-                        rules: roundRules
-                    }
-                });
-
-            return {
-                ...event,
-                rounds: eventRounds,
-                prizes: prizes.filter(prize => prize.event_id === event.id),
-                crew: {
-                    organizers: organizers.filter(og => og.event_id === event.id)
+    const verboseEvents = events.map(event => {
+        const eventRounds = rounds
+            .filter(round => round.event_id === event.id)
+            .map(round => {
+                const roundRules = rules.filter(rule => rule.round_id === round.id)
+                return {
+                    ...round,
+                    rules: roundRules,
                 }
-            }
-        });
+            })
 
-    return verboseEvents.map(ve => { return getVerboseEventResponseSchema.parse(ve) });
+        return {
+            ...event,
+            rounds: eventRounds,
+            prizes: prizes.filter(prize => prize.event_id === event.id),
+            crew: {
+                organizers: organizers.filter(og => og.event_id === event.id),
+            },
+        }
+    })
+
+    return verboseEvents.map(ve => {
+        return getVerboseEventResponseSchema.parse(ve)
+    })
 }
 
 export async function getEventById(eventId: string): Promise<GetVerboseEvent> {
@@ -366,17 +379,17 @@ export async function getEventById(eventId: string): Promise<GetVerboseEvent> {
     `
 
     if (!event) {
-        throw new HTTPException(404, { message: "Event not found" });
+        throw new HTTPException(404, { message: "Event not found" })
     }
 
     const [prizes, rounds, organizers] = await Promise.all([
         await getPrizes([eventId]),
         await getRounds([eventId]),
-        await getOrganizers([eventId])
-    ]);
+        await getOrganizers([eventId]),
+    ])
 
-    const roundIds = rounds.map(rnd => rnd.id);
-    const rules = roundIds.length ? await getRoundRules(roundIds) : [];
+    const roundIds = rounds.map(rnd => rnd.id)
+    const rules = roundIds.length ? await getRoundRules(roundIds) : []
 
     const eventRounds = rounds
         .filter(round => round.event_id === eventId)
@@ -384,20 +397,20 @@ export async function getEventById(eventId: string): Promise<GetVerboseEvent> {
             const roundRules = rules.filter(rule => rule.round_id === round.id)
             return {
                 ...round,
-                rules: roundRules
+                rules: roundRules,
             }
-        });
+        })
 
     const verboseEvent = {
         ...event,
         rounds: eventRounds,
         prizes: prizes.filter(prize => prize.event_id === eventId),
         crew: {
-            organizers: organizers.filter(og => og.event_id === eventId)
-        }
+            organizers: organizers.filter(og => og.event_id === eventId),
+        },
     }
 
-    return getVerboseEventResponseSchema.parse(verboseEvent);
+    return getVerboseEventResponseSchema.parse(verboseEvent)
 }
 
 export async function deleteEvent(eventId: string): Promise<Event> {
@@ -408,10 +421,10 @@ export async function deleteEvent(eventId: string): Promise<Event> {
     `
 
     if (!deletedEvent) {
-        throw new HTTPException(404, { message: "Event not found" });
+        throw new HTTPException(404, { message: "Event not found" })
     }
 
-    return baseEventSchema.parse(deletedEvent);
+    return baseEventSchema.parse(deletedEvent)
 }
 
 export async function getUserRegisteredEvents(userId: string): Promise<UserRegisteredEvents> {
@@ -489,57 +502,55 @@ export async function getUserRegisteredEvents(userId: string): Promise<UserRegis
             e.start_time,
             e.name;
     `
-    const rounds = await getRounds(regEvents.map(regEvent => regEvent.id));
+    const rounds = await getRounds(regEvents.map(regEvent => regEvent.id))
 
-    return userRegisteredEventsSchema
-        .parse(
-            regEvents
-                .map(event => {
-                    return {
-                        ...event,
-                        rounds: rounds.filter(round => round.event_id == event.id)
-                    }
-                })
-        );
+    return userRegisteredEventsSchema.parse(
+        regEvents.map(event => {
+            return {
+                ...event,
+                rounds: rounds.filter(round => round.event_id == event.id),
+            }
+        })
+    )
 }
 
 export async function checkEventExists(eventId: string): Promise<boolean> {
     const result = await sql`
         SELECT 1 FROM events WHERE id = ${eventId}
-    `;
-    return result.length > 0;
+    `
+    return result.length > 0
 }
 
-// Event Registration Queries 
+// Event Registration Queries
 export async function isUserRegisteredAlready(eventId: string, userId: string): Promise<boolean> {
     const result = await sql`
         SELECT 1 FROM event_registrations 
         WHERE event_id = ${eventId} AND user_id = ${userId}
-    `;
-    return result.length > 0;
+    `
+    return result.length > 0
 }
 
 export async function isTeamRegisteredAlready(eventId: string, teamId: string): Promise<boolean> {
     const result = await sql`
         SELECT 1 FROM event_registrations 
         WHERE event_id = ${eventId} AND team_id = ${teamId}
-    `;
-    return result.length > 0;
+    `
+    return result.length > 0
 }
 
 export async function getEventRegistrationCount(eventId: string): Promise<number> {
     const [result] = await sql<[{ count: number }]>`
         SELECT COUNT(*) as count FROM event_registrations 
         WHERE event_id = ${eventId}
-    `;
-    return result.count;
+    `
+    return result.count
 }
 export async function getEventTeamRegistrationCount(eventId: string): Promise<number> {
     const [result] = await sql<[{ count: number }]>`
         SELECT COUNT(DISTINCT team_id) as count FROM event_registrations 
         WHERE event_id = ${eventId} AND team_id IS NOT NULL
-    `;
-    return result.count;
+    `
+    return result.count
 }
 
 export async function getConflictingTeamMembers(eventId: string, memberIds: string[]) {
@@ -551,8 +562,8 @@ export async function getConflictingTeamMembers(eventId: string, memberIds: stri
         JOIN users u ON er.user_id = u.id
         WHERE er.event_id = ${eventId} 
         AND er.user_id = ANY(${memberIds}::text[])
-    `;
-    return conflicts;
+    `
+    return conflicts
 }
 
 export async function insertSoloRegistration(eventId: string, userId: string) {
@@ -560,8 +571,8 @@ export async function insertSoloRegistration(eventId: string, userId: string) {
         INSERT INTO event_registrations (event_id, team_id, user_id, registered_at)
         VALUES (${eventId}, NULL, ${userId}, NOW())
         RETURNING id, event_id, team_id, user_id, registered_at
-    `;
-    return result;
+    `
+    return result
 }
 
 export async function insertTeamRegistration(eventId: string, teamId: string, userId: string) {
@@ -569,59 +580,62 @@ export async function insertTeamRegistration(eventId: string, teamId: string, us
         INSERT INTO event_registrations (event_id, team_id, user_id, registered_at)
         VALUES (${eventId}, ${teamId}, ${userId}, NOW())
         RETURNING id, event_id, team_id, user_id, registered_at
-    `;
-    return result;
+    `
+    return result
 }
 
-// Team Related Queries 
+// Team Related Queries
 export async function getTeamLeaderId(teamId: string): Promise<string | null> {
     const [team] = await sql`
         SELECT leader_id FROM teams WHERE id = ${teamId}
-    `;
-    return team?.leader_id || null;
+    `
+    return team?.leader_id || null
 }
 
 export async function getTeamMemberIds(teamId: string): Promise<string[]> {
     const members = await sql<{ user_id: string }[]>`
         SELECT user_id FROM team_members WHERE team_id = ${teamId}
-    `;
-    return members.map(m => m.user_id);
+    `
+    return members.map(m => m.user_id)
 }
 
 export async function getTeamMemberCount(teamId: string): Promise<number> {
     const [result] = await sql<[{ count: number }]>`
         SELECT COUNT(*) as count FROM team_members WHERE team_id = ${teamId}
-    `;
-    return result.count;
+    `
+    return result.count
 }
 
 export async function getRegistrationRecordForUser(userId: string, eventId: string) {
     const [result] = await sql`
         SELECT * FROM event_registrations WHERE user_id = ${userId} AND event_id = ${eventId}
-    `;
-    return result || null;
+    `
+    return result || null
 }
 
 export async function deregisterTeam(teamId: string, eventId: string): Promise<void> {
     await sql`
         DELETE FROM event_registrations 
         WHERE event_id = ${eventId} AND team_id = ${teamId}
-    `;
+    `
 }
 
 export async function deregisterUser(userId: string, eventId: string): Promise<void> {
     await sql`
         DELETE FROM event_registrations 
         WHERE event_id = ${eventId} AND user_id = ${userId} AND team_id IS NULL
-    `;
+    `
 }
 
-export async function getUserRegStatus(eventId: string, userId: string): Promise<UserRegistrationStatus> {
+export async function getUserRegStatus(
+    eventId: string,
+    userId: string
+): Promise<UserRegistrationStatus> {
     const [event] = await sql`
         SELECT 1 FROM events WHERE id = ${eventId};
     `
     if (!event) {
-        throw new HTTPException(404, { message: "Event not found" });
+        throw new HTTPException(404, { message: "Event not found" })
     }
 
     const [eventReg] = await sql`
@@ -636,8 +650,8 @@ export async function getUserRegStatus(eventId: string, userId: string): Promise
 
     if (!eventReg) {
         return userRegistrationStatus.parse({
-            registered: false
-        });
+            registered: false,
+        })
     }
 
     if (eventReg.team_id) {
@@ -647,14 +661,247 @@ export async function getUserRegStatus(eventId: string, userId: string): Promise
             registered_at: eventReg.registered_at,
             team: {
                 id: eventReg.team_id,
-                name: eventReg.name
-            }
-        });
+                name: eventReg.name,
+            },
+        })
     } else {
         return userRegistrationStatus.parse({
             registered: true,
             mode: "solo",
-            registered_at: eventReg.registered_at
-        });
+            registered_at: eventReg.registered_at,
+        })
     }
+}
+
+// ... existing imports
+
+export async function updateEvent(eventId: string, updates: EventPatch, tx = sql): Promise<Event> {
+    // Check if event exists
+    const [eventCheck] = await tx`
+        SELECT 1 FROM events WHERE id = ${eventId}
+    `
+    if (!eventCheck) {
+        throw new HTTPException(404, { message: "Event not found" })
+    }
+
+    // Get current event data for comprehensive validation
+    const [currentEvent] = await tx`
+        SELECT 
+            id,
+            name,
+            description,
+            participation_type,
+            event_type,
+            max_allowed,
+            min_team_size,
+            max_team_size,
+            venue,
+            registration_start,
+            registration_end,
+            start_time,
+            end_time,
+            created_by,
+            created_at,
+            updated_at
+        FROM events e
+        WHERE e.id = ${eventId}
+    `
+
+    if (!currentEvent) {
+        throw new HTTPException(404, { message: "Event not found" })
+    }
+
+    // Validate timing constraints with current event data
+    if (
+        updates.registration_start !== undefined ||
+        updates.registration_end !== undefined ||
+        updates.start_time !== undefined ||
+        updates.end_time !== undefined
+    ) {
+        const regStart = updates.registration_start || currentEvent.registration_start
+        const regEnd = updates.registration_end || currentEvent.registration_end
+        const start = updates.start_time || currentEvent.start_time
+        const end = updates.end_time || currentEvent.end_time
+
+        // Validate registration window constraints
+        if (regEnd > start) {
+            throw new HTTPException(400, {
+                message: "Registration end must be before or equal to event start time",
+            })
+        }
+
+        if (regEnd <= regStart) {
+            throw new HTTPException(400, {
+                message: "Registration end must be after registration start",
+            })
+        }
+
+        if (end <= start) {
+            throw new HTTPException(400, {
+                message: "Event end time must be after start time",
+            })
+        }
+
+        // Check if we're trying to modify timing for events that have registrations
+        const now = new Date()
+        if (
+            regStart < now &&
+            (updates.registration_start !== undefined || updates.registration_end !== undefined)
+        ) {
+            throw new HTTPException(409, {
+                message:
+                    "Cannot modify registration timing for events where registration has already started",
+            })
+        }
+    }
+
+    // Validate team size constraints
+    if (updates.min_team_size !== undefined || updates.max_team_size !== undefined) {
+        const minSize = updates.min_team_size || currentEvent.min_team_size
+        const maxSize = updates.max_team_size || currentEvent.max_team_size
+
+        if (maxSize < minSize) {
+            throw new HTTPException(400, {
+                message: "Maximum team size must be greater than or equal to minimum team size",
+            })
+        }
+
+        // Validate participation type consistency
+        if (
+            currentEvent.participation_type === "solo" &&
+            (updates.min_team_size !== undefined || updates.max_team_size !== undefined)
+        ) {
+            if (minSize !== 1 || maxSize !== 1) {
+                throw new HTTPException(400, {
+                    message: "Solo events must have min_team_size and max_team_size set to 1",
+                })
+            }
+        }
+    }
+
+    // Validate participation type changes
+    if (
+        updates.participation_type !== undefined &&
+        updates.participation_type !== currentEvent.participation_type
+    ) {
+        // Check if event already has registrations
+        // In a real implementation, this would query the database
+        throw new HTTPException(409, {
+            message: "Cannot change participation type for events with existing registrations",
+        })
+    }
+
+    // 1. Build a clean object with only the fields that are defined
+    const updateData: any = {}
+
+    if (updates.name !== undefined) updateData.name = updates.name
+    if (updates.description !== undefined) updateData.description = updates.description
+    if (updates.participation_type !== undefined)
+        updateData.participation_type = updates.participation_type
+    if (updates.event_type !== undefined) updateData.event_type = updates.event_type
+    if (updates.max_allowed !== undefined) updateData.max_allowed = updates.max_allowed
+    if (updates.min_team_size !== undefined) updateData.min_team_size = updates.min_team_size
+    if (updates.max_team_size !== undefined) updateData.max_team_size = updates.max_team_size
+    if (updates.venue !== undefined) updateData.venue = updates.venue
+    if (updates.registration_start !== undefined)
+        updateData.registration_start = updates.registration_start
+    if (updates.registration_end !== undefined)
+        updateData.registration_end = updates.registration_end
+    if (updates.start_time !== undefined) updateData.start_time = updates.start_time
+    if (updates.end_time !== undefined) updateData.end_time = updates.end_time
+
+    // 2. Handle case where no fields are provided
+    if (Object.keys(updateData).length === 0) {
+        // If no updates, just return the existing event
+        return baseEventSchema.parse(currentEvent)
+    }
+
+    // 3. Execute Update
+    // postgres.js automatically converts ${updateData} into "col1 = $1, col2 = $2..."
+    const [updatedEvent] = await tx`
+        UPDATE events
+        SET ${tx(updateData)}
+        WHERE id = ${eventId}
+        RETURNING *;
+    `
+
+    if (!updatedEvent) {
+        throw new HTTPException(404, { message: "Event not found" })
+    }
+
+    return baseEventSchema.parse(updatedEvent)
+}
+
+export async function updateEventRound(
+    eventId: string,
+    roundNo: number,
+    updates: RoundPatch,
+    tx = sql
+): Promise<Round> {
+    const updateData: any = {}
+
+    if (updates.round_no !== undefined) updateData.round_no = updates.round_no
+    if (updates.round_name !== undefined) updateData.round_name = updates.round_name
+    if (updates.round_description !== undefined)
+        updateData.round_description = updates.round_description
+    if (updates.start_time !== undefined) updateData.start_time = updates.start_time
+    if (updates.end_time !== undefined) updateData.end_time = updates.end_time
+
+    if (Object.keys(updateData).length === 0) {
+        const [round] = await tx`
+            SELECT * FROM event_rounds WHERE round_no = ${roundNo} AND event_id = ${eventId} 
+        `
+        if (!round) {
+            throw new HTTPException(404, { message: "Round not found" })
+        }
+        return baseRoundSchema.parse(round)
+    }
+
+    const [updatedRound] = await tx`
+        UPDATE event_rounds
+        SET ${tx(updateData)}
+        WHERE round_no = ${roundNo} AND event_id = ${eventId}
+        RETURNING *;
+    `
+
+    if (!updatedRound) {
+        throw new HTTPException(404, { message: "Round not found" })
+    }
+
+    return baseRoundSchema.parse(updatedRound)
+}
+
+export async function updateEventPrize(
+    event_id: string,
+    position: number,
+    updates: Partial<Prize>,
+    tx = sql
+): Promise<Prize> {
+    const updateData: any = {}
+
+    if (updates.position !== undefined) updateData.position = updates.position
+    if (updates.reward_value !== undefined) updateData.reward_value = updates.reward_value
+
+    if (Object.keys(updateData).length === 0) {
+        const [prize] = await tx`
+            SELECT * FROM event_prizes WHERE position = ${position} AND event_id = ${event_id}
+        `
+        if (!prize) {
+            throw new HTTPException(404, { message: "Prize not found" })
+        }
+        return basePrizeSchema.parse(prize)
+    }
+
+    const [updatedPrize] = await tx`
+        UPDATE event_prizes
+        SET ${tx(updateData)}
+        WHERE position = ${position} AND event_id = ${event_id}
+        RETURNING *;
+    `
+
+    if (!updatedPrize) {
+        throw new HTTPException(404, { message: "Prize not found" })
+    }
+
+    return basePrizeSchema.parse(updatedPrize)
 }

@@ -52,3 +52,6 @@ log.txt
 deployments/config/prometheus.yml
 deployments/config/alertmanager.yml
 deployments/logs/
+
+*.original
+*.backup

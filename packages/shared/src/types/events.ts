@@ -121,6 +121,76 @@ export const getCrewSchema =
             ph_no: z.string()
         })
 
+	
+// Event Patch Schema for incremental updates
+export const eventPatchSchema = baseEventSchema
+    .omit({
+        id: true,
+        created_at: true,
+        updated_at: true,
+        created_by: true,
+    })
+    .partial()
+    .extend({
+        // Add custom validation for timing constraints
+        registration_start: z.coerce.date().optional(),
+        registration_end: z.coerce.date().optional(),
+        start_time: z.coerce.date().optional(),
+        end_time: z.coerce.date().optional(),
+    })
+    .superRefine((data, ctx) => {
+        // Validate timing constraints if any timing fields are provided
+        if (data.registration_end !== undefined || data.start_time !== undefined) {
+            const regEnd = data.registration_end || new Date('9999-12-31');
+            const start = data.start_time || new Date('1970-01-01');
+            
+            if (regEnd > start) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "registration_end must be before or equal to start_time",
+                    path: ["registration_end"],
+                });
+            }
+        }
+        
+        if (data.start_time !== undefined || data.end_time !== undefined) {
+            const start = data.start_time || new Date('1970-01-01');
+            const end = data.end_time || new Date('9999-12-31');
+            
+            if (end <= start) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "end_time must be after start_time",
+                    path: ["end_time"],
+                });
+            }
+        }
+        
+        if (data.registration_start !== undefined || data.registration_end !== undefined) {
+            const regStart = data.registration_start || new Date('1970-01-01');
+            const regEnd = data.registration_end || new Date('9999-12-31');
+            
+            if (regEnd <= regStart) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "registration_end must be after registration_start",
+                    path: ["registration_end"],
+                });
+            }
+        }
+        
+        // Validate team size constraints
+        if (data.min_team_size !== undefined && data.max_team_size !== undefined) {
+            if (data.max_team_size < data.min_team_size) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "max_team_size must be greater than or equal to min_team_size",
+                    path: ["max_team_size"],
+                });
+            }
+        }
+    });
+
 // Event
 export const createEventSchema =
     baseEventSchema
@@ -327,8 +397,49 @@ export const eventRegistrationSchema = z.object({
     team_id: z.string().optional().nullable()
 });
 
+
+
+// round update schema
+
+
+export const roundPatchSchema = baseRoundSchema
+    .omit({
+        id: true,
+        event_id: true, // event_id is structural and usually immutable in a patch
+        created_at: true,
+        updated_at: true
+    })
+    .partial()
+    .extend({
+        // Add custom validation for timing constraints
+        start_time: z.coerce.date().optional(),
+        end_time: z.coerce.date().optional(),
+    })
+    .superRefine((data, ctx) => {
+        // Validate timing constraints if any timing fields are provided
+        if (data.start_time !== undefined || data.end_time !== undefined) {
+            const start = data.start_time || new Date('1970-01-01');
+            const end = data.end_time || new Date('9999-12-31');
+            
+			console.log(end,start)
+            if (end <= start) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "end_time must be after start_time",
+                    path: ["end_time"],
+                });
+            }
+        }else{
+			console.log("undefined");
+		}
+    });
+
+
+
+
 export type CreateEvent = z.infer<typeof createEventSchema>;
 export type Event = z.infer<typeof baseEventSchema>;
+export type EventPatch = z.infer<typeof eventPatchSchema>;
 export type VerboseEvent = z.infer<typeof verboseEventSchema>;
 export type GetVerboseEvent = z.infer<typeof getVerboseEventResponseSchema>;
 export type UserRegisteredEvents = z.infer<typeof userRegisteredEventsSchema>;
@@ -348,3 +459,4 @@ export type CreateRoundRules = z.infer<typeof createEventRoundRulesSchema>;
 export type Rule = z.infer<typeof baseRoundRulesSchema>;
 
 export type EventRegistration = z.infer<typeof eventRegistrationSchema>;
+export type RoundPatch = z.infer<typeof roundPatchSchema>; 

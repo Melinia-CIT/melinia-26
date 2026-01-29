@@ -1,12 +1,25 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
-import { createEventSchema, EventParamSchema, getEventsQuerySchema, eventRegistrationSchema, type EventRegistration } from "@melinia/shared";
+import { Hono } from "hono"
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
+import {
+    createEventSchema,
+    EventParamSchema,
+    getEventsQuerySchema,
+    eventRegistrationSchema,
+    eventPatchSchema,
+    roundPatchSchema,
+    basePrizeSchema,
+} from "@melinia/shared"
+import sql from "../db/connection"
 import {
     createEvent,
     deleteEvent,
     getEventById,
     getEvents,
     listEvents,
+    updateEvent,
+    updateEventRound,
+    updateEventPrize,
     isTeamRegisteredAlready,
     isUserRegisteredAlready,
     getEventRegistrationCount,
@@ -20,127 +33,239 @@ import {
     getUserRegStatus,
     isTeamLeader,
     deregisterTeam,
-    deregisterUser
-} from "../db/queries";
+    deregisterUser,
+} from "../db/queries"
 import {
     authMiddleware,
     adminOnlyMiddleware,
     participantOnlyMiddleware,
-} from "../middleware/auth.middleware";
-import { HTTPException } from "hono/http-exception";
-import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware";
+} from "../middleware/auth.middleware"
+import { HTTPException } from "hono/http-exception"
+import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
 
-export const events = new Hono();
+export const events = new Hono()
 
-events.get(
-    "/",
-    zValidator("query", getEventsQuerySchema),
-    async (c) => {
-        try {
-            const { expand } = c.req.valid("query");
+events.get("/", zValidator("query", getEventsQuerySchema), async c => {
+    try {
+        const { expand } = c.req.valid("query")
 
-            if (!expand) {
-                const events = await listEvents();
-                return c.json({ events }, 200);
-            }
-
-            const events = await getEvents();
-            return c.json({ events }, 200);
-        } catch (err) {
-            console.error(err);
-            throw new HTTPException(500, { message: "Failed to fetch events" });
+        if (!expand) {
+            const events = await listEvents()
+            return c.json({ events }, 200)
         }
-    }
-)
 
-events.get(
-    "/:id",
-    zValidator("param", EventParamSchema),
-    async (c) => {
-        try {
-            const { id } = c.req.valid("param");
-            const event = await getEventById(id);
-            return c.json({ event }, 200);
-        } catch (err) {
-            console.error(err);
-            if (err instanceof HTTPException) {
-                throw err;
-            }
-            throw new HTTPException(500, { message: "Failed to fetch event" });
-        }
+        const events = await getEvents()
+        return c.json({ events }, 200)
+    } catch (err) {
+        console.error(err)
+        throw new HTTPException(500, { message: "Failed to fetch events" })
     }
-)
+})
 
-events.get(
-    "/:id/status",
-    authMiddleware,
-    zValidator("param", EventParamSchema),
-    async (c) => {
-        try {
-            const { id } = c.req.valid("param");
-            const userId = c.get("user_id");
-            const regStatus = await getUserRegStatus(id, userId);
-            return c.json({ ...regStatus }, 200);
-        } catch (err) {
-            console.error(err);
-            if (err instanceof HTTPException) {
-                throw err;
-            }
-            throw new HTTPException(500, { message: "Failed to fetch event registration status" });
+events.get("/:id", zValidator("param", EventParamSchema), async c => {
+    try {
+        const { id } = c.req.valid("param")
+        const event = await getEventById(id)
+        return c.json({ event }, 200)
+    } catch (err) {
+        console.error(err)
+        if (err instanceof HTTPException) {
+            throw err
         }
+        throw new HTTPException(500, { message: "Failed to fetch event" })
     }
-)
+})
+
+events.get("/:id/status", authMiddleware, zValidator("param", EventParamSchema), async c => {
+    try {
+        const { id } = c.req.valid("param")
+        const userId = c.get("user_id")
+        const regStatus = await getUserRegStatus(id, userId)
+        return c.json({ ...regStatus }, 200)
+    } catch (err) {
+        console.error(err)
+        if (err instanceof HTTPException) {
+            throw err
+        }
+        throw new HTTPException(500, { message: "Failed to fetch event registration status" })
+    }
+})
 
 events.post(
     "/",
     authMiddleware,
     adminOnlyMiddleware,
     zValidator("json", createEventSchema),
-    async (c) => {
+    async c => {
         try {
-            const data = c.req.valid("json");
-            const userId = c.get("user_id");
+            const data = c.req.valid("json")
+            const userId = c.get("user_id")
 
-            const event = await createEvent(userId, data);
+            const event = await createEvent(userId, data)
 
-            return c.json({
-                data: event,
-                message: "Event created successfully"
-            }, 201);
+            return c.json(
+                {
+                    data: event,
+                    message: "Event created successfully",
+                },
+                201
+            )
         } catch (err) {
-            console.error(err);
-            throw new HTTPException(500, { message: "Failed to create event" });
+            console.error(err)
+            throw new HTTPException(500, { message: "Failed to create event" })
         }
     }
-);
-
+)
 
 events.delete(
     "/:id",
     authMiddleware,
     adminOnlyMiddleware,
     zValidator("param", EventParamSchema),
-    async (c) => {
+    async c => {
         try {
-            const { id } = c.req.valid("param");
-            const deletedEvent = await deleteEvent(id);
+            const { id } = c.req.valid("param")
+            const deletedEvent = await deleteEvent(id)
 
-            return c.json({
-                message: "Event deleted successfully",
-                event: deletedEvent
-            }, 200);
+            return c.json(
+                {
+                    message: "Event deleted successfully",
+                    event: deletedEvent,
+                },
+                200
+            )
         } catch (err) {
-            console.error(err);
+            console.error(err)
             if (err instanceof HTTPException) {
-                throw err;
+                throw err
             }
-            throw new HTTPException(500, { message: "Failed to delete event" });
+            throw new HTTPException(500, { message: "Failed to delete event" })
         }
     }
 )
 
+events.patch(
+    "/:id",
+    authMiddleware,
+    adminOnlyMiddleware,
+    zValidator("param", EventParamSchema),
+    zValidator("json", eventPatchSchema),
 
-// TODO: PATCH /events/:id 
+    async c => {
+        try {
+            const { id } = c.req.valid("param")
+            const updates = c.req.valid("json")
+
+            // Apply updates
+            const updatedEvent = await updateEvent(id, updates)
+
+            return c.json(
+                {
+                    message: "Event updated successfully",
+                    event: updatedEvent,
+                },
+                200
+            )
+        } catch (err) {
+            console.error(err)
+            if (err instanceof HTTPException) {
+                throw err
+            }
+            throw new HTTPException(500, { message: "Failed to update event" })
+        }
+    }
+)
+
+// Round update endpoint
+events.patch(
+    "/:eventId/rounds/:roundNo",
+    authMiddleware,
+    adminOnlyMiddleware,
+    zValidator(
+        "param",
+        z.object({
+            eventId: z.string(),
+            roundNo: z.coerce.number(),
+        })
+    ),
+    zValidator("json", roundPatchSchema),
+    async c => {
+        try {
+            const { eventId, roundNo } = c.req.valid("param")
+            const updates = c.req.valid("json")
+
+            // Apply updates
+            const updatedRound = await updateEventRound(eventId, roundNo, updates)
+
+            return c.json(
+                {
+                    message: "Round updated successfully",
+                    round: updatedRound,
+                },
+                200
+            )
+        } catch (err) {
+            if (err instanceof HTTPException) {
+                throw err
+            }
+            throw new HTTPException(500, { message: "Failed to update round" })
+        }
+    }
+)
+
+// Prize update endpoint
+events.patch(
+    "/:eventId/prizes/:position",
+    authMiddleware,
+    adminOnlyMiddleware,
+    zValidator(
+        "param",
+        z.object({
+            eventId: z.string(),
+            position: z.coerce.number(),
+        })
+    ),
+    zValidator("json", basePrizeSchema.partial()),
+    async c => {
+        try {
+            const { eventId, position } = c.req.valid("param")
+            const updates = c.req.valid("json")
+
+            // Verify the prize belongs to the event
+            const [prize] = await sql`
+                SELECT 1 FROM event_prizes 
+                WHERE position = ${position} AND event_id = ${eventId}
+            `
+
+            if (!prize) {
+                throw new HTTPException(404, {
+                    message: "Prize not found or does not belong to this event",
+                })
+            }
+
+            // Apply updates
+            const updatedPrize = await updateEventPrize(eventId, position, updates)
+
+            return c.json(
+                {
+                    message: "Prize updated successfully",
+                    prize: updatedPrize,
+                },
+                200
+            )
+        } catch (err) {
+            console.error(err)
+            if (err instanceof HTTPException) {
+                throw err
+            }
+            throw new HTTPException(500, { message: "Failed to update prize" })
+        }
+    }
+)
+
+// TODO: PATCH /events/:id ==> [DONE]
+// TODO: PATCH /events/:eventId/rounds/:roundNo ==> [DONE]
+// TODO: PATCH /events/:eventId/prizes/:position ==> [DONE]
 // TODO: POST /events/:id/registrations ==> [DONE]
 // TODO: DELETE /events/:id/registrations ==> [DONE]
 // TODO: GET /users/me/events define this endpoint in users.routes.ts
@@ -157,32 +282,32 @@ events.post(
     participantOnlyMiddleware,
     paymentStatusMiddleware,
     zValidator("json", eventRegistrationSchema),
-    async (c) => {
-        const userId = c.get("user_id");
-        const eventId = c.req.param('id')!;
-        const { team_id, registration_type } = c.req.valid("json");
+    async c => {
+        const userId = c.get("user_id")
+        const eventId = c.req.param("id")!
+        const { team_id, registration_type } = c.req.valid("json")
 
         // Check if event exists
-        const event = await getEventById(eventId);
+        const event = await getEventById(eventId)
         if (!event) {
-            throw new HTTPException(404, { message: "Event not found" });
+            throw new HTTPException(404, { message: "Event not found" })
         }
 
         // Validate registration window
-        const now = new Date();
-        const regStart = new Date(event.registration_start);
-        const regEnd = new Date(event.registration_end);
+        const now = new Date()
+        const regStart = new Date(event.registration_start)
+        const regEnd = new Date(event.registration_end)
 
         if (now < regStart) {
             throw new HTTPException(400, {
-                message: "Registration has not started yet for this event"
-            });
+                message: "Registration has not started yet for this event",
+            })
         }
 
         if (now > regEnd) {
             throw new HTTPException(400, {
-                message: "Registration has ended for this event"
-            });
+                message: "Registration has ended for this event",
+            })
         }
 
         // Validate participation type matches event type
@@ -192,121 +317,123 @@ events.post(
         //     });
         // }
 
-        // SOLO REGISTRATION 
+        // SOLO REGISTRATION
         if (registration_type === "solo") {
             // Solo event: teamId should not be provided
             if (team_id) {
                 throw new HTTPException(400, {
-                    message: "Team registration not allowed for solo events"
-                });
+                    message: "Team registration not allowed for solo events",
+                })
             }
 
-            if(event.min_team_size > 1){
-                throw new HTTPException(400, {message:"Solo registration not applicable for this event"})
+            if (event.min_team_size > 1) {
+                throw new HTTPException(400, {
+                    message: "Solo registration not applicable for this event",
+                })
             }
 
             //Check if user already registered for this event (solo)
-            const alreadyRegisteredSolo = await isUserRegisteredAlready(eventId, userId);
+            const alreadyRegisteredSolo = await isUserRegisteredAlready(eventId, userId)
             if (alreadyRegisteredSolo) {
                 throw new HTTPException(409, {
-                    message: "You are already registered for this event"
-                });
+                    message: "You are already registered for this event",
+                })
             }
 
             //Check max registration limit
-            const registrationCount = await getEventRegistrationCount(eventId);
+            const registrationCount = await getEventRegistrationCount(eventId)
             if (registrationCount >= event.max_allowed) {
                 throw new HTTPException(400, {
-                    message: `Event is full. Maximum ${event.max_allowed} registrations allowed`
-                });
+                    message: `Event is full. Maximum ${event.max_allowed} registrations allowed`,
+                })
             }
 
             //Register solo user
-            const registration = await insertSoloRegistration(eventId, userId);
+            const registration = await insertSoloRegistration(eventId, userId)
 
             return c.json(
                 {
                     message: "Solo registration successful",
-                    data: registration
+                    data: registration,
                 },
                 201
-            );
+            )
         }
 
-        // TEAM REGISTRATION 
+        // TEAM REGISTRATION
         if (registration_type === "team") {
             // Team event: teamId is required
             if (!team_id) {
                 throw new HTTPException(400, {
-                    message: "Team ID is required for team events"
-                });
+                    message: "Team ID is required for team events",
+                })
             }
 
             //Check if team exists and get leader
-            const teamLeaderId = await getTeamLeaderId(team_id);
+            const teamLeaderId = await getTeamLeaderId(team_id)
             if (!teamLeaderId) {
-                throw new HTTPException(404, { message: "Team not found" });
+                throw new HTTPException(404, { message: "Team not found" })
             }
 
             // Only team leader can register
             if (teamLeaderId !== userId) {
                 throw new HTTPException(403, {
-                    message: "Only team leader can register the team for events"
-                });
+                    message: "Only team leader can register the team for events",
+                })
             }
 
             // Check if team already registered
-            const teamAlreadyRegistered = await isTeamRegisteredAlready(eventId, team_id);
+            const teamAlreadyRegistered = await isTeamRegisteredAlready(eventId, team_id)
             if (teamAlreadyRegistered) {
                 throw new HTTPException(409, {
-                    message: "Team is already registered for this event"
-                });
+                    message: "Team is already registered for this event",
+                })
             }
 
             // Get all team members
-            const memberIds = await getTeamMemberIds(team_id);
-            const teamSize = memberIds.length;
+            const memberIds = await getTeamMemberIds(team_id)
+            const teamSize = memberIds.length
 
             // Validate team has members
             if (teamSize === 0) {
                 throw new HTTPException(400, {
-                    message: "Cannot register an empty team"
-                });
+                    message: "Cannot register an empty team",
+                })
             }
 
             // Validate team size constraints
             if (event.min_team_size && teamSize < event.min_team_size) {
                 throw new HTTPException(400, {
-                    message: `Team size (${teamSize}) is less than minimum required (${event.min_team_size})`
-                });
+                    message: `Team size (${teamSize}) is less than minimum required (${event.min_team_size})`,
+                })
             }
 
             if (event.max_team_size && teamSize > event.max_team_size) {
                 throw new HTTPException(400, {
-                    message: `Team size (${teamSize}) exceeds maximum allowed (${event.max_team_size})`
-                });
+                    message: `Team size (${teamSize}) exceeds maximum allowed (${event.max_team_size})`,
+                })
             }
 
             // Check if any team member already registered for this event
-            const conflictingMembers = await getConflictingTeamMembers(eventId, memberIds);
+            const conflictingMembers = await getConflictingTeamMembers(eventId, memberIds)
             if (conflictingMembers.length > 0) {
-                const conflictingEmails = conflictingMembers.map((r: any) => r.email).join(", ");
+                const conflictingEmails = conflictingMembers.map((r: any) => r.email).join(", ")
                 throw new HTTPException(409, {
-                    message: `Cannot register team. Following members are already registered for this event: ${conflictingEmails}`
-                });
+                    message: `Cannot register team. Following members are already registered for this event: ${conflictingEmails}`,
+                })
             }
 
             // Check max team registration limit
-            const teamRegistrationCount = await getEventTeamRegistrationCount(eventId);
+            const teamRegistrationCount = await getEventTeamRegistrationCount(eventId)
             if (teamRegistrationCount >= event.max_allowed) {
                 throw new HTTPException(400, {
-                    message: `Event is full. Maximum ${event.max_allowed} teams allowed`
-                });
+                    message: `Event is full. Maximum ${event.max_allowed} teams allowed`,
+                })
             }
 
             // Register all team members
             for (const memberId of memberIds) {
-                await insertTeamRegistration(eventId, team_id, memberId);
+                await insertTeamRegistration(eventId, team_id, memberId)
             }
 
             return c.json(
@@ -315,70 +442,63 @@ events.post(
                     data: {
                         team_id: team_id,
                         team_size: teamSize,
-                        event_id: eventId
-                    }
+                        event_id: eventId,
+                    },
                 },
                 201
-            );
+            )
         }
 
         // invalid participation type
         throw new HTTPException(400, {
-            message: "Invalid participation type. Must be 'solo' or 'team'"
-        });
+            message: "Invalid participation type. Must be 'solo' or 'team'",
+        })
     }
-);
+)
 events.delete(
     "/:id/registrations",
     authMiddleware,
     participantOnlyMiddleware,
     paymentStatusMiddleware,
-    async (c) => {
-        const userId = c.get("user_id");
-        const eventId = c.req.param("id");
+    async c => {
+        const userId = c.get("user_id")
+        const eventId = c.req.param("id")
 
         // Check if event exists
-        const event = await getEventById(eventId);
+        const event = await getEventById(eventId)
         if (!event) {
-            throw new HTTPException(404, { message: "Event not found" });
+            throw new HTTPException(404, { message: "Event not found" })
         }
 
         // Check if user is registered
-        const record = await getRegistrationRecordForUser(userId, eventId);
+        const record = await getRegistrationRecordForUser(userId, eventId)
         if (!record) {
             throw new HTTPException(400, {
-                message: "You are not registered for this event"
-            });
+                message: "You are not registered for this event",
+            })
         }
 
         // Handle team registration
         if (record.team_id) {
             // Check if user is team leader
-            const isLeader = await isTeamLeader(userId, record.team_id);
+            const isLeader = await isTeamLeader(userId, record.team_id)
             if (!isLeader) {
                 throw new HTTPException(403, {
-                    message: "Only team leader can unregister the team"
-                });
+                    message: "Only team leader can unregister the team",
+                })
             }
 
             // Deregister entire team
-            await deregisterTeam(record.team_id, eventId);
+            await deregisterTeam(record.team_id, eventId)
 
-            return c.json(
-                { message: "Team unregistered successfully from the event" },
-                200
-            );
+            return c.json({ message: "Team unregistered successfully from the event" }, 200)
         }
 
         // else solo registration
-        await deregisterUser(userId, eventId);
+        await deregisterUser(userId, eventId)
 
-        return c.json(
-            { message: "Unregistered successfully from the event" },
-            200
-        );
+        return c.json({ message: "Unregistered successfully from the event" }, 200)
     }
-);
+)
 
-
-export default events;
+export default events
