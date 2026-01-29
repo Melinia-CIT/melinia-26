@@ -216,7 +216,6 @@ export default function Footer() {
                             className="w-full h-64 md:h-80 transition-all duration-500"
                             style={{ border: 0 }}
                             allowFullScreen
-                            loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
                         />
                     </div>
