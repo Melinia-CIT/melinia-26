@@ -421,7 +421,6 @@ export const roundPatchSchema = baseRoundSchema
             const start = data.start_time || new Date('1970-01-01');
             const end = data.end_time || new Date('9999-12-31');
             
-			console.log(end,start)
             if (end <= start) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -429,9 +428,7 @@ export const roundPatchSchema = baseRoundSchema
                     path: ["end_time"],
                 });
             }
-        }else{
-			console.log("undefined");
-		}
+        }
     });
 
 
