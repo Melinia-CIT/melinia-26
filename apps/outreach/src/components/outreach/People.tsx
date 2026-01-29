@@ -97,7 +97,7 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
             setIsMobile(mobile)
             if (mobile) {
                 setCardWidth(window.innerWidth / 2 - 12)
-                setGap(24)
+                setGap(12)
             } else {
                 setCardWidth(192)
                 setGap(64)
@@ -228,7 +228,7 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
                 className="carousel-wrapper relative w-full overflow-x-auto lg:overflow-hidden py-12"
             >
                 <div
-                    className={`carousel-container flex gap-6 md:gap-28 ${isScrolling ? "scrolling" : ""}`}
+                    className={`carousel-container flex gap-3 md:gap-28 ${isScrolling ? "scrolling" : ""}`}
                 >
                     {duplicatedPeople.map((person, index) => (
                         <motion.div
@@ -240,7 +240,7 @@ function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactEleme
                             animate={!shouldReduceMotion ? "animate" : undefined}
                             whileHover={!shouldReduceMotion ? "hover" : undefined}
                         >
-                            <UserCard {...person} alwaysShowText={isMobile} />
+                            <UserCard {...person} />
                         </motion.div>
                     ))}
                 </div>

@@ -1,6 +1,34 @@
 import { motion } from "framer-motion"
-import { MapPin, Mail, Phone, ArrowRight } from "iconoir-react"
+import { MapPin, Mail, ArrowRight } from "iconoir-react"
 import { FloatingPathsBackground } from "../ui/floating-paths"
+
+type FooterPerson = {
+    name: string
+    role: string
+    phoneDisplay: string
+    phoneHref: string
+}
+
+const footerContactPersons: FooterPerson[] = [
+    {
+        name: "Ratheesh Kumar S",
+        role: "Chairperson, SS",
+        phoneDisplay: "+91 95979 70123",
+        phoneHref: "tel:+919597970123",
+    },
+    {
+        name: "Omega S",
+        role: "Chairperson, DCS",
+        phoneDisplay: "+91 77082 75886",
+        phoneHref: "tel:+917708275886",
+    },
+    {
+        name: "Shree Kottes J",
+        role: "Technical Lead",
+        phoneDisplay: "+91 94429 28955",
+        phoneHref: "tel:+919442928955",
+    },
+]
 
 const InstagramIcon = ({ className }: { className?: string }) => (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -48,6 +76,31 @@ function ContactItem({ icon: Icon, label, value, href }: ContactItemProps) {
                     {value}
                 </p>
             </div>
+        </a>
+    )
+}
+
+function PersonContactCard({ person }: { person: FooterPerson }) {
+    return (
+        <a href={person.phoneHref} className="group cursor-pointer block">
+            <p
+                className="text-gray-200 text-base md:text-lg font-medium mb-1 group-hover:text-white transition-colors duration-300"
+                style={{ fontFamily: "Inter, sans-serif" }}
+            >
+                {person.name}
+            </p>
+            <p
+                className="text-white/60 text-[10px] uppercase tracking-widest mb-2"
+                style={{ fontFamily: "Space Grotesk, sans-serif" }}
+            >
+                {person.role}
+            </p>
+            <p
+                className="text-white text-lg md:text-xl font-light group-hover:text-[#FF69B4] transition-colors duration-300"
+                style={{ fontFamily: "Inter, sans-serif" }}
+            >
+                {person.phoneDisplay}
+            </p>
         </a>
     )
 }
@@ -181,23 +234,32 @@ export default function Footer() {
                                 value="helpdesk@melinia.in"
                                 href="mailto:helpdesk@melinia.in"
                             />
-                            <ContactItem
-                                icon={Phone}
-                                label="Phone"
-                                value="+91 9597970123"
-                                href="tel:+919597970123"
-                            />
                         </div>
                     </div>
 
                     {/* Links & Social Column */}
-                    <div className="lg:col-span-6 flex flex-col gap-10 lg:pl-8">
-                        <QuickLinks />
-                        <SocialLinks />
+                    <div className="lg:col-span-6 lg:pl-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <QuickLinks />
+                            <SocialLinks />
+                        </div>
                     </div>
                 </div>
 
-                {/* Row 2: Map - Full Width */}
+                {/* Row 2: Contact Persons - Full Width */}
+                <div className="mb-16">
+                    <h3 className="font-space text-white text-lg md:text-xl tracking-wider flex items-center gap-2 mb-6">
+                        <span className="w-1 h-6 bg-[#FF0066]" />
+                        Contacts
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {footerContactPersons.map(person => (
+                            <PersonContactCard key={person.phoneHref} person={person} />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Row 3: Map - Full Width */}
                 <div className="mb-16">
                     <h3 className="font-space text-white text-lg md:text-xl tracking-wider flex items-center gap-2 mb-6">
                         <span className="w-1 h-6 bg-white" />

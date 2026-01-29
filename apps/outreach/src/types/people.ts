@@ -1,4 +1,3 @@
-
 export interface SectionData {
     title: string
     people: {
@@ -84,7 +83,7 @@ export const peopleData: SectionData[] = [
                 linkedinUrl: "https://www.linkedin.com/in/chandradhitiyatv/",
                 color: "#FF0055",
             },
-       ],
+        ],
     },
 
     {
@@ -92,55 +91,55 @@ export const peopleData: SectionData[] = [
         people: [
             {
                 name: "Shree Kottes J",
-                role: "Techical Lead",
-                imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
-                linkedinUrl: "#",
+                role: "Technical Lead",
+                imageUrl: "https://cdn.melinia.in/people/kottesh.webp",
+                linkedinUrl: "https://linkedin.com/in/kottesh",
                 color: "#9D00FF",
             },
 
             {
                 name: "Vishal D",
                 role: "Lead Developer",
-                imageUrl: "https://podu.pics/M6mZKBGA17",
+                imageUrl: "https://cdn.melinia.in/people/vishal.webp",
                 linkedinUrl: "https://www.linkedin.com/in/vishal-dhanasekaran/",
                 color: "#9D00FF",
             },
             {
                 name: "Anush M",
-                role: "Backend Engineer",
-                imageUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=400",
+                role: "Backend Developer",
+                imageUrl: "https://cdn.melinia.in/people/anush.webp",
                 linkedinUrl: "#",
                 color: "#9D00FF",
             },
             {
                 name: "Pranav N T",
                 role: "Backend Developer",
-                imageUrl: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=400",
+                imageUrl: "https://cdn.melinia.in/people/pranav.webp",
                 linkedinUrl: "#",
                 color: "#9D00FF",
             },
             {
                 name: "Sidharth S",
-                role: "Backend Developer",
-                imageUrl: "https://images.unsplash.com/photo-1524503033411-c9566986fc8f?w=400",
+                role: "Payments Engineer",
+                imageUrl: "https://cdn.melinia.in/people/sid.webp",
                 linkedinUrl: "#",
                 color: "#9D00FF",
             },
-            {
-                name: "Barath Vikraman",
-                role: "Contributor",
-                imageUrl: "https://images.unsplash.com/photo-1545996124-0501ebae84d0?w=400",
-                linkedinUrl: "#",
-                color: "#9D00FF",
-            },
+            // {
+            //     name: "Barath Vikraman",
+            //     role: "Contributor",
+            //     imageUrl: "https://images.unsplash.com/photo-1545996124-0501ebae84d0?w=400",
+            //     linkedinUrl: "#",
+            //     color: "#9D00FF",
+            // },
             {
                 name: "Krishneshwar",
-                role: "Frontend Contributor",
-                imageUrl: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=400",
+                role: "Frontend Developer",
+                imageUrl: "https://cdn.melinia.in/people/krish.webp",
                 linkedinUrl: "#",
                 color: "#9D00FF",
             },
-       ],
+        ],
     },
 ];
 
