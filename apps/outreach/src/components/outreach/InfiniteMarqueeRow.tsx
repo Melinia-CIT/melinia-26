@@ -256,6 +256,14 @@ export function InfiniteMarqueeRow({
         const handleMouseLeave = () => {
             if (pauseOnHover) {
                 isPausedRef.current = false
+
+                // Clear any pending interaction timeouts to prevent carousel from staying paused
+                if (interactionTimeoutRef.current) {
+                    clearTimeout(interactionTimeoutRef.current)
+                }
+
+                // Reset interaction state to ensure carousel resumes immediately
+                isInteractingRef.current = false
             }
         }
 

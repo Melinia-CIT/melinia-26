@@ -16,14 +16,14 @@ export const peopleData: SectionData[] = [
             {
                 name: "Ratheesh Kumar S",
                 role: "Chairperson, SS",
-                imageUrl: "",
+                imageUrl: "https://cdn.melinia.in/people/ratheesh.webp",
                 linkedinUrl: "https://www.linkedin.com/in/ratheesh-kumar-",
                 color: "#FF0055",
             },
             {
                 name: "Avanthika P G",
                 role: "Co-Chair, SS",
-                imageUrl: "",
+                imageUrl: "https://cdn.melinia.in/people/avanthika.webp",
                 linkedinUrl: "https://www.linkedin.com/in/avanthika-pg/",
                 color: "#FF0055",
             },
