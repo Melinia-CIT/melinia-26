@@ -1,253 +1,9 @@
 "use strict"
 
-import { motion, useReducedMotion, Variants } from "framer-motion"
-import { useEffect, useState, useRef } from "react"
-import UserCard from "../ui/user-card"
+import { motion } from "framer-motion"
 import { HudSectionHeader } from "../ui/hud-section-header"
-import { peopleData, SectionData } from "../../types/people"
-
-const leftImageVariants: Variants = {
-    initial: { rotate: 0, x: 0, y: 0 },
-    animate: {
-        rotate: -8,
-        x: 0,
-        y: 15,
-        transition: {
-            type: "spring",
-            stiffness: 120,
-            damping: 12,
-        },
-    },
-    hover: {
-        rotate: -3,
-        x: 0,
-        y: 0,
-        transition: {
-            type: "spring",
-            stiffness: 200,
-            damping: 15,
-        },
-    },
-}
-
-const middleImageVariants: Variants = {
-    initial: { rotate: 0, x: 0, y: 0 },
-    animate: {
-        rotate: 6,
-        x: 0,
-        y: 0,
-        transition: {
-            type: "spring",
-            stiffness: 120,
-            damping: 12,
-        },
-    },
-    hover: {
-        rotate: 0,
-        x: 0,
-        y: -15,
-        transition: {
-            type: "spring",
-            stiffness: 200,
-            damping: 15,
-        },
-    },
-}
-
-const rightImageVariants: Variants = {
-    initial: { rotate: 0, x: 0, y: 0 },
-    animate: {
-        rotate: -6,
-        x: 0,
-        y: 25,
-        transition: {
-            type: "spring",
-            stiffness: 120,
-            damping: 12,
-        },
-    },
-    hover: {
-        rotate: 3,
-        x: 0,
-        y: 15,
-        transition: {
-            type: "spring",
-            stiffness: 200,
-            damping: 15,
-        },
-    },
-}
-interface InfiniteScrollRowProps {
-    people: SectionData["people"]
-}
-
-function InfiniteScrollRow({ people }: InfiniteScrollRowProps): React.ReactElement {
-    const shouldReduceMotion = useReducedMotion()
-    const [cardWidth, setCardWidth] = useState<number>(192)
-    const [gap, setGap] = useState<number>(24)
-    const [isMobile, setIsMobile] = useState<boolean>(false)
-    const containerRef = useRef<HTMLDivElement>(null)
-    const carouselRef = useRef<HTMLDivElement>(null)
-    const [isScrolling, setIsScrolling] = useState<boolean>(false)
-    const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-    useEffect(() => {
-        const handleResize = (): void => {
-            const mobile = window.innerWidth < 1081
-            setIsMobile(mobile)
-            if (mobile) {
-                setCardWidth(window.innerWidth / 2 - 12)
-                setGap(12)
-            } else {
-                setCardWidth(192)
-                setGap(64)
-            }
-        }
-
-        handleResize()
-        window.addEventListener("resize", handleResize)
-        return () => window.removeEventListener("resize", handleResize)
-    }, [])
-
-    const duplicatedPeople = [...people, ...people, ...people, ...people, ...people]
-    const scrollDistance = people.length * (cardWidth + gap)
-    const duration = people.length * 4
-
-    const getVariant = (index: number): Variants => {
-        const position = index % 3
-        if (position === 0) return leftImageVariants
-        if (position === 1) return middleImageVariants
-        return rightImageVariants
-    }
-
-    // Auto-reset carousel to beginning for seamless infinite loop
-    useEffect(() => {
-        const carousel = carouselRef.current
-        if (!carousel || shouldReduceMotion) return
-
-        const handleAnimationIteration = () => {
-            carousel.scrollLeft = 0
-        }
-
-        const carouselContainer = carousel.querySelector(".carousel-container")
-        if (carouselContainer) {
-            carouselContainer.addEventListener("animationiteration", handleAnimationIteration)
-            return () => {
-                carouselContainer.removeEventListener(
-                    "animationiteration",
-                    handleAnimationIteration
-                )
-            }
-        }
-    }, [shouldReduceMotion])
-
-    const handleScroll = (): void => {
-        setIsScrolling(true)
-
-        if (scrollTimeoutRef.current) {
-            clearTimeout(scrollTimeoutRef.current)
-        }
-
-        scrollTimeoutRef.current = setTimeout(() => {
-            setIsScrolling(false)
-        }, 150)
-    }
-
-    useEffect(() => {
-        const carousel = carouselRef.current
-        if (carousel) {
-            carousel.addEventListener("scroll", handleScroll, { passive: true })
-            return () => {
-                carousel.removeEventListener("scroll", handleScroll)
-                if (scrollTimeoutRef.current) {
-                    clearTimeout(scrollTimeoutRef.current)
-                }
-            }
-        }
-    }, [])
-
-    return (
-        <div
-            ref={containerRef}
-            className="relative w-full py-8 px-2 group overflow-visible"
-            style={
-                {
-                    "--scroll-distance": `-${scrollDistance}px`,
-                    "--duration": `${duration}s`,
-                } as React.CSSProperties
-            }
-        >
-            <style>{`
-                @keyframes scroll-carousel {
-                    0% {
-                        transform: translateX(0);
-                    }
-                    100% {
-                        transform: translateX(var(--scroll-distance));
-                    }
-                }
-
-                .carousel-container {
-                    animation: scroll-carousel var(--duration) linear infinite;
-                }
-
-                .carousel-container.scrolling {
-                    animation-play-state: paused;
-                }
-
-                .carousel-container:hover {
-                    animation-play-state: paused;
-                }
-
-                .carousel-wrapper {
-                    scroll-behavior: smooth;
-                }
-
-                .carousel-wrapper::-webkit-scrollbar {
-                    display: none;
-                }
-
-                .carousel-wrapper {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                }
-
-                .carousel-wrapper {
-                    overflow-x: auto;
-                }
-
-                @media (prefers-reduced-motion: reduce) {
-                    .carousel-container {
-                        animation: none;
-                    }
-                }
-            `}</style>
-
-            <div
-                ref={carouselRef}
-                className="carousel-wrapper relative w-full overflow-x-auto lg:overflow-hidden py-12"
-            >
-                <div
-                    className={`carousel-container flex gap-3 md:gap-28 ${isScrolling ? "scrolling" : ""}`}
-                >
-                    {duplicatedPeople.map((person, index) => (
-                        <motion.div
-                            key={index}
-                            className="shrink-0"
-                            style={{ width: `${cardWidth}px` }}
-                            variants={!shouldReduceMotion ? getVariant(index) : undefined}
-                            initial={!shouldReduceMotion ? "initial" : undefined}
-                            animate={!shouldReduceMotion ? "animate" : undefined}
-                            whileHover={!shouldReduceMotion ? "hover" : undefined}
-                        >
-                            <UserCard {...person} />
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    )
-}
+import { peopleData } from "../../types/people"
+import { InfiniteMarqueeRow } from "./InfiniteMarqueeRow"
 
 interface ColorMapType {
     [key: string]: string
@@ -255,15 +11,164 @@ interface ColorMapType {
 
 export default function People(): React.ReactElement {
     const colorMap: ColorMapType = {
-        "Event Coordinators": "#FF0055",
+        "Core Team": "#FF0055",
         "Dev Team": "#9D00FF",
     }
 
     return (
         <section className="relative w-full py-20 bg-zinc-950 text-white overflow-hidden">
-            <div className="relative  mx-auto px-4 md:px-8 w-full">
-                <div className="absolute top-0 bottom-0 left-4 md:left-8 w-px bg-gradient-to-b from-transparent via-[#9D00FF]/30 to-transparent" />
-                <div className="absolute top-0 bottom-0 right-4 md:right-8 w-px bg-gradient-to-b from-transparent via-[#FF0066]/30 to-transparent" />
+            <div className="relative mx-auto px-4 md:px-8 w-full">
+                {/* Top-left corner pattern */}
+                <div className="absolute top-0 left-0 w-64 h-64 md:w-96 md:h-96 pointer-events-none overflow-hidden">
+                    <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
+                        <defs>
+                            <linearGradient
+                                id="corner-gradient-tl"
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="100%"
+                            >
+                                <stop offset="0%" stopColor="#9D00FF" stopOpacity="0.8" />
+                                <stop offset="100%" stopColor="#FF0066" stopOpacity="0.4" />
+                            </linearGradient>
+                        </defs>
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <motion.path
+                                key={i}
+                                d={`M0,${60 + i * 40} Q${60 + i * 40},${60 + i * 40} ${60 + i * 40},0`}
+                                stroke="url(#corner-gradient-tl)"
+                                strokeWidth={3 - i * 0.3}
+                                fill="none"
+                                initial={{ pathLength: 0, opacity: 0 }}
+                                animate={{
+                                    pathLength: 1,
+                                    opacity: [0.2 + i * 0.05, 0.6 + i * 0.05, 0.2 + i * 0.05],
+                                }}
+                                transition={{
+                                    duration: 3 + i * 0.5,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    delay: i * 0.2,
+                                }}
+                            />
+                        ))}
+                    </svg>
+                </div>
+
+                {/* Top-right corner pattern */}
+                <div className="absolute top-0 right-0 w-64 h-64 md:w-96 md:h-96 pointer-events-none overflow-hidden">
+                    <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
+                        <defs>
+                            <linearGradient
+                                id="corner-gradient-tr"
+                                x1="100%"
+                                y1="0%"
+                                x2="0%"
+                                y2="100%"
+                            >
+                                <stop offset="0%" stopColor="#FF0066" stopOpacity="0.8" />
+                                <stop offset="100%" stopColor="#9D00FF" stopOpacity="0.4" />
+                            </linearGradient>
+                        </defs>
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <motion.path
+                                key={i}
+                                d={`M400,${60 + i * 40} Q${340 - i * 40},${60 + i * 40} ${340 - i * 40},0`}
+                                stroke="url(#corner-gradient-tr)"
+                                strokeWidth={3 - i * 0.3}
+                                fill="none"
+                                initial={{ pathLength: 0, opacity: 0 }}
+                                animate={{
+                                    pathLength: 1,
+                                    opacity: [0.2 + i * 0.05, 0.6 + i * 0.05, 0.2 + i * 0.05],
+                                }}
+                                transition={{
+                                    duration: 3 + i * 0.5,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    delay: i * 0.2,
+                                }}
+                            />
+                        ))}
+                    </svg>
+                </div>
+
+                {/* Bottom-left corner pattern */}
+                <div className="absolute bottom-0 left-0 w-64 h-64 md:w-96 md:h-96 pointer-events-none overflow-hidden">
+                    <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
+                        <defs>
+                            <linearGradient
+                                id="corner-gradient-bl"
+                                x1="0%"
+                                y1="100%"
+                                x2="100%"
+                                y2="0%"
+                            >
+                                <stop offset="0%" stopColor="#9D00FF" stopOpacity="0.8" />
+                                <stop offset="100%" stopColor="#FF0066" stopOpacity="0.4" />
+                            </linearGradient>
+                        </defs>
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <motion.path
+                                key={i}
+                                d={`M0,${340 - i * 40} Q${60 + i * 40},${340 - i * 40} ${60 + i * 40},400`}
+                                stroke="url(#corner-gradient-bl)"
+                                strokeWidth={3 - i * 0.3}
+                                fill="none"
+                                initial={{ pathLength: 0, opacity: 0 }}
+                                animate={{
+                                    pathLength: 1,
+                                    opacity: [0.2 + i * 0.05, 0.6 + i * 0.05, 0.2 + i * 0.05],
+                                }}
+                                transition={{
+                                    duration: 3 + i * 0.5,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    delay: i * 0.2,
+                                }}
+                            />
+                        ))}
+                    </svg>
+                </div>
+
+                {/* Bottom-right corner pattern */}
+                <div className="absolute bottom-0 right-0 w-64 h-64 md:w-96 md:h-96 pointer-events-none overflow-hidden">
+                    <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
+                        <defs>
+                            <linearGradient
+                                id="corner-gradient-br"
+                                x1="100%"
+                                y1="100%"
+                                x2="0%"
+                                y2="0%"
+                            >
+                                <stop offset="0%" stopColor="#FF0066" stopOpacity="0.8" />
+                                <stop offset="100%" stopColor="#9D00FF" stopOpacity="0.4" />
+                            </linearGradient>
+                        </defs>
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <motion.path
+                                key={i}
+                                d={`M400,${340 - i * 40} Q${340 - i * 40},${340 - i * 40} ${340 - i * 40},400`}
+                                stroke="url(#corner-gradient-br)"
+                                strokeWidth={3 - i * 0.3}
+                                fill="none"
+                                initial={{ pathLength: 0, opacity: 0 }}
+                                animate={{
+                                    pathLength: 1,
+                                    opacity: [0.2 + i * 0.05, 0.6 + i * 0.05, 0.2 + i * 0.05],
+                                }}
+                                transition={{
+                                    duration: 3 + i * 0.5,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    delay: i * 0.2,
+                                }}
+                            />
+                        ))}
+                    </svg>
+                </div>
 
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -281,12 +186,10 @@ export default function People(): React.ReactElement {
                     {peopleData.map((section, index) => {
                         const isEven = index % 2 === 0
                         const sectionColor = colorMap[section.title] || "#FF0055"
+                        const direction = isEven ? "left" : "right"
 
                         return (
-                            <div key={index} className="relative">
-                                {index > 0 && (
-                                    <div className="absolute -top-8 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#9D00FF]/30 to-transparent" />
-                                )}
+                            <div key={section.title} className="relative">
                                 <HudSectionHeader
                                     title={section.title}
                                     color={sectionColor}
@@ -294,7 +197,11 @@ export default function People(): React.ReactElement {
                                     className="mb-8"
                                 />
 
-                                <InfiniteScrollRow people={section.people} />
+                                <InfiniteMarqueeRow
+                                    people={section.people}
+                                    direction={direction}
+                                    speedPxPerSec={40}
+                                />
                             </div>
                         )
                     })}

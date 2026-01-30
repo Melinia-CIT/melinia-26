@@ -28,6 +28,12 @@ const footerContactPersons: FooterPerson[] = [
         phoneDisplay: "+91 94429 28955",
         phoneHref: "tel:+919442928955",
     },
+    {
+        name: "Chandradhitiya T V",
+        role: "Operations Lead",
+        phoneDisplay: "+91 74184 11221",
+        phoneHref: "tel:+917418411221",
+    },
 ]
 
 const InstagramIcon = ({ className }: { className?: string }) => (
