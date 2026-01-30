@@ -293,10 +293,10 @@ export function InfiniteMarqueeRow({
     return (
         <div className={`relative w-full py-8 px-2 overflow-visible ${className}`}>
             {/* Left edge fade */}
-            <div className="absolute inset-y-0 left-0 w-10 sm:w-14 md:w-20 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-transparent pointer-events-none z-10" />
+            <div className="absolute inset-y-0 left-0 w-32 sm:w-40 md:w-56 lg:w-64 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-transparent pointer-events-none z-10" />
 
             {/* Right edge fade */}
-            <div className="absolute inset-y-0 right-0 w-10 sm:w-14 md:w-20 bg-gradient-to-l from-zinc-950 via-zinc-950/80 to-transparent pointer-events-none z-10" />
+            <div className="absolute inset-y-0 right-0 w-32 sm:w-40 md:w-56 lg:w-64 bg-gradient-to-l from-zinc-950 via-zinc-950/80 to-transparent pointer-events-none z-10" />
 
             {/* Scroll wrapper */}
             <div

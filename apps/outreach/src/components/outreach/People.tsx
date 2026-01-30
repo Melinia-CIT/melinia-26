@@ -197,11 +197,13 @@ export default function People(): React.ReactElement {
                                     className="mb-8"
                                 />
 
-                                <InfiniteMarqueeRow
-                                    people={section.people}
-                                    direction={direction}
-                                    speedPxPerSec={40}
-                                />
+                                <div className="-mx-4 md:-mx-8">
+                                    <InfiniteMarqueeRow
+                                        people={section.people}
+                                        direction={direction}
+                                        speedPxPerSec={80}
+                                    />
+                                </div>
                             </div>
                         )
                     })}
