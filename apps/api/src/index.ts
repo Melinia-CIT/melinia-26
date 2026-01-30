@@ -25,7 +25,7 @@ app.use(
 			"http://localhost:5173",
 			"https://d2ects9rfqf4lr.cloudfront.net",
 			"https://melinia.in",
-			"https://mlndemo.melinia.in",
+			"https://www.melinia.in"
 		],
 		credentials: true,
 	})
