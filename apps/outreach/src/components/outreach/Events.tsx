@@ -421,7 +421,7 @@ const Events = () => {
                                         <div className="relative w-full h-32 sm:h-40 md:h-48 lg:h-56 overflow-hidden bg-gray-900">
                                             {/* Background Image */}
                                             <img
-                                                src="/event_bg.png"
+                                                src="https://cdn.melinia.in/event_bg.png"
                                                 alt=""
                                                 className="absolute inset-0 w-full h-full object-cover object-center"
                                             />
