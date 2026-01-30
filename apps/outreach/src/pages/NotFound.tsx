@@ -27,6 +27,7 @@ export type AnimationFrame = string[]
 export type AnimatedTerminalProps = Omit<TerminalProps, "lines"> & {
     frames: AnimationFrame[]
     frameLengthMs?: number
+    fillContainer?: boolean
 }
 
 // --- Components ---
@@ -41,13 +42,53 @@ function Terminal({
     whitespacePadding = 0,
     disableScrolling = false,
     hideWindowChrome = false,
-}: TerminalProps) {
+    fillContainer = false,
+}: TerminalProps & { fillContainer?: boolean }) {
     const [platformStyle, setPlatformStyle] = useState("macos")
+    const containerRef = useRef<HTMLDivElement>(null)
+    const contentRef = useRef<HTMLPreElement>(null)
+    const [scale, setScale] = useState(1)
+
     useEffect(() => {
         const userAgent = window?.navigator.userAgent
         const isLinux = /Linux/i.test(userAgent)
         setPlatformStyle(isLinux ? "adwaita" : "macos")
     }, [])
+
+    // Calculate scale to fill container
+    useEffect(() => {
+        if (!fillContainer || !containerRef.current || !contentRef.current) return
+
+        const calculateScale = () => {
+            const container = containerRef.current
+            const content = contentRef.current
+            if (!container || !content) return
+
+            const containerWidth = container.clientWidth
+            const containerHeight = container.clientHeight
+            const contentWidth = content.scrollWidth
+            const contentHeight = content.scrollHeight
+
+            if (contentWidth === 0 || contentHeight === 0) return
+
+            // Calculate scale to cover (fill) the container
+            const scaleX = containerWidth / contentWidth
+            const scaleY = containerHeight / contentHeight
+            const newScale = Math.max(scaleX, scaleY) // Use max for cover effect
+
+            setScale(newScale)
+        }
+
+        calculateScale()
+        window.addEventListener("resize", calculateScale)
+        // Recalculate after a short delay to ensure content is rendered
+        const timeout = setTimeout(calculateScale, 100)
+
+        return () => {
+            window.removeEventListener("resize", calculateScale)
+            clearTimeout(timeout)
+        }
+    }, [fillContainer, lines])
 
     const [autoScroll, setAutoScroll] = useState(true)
     const handleScroll = (e: UIEvent<HTMLElement>) => {
@@ -63,7 +104,7 @@ function Terminal({
 
     const codeRef = useRef<HTMLPreElement>(null)
     useEffect(() => {
-        if (autoScroll) {
+        if (autoScroll && codeRef.current) {
             codeRef.current?.scrollTo({
                 top: codeRef.current.scrollHeight,
                 behavior: "instant",
@@ -80,6 +121,41 @@ function Terminal({
         medium: "text-base",
         large: "text-lg",
         xlarge: "text-xl",
+    }
+
+    if (fillContainer) {
+        return (
+            <div
+                ref={containerRef}
+                className={cn("overflow-hidden font-mono bg-black relative", className)}
+            >
+                <pre
+                    ref={contentRef}
+                    className={cn(
+                        "text-white bg-black leading-[1.4] whitespace-pre absolute",
+                        fontSizeClasses[fontSize] || "text-lg",
+                        "[&_.b]:text-white"
+                    )}
+                    style={{
+                        transform: `translate(-50%, -50%) scale(${scale})`,
+                        transformOrigin: "center center",
+                        left: "50%",
+                        top: "50%",
+                    }}
+                >
+                    {lines?.map((line, i) => {
+                        return (
+                            <div
+                                key={i + line}
+                                dangerouslySetInnerHTML={{
+                                    __html: `${padding}${line}${padding}`,
+                                }}
+                            />
+                        )
+                    })}
+                </pre>
+            </div>
+        )
     }
 
     return (
@@ -114,7 +190,6 @@ function Terminal({
                     "[&::-webkit-scrollbar-track]:bg-[#1a1a2e]",
                     "[&::-webkit-scrollbar-thumb]:bg-[#4a4a6a] [&::-webkit-scrollbar-thumb]:rounded",
                     "[&::-webkit-scrollbar-thumb]:hover:bg-[#6a6a8a]",
-                    "[&_span]:text-white",
                     "[&_.b]:text-white"
                 )}
                 onScroll={handleScroll}
@@ -223,6 +298,7 @@ function AnimatedTerminal({
     title,
     frames,
     whitespacePadding,
+    fillContainer,
 }: AnimatedTerminalProps) {
     const [currentFrame, setCurrentFrame] = useState(16)
     const [animationManager] = useState(
@@ -274,6 +350,7 @@ function AnimatedTerminal({
             lines={lines}
             disableScrolling={true}
             hideWindowChrome={true}
+            fillContainer={fillContainer}
         />
     )
 }
@@ -598,26 +675,30 @@ export default function NotFound() {
             {/* Terminal Animation Layer (Background) */}
             {isLoading ? (
                 <Terminal
+                    className="absolute inset-0 w-full h-full !flex"
                     fontSize="tiny"
                     whitespacePadding={0}
                     columns={COLUMNS}
                     rows={ROWS}
                     lines={loadingFrame}
                     hideWindowChrome={true}
+                    fillContainer={true}
                 />
             ) : error ? (
                 <Terminal
+                    className="absolute inset-0 w-full h-full !flex"
                     fontSize="tiny"
                     whitespacePadding={0}
                     columns={COLUMNS}
                     rows={ROWS}
                     lines={errorFrame}
                     hideWindowChrome={true}
+                    fillContainer={true}
                 />
             ) : (
                 animationFrames.length > 0 && (
                     <AnimatedTerminal
-                        className="scale-120"
+                        className="absolute inset-0 w-full h-full !flex"
                         fontSize="tiny"
                         whitespacePadding={0}
                         columns={COLUMNS}
@@ -625,6 +706,7 @@ export default function NotFound() {
                         frames={animationFrames}
                         frameLengthMs={31}
                         hideWindowChrome={true}
+                        fillContainer={true}
                     />
                 )
             )}
