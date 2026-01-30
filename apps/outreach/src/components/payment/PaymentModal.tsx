@@ -211,36 +211,36 @@ export default function PaymentModal({
                                             Complete Registration
                                         </h3>
                                         <p className="text-zinc-400 text-sm">
-                                            Pay ₹1 to complete your registration and unlock all
+                                            Pay ₹310 to complete your registration and unlock all
                                             features
                                         </p>
                                     </div>
                                     <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-zinc-400">Registration Fee</span>
-                                            <span className="text-white font-semibold">₹1.00</span>
+                                            <span className="text-zinc-400 self-center">Registration Fee</span>
+                                            <span className="text-white font-semibold">₹310.00</span>
                                         </div>
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="text-zinc-400">Convenience Fee</span>
                                             <span className="text-white font-semibold">₹0.00</span>
                                         </div>
-                                        <div className="border-t border-zinc-700 my-2 pt-2">
+                                        <div className="border-zinc-700 my-2 pt-2">
                                             <div className="flex justify-between items-center">
                                                 <span className="text-white font-semibold">
                                                     Total
                                                 </span>
                                                 <span className="text-lg font-bold text-white">
-                                                    ₹1.00
+                                                    ₹310.00
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Attention Box */}
-                                    <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                    <div className="flex items-center gap-3 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                                         <InfoCircle width={20} height={20} className="text-yellow-500 shrink-0 mt-0.5" />
-                                        <p className="text-sm text-yellow-100 font-xs leading-relaxed">
-                                            This payment covers only the Melinia’26 Main Track, Flagship events are hosted on Unstop and require separate payment.
+                                        <p className="text-xs text-yellow-100 font-xs leading-relaxed">
+                                            Covers only the Melinia’26 Main Track. Flagship events require separate payment on Unstop.
                                         </p>
                                     </div>
 
@@ -261,7 +261,7 @@ export default function PaymentModal({
                                                 Processing...
                                             </>
                                         ) : (
-                                            "Pay ₹1"
+                                            "Pay ₹310"
                                         )}
                                     </button>
 

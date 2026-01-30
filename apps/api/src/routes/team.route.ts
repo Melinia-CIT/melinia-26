@@ -377,6 +377,10 @@ teams.delete("/:team_id/pending_invitations/:invitation_id", authMiddleware, pay
         throw new HTTPException(403, { message: "Invitation does not belong to this team" });
     }
 
+    if(invitation.status !== "pending"){
+        throw new HTTPException(403, {message:`Invitation already ${invitation.status}`});
+    }
+
     // Delete invitation
     await deleteInvitationById(invitationId);
 

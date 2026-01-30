@@ -111,7 +111,7 @@ export const createEventPrizeSchema =
 export const createEventPrizesSchema = z.array(createEventPrizeSchema);
 
 // Crew    
-export const assignEventCrewSchema = z.object({ email: z.string() });
+export const assignEventCrewSchema = z.object({ email: z.email() });
 export const assignEventCrewsSchema = z.array(assignEventCrewSchema);
 export const getCrewSchema =
     baseCrewSchema

@@ -293,6 +293,11 @@ events.post(
             throw new HTTPException(404, { message: "Event not found" })
         }
 
+        // is Flagship event
+        if(event.event_type==='flagship'){
+            throw new HTTPException(403, {message:"Flagship events should be registered via Unstop platform"});
+        }
+
         // Validate registration window
         const now = new Date()
         const regStart = new Date(event.registration_start)

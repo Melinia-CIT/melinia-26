@@ -1,5 +1,5 @@
 import { motion, useReducedMotion, Variants } from "framer-motion"
-import { useId, useState } from "react"
+import { useId } from "react"
 import { Linkedin } from "lucide-react"
 import { cn } from "../../lib/utils"
 
@@ -13,7 +13,6 @@ interface UserCardProps {
     hoverEffect?: "scale" | "glitch" | "glow" | "none"
     glitchOnHover?: boolean
     className?: string
-    alwaysShowText?: boolean
 }
 
 const UserCard = ({
@@ -26,14 +25,12 @@ const UserCard = ({
     hoverEffect = "glitch",
     glitchOnHover = true,
     className = "",
-    alwaysShowText = false,
 }: UserCardProps) => {
     const shouldReduceMotion = useReducedMotion()
     const shouldAnimate = !shouldReduceMotion
     const uniqueId = useId()
     const gradientId = `user-card-gradient-${uniqueId}`
     const clipId = `user-card-clip-${uniqueId}`
-    const [isHovered, setIsHovered] = useState(false)
 
     const getColors = () => {
         switch (variant) {
@@ -166,13 +163,11 @@ const UserCard = ({
 
     return (
         <motion.div
-            className={cn("relative w-44 h-44 md:w-64 md:h-80 lg:w-72 lg:h-96", className)}
+            className={cn("relative w-44 h-64 md:w-64 md:h-80 lg:w-72 lg:h-96", className)}
             variants={shouldAnimate ? cardVariants : {}}
             initial="hidden"
             animate="show"
             whileHover={hoverEffect !== "none" ? "hover" : undefined}
-            onHoverStart={() => setIsHovered(true)}
-            onHoverEnd={() => setIsHovered(false)}
         >
             {shouldAnimate && (
                 <motion.div
@@ -253,7 +248,7 @@ const UserCard = ({
                             <img
                                 src={imageUrl}
                                 alt={name}
-                                className="w-full h-full object-cover object-center rounded-lg md:grayscale md:hover:grayscale-0 transition-all duration-300"
+                                className="w-full h-full object-cover object-center rounded-lg transition-all duration-300"
                                 style={{
                                     maxHeight: "calc(100% - 8px)",
                                     maxWidth: "calc(100% - 8px)",
@@ -265,8 +260,8 @@ const UserCard = ({
                     <motion.div
                         className="absolute bottom-0 flex flex-col items-start w-full px-5 pb-3 md:pb-6 bg-gradient-to-t from-black/90 via-black/60 to-transparent"
                         variants={revealVariants}
-                        initial="hidden"
-                        animate={alwaysShowText || isHovered ? "visible" : "hidden"}
+                        initial="visible"
+                        animate="visible"
                     >
                         <motion.p
                             className="font-heading font-bold text-xs sm:text-sm md:text-lg text-white text-left leading-tight w-full"
