@@ -1,10 +1,10 @@
-FROM alpine:3.20
+FROM alpine:3.21
 
 RUN apk add --no-cache \
     bash \
     ca-certificates \
     msmtp \
-    postgresql-client \
+    postgresql17-client \
     tzdata \
     aws-cli
 

@@ -72,6 +72,22 @@ on_exit() {
     
     log "ERROR: Backup failed at step '${STEP}' with exit code ${code}"
     log "Error details: ${error_msg:-No details}"
+    
+    # Send email alert
+    send_mail \
+      "Melinia DB backup failed at step '${STEP}'" \
+      "Backup failed on host $(hostname) at $(date -u '+%Y-%m-%dT%H:%M:%SZ').
+
+Step: ${STEP}
+Exit code: ${code}
+Database: ${DB_NAME}
+Target: ${DB_HOST}:${DB_PORT}
+
+Error details:
+${error_msg:-No error details available}
+
+Check container logs for full details:
+  docker logs melinia-db-backup"
   fi
 }
 trap on_exit EXIT
