@@ -179,6 +179,23 @@ const Events = () => {
         return "secondary"
     }
 
+    const getEventTextGradient = (event_type: string) => {
+        const t = event_type?.toLowerCase()
+        if (t === "flagship") {
+            // Red theme: vibrant yellow-orange-red pop-art style
+            return "linear-gradient(180deg, #FFE03D 0%, #FFAA00 20%, #FF6B00 45%, #FF0066 70%, #CC0044 100%)"
+        }
+        if (t === "technical") {
+            // Purple theme: cyan-purple pop-art style
+            return "linear-gradient(180deg, #00FFFF 0%, #9D7AFF 25%, #9D00FF 50%, #7B00CC 75%, #4A0080 100%)"
+        }
+        if (t === "non-technical") {
+            // Pink theme: yellow-pink-magenta pop-art style
+            return "linear-gradient(180deg, #FFEB3B 0%, #FF9ECE 25%, #FF69B4 50%, #FF1493 75%, #C71585 100%)"
+        }
+        return "linear-gradient(180deg, #FFFFFF 0%, #CCCCCC 100%)"
+    }
+
     const getPrizeColor = (position: number) => {
         if (position === 1) return "#FFD700"
         if (position === 2) return "#C0C0C0"
@@ -401,12 +418,19 @@ const Events = () => {
                                         glitchOnHover
                                     >
                                         {/* Image Section */}
-                                        <div className="relative aspect-[4/1] md:aspect-[16/6] w-full overflow-hidden bg-gray-900">
-                                            <div className="absolute inset-0 bg-[radial-gradient(circle,_var(--tw-gradient-stops))] from-gray-800 via-black to-black opacity-50" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10" />
+                                        <div className="relative w-full h-32 sm:h-40 md:h-48 lg:h-56 overflow-hidden bg-gray-900">
+                                            {/* Background Image */}
+                                            <img
+                                                src="/event_bg.png"
+                                                alt=""
+                                                className="absolute inset-0 w-full h-full object-cover object-center"
+                                            />
+                                            {/* Dark overlay */}
+                                            <div className="absolute inset-0 bg-black/40 z-[4]" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20 z-[5]" />
 
                                             <div
-                                                className="absolute top-2 md:top-4 left-2 md:left-4 z-20 px-2 py-1 md:px-3 md:py-1 rounded text-white font-heading font-bold text-[10px] md:text-xs uppercase tracking-wider skew-x-[-10deg]"
+                                                className="absolute top-2 left-2 z-30 px-2 py-1 rounded text-white font-heading font-bold text-[8px] sm:text-[10px] md:text-xs uppercase tracking-wider skew-x-[-10deg]"
                                                 style={{
                                                     backgroundColor: getEventTypeColor(
                                                         currentEvent?.event_type || ""
@@ -416,8 +440,51 @@ const Events = () => {
                                                 {currentEvent?.event_type}
                                             </div>
 
-                                            <div className="absolute inset-0 flex items-center justify-center z-0">
-                                                <span className="font-heading text-3xl md:text-6xl text-white font-black uppercase select-none text-center px-4">
+                                            <div className="absolute inset-0 flex items-center justify-center z-10 p-2 sm:p-4">
+                                                {/* Shadow layer (outermost) */}
+                                                <span
+                                                    className="absolute font-['Luckiest_Guy'] uppercase tracking-tight select-none text-center text-black leading-none"
+                                                    style={{
+                                                        fontSize: "clamp(1.25rem, 5vw, 3rem)",
+                                                        transform:
+                                                            "translate(3px, 3px) skewX(-6deg) rotate(-2deg)",
+                                                        WebkitTextStroke:
+                                                            "clamp(2px, 0.5vw, 4px) #000",
+                                                    }}
+                                                >
+                                                    {currentEvent?.name}
+                                                </span>
+                                                {/* Inner outline layer (between shadow and main text) */}
+                                                <span
+                                                    className="absolute font-['Luckiest_Guy'] uppercase tracking-tight select-none text-center leading-none"
+                                                    style={{
+                                                        fontSize: "clamp(1.25rem, 5vw, 3rem)",
+                                                        transform: "skewX(-6deg) rotate(-2deg)",
+                                                        color: getEventTypeColor(
+                                                            currentEvent?.event_type || ""
+                                                        ),
+                                                        WebkitTextStroke: `clamp(1px, 0.4vw, 3px) ${getEventTypeColor(currentEvent?.event_type || "")}`,
+                                                    }}
+                                                >
+                                                    {currentEvent?.name}
+                                                </span>
+                                                {/* Main gradient text with halftone effect */}
+                                                <span
+                                                    className="absolute font-['Luckiest_Guy'] uppercase tracking-tight transform -skew-x-6 -rotate-2 select-none text-center leading-none"
+                                                    style={{
+                                                        fontSize: "clamp(1.25rem, 5vw, 3rem)",
+                                                        background: `
+                                                            radial-gradient(circle at center, rgba(0,0,0,0.25) 20%, transparent 20%),
+                                                            ${getEventTextGradient(currentEvent?.event_type || "")}
+                                                        `,
+                                                        backgroundSize: "3px 3px, 100% 100%",
+                                                        WebkitBackgroundClip: "text",
+                                                        WebkitTextFillColor: "transparent",
+                                                        WebkitTextStroke:
+                                                            "clamp(1px, 0.3vw, 2px) #000",
+                                                        paintOrder: "stroke fill",
+                                                    }}
+                                                >
                                                     {currentEvent?.name}
                                                 </span>
                                             </div>
