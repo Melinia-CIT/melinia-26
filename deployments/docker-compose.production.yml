@@ -226,6 +226,21 @@ services:
             - /sys:/sys:ro
             - /var/lib/docker:/var/lib/docker:ro
 
+    db-backup:
+        build:
+            context: ./backup
+        container_name: melinia-db-backup
+        restart: unless-stopped
+        env_file:
+            - .env
+        environment:
+            - TZ=UTC
+            - DB_HOST=postgres
+            - DB_PORT=5432
+        depends_on:
+            postgres:
+                condition: service_healthy
+
 volumes:
     postgres_data:
         driver: local
