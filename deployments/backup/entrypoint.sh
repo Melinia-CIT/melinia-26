@@ -127,12 +127,22 @@ sleep_until_next_half_hour_utc() {
 main() {
   export BACKUP_ALERT_EMAIL_TO="${BACKUP_ALERT_EMAIL_TO:-${ALERT_EMAIL_TO:-}}"
 
-  if ! validate; then
+  # Redirect validation errors to a temp file
+  local error_file="/tmp/validation_errors.txt"
+  > "$error_file"
+  
+  if ! validate 2>&1 | tee "$error_file" >/dev/null; then
+    local validation_errors
+    validation_errors=$(cat "$error_file")
+    
     send_mail \
       "Melinia DB backup service failed to start" \
       "Startup validation failed on host $(hostname) at $(date -u '+%Y-%m-%dT%H:%M:%SZ').
 
-Check container logs for details."
+${validation_errors}
+
+Check container logs for full details:
+  docker logs melinia-db-backup"
     exit 1
   fi
 
