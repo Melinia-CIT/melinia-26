@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { HudButton } from "../../components/ui/hud-button"
 import { MouseScrollWheel } from "iconoir-react"
 import { VerticalCutReveal } from "../ui/vertical-cut-text-reveal"
@@ -66,16 +66,6 @@ export function HeroAnimatedText() {
         }
     }, [])
 
-    useEffect(() => {
-        if (showFinal) {
-            const timer = setTimeout(() => {
-                setShowFinal(false)
-                setIndex(0)
-            }, 5000)
-            return () => clearTimeout(timer)
-        }
-    }, [showFinal])
-
     return (
         <div className="font-space text-white font-bold text-base sm:text-lg md:text-xl lg:text-2xl mt-2 text-center min-h-[2.5rem] sm:min-h-[3rem] relative flex flex-col items-center justify-center px-4 w-full">
             <AnimatePresence mode="wait">
@@ -125,67 +115,35 @@ export function HeroAnimatedText() {
 const Hero = () => {
     const navigate = useNavigate()
     const [isLogoHovered, setIsLogoHovered] = useState(false)
-    const [videoPoster, setVideoPoster] = useState<string | null>(null)
     const [isVideoLoaded, setIsVideoLoaded] = useState(false)
-    const videoRef = useRef<HTMLVideoElement>(null)
-
-    useEffect(() => {
-        const video = document.createElement("video")
-        video.src = "https://cdn.melinia.in/mln-hero.mp4"
-        video.muted = true
-        video.crossOrigin = "anonymous"
-
-        const handleLoaded = () => {
-            video.currentTime = 0
-        }
-
-        const handleSeeked = () => {
-            const canvas = document.createElement("canvas")
-            canvas.width = video.videoWidth
-            canvas.height = video.videoHeight
-            const ctx = canvas.getContext("2d")
-            if (ctx) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-                const posterUrl = canvas.toDataURL("image/jpeg", 0.8)
-                setVideoPoster(posterUrl)
-            }
-            video.removeEventListener("loadeddata", handleLoaded)
-            video.removeEventListener("seeked", handleSeeked)
-        }
-
-        video.addEventListener("loadeddata", handleLoaded)
-        video.addEventListener("seeked", handleSeeked)
-        video.load()
-
-        return () => {
-            video.removeEventListener("loadeddata", handleLoaded)
-            video.removeEventListener("seeked", handleSeeked)
-        }
-    }, [])
     return (
         <section className="relative min-h-screen w-full overflow-hidden">
             {/* Video Background */}
             <div className="absolute inset-0 w-full h-full z-0">
-                {/* Poster/First Frame Background */}
-                {videoPoster && (
-                    <img
-                        src={videoPoster}
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover"
-                        style={{ opacity: isVideoLoaded ? 0 : 1 }}
-                    />
-                )}
+                {/* Fallback Image */}
+                <img
+                    src="https://cdn.melinia.in/mln-hero.webp"
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ opacity: isVideoLoaded ? 0 : 1, transition: "opacity 0.5s ease" }}
+                />
 
                 <video
-                    ref={videoRef}
                     autoPlay
                     loop
                     muted
                     playsInline
+                    preload="auto"
                     onLoadedData={() => setIsVideoLoaded(true)}
+                    style={{
+                        objectFit: "cover",
+                        width: "100%",
+                        height: "100%",
+                    }}
                     className="absolute inset-0 w-full h-full object-cover"
                 >
-                    <source src="https://cdn.melinia.in/mln-hero.mp4" type="video/mp4" />
+                    <source src="https://cdn.melinia.in/mlnhero.webm" type="video/webm" />
+                    <source src="https://cdn.melinia.in/mlnhero.mp4" type="video/mp4" />
                 </video>
             </div>
 
