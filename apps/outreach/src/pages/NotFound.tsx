@@ -358,56 +358,80 @@ function AnimatedTerminal({
 // --- New Draggable Window Component (Responsive & Blurry) ---
 
 function DraggableWindow({ title, children }: { title: string; children: React.ReactNode }) {
+    const isMobileInit = window.innerWidth < 640
+    const initWidth = isMobileInit ? window.innerWidth * 0.8 : 500
+    const initHeight = isMobileInit ? Math.min(window.innerHeight - 100, 400) : 400
+
     const [position, setPosition] = useState({
-        x: window.innerWidth / 2 - 250,
-        y: window.innerHeight / 2 - 150,
+        x: (window.innerWidth - initWidth) / 2,
+        y: (window.innerHeight - initHeight) / 2,
     })
-    const [size, setSize] = useState({ width: 500, height: 400 })
+    const [size, setSize] = useState({ width: initWidth, height: initHeight })
     const [isDragging, setIsDragging] = useState(false)
     const [isResizing, setIsResizing] = useState(false)
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+    const [isMobile, setIsMobile] = useState(isMobileInit)
 
     // Refs to track initial mouse offset
     const dragOffset = useRef({ x: 0, y: 0 })
     const resizeOffset = useRef({ x: 0, y: 0 })
+    const lastWindowSize = useRef({ width: window.innerWidth, height: window.innerHeight })
 
-    // 1. Handle Responsive Resizing
+    // 1. Handle Responsive Resizing (only on actual window resize)
     useEffect(() => {
         const handleResize = () => {
             const w = window.innerWidth
             const h = window.innerHeight
+
+            // Skip if window size hasn't actually changed (prevents unnecessary updates)
+            if (w === lastWindowSize.current.width && h === lastWindowSize.current.height) {
+                return
+            }
+            lastWindowSize.current = { width: w, height: h }
+
             const isNowMobile = w < 640
+            const wasMobile = isMobile
 
             setIsMobile(isNowMobile)
 
             if (isNowMobile) {
-                // Mobile Mode: Full Width Modal
-                const newW = w - 32 // 16px padding on sides
+                // Mobile Mode: 80% width centered
+                const newW = w * 0.8
                 const newH = Math.min(h - 100, 400) // Max height 400, or fits screen
-                const newX = 16
-                const newY = Math.max(0, (h - newH) / 2) // Center vertically
 
                 setSize({ width: newW, height: newH })
-                setPosition({ x: newX, y: newY })
+
+                // Only center if transitioning from desktop to mobile
+                if (!wasMobile) {
+                    const newX = (w - newW) / 2 // Center horizontally
+                    const newY = Math.max(0, (h - newH) / 2)
+                    setPosition({ x: newX, y: newY })
+                }
             } else {
                 // Desktop Mode: Ensure window stays within bounds
-                let newX = position.x
-                let newY = position.y
-                let newW = size.width
-                let newH = size.height
+                setSize(prevSize => {
+                    let newW = prevSize.width
+                    let newH = prevSize.height
 
-                // If we just came from mobile, window might be huge. Reset size.
-                if (size.width > 800) newW = 500
-                if (size.height > 800) newH = 400
+                    // If we just came from mobile, window might be huge. Reset size.
+                    if (newW > 800) newW = 500
+                    if (newH > 800) newH = 400
 
-                // Keep window inside viewport
-                if (newX + newW > w) newX = w - newW - 20
-                if (newY + newH > h) newY = h - newH - 20
-                if (newX < 0) newX = 20
-                if (newY < 0) newY = 20
+                    return { width: newW, height: newH }
+                })
 
-                setPosition({ x: newX, y: newY })
-                setSize({ width: newW, height: newH })
+                setPosition(prevPos => {
+                    let newX = prevPos.x
+                    let newY = prevPos.y
+                    const currentSize = size
+
+                    // Keep window inside viewport
+                    if (newX + currentSize.width > w) newX = w - currentSize.width - 20
+                    if (newY + currentSize.height > h) newY = h - currentSize.height - 20
+                    if (newX < 0) newX = 20
+                    if (newY < 0) newY = 20
+
+                    return { x: newX, y: newY }
+                })
             }
         }
 
@@ -417,15 +441,24 @@ function DraggableWindow({ title, children }: { title: string; children: React.R
         return () => {
             window.removeEventListener("resize", handleResize)
         }
-    }, [position.x, position.y, size.width, size.height])
+    }, [isMobile, size])
 
-    // Drag Handlers (Disabled on Mobile)
+    // Drag Handlers (Mouse)
     const startDrag = (e: React.MouseEvent) => {
-        if (isMobile) return
         setIsDragging(true)
         dragOffset.current = {
             x: e.clientX - position.x,
             y: e.clientY - position.y,
+        }
+    }
+
+    // Drag Handlers (Touch)
+    const startTouchDrag = (e: React.TouchEvent) => {
+        const touch = e.touches[0]
+        setIsDragging(true)
+        dragOffset.current = {
+            x: touch.clientX - position.x,
+            y: touch.clientY - position.y,
         }
     }
 
@@ -440,7 +473,7 @@ function DraggableWindow({ title, children }: { title: string; children: React.R
         }
     }
 
-    // Window Event Listeners for Move/Up
+    // Window Event Listeners for Move/Up (Mouse and Touch)
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
             if (isDragging) {
@@ -456,19 +489,37 @@ function DraggableWindow({ title, children }: { title: string; children: React.R
             }
         }
 
+        const handleTouchMove = (e: TouchEvent) => {
+            if (isDragging) {
+                const touch = e.touches[0]
+                setPosition({
+                    x: touch.clientX - dragOffset.current.x,
+                    y: touch.clientY - dragOffset.current.y,
+                })
+            }
+        }
+
         const handleMouseUp = () => {
             setIsDragging(false)
             setIsResizing(false)
         }
 
+        const handleTouchEnd = () => {
+            setIsDragging(false)
+        }
+
         if (isDragging || isResizing) {
             window.addEventListener("mousemove", handleMouseMove)
             window.addEventListener("mouseup", handleMouseUp)
+            window.addEventListener("touchmove", handleTouchMove)
+            window.addEventListener("touchend", handleTouchEnd)
         }
 
         return () => {
             window.removeEventListener("mousemove", handleMouseMove)
             window.removeEventListener("mouseup", handleMouseUp)
+            window.removeEventListener("touchmove", handleTouchMove)
+            window.removeEventListener("touchend", handleTouchEnd)
         }
     }, [isDragging, isResizing])
 
@@ -489,10 +540,11 @@ function DraggableWindow({ title, children }: { title: string; children: React.R
         >
             {/* Header / Drag Handle */}
             <div
-                className={`flex items-center px-3 py-2 border-b border-white/10 select-none backdrop-blur-md ${isMobile ? "cursor-default" : "cursor-move"}`}
+                className={`flex items-center px-3 py-2 border-b border-white/10 select-none backdrop-blur-md cursor-move`}
                 // CHANGED: Semi-transparent white for the header to match glass
                 style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
                 onMouseDown={startDrag}
+                onTouchStart={startTouchDrag}
             >
                 <MacosButtons />
                 <span className="text-white text-[13px] font-medium ml-2 flex-1 text-center drop-shadow-md">
@@ -528,6 +580,16 @@ export default function NotFound() {
     const [loadingProgress, setLoadingProgress] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+
+    // Disable body scroll on mobile
+    useEffect(() => {
+        const originalStyle = document.body.style.overflow
+        document.body.style.overflow = "hidden"
+
+        return () => {
+            document.body.style.overflow = originalStyle
+        }
+    }, [])
 
     useEffect(() => {
         let mounted = true
