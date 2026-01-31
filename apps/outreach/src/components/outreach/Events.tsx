@@ -203,6 +203,14 @@ const Events = () => {
         return "#FF0066"
     }
 
+    const getEventBackgroundImage = (event_type: string) => {
+        const t = event_type?.toLowerCase()
+        if (t === "flagship") return "https://cdn.melinia.in/flagship_bg.webp"
+        if (t === "technical") return "https://cdn.melinia.in/technical_bg.webp"
+        if (t === "non-technical") return "https://cdn.melinia.in/nontech_bg.webp"
+        return "https://cdn.melinia.in/technical_bg.webp" // fallback
+    }
+
     const formatDateTime = (date: Date) => {
         return date
             .toLocaleDateString("en-US", {
@@ -421,7 +429,9 @@ const Events = () => {
                                         <div className="relative w-full h-32 sm:h-40 md:h-48 lg:h-56 overflow-hidden bg-gray-900">
                                             {/* Background Image */}
                                             <img
-                                                src="https://cdn.melinia.in/event_bg.webp"
+                                                src={getEventBackgroundImage(
+                                                    currentEvent?.event_type || ""
+                                                )}
                                                 alt=""
                                                 className="absolute inset-0 w-full h-full object-cover object-center"
                                             />
