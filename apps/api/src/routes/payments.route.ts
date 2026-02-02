@@ -39,7 +39,7 @@ payment.post("/register-melinia", authMiddleware, async c => {
 
     try {
         const order = await razorpay.orders.create({
-            amount: 31000,
+            amount: 30000,
             currency: "INR",
             receipt: `receipt_${Date.now()}`,
         })

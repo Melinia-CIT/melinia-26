@@ -211,14 +211,14 @@ export default function PaymentModal({
                                             Complete Registration
                                         </h3>
                                         <p className="text-zinc-400 text-sm">
-                                            Pay ₹310 to complete your registration and unlock all
+                                            Pay ₹300 to complete your registration and unlock all
                                             features
                                         </p>
                                     </div>
                                     <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="text-zinc-400 self-center">Registration Fee</span>
-                                            <span className="text-white font-semibold">₹310.00</span>
+                                            <span className="text-white font-semibold">₹300.00</span>
                                         </div>
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="text-zinc-400">Convenience Fee</span>
@@ -230,7 +230,7 @@ export default function PaymentModal({
                                                     Total
                                                 </span>
                                                 <span className="text-lg font-bold text-white">
-                                                    ₹310.00
+                                                    ₹300.00
                                                 </span>
                                             </div>
                                         </div>
@@ -261,7 +261,7 @@ export default function PaymentModal({
                                                 Processing...
                                             </>
                                         ) : (
-                                            "Pay ₹310"
+                                            "Pay ₹300"
                                         )}
                                     </button>
 
