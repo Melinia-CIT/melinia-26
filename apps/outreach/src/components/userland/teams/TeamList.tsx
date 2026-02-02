@@ -23,7 +23,7 @@ export const TeamListItem: React.FC<TeamListItemProps> = ({ team, isSelected, on
                         {team.team_name}
                     </h3>
                     <div className="flex items-center gap-2 sm:gap-4 text-xs text-zinc-500">
-                        <span className="truncate font-medium">Leader: {team.leader_id}</span>
+                        <span className="truncate font-medium">Team ID: {team.id}</span>
                     </div>
                 </div>
 

@@ -191,7 +191,7 @@ const TeamsPage: React.FC = () => {
                                             {team.team_name}
                                         </h3>
                                         <div className="flex items-center gap-4 text-xs text-zinc-400">
-                                            <span>Leader: {team.leader_id}</span>
+                                            <span>Team ID: {team.id}</span>
                                             <span className="flex items-center gap-1">
                                                 <Users className="h-3 w-3" />
                                                 {team.member_count} member(s)
