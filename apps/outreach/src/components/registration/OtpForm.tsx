@@ -11,6 +11,7 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
     const [otpValue, setOtpValue] = useState<string[]>(["", "", "", "", "", ""])
     const [submitted, setSubmitted] = useState(false)
     const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+    const containerRef = useRef<HTMLDivElement>(null)
 
     // Focus first input when component mounts
     useEffect(() => {
@@ -70,6 +71,36 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
         }
     }
 
+    const handleInput = (index: number, e: React.FormEvent<HTMLInputElement>) => {
+        const target = e.currentTarget
+        const value = target.value
+        
+        // Handle paste on input event for better mobile support
+        if (value.length > 1) {
+            const sanitizedValue = value.replace(/[^0-9]/g, "").slice(0, 6)
+            if (sanitizedValue.length > 1) {
+                const newOtp = [...otpValue]
+                for (let i = 0; i < sanitizedValue.length; i++) {
+                    newOtp[i] = sanitizedValue[i]
+                }
+                setOtpValue(newOtp)
+
+                const nextIndex = Math.min(sanitizedValue.length, 5)
+                inputRefs.current[nextIndex]?.focus()
+
+                const fullOtp = newOtp.join("")
+                if (fullOtp.length === 6) {
+                    setSubmitted(true)
+                    onOtpSubmit(fullOtp)
+                    setTimeout(() => inputRefs.current[5]?.focus(), 0)
+                }
+                return
+            }
+        }
+        
+        handleOtpChange(index, value)
+    }
+
     const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
         if (submitted || mutation.isPending || isVerified) return
         if (e.key === "Backspace" && !otpValue[index] && index > 0) {
@@ -85,7 +116,7 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex justify-between gap-2 sm:gap-4" onPaste={handlePaste}>
+            <div className="flex justify-between gap-2 sm:gap-4" ref={containerRef} onPaste={handlePaste}>
                 {otpValue.map((digit, index) => (
                     <input
                         key={index}
@@ -94,9 +125,10 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
                         }}
                         type="text"
                         inputMode="numeric"
-                        maxLength={1}
+                        maxLength={6}
                         value={digit}
                         readOnly={submitted || mutation.isPending || isVerified}
+                        onInput={e => handleInput(index, e)}
                         onChange={e => handleOtpChange(index, e.target.value)}
                         onKeyDown={e => handleOtpKeyDown(index, e)}
                         className={`w-full aspect-square rounded-lg bg-zinc-900 border text-center text-xl font-bold text-white focus:outline-none focus:ring-2 transition-colors
