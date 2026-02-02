@@ -18,7 +18,7 @@ services:
                 limits:
                     memory: 6GB
         healthcheck:
-            test: ["CMD", "pg_isready", "-U", "melinia"]
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
             interval: 5s
             timeout: 5s
             retries: 10
