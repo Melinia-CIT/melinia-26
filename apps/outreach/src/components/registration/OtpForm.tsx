@@ -125,7 +125,7 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
                         }}
                         type="text"
                         inputMode="numeric"
-                        maxLength={6}
+                        maxLength={1}
                         value={digit}
                         readOnly={submitted || mutation.isPending || isVerified}
                         onInput={e => handleInput(index, e)}
