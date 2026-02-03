@@ -131,7 +131,7 @@ export const peopleData: SectionData[] = [
                 color: "#9D00FF",
             },
             {
-                name: "Krishneshwar",
+                name: "Krishneshvar",
                 role: "Frontend Developer",
                 imageUrl: "https://cdn.melinia.in/people/krish.webp",
                 linkedinUrl: "https://www.linkedin.com/in/krishneshvar-j",
