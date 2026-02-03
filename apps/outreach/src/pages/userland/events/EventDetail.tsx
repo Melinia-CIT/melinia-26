@@ -124,6 +124,10 @@ const EventDetail = () => {
     }
 
     const getStatusInfo = (evt: GetVerboseEvent) => {
+        if (evt.event_type === "flagship") {
+            return { text: "Open", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" }
+        }
+
         const now = new Date()
         const start = evt.start_time ? new Date(evt.start_time) : null
         const end = evt.end_time ? new Date(evt.end_time) : null
@@ -147,9 +151,9 @@ const EventDetail = () => {
     // New handler to check event type before opening modal
     const handleRegisterClick = () => {
         if (event?.id === hackathon_event_id || event?.id === pitch_pit_event_id) {
-            setIsRedirectModalOpen(true)
+            setIsRedirectModalOpen(!isRedirectModalOpen)
         } else {
-            setIsRegisterModalOpen(true)
+            setIsRegisterModalOpen(!isRegisterModalOpen)
         }
     }
 
