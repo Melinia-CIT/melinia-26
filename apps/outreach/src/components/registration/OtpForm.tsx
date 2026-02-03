@@ -24,9 +24,55 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
         }
     }, [mutation.isError])
 
+    // Helper function to set cursor at the end
+    const setCursorToEnd = (input: HTMLInputElement | null) => {
+        if (input) {
+            const length = input.value.length
+            input.setSelectionRange(length, length)
+        }
+    }
+
+    // Keep cursor at the end when value changes
+    useEffect(() => {
+        inputRefs.current.forEach((input) => {
+            if (input && document.activeElement === input) {
+                setCursorToEnd(input)
+            }
+        })
+    }, [otpValue])
+
     const handleOtpChange = (index: number, value: string) => {
         if (submitted || mutation.isPending || isVerified) return
+        
         const sanitizedValue = value.replace(/[^0-9]/g, "")
+        
+        // Handle multi-character input (from Gboard suggestions, autocomplete, etc.)
+        if (sanitizedValue.length > 1) {
+            const newOtp = [...otpValue]
+            const digitsToFill = sanitizedValue.slice(0, 6) // Limit to 6 digits
+            
+            // Fill from current index onwards
+            for (let i = 0; i < digitsToFill.length && (index + i) < 6; i++) {
+                newOtp[index + i] = digitsToFill[i]
+            }
+            
+            setOtpValue(newOtp)
+            
+            // Focus the next empty field or last field
+            const nextIndex = Math.min(index + digitsToFill.length, 5)
+            inputRefs.current[nextIndex]?.focus()
+            
+            // Auto submit if complete
+            const fullOtp = newOtp.join("")
+            if (fullOtp.length === 6) {
+                setSubmitted(true)
+                onOtpSubmit(fullOtp)
+                setTimeout(() => inputRefs.current[5]?.focus(), 0)
+            }
+            return
+        }
+        
+        // Handle single character input (original logic)
         const newOtp = [...otpValue]
         newOtp[index] = sanitizedValue
         setOtpValue(newOtp)
@@ -72,15 +118,25 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
 
     const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
         if (submitted || mutation.isPending || isVerified) return
+        
         if (e.key === "Backspace" && !otpValue[index] && index > 0) {
+            e.preventDefault()
             inputRefs.current[index - 1]?.focus()
         }
+        
         if (e.key === "ArrowLeft" && index > 0) {
+            e.preventDefault()
             inputRefs.current[index - 1]?.focus()
         }
+        
         if (e.key === "ArrowRight" && index < 5) {
+            e.preventDefault()
             inputRefs.current[index + 1]?.focus()
         }
+    }
+
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        setCursorToEnd(e.target)
     }
 
     return (
@@ -94,12 +150,12 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
                         }}
                         type="text"
                         inputMode="numeric"
-                        maxLength={1}
                         value={digit}
                         readOnly={submitted || mutation.isPending || isVerified}
                         onChange={e => handleOtpChange(index, e.target.value)}
                         onPaste={handlePaste}
                         onKeyDown={e => handleOtpKeyDown(index, e)}
+                        onFocus={handleFocus}
                         className={
                             `w-full aspect-square rounded-lg bg-zinc-900 border text-center text-xl font-bold text-white focus:outline-none focus:ring-2 transition-colors
                             ${submitted || mutation.isPending || isVerified ? "opacity-50 cursor-not-allowed" : ""}
