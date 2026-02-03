@@ -475,7 +475,7 @@ const EventDetail = () => {
                                     <CheckCircle2 className="w-5 h-5" /> Registered
                                 </>
                             ) : status.text === "Open" ? (
-                                "Register Now"
+                                event.event_type === "flagship" ? "View on Unstop" : "Register"
                             ) : (
                                 status.text
                             )}
