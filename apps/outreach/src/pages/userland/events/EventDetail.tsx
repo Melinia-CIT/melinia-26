@@ -74,52 +74,51 @@ const EventDetail = () => {
     const formatDate = (dateString: string) =>
         dateString
             ? new Date(dateString).toLocaleDateString("en-US", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-              })
+                month: "short",
+                day: "numeric",
+            })
             : "TBA"
 
     const formatTime = (dateString: string) =>
         dateString
             ? new Date(dateString).toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-              })
+                hour: "2-digit",
+                minute: "2-digit",
+            })
             : "TBA"
 
     const getThemeStyles = (type: string) => {
         const typeLower = type?.toLowerCase()
         if (typeLower === "technical")
             return {
-                banner: "from-rose-500/20 via-rose-600/10 to-transparent",
-                badge: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+                banner: "from-rose-500/20 via-rose-600/15 via-rose-700/10 to-transparent",
+                badge: "bg-rose-500/10 text-rose-400 border-rose-500/30",
                 accent: "text-rose-400",
                 button: "border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white",
-                icon: "text-rose-500",
+                icon: "text-rose-400",
             }
         if (typeLower === "non-technical")
             return {
-                banner: "from-emerald-500/20 via-emerald-900/10 to-transparent",
-                badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-                accent: "text-emerald-400",
-                button: "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white",
-                icon: "text-emerald-500",
+                banner: "from-purple-500/20 via-purple-600/15 via-purple-700/10 to-transparent",
+                badge: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+                accent: "text-purple-400",
+                button: "border-purple-500/30 text-purple-400 hover:bg-purple-500 hover:text-white",
+                icon: "text-purple-400",
             }
         if (typeLower === "flagship")
             return {
-                banner: "from-blue-600/20 via-blue-900/10 to-transparent",
-                badge: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-                accent: "text-blue-400",
-                button: "border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white",
-                icon: "text-blue-500",
+                banner: "from-orange-500/20 via-orange-600/15 via-orange-700/10 to-transparent",
+                badge: "bg-orange-500/10 text-orange-400 border-orange-500/30",
+                accent: "text-orange-400",
+                button: "border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-white",
+                icon: "text-orange-400",
             }
         return {
-            banner: "from-zinc-800/30 via-zinc-700/20 to-transparent",
-            badge: "bg-zinc-800 text-zinc-400 border-zinc-700",
+            banner: "from-zinc-900/40 via-zinc-800/30 via-zinc-700/20 to-transparent",
+            badge: "bg-zinc-800/60 text-zinc-400 border-zinc-700/50",
             accent: "text-zinc-400",
             button: "border-white/20 text-white hover:bg-white hover:text-black",
-            icon: "text-zinc-500",
+            icon: "text-zinc-400",
         }
     }
 
@@ -179,7 +178,7 @@ const EventDetail = () => {
                 </p>
                 <button
                     type="button"
-                    onClick={() => navigate("/app/events")}
+                    onClick={() => navigate(-1)}
                     className="text-xs bg-zinc-800 px-3 py-1 rounded text-white"
                 >
                     Back
@@ -194,7 +193,7 @@ const EventDetail = () => {
     return (
         <div className="flex flex-col w-full md:px-8 md:py-6 relative">
             <motion.button
-                onClick={() => navigate("/app/events")}
+                onClick={() => navigate(-1)}
                 className="pointer-events-auto flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-zinc-900/80 backdrop-blur-xl border border-white/10 text-zinc-100 hover:bg-zinc-800 hover:border-white/20 transition-all shadow-2xl z-99"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -230,56 +229,61 @@ const EventDetail = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="flex items-start gap-2">
-                            <Calendar className={`w-4 h-4 ${theme.icon} mt-0.5`} />
-                            <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Date
-                                </p>
-                                <p className="text-xs text-white font-medium">
-                                    {formatDate(event.start_time.toString())}
-                                </p>
+                    {event.event_type !== "flagship" && (
+                        <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="flex items-start gap-2">
+                                <Calendar className={`w-4 h-4 ${theme.icon} mt-0.5`} />
+                                <div>
+                                    <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                        Date
+                                    </p>
+                                    <p className="text-xs text-white font-medium">
+                                        {formatDate(event.start_time.toString())}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <Clock className={`w-4 h-4 ${theme.icon} mt-0.5`} />
+                                <div>
+                                    <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                        Time
+                                    </p>
+                                    <p className="text-xs text-white font-medium">
+                                        {formatTime(event.start_time.toString())} -{" "}
+                                        {event.end_time
+                                            ? formatTime(event.end_time.toString())
+                                            : "TBA"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <MapPin className={`w-4 h-4 ${theme.icon} mt-0.5 flex-shrink-0`} />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                        Venue
+                                    </p>
+                                    <p className="text-xs text-white font-medium break-words">
+                                        {event.venue}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <Users className={`w-4 h-4 ${theme.icon} mt-0.5`} />
+                                <div>
+                                    <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                        Size
+                                    </p>
+                                    <p className="text-xs text-white font-medium">
+                                        {event.participation_type.toLowerCase() === "solo"
+                                            ? "Solo"
+                                            : event.min_team_size === event.max_team_size
+                                                ? `${event.max_team_size} per team`
+                                                : `${event.min_team_size} - ${event.max_team_size} per team`}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex items-start gap-2">
-                            <Clock className={`w-4 h-4 ${theme.icon} mt-0.5`} />
-                            <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Time
-                                </p>
-                                <p className="text-xs text-white font-medium">
-                                    {formatTime(event.start_time.toString())}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                            <MapPin className={`w-4 h-4 ${theme.icon} mt-0.5 flex-shrink-0`} />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Venue
-                                </p>
-                                <p className="text-xs text-white font-medium break-words">
-                                    {event.venue}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                            <Users className={`w-4 h-4 ${theme.icon} mt-0.5`} />
-                            <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Size
-                                </p>
-                                <p className="text-xs text-white font-medium">
-                                    {event.participation_type.toLowerCase() === "solo"
-                                        ? "Solo"
-                                        : event.min_team_size === event.max_team_size
-                                          ? `${event.max_team_size} per team`
-                                          : `${event.min_team_size} - ${event.max_team_size} per team`}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    )}
 
                     {event.rounds?.length > 0 && (
                         <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-xl p-5">
@@ -295,10 +299,10 @@ const EventDetail = () => {
                                         const isExpanded = expandedRound === round.round_no
                                         const timeLabel =
                                             round.start_time && round.end_time
-                                                ? `${formatTime(round.start_time.toString())} - ${formatTime(round.end_time.toString())}`
+                                                ? `${formatDate(round.start_time.toString())} ${formatTime(round.start_time.toString())} - ${formatDate(round.end_time.toString())} ${formatTime(round.end_time.toString())}`
                                                 : round.start_time
-                                                  ? formatTime(round.start_time.toString())
-                                                  : "TBA"
+                                                    ? `${formatDate(round.start_time.toString())} ${formatTime(round.start_time.toString())}`
+                                                    : "TBA"
                                         return (
                                             <div
                                                 key={round.round_no}
@@ -444,7 +448,8 @@ const EventDetail = () => {
                                     Opens
                                 </p>
                                 <p className="text-xs text-white font-medium">
-                                    {formatDate(event.registration_start.toString())}
+                                    {formatDate(event.registration_start.toString())} •{" "}
+                                    {formatTime(event.registration_start.toString())}
                                 </p>
                             </div>
                             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
@@ -452,7 +457,8 @@ const EventDetail = () => {
                                     Closes
                                 </p>
                                 <p className="text-xs text-white font-medium">
-                                    {formatDate(event.registration_end.toString())}
+                                    {formatDate(event.registration_end.toString())} •{" "}
+                                    {formatTime(event.registration_end.toString())}
                                 </p>
                             </div>
                         </div>
@@ -469,7 +475,7 @@ const EventDetail = () => {
                                     <CheckCircle2 className="w-5 h-5" /> Registered
                                 </>
                             ) : status.text === "Open" ? (
-                                "Register Now"
+                                event.event_type === "flagship" ? "View on Unstop" : "Register"
                             ) : (
                                 status.text
                             )}

@@ -309,7 +309,7 @@ export function InfiniteMarqueeRow({
             {/* Scroll wrapper */}
             <div
                 ref={wrapperRef}
-                className="relative w-full overflow-x-auto touch-pan-x overscroll-x-contain select-none py-12"
+                className="relative w-full overflow-x-auto overscroll-x-contain select-none py-12"
                 style={{
                     scrollbarWidth: "none",
                     msOverflowStyle: "none",

@@ -117,7 +117,7 @@ export const peopleData: SectionData[] = [
                 color: "#9D00FF",
             },
             {
-                name: "Sidharth S",
+                name: "Siddarth S",
                 role: "Backend Developer(Payments)",
                 imageUrl: "https://cdn.melinia.in/people/sid.webp",
                 linkedinUrl: "https://www.linkedin.com/in/siddarth-s-801478257",
