@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
     CheckCircle,
     AlertTriangle,
@@ -9,28 +9,28 @@ import {
     PlusCircle,
     AlertCircle,
     User,
-} from "lucide-react";
-import api from "../../../services/api";
-import { useNavigate } from "react-router-dom";
-import PaymentModal from "../../payment/PaymentModal";
-import { Event } from "@melinia/shared";
-import { team_management } from "../../../services/teams";
+} from "lucide-react"
+import api from "../../../services/api"
+import { useNavigate } from "react-router-dom"
+import PaymentModal from "../../payment/PaymentModal"
+import { Event } from "@melinia/shared"
+import { team_management } from "../../../services/teams"
 
 interface Team {
-    id: string;
-    team_name: string;
-    member_count: string | number;
-    leader_id: string;
+    id: string
+    team_name: string
+    member_count: string | number
+    leader_id: string
 }
 
 interface EventRegisterProps {
-    event: Event;
-    onClose: () => void;
-    onSuccess: () => void;
+    event: Event
+    onClose: () => void
+    onSuccess: () => void
 }
 
 const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
-    const navigate = useNavigate();
+    const navigate = useNavigate()
     const [step, setStep] = useState<
         | "checking"
         | "Payment required"
@@ -39,108 +39,109 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
         | "confirm"
         | "success"
         | "error"
-    >("checking");
-    const [teams, setTeams] = useState<Team[]>([]);
-    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
-    const [isSoloChoice, setIsSoloChoice] = useState(false);
-    const registrationInitiated = useRef(false);
-    const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
+    >("checking")
+    const [teams, setTeams] = useState<Team[]>([])
+    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
+    const [loading, setLoading] = useState(false)
+    const [errorMessage, setErrorMessage] = useState("")
+    const [isSoloChoice, setIsSoloChoice] = useState(false)
+    const registrationInitiated = useRef(false)
+    const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false)
 
     useEffect(() => {
-        let isSubscribed = true;
+        let isSubscribed = true
         const checkEligibilityAndProcess = async () => {
-            if (registrationInitiated.current) return;
+            if (registrationInitiated.current) return
             try {
                 // This call triggers the paymentStatusMiddleware on the backend
-                const payRes = await api.get("/payment/payment-status");
-                if (!isSubscribed) return;
+                const payRes = await api.get("/payment/payment-status")
+                if (!isSubscribed) return
 
-                const paymentStatus = payRes.data.paid;
+                const paymentStatus = payRes.data.paid
 
                 if (!paymentStatus) {
-                    setStep("Payment required");
-                    return;
+                    setStep("Payment required")
+                    return
                 }
 
                 if (event.participation_type.toLowerCase() === "solo") {
-                    registrationInitiated.current = true;
-                    handleFinalRegister(null, "solo");
+                    registrationInitiated.current = true
+                    handleFinalRegister(null, "solo")
                 } else {
-                    const teamRes = await team_management.teamList('led');
-                    if (!isSubscribed) return;
+                    const teamRes = await team_management.teamList("led")
+                    if (!isSubscribed) return
 
-                    const userTeams = teamRes.data || [];
-                    setTeams(userTeams);
+                    const userTeams = teamRes.data || []
+                    setTeams(userTeams)
 
                     if (userTeams.length === 0 && event.min_team_size > 1) {
-                        setStep("no_teams");
+                        setStep("no_teams")
                     } else {
-                        setStep("team_selection");
+                        setStep("team_selection")
                     }
                 }
             } catch (err: any) {
-                if (!isSubscribed) return;
+                if (!isSubscribed) return
 
                 // FIX: Check if the middleware threw a 402 Payment Required error
                 if (err.response?.status === 402) {
-                    setStep("Payment required");
+                    setStep("Payment required")
                 } else {
-                    setErrorMessage(err.response?.data?.message || "Failed to verify eligibility.");
-                    setStep("error");
+                    setErrorMessage(err.response?.data?.message || "Failed to verify eligibility.")
+                    setStep("error")
                 }
             }
-        };
+        }
 
-        checkEligibilityAndProcess();
+        checkEligibilityAndProcess()
 
         return () => {
-            isSubscribed = false;
-        };
-    }, [event.id]);
+            isSubscribed = false
+        }
+    }, [event.id])
 
     const handleFinalRegister = async (teamId: string | null, typeOverride?: string) => {
-        if (loading) return;
-        setLoading(true);
+        if (loading) return
+        setLoading(true)
         try {
             const response = await api.post(`/events/${event.id}/registrations`, {
-                registration_type: typeOverride || (isSoloChoice ? "solo" : event.participation_type),
-                team_id: teamId
-            });
+                registration_type:
+                    typeOverride || (isSoloChoice ? "solo" : event.participation_type),
+                team_id: teamId,
+            })
 
             if (response.status === 201) {
-                setStep("success");
-                onSuccess();
-                setTimeout(() => onClose(), 2000);
+                setStep("success")
+                onSuccess()
+                setTimeout(() => onClose(), 2000)
             }
         } catch (err: any) {
             // FIX: Also check for 402 here in case status changed mid-session
             if (err.response?.status === 402) {
-                setStep("Payment required");
+                setStep("Payment required")
             } else {
                 setErrorMessage(
                     err.response?.data?.message ||
-                    "Registration failed. One or more members might already be registered."
-                );
-                setStep("error");
+                        "Registration failed. One or more members might already be registered."
+                )
+                setStep("error")
             }
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     const handlePaymentRedirect = async () => {
-        setLoading(true);
+        setLoading(true)
         try {
-            setShowPaymentModal(true);
+            setShowPaymentModal(true)
         } catch (err: any) {
-            setErrorMessage("Could not initialize payment. Please try again later.");
-            setStep("error");
+            setErrorMessage("Could not initialize payment. Please try again later.")
+            setStep("error")
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -159,6 +160,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
             >
                 {step !== "success" && (
                     <button
+                        type="button"
                         onClick={onClose}
                         className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
                     >
@@ -194,6 +196,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                             </div>
                             <h2 className="text-xl font-bold mb-2 text-white">{errorMessage}</h2>
                             <button
+                                type="button"
                                 onClick={onClose}
                                 className="w-full py-2.5 sm:py-3 px-4 bg-zinc-100 text-zinc-900 font-medium sm:font-semibold hover:bg-white rounded-xl transition disabled:opacity-70 text-sm sm:text-base"
                             >
@@ -218,6 +221,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                 participating in events.
                             </p>
                             <button
+                                type="button"
                                 onClick={handlePaymentRedirect}
                                 disabled={loading}
                                 className="w-full py-2.5 sm:py-3 px-4 bg-zinc-100 text-zinc-900 font-medium sm:font-semibold hover:bg-white rounded-xl transition flex items-center justify-center gap-1.5 sm:gap-2 disabled:opacity-70 text-sm sm:text-base"
@@ -237,8 +241,8 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                             animate={{ opacity: 1 }}
                             className="text-center py-4"
                         >
-                            <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <PlusCircle className="w-8 h-8 text-blue-500" />
+                            <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <PlusCircle className="w-8 h-8 text-purple-500" />
                             </div>
                             <h2 className="text-xl font-bold mb-2 text-white">No Team Found</h2>
                             <p className="text-sm text-zinc-400 mb-6">
@@ -246,6 +250,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                 first.
                             </p>
                             <button
+                                type="button"
                                 onClick={() => navigate("/app/teams")}
                                 className="w-full py-2.5 sm:py-3 px-4 bg-zinc-100 text-zinc-900 font-medium sm:font-semibold hover:bg-white rounded-xl transition text-sm sm:text-base"
                             >
@@ -275,8 +280,8 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                                 name="team"
                                                 checked={isSoloChoice}
                                                 onChange={() => {
-                                                    setSelectedTeamId(null);
-                                                    setIsSoloChoice(true);
+                                                    setSelectedTeamId(null)
+                                                    setIsSoloChoice(true)
                                                 }}
                                                 className="accent-zinc-500 w-4 h-4"
                                             />
@@ -293,8 +298,8 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                 {teams.map(t => {
                                     const isValidSize =
                                         Number(t.member_count) >= event.min_team_size &&
-                                        Number(t.member_count) <= event.max_team_size;
-                                    const isSelected = selectedTeamId === t.id;
+                                        Number(t.member_count) <= event.max_team_size
+                                    const isSelected = selectedTeamId === t.id
                                     return (
                                         <label
                                             key={t.id}
@@ -307,8 +312,8 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                                     disabled={!isValidSize}
                                                     checked={isSelected}
                                                     onChange={() => {
-                                                        setSelectedTeamId(t.id);
-                                                        setIsSoloChoice(false);
+                                                        setSelectedTeamId(t.id)
+                                                        setIsSoloChoice(false)
                                                     }}
                                                     className="accent-zinc-500 w-4 h-4"
                                                 />
@@ -325,10 +330,11 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                                 <AlertTriangle className="w-4 h-4 text-amber-500" />
                                             )}
                                         </label>
-                                    );
+                                    )
                                 })}
                             </div>
                             <button
+                                type="button"
                                 disabled={(!selectedTeamId && !isSoloChoice) || loading}
                                 onClick={() => setStep("confirm")}
                                 className="w-full py-2.5 sm:py-3 px-4 bg-zinc-100 text-zinc-900 font-medium sm:font-semibold hover:bg-white rounded-xl transition disabled:opacity-50 text-sm sm:text-base"
@@ -352,21 +358,20 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                                 Final Confirmation
                             </h2>
                             <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
-                                {
-                                    isSoloChoice ?
-                                        "Once registered, your participation details cannot be modified. Do you wish to proceed?"
-                                        : "Team registrations will lock the team and expire pending invites. Do you wish to proceed?"
-
-                                }
+                                {isSoloChoice
+                                    ? "Once registered, your participation details cannot be modified. Do you wish to proceed?"
+                                    : "Team registrations will lock the team and expire pending invites. Do you wish to proceed?"}
                             </p>
                             <div className="flex gap-2 sm:gap-3">
                                 <button
+                                    type="button"
                                     onClick={() => setStep("team_selection")}
                                     className="flex-1 py-2.5 sm:py-3 px-4 bg-zinc-100 text-zinc-900 font-medium sm:font-semibold hover:bg-white rounded-xl transition text-sm sm:text-base"
                                 >
                                     Cancel
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => handleFinalRegister(selectedTeamId)}
                                     disabled={loading}
                                     className="flex-1 py-2.5 sm:py-3 px-4 bg-zinc-100 text-zinc-900 font-medium sm:font-semibold hover:bg-white rounded-xl transition flex items-center justify-center gap-1.5 sm:gap-2 disabled:opacity-50 text-sm sm:text-base"
@@ -409,7 +414,7 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                 </AnimatePresence>
             </motion.div>
         </div>
-    );
-};
+    )
+}
 
-export default EventRegister;
+export default EventRegister

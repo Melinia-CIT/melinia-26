@@ -13,34 +13,34 @@ interface FAQItem {
 const faqData: FAQItem[] = [
     {
         id: "1",
+        question: "Who should I contact for additional queries?",
+        answer: "For any queries, you can reach out to our team via email at helpdesk@melinia.in or call the respective event organizers mentioned. You can also visit our campus at Civil Aerodrome Post, Coimbatore, Tamilnadu, India – 641 014. Our team is available to assist you throughout the fest period.",
+    },
+    {
+        id: "2",
         question: "How do I register for events?",
         answer: "Registration is simple! Navigate to the Events section, browse through our Flagship, Technical, and Non-Technical events. Click on 'Know More' button. You'll be redirected to the registration page where you can complete the process. Make sure you're logged in to register.",
     },
     {
-        id: "2",
+        id: "3",
         question: "Who can participate in Melinia'26?",
         answer: "Melinia'26 is open to all college students across India. Whether you're from engineering, arts, science, or any other discipline, we welcome you to participate in our events. Some events may have specific prerequisites, which will be mentioned in the event description.",
     },
     {
-        id: "3",
+        id: "4",
         question:
             "Is Flagship event registrations are different from Melinia main track registration?",
         answer: "Flagship-event registration is separate from Melinia registration, Flagship events are hosted on Unstop platform and require their own payment, To enter the main-track events, login & pay inside the Melinia web app.",
     },
     {
-        id: "4",
+        id: "5",
         question: "Is accommodation available for outstation participants?",
         answer: "Accommodation is not provided for participants. However, we can help guide you to nearby hotels and PG accommodations in Coimbatore. Please contact our team at +91 9597970123 for assistance.",
     },
     {
-        id: "5",
+        id: "6",
         question: "Can I participate solo or do I need a team?",
         answer: "It depends on the event! Some events are designed for individual participation, while others require teams. Each event listing clearly specifies the minimum and maximum team size allowed. You can register as a solo participant for individual events, and team-based events will allow you to form teams during registration.",
-    },
-    {
-        id: "6",
-        question: "Who should I contact for additional queries?",
-        answer: "For any queries, you can reach out to our team via email at helpdesk@melinia.in or call the respective event organizers mentioned. You can also visit our campus at Civil Aerodrome Post, Coimbatore, Tamilnadu, India – 641 014. Our team is available to assist you throughout the fest period.",
     },
 ]
 

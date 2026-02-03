@@ -1,66 +1,60 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
-import { Xmark, Search } from "iconoir-react";
-import EventsCard from "../../../components/userland/events/EventsCard";
-import api from "../../../services/api";
-import { baseEventSchema, Event } from "@melinia/shared";
+import { useState, useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { motion, AnimatePresence } from "framer-motion"
+import { Xmark, Search } from "iconoir-react"
+import EventsCard from "../../../components/userland/events/EventsCard"
+import api from "../../../services/api"
+import { baseEventSchema, Event } from "@melinia/shared"
 
 type Events = {
     events: Event[]
 }
 
 const Events = () => {
-    const [activeFilters, setActiveFilters] = useState<string[]>(["all"]);
-    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [activeFilters, setActiveFilters] = useState<string[]>(["all"])
+    const [searchQuery, setSearchQuery] = useState<string>("")
 
-    const {
-        data: eventsData,
-        isLoading: eventsLoading
-    } = useQuery<Event[]>({
+    const { data: eventsData, isLoading: eventsLoading } = useQuery<Event[]>({
         queryKey: ["events"],
         queryFn: async () => {
-            const response = await api.get<Events>("/events");
-            return response
-                .data
-                .events
-                .map(e => baseEventSchema.parse(e));
+            const response = await api.get<Events>("/events")
+            return response.data.events.map(e => baseEventSchema.parse(e))
         },
         staleTime: 5 * 60 * 1000,
-    });
+    })
 
     const filters = useMemo(() => {
-        if (!eventsData) return [{ label: "All", value: "all" }];
-        const types = Array.from(new Set(eventsData.map(e => e.event_type)));
+        if (!eventsData) return [{ label: "All", value: "all" }]
+        const types = Array.from(new Set(eventsData.map(e => e.event_type)))
         return [
             { label: "All", value: "all" },
             ...types.map(t => ({
                 label: t.charAt(0).toUpperCase() + t.slice(1),
                 value: t,
             })),
-        ];
-    }, [eventsData]);
+        ]
+    }, [eventsData])
 
     // Updated toggle logic to handle multi-select and "All" behavior
     const handleFilterClick = (value: string) => {
         setActiveFilters(prev => {
-            if (value === "all") return ["all"];
-            const newFilters = prev.filter(f => f !== "all");
+            if (value === "all") return ["all"]
+            const newFilters = prev.filter(f => f !== "all")
             if (newFilters.includes(value)) {
-                const updated = newFilters.filter(f => f !== value);
-                return updated.length === 0 ? ["all"] : updated;
+                const updated = newFilters.filter(f => f !== value)
+                return updated.length === 0 ? ["all"] : updated
             } else {
-                return [...newFilters, value];
+                return [...newFilters, value]
             }
-        });
-    };
+        })
+    }
 
     const filteredEvents = eventsData?.filter(event => {
         const matchesCategory =
-            activeFilters.includes("all") || activeFilters.includes(event.event_type);
-        const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-    });
+            activeFilters.includes("all") || activeFilters.includes(event.event_type)
+        const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase())
+        return matchesCategory && matchesSearch
+    })
 
     return (
         <div className="flex-1 w-full transition-all duration-300">
@@ -86,18 +80,18 @@ const Events = () => {
                         </div>
 
                         {/* Grid Skeleton */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4">
                             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                                 <div
                                     key={i}
-                                    className="h-48 sm:h-64 md:h-72 lg:h-80 rounded-xl sm:rounded-2xl bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer"
+                                    className="h-full rounded-3xl bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer"
                                 />
                             ))}
                         </div>
                     </div>
                 </motion.div>
             ) : (
-                <div className="mx-auto space-y-10 px-4 md:px-6">
+                <div className="mx-auto space-y-10 px-2 md:px-6">
                     <motion.div
                         className="flex flex-col gap-6"
                         initial={{ opacity: 0, y: -20 }}
@@ -118,6 +112,7 @@ const Events = () => {
                                 />
                                 {searchQuery && (
                                     <button
+                                        type="button"
                                         onClick={() => setSearchQuery("")}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 ml-1 w-4 h-4 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                                     >
@@ -133,15 +128,17 @@ const Events = () => {
                         {/*Filters*/}
                         <div className="flex flex-wrap justify-center sm:justify-start gap-3">
                             {filters.map((filter, index) => {
-                                const isActive = activeFilters.includes(filter.value);
+                                const isActive = activeFilters.includes(filter.value)
                                 return (
                                     <motion.button
                                         key={filter.value}
+                                        type="button"
                                         onClick={() => handleFilterClick(filter.value)}
-                                        className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border relative flex justify-center items-center gap-2 group ${isActive
-                                            ? "text-white border-white/40 bg-white/10"
-                                            : "text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600"
-                                            }`}
+                                        className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border relative flex justify-center items-center gap-2 group ${
+                                            isActive
+                                                ? "text-white border-white/40 bg-white/10"
+                                                : "text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600"
+                                        }`}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         initial={{ opacity: 0, y: -10 }}
@@ -165,7 +162,7 @@ const Events = () => {
                                             />
                                         )}
                                     </motion.button>
-                                );
+                                )
                             })}
                         </div>
                     </motion.div>
@@ -175,20 +172,13 @@ const Events = () => {
                             filteredEvents && filteredEvents.length > 0 ? (
                                 <motion.div
                                     key={`${activeFilters.join(",")}-${searchQuery}`}
-                                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
+                                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                 >
-                                    {filteredEvents.map((event, index) => (
-                                        <motion.div
-                                            key={event.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.05 }}
-                                        >
-                                            <EventsCard event={event} />
-                                        </motion.div>
+                                    {filteredEvents.map(event => (
+                                        <EventsCard key={event.id} event={event} />
                                     ))}
                                 </motion.div>
                             ) : (
@@ -223,7 +213,7 @@ const Events = () => {
                 </div>
             )}
         </div>
-    );
-};
+    )
+}
 
-export default Events;
+export default Events

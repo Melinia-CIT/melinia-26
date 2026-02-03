@@ -537,21 +537,53 @@ const Events = () => {
                                                     </div>
                                                 </div>
                                                 {/* Time */}
-                                                <div className="flex items-center gap-2 md:gap-3 text-white">
-                                                    <div className="p-1.5 md:p-2 rounded-full bg-red-500/20 text-red-400">
-                                                        <Clock size={16} />
+                                                {currentEvent?.event_type?.toLowerCase() ===
+                                                "flagship" ? (
+                                                    <div className="flex items-center gap-2 md:gap-3 text-white">
+                                                        <div className="p-1.5 md:p-2 rounded-full bg-red-500/20 text-red-400">
+                                                            <Clock size={16} />
+                                                        </div>
+                                                        <div className="flex items-center gap-2 md:gap-3 flex-1">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                                                                    START
+                                                                </span>
+                                                                <span className="text-xs md:text-sm font-medium">
+                                                                    {formatDateTime(
+                                                                        currentEvent.start_time
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                            <div className="w-px h-6 bg-white/20 mx-1" />
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                                                                    END
+                                                                </span>
+                                                                <span className="text-xs md:text-sm font-medium">
+                                                                    {formatDateTime(
+                                                                        currentEvent.end_time
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
-                                                            Date
-                                                        </span>
-                                                        <span className="text-xs md:text-sm font-medium">
-                                                            {formatDateTime(
-                                                                currentEvent.start_time
-                                                            )}
-                                                        </span>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 md:gap-3 text-white">
+                                                        <div className="p-1.5 md:p-2 rounded-full bg-red-500/20 text-red-400">
+                                                            <Clock size={16} />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] md:text-[10px] uppercase text-gray-500 font-bold tracking-wider">
+                                                                Date
+                                                            </span>
+                                                            <span className="text-xs md:text-sm font-medium">
+                                                                {formatDateTime(
+                                                                    currentEvent.start_time
+                                                                )}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
                                                 {/* Team Size */}
                                                 {!(
                                                     currentEvent.min_team_size === 1 &&
