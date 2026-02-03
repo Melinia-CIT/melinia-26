@@ -11,7 +11,6 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
     const [otpValue, setOtpValue] = useState<string[]>(["", "", "", "", "", ""])
     const [submitted, setSubmitted] = useState(false)
     const inputRefs = useRef<(HTMLInputElement | null)[]>([])
-    const containerRef = useRef<HTMLDivElement>(null)
 
     // Focus first input when component mounts
     useEffect(() => {
@@ -25,41 +24,8 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
         }
     }, [mutation.isError])
 
-    // Shared function to process OTP input from paste or autofill
-    const processOtpInput = (otpString: string, startIndex: number = 0) => {
-        const newOtp = [...otpValue]
-        
-        for (let i = 0; i < otpString.length && (startIndex + i) < 6; i++) {
-            newOtp[startIndex + i] = otpString[i]
-        }
-        
-        setOtpValue(newOtp)
-        
-        // Focus the next empty input or the last one
-        const nextIndex = Math.min(startIndex + otpString.length, 5)
-        inputRefs.current[nextIndex]?.focus()
-        
-        // Check if OTP is complete
-        const fullOtp = newOtp.join("")
-        if (fullOtp.length === 6) {
-            setSubmitted(true)
-            onOtpSubmit(fullOtp)
-            setTimeout(() => inputRefs.current[5]?.focus(), 0)
-        }
-    }
-
     const handleOtpChange = (index: number, value: string) => {
         if (submitted || mutation.isPending || isVerified) return
-        
-        // Handle mobile keyboard autofill (when multiple digits are pasted into one input)
-        if (value.length > 1) {
-            const sanitizedValue = value.replace(/[^0-9]/g, "").slice(0, 6)
-            // Always start from index 0 for multi-character input (autofill scenario)
-            processOtpInput(sanitizedValue, 0)
-            return
-        }
-        
-        // Handle single character input
         const sanitizedValue = value.replace(/[^0-9]/g, "")
         const newOtp = [...otpValue]
         newOtp[index] = sanitizedValue
@@ -86,38 +52,22 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
         const pastedOtp = pastedData.replace(/[^0-9]/g, "").slice(0, 6)
 
         if (pastedOtp.length > 0) {
-            processOtpInput(pastedOtp, 0)
-        }
-    }
+            const newOtp = [...otpValue]
+            for (let i = 0; i < pastedOtp.length; i++) {
+                newOtp[i] = pastedOtp[i]
+            }
+            setOtpValue(newOtp)
 
-    const handleInput = (index: number, e: React.FormEvent<HTMLInputElement>) => {
-        const target = e.currentTarget
-        const value = target.value
-        
-        // Handle paste on input event for better mobile support
-        if (value.length > 1) {
-            const sanitizedValue = value.replace(/[^0-9]/g, "").slice(0, 6)
-            if (sanitizedValue.length > 1) {
-                const newOtp = [...otpValue]
-                for (let i = 0; i < sanitizedValue.length; i++) {
-                    newOtp[i] = sanitizedValue[i]
-                }
-                setOtpValue(newOtp)
+            const nextIndex = Math.min(pastedOtp.length, 5)
+            inputRefs.current[nextIndex]?.focus()
 
-                const nextIndex = Math.min(sanitizedValue.length, 5)
-                inputRefs.current[nextIndex]?.focus()
-
-                const fullOtp = newOtp.join("")
-                if (fullOtp.length === 6) {
-                    setSubmitted(true)
-                    onOtpSubmit(fullOtp)
-                    setTimeout(() => inputRefs.current[5]?.focus(), 0)
-                }
-                return
+            const fullOtp = newOtp.join("")
+            if (fullOtp.length === 6) {
+                setSubmitted(true)
+                onOtpSubmit(fullOtp)
+                setTimeout(() => inputRefs.current[5]?.focus(), 0)
             }
         }
-        
-        handleOtpChange(index, value)
     }
 
     const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -135,7 +85,7 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex justify-between gap-2 sm:gap-4" ref={containerRef} onPaste={handlePaste}>
+            <div className="flex justify-between gap-2 sm:gap-4">
                 {otpValue.map((digit, index) => (
                     <input
                         key={index}
@@ -144,17 +94,16 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
                         }}
                         type="text"
                         inputMode="numeric"
-                        maxLength={6}
+                        maxLength={1}
                         value={digit}
                         readOnly={submitted || mutation.isPending || isVerified}
-                        onInput={e => handleInput(index, e)}
                         onChange={e => handleOtpChange(index, e.target.value)}
+                        onPaste={handlePaste}
                         onKeyDown={e => handleOtpKeyDown(index, e)}
-                        autoComplete="one-time-code"
                         className={`w-full aspect-square rounded-lg bg-zinc-900 border text-center text-xl font-bold text-white focus:outline-none focus:ring-2 transition-colors
-                            ${submitted || mutation.isPending || isVerified ? "opacity-50 cursor-not-allowed" : ""}
-                            ${mutation.isError ? "border-red-500 focus:ring-red-500/50" : "border-zinc-800 focus:ring-zinc-600"}
-                        `}
+              ${submitted || mutation.isPending || isVerified ? "opacity-50 cursor-not-allowed" : ""}
+              ${mutation.isError ? "border-red-500 focus:ring-red-500/50" : "border-zinc-800 focus:ring-zinc-600"}
+            `}
                     />
                 ))}
             </div>
