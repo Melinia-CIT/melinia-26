@@ -241,8 +241,8 @@ const EventRegister = ({ event, onClose, onSuccess }: EventRegisterProps) => {
                             animate={{ opacity: 1 }}
                             className="text-center py-4"
                         >
-                            <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <PlusCircle className="w-8 h-8 text-purple-500" />
+                            <div className="w-16 h-16 bg-gray-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <PlusCircle className="w-8 h-8 text-zinc-500" />
                             </div>
                             <h2 className="text-xl font-bold mb-2 text-white">No Team Found</h2>
                             <p className="text-sm text-zinc-400 mb-6">
