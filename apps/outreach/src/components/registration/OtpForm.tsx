@@ -100,10 +100,11 @@ const OtpForm = ({ mutation, isVerified, onOtpSubmit }: OtpFormProps) => {
                         onChange={e => handleOtpChange(index, e.target.value)}
                         onPaste={handlePaste}
                         onKeyDown={e => handleOtpKeyDown(index, e)}
-                        className={`w-full aspect-square rounded-lg bg-zinc-900 border text-center text-xl font-bold text-white focus:outline-none focus:ring-2 transition-colors
-              ${submitted || mutation.isPending || isVerified ? "opacity-50 cursor-not-allowed" : ""}
-              ${mutation.isError ? "border-red-500 focus:ring-red-500/50" : "border-zinc-800 focus:ring-zinc-600"}
-            `}
+                        className={
+                            `w-full aspect-square rounded-lg bg-zinc-900 border text-center text-xl font-bold text-white focus:outline-none focus:ring-2 transition-colors
+                            ${submitted || mutation.isPending || isVerified ? "opacity-50 cursor-not-allowed" : ""}
+                            ${mutation.isError ? "border-red-500 focus:ring-red-500/50" : "border-zinc-800 focus:ring-zinc-600"}
+                        `}
                     />
                 ))}
             </div>
