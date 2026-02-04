@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
 import { Xmark, Search } from "iconoir-react"
 import EventsCard from "../../../components/userland/events/EventsCard"
+import EventsCardShimmer from "../../../components/userland/events/EventsCardShimmer"
 import api from "../../../services/api"
 import { baseEventSchema, Event } from "@melinia/shared"
 
@@ -67,25 +68,25 @@ const Events = () => {
                 >
                     <div className="space-y-8 w-full px-4 md:px-6">
                         {/* Header Skeleton */}
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div className="h-10 w-32 sm:h-12 sm:w-40 rounded-lg bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer" />
-                            <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto justify-center sm:justify-end px-2 sm:px-0">
-                                {[1, 2, 3].map(i => (
+                        <div className="space-y-6">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="relative h-10 w-32 sm:h-12 sm:w-40 rounded-lg bg-zinc-800/50 overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                                <div className="relative h-9 w-full sm:w-72 rounded-full bg-zinc-900/50 overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent" />
+                            </div>
+                            <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto justify-center sm:justify-start px-2 sm:px-0">
+                                {[1, 2, 3, 4].map(i => (
                                     <div
                                         key={i}
-                                        className="h-9 w-20 sm:h-10 sm:w-24 rounded-full bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer flex-shrink-0"
+                                        className="relative h-9 w-20 sm:h-10 sm:w-24 rounded-full bg-zinc-800/50 flex-shrink-0 overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent"
                                     />
                                 ))}
                             </div>
                         </div>
 
                         {/* Grid Skeleton */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4">
+                        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4">
                             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                                <div
-                                    key={i}
-                                    className="h-full rounded-3xl bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%] animate-shimmer"
-                                />
+                                <EventsCardShimmer key={i} />
                             ))}
                         </div>
                     </div>
