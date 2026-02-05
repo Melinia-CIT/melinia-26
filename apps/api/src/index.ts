@@ -23,6 +23,7 @@ app.use(
 	cors({
 		origin: [
 			"http://localhost:5173",
+			"http://localhost:5174",
 			"https://d2ects9rfqf4lr.cloudfront.net",
 			"https://melinia.in",
 			"https://www.melinia.in"
