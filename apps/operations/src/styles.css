@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/* ============================================
+   Dark theme + square corners + subtle motion
+   Monochrome base with semantic colors for states
+   ============================================ */
+
+:root {
+	/* Force dark mode */
+	color-scheme: dark;
+
+	/* Monochrome base palette (dark mode) */
+	--color-bg: #0a0a0a;
+	--color-surface: #141414;
+	--color-surface-elevated: #1a1a1a;
+	--color-border: #2a2a2a;
+	--color-border-strong: #3a3a3a;
+	--color-text: #e5e5e5;
+	--color-text-secondary: #a3a3a3;
+	--color-text-tertiary: #737373;
+	
+	/* Monochrome accent (subtle gray) */
+	--color-accent: #ffffff;
+	--color-accent-hover: #d4d4d4;
+	--color-accent-muted: #525252;
+
+	/* Semantic state colors (not monochrome) */
+	--color-error: #ef4444;
+	--color-error-bg: #1a0f0f;
+	--color-error-border: #3f1515;
+	--color-warning: #f59e0b;
+	--color-warning-bg: #1a1408;
+	--color-warning-border: #3f2f08;
+	--color-success: #10b981;
+	--color-success-bg: #0a1a14;
+	--color-success-border: #0f3f28;
+
+	/* Zero rounded corners */
+	--radius: 0px;
+
+	/* Spacing */
+	--spacing-page: 1.5rem;
+
+	/* Focus ring (high contrast for dark mode) */
+	--focus-ring: 0 0 0 2px #ffffff;
+
+	/* Motion timing (subtle, short) */
+	--transition-fast: 120ms ease;
+	--transition-base: 150ms ease;
+}
+
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
+/* Global resets for consistent styling */
+body {
+	@apply m-0;
+	background-color: var(--color-bg);
+	color: var(--color-text);
+	font-family: "IBM Plex Mono", monospace;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+code,
+pre {
+	font-family: "IBM Plex Mono", monospace;
+}
+
+/* Enforce square corners on common elements */
+input,
+textarea,
+select,
+button {
+	border-radius: var(--radius);
+}
+
+/* Focus styles (accessible) */
+:focus-visible {
+	outline: none;
+	box-shadow: var(--focus-ring);
+}
+
+/* Subtle transitions */
+button,
+a,
+input,
+select,
+textarea {
+	transition: all var(--transition-base);
+}
+
+/* QR Scanner animations */
+@keyframes scan {
+	0% {
+		transform: translateY(0);
+	}
+	100% {
+		transform: translateY(256px);
+	}
+}
+
+.animate-scan {
+	animation: scan 2s ease-in-out infinite;
+}
