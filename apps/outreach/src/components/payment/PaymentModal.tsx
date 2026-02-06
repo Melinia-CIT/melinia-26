@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
-import { Xmark, CreditCard, SystemRestart, CheckCircle, InfoCircle } from "iconoir-react"
+import { Xmark, CreditCard, SystemRestart, CheckCircle, InfoCircle, Gift } from "iconoir-react"
 import { paymentService, type OrderResponse } from "../../services/payment"
+import { couponService } from "../../services/coupon"
 
 interface RazorpayOptions {
     key: string
@@ -58,6 +59,10 @@ export default function PaymentModal({
         "idle"
     )
     const [isScriptLoaded, setIsScriptLoaded] = useState(false)
+    const [showCouponDialog, setShowCouponDialog] = useState(false)
+    const [couponCode, setCouponCode] = useState("")
+    const [couponError, setCouponError] = useState("")
+    const [isRedeemingCoupon, setIsRedeemingCoupon] = useState(false)
     const queryClient = useQueryClient()
 
     useEffect(() => {
@@ -71,7 +76,7 @@ export default function PaymentModal({
             toast.error("Failed to load payment gateway. Please refresh the page.")
         }
         document.body.appendChild(script)
-    }, []);
+    }, [])
 
     const createPaymentOrderMutation = useMutation({
         mutationFn: paymentService.createOrder,
@@ -149,6 +154,44 @@ export default function PaymentModal({
         setPaymentStatus("idle")
     }
 
+    const handleCouponRedeem = async () => {
+        if (!couponCode.trim()) {
+            setCouponError("Please enter a coupon code")
+            return
+        }
+
+        setIsRedeemingCoupon(true)
+        setCouponError("")
+
+        try {
+            await couponService.redeemCoupon(couponCode.trim())
+            toast.success("Coupon redeemed! Payment exempted.")
+            queryClient.invalidateQueries({ queryKey: ["userMe"] })
+            queryClient.invalidateQueries({ queryKey: ["paymentStatus"] })
+            setShowCouponDialog(false)
+            setCouponCode("")
+            onPaymentSuccess?.()
+            onClose()
+        } catch (error: unknown) {
+            const err = error as { response?: { status?: number; data?: { message?: string } } }
+            if (err.response?.status === 404) {
+                setCouponError("Invalid coupon code")
+            } else if (err.response?.status === 409) {
+                setCouponError("This coupon has already been used")
+            } else {
+                setCouponError(err.response?.data?.message || "Failed to redeem coupon")
+            }
+        } finally {
+            setIsRedeemingCoupon(false)
+        }
+    }
+
+    const handleCloseCouponDialog = () => {
+        setShowCouponDialog(false)
+        setCouponCode("")
+        setCouponError("")
+    }
+
     if (!isOpen) return null
 
     return (
@@ -163,7 +206,7 @@ export default function PaymentModal({
                         <h2 className="text-lg font-semibold text-white font-inst">Payment</h2>
                         {isRequired && <span className="text-xs text-zinc-400">Required</span>}
                     </div>
-                    {(
+                    {
                         <button
                             onClick={onClose}
                             className="text-zinc-400 hover:text-white transition-colors"
@@ -171,7 +214,7 @@ export default function PaymentModal({
                         >
                             <Xmark width={25} height={25} />
                         </button>
-                    )}
+                    }
                 </div>
 
                 <div className="p-6">
@@ -217,8 +260,12 @@ export default function PaymentModal({
                                     </div>
                                     <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-zinc-400 self-center">Registration Fee</span>
-                                            <span className="text-white font-semibold">₹300.00</span>
+                                            <span className="text-zinc-400 self-center">
+                                                Registration Fee
+                                            </span>
+                                            <span className="text-white font-semibold">
+                                                ₹300.00
+                                            </span>
                                         </div>
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="text-zinc-400">Convenience Fee</span>
@@ -238,12 +285,16 @@ export default function PaymentModal({
 
                                     {/* Attention Box */}
                                     <div className="flex items-center gap-3 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                                        <InfoCircle width={20} height={20} className="text-yellow-500 shrink-0 mt-0.5" />
+                                        <InfoCircle
+                                            width={20}
+                                            height={20}
+                                            className="text-yellow-500 shrink-0 mt-0.5"
+                                        />
                                         <p className="text-xs text-yellow-100 font-xs leading-relaxed">
-                                            Covers only the Melinia’26 Main Track. Flagship events require separate payment on Unstop.
+                                            Covers only the Melinia’26 Main Track. Flagship events
+                                            require separate payment on Unstop.
                                         </p>
                                     </div>
-
 
                                     <button
                                         onClick={handlePay}
@@ -268,6 +319,14 @@ export default function PaymentModal({
                                     <p className="text-xs text-zinc-500 text-center">
                                         Secured by Razorpay. Your payment information is safe.
                                     </p>
+
+                                    {/* Coupon Code Prompt */}
+                                    <button
+                                        onClick={() => setShowCouponDialog(true)}
+                                        className="w-full text-center text-red-500 hover:text-red-400 text-sm font-medium transition-colors cursor-pointer"
+                                    >
+                                        Have coupon code?
+                                    </button>
                                 </div>
                             )}
 
@@ -338,6 +397,80 @@ export default function PaymentModal({
                     )}
                 </div>
             </div>
+
+            {/* Coupon Dialog */}
+            {showCouponDialog && (
+                <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={handleCloseCouponDialog}
+                    />
+                    <div className="relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800 bg-zinc-900/50">
+                            <div className="flex items-center gap-2">
+                                <Gift width={18} height={18} className="text-red-500" />
+                                <h3 className="text-base font-semibold text-white">
+                                    Enter Coupon Code
+                                </h3>
+                            </div>
+                            <button
+                                onClick={handleCloseCouponDialog}
+                                className="text-zinc-400 hover:text-white transition-colors"
+                                disabled={isRedeemingCoupon}
+                            >
+                                <Xmark width={20} height={20} />
+                            </button>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div>
+                                <input
+                                    type="text"
+                                    value={couponCode}
+                                    onChange={e => {
+                                        setCouponCode(e.target.value.toUpperCase())
+                                        setCouponError("")
+                                    }}
+                                    placeholder="Enter coupon code"
+                                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 uppercase"
+                                    disabled={isRedeemingCoupon}
+                                    autoFocus
+                                />
+                                {couponError && (
+                                    <p className="mt-2 text-sm text-red-500">{couponError}</p>
+                                )}
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleCloseCouponDialog}
+                                    className="flex-1 py-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-lg transition-all duration-200"
+                                    disabled={isRedeemingCoupon}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleCouponRedeem}
+                                    disabled={isRedeemingCoupon || !couponCode.trim()}
+                                    className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isRedeemingCoupon ? (
+                                        <>
+                                            <SystemRestart
+                                                width={16}
+                                                height={16}
+                                                className="animate-spin"
+                                                strokeWidth={1.5}
+                                            />
+                                            Verifying...
+                                        </>
+                                    ) : (
+                                        "Apply"
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
