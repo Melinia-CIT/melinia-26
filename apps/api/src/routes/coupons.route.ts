@@ -65,7 +65,7 @@ coupons.get("/check", zValidator("query", checkCouponRequestSchema), async c => 
 })
 
 coupons.post("/redeem", authMiddleware, zValidator("json", checkCouponRequestSchema), async c => {
-    const { code } = await c.req.valid("json")
+    const { code } = c.req.valid("json")
     const userId = c.get("user_id")
 
     if (!(await couponExists(code))) {
@@ -73,7 +73,7 @@ coupons.post("/redeem", authMiddleware, zValidator("json", checkCouponRequestSch
     }
 
     if (await couponRedeemed(code)) {
-        throw new HTTPException(409, { message: "Looks like this coupon has already been used." })
+        throw new HTTPException(409, { message: "Coupon has already been used." })
     }
 
     // Redeem the coupon
@@ -82,5 +82,5 @@ coupons.post("/redeem", authMiddleware, zValidator("json", checkCouponRequestSch
     // Update user payment status to EXEMPTED
     await updateUserPaymentStatus(userId, "EXEMPTED")
 
-    return c.json({ message: "Coupon redeemed successfully. Payment exempted." }, 200)
+    return c.json({ message: "Coupon redeemed successfully. " }, 200)
 })
