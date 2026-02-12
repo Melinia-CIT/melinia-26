@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import { verifyToken } from "../utils/jwt";
+import { isUserSuspended } from "../db/queries";
 
 type Variables = {
     user_id: string,
@@ -22,6 +23,11 @@ export const authMiddleware = createMiddleware<{ Variables: Variables }>(async (
 
     try {
         const { id, role } = await verifyToken(token) as { id: string, role: string };
+
+        if (await isUserSuspended(id)) {
+            return c.json({ message: "Your account has been suspended" }, 403);
+        }
+
         c.set("user_id", id);
         c.set("role", role);
         await next();

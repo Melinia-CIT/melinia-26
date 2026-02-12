@@ -3,20 +3,19 @@ import { z } from "zod";
 export const baseUserSchema = z.object({
     id: z.string(),
     email: z.email("Invalid email address"),
-
     ph_no: z
         .string()
         .length(10)
         .regex(/^\d+$/)
         .nullable(),
-
     passwd_hash: z.string(),
     role: z.string(),
+    profile_completed: z.boolean(),
+    payment_status: z.enum(["PAID", "UNPAID", "EXEMPTED"]),
+    status: z.enum(["INACTIVE", "ACTIVE", "SUSPENDED"]),
 
     created_at: z.coerce.date(),
-    updated_at: z.coerce.date(),
-    profile_completed: z.boolean(),
-    payment_status: z.enum(["PAID", "UNPAID", "EXEMPTED"])
+    updated_at: z.coerce.date()
 });
 
 export const userSchema = baseUserSchema.omit({ passwd_hash: true });

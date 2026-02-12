@@ -44,7 +44,6 @@ auth.post("/send-otp",
         const OTP = generateOTP();
         const otpHash = createHash("sha256").update(OTP).digest("hex");
 
-        // console.log(`${email}:${OTP}`);
         const jobId = await sendOTP(email, OTP);
         if (!jobId) {
             console.error(`Failed to send OTP to ${email}`);
@@ -93,7 +92,6 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
 auth.post("/register", zValidator("json", registrationSchema), async (c) => {
     const { passwd, confirmPasswd, couponCode } = c.req.valid("json");
     const token = getCookie(c, "registration_token");
-    console.log(couponCode);
 
     if (!token) {
         throw new HTTPException(401, { message: "Registration token not provided" });
@@ -141,15 +139,19 @@ auth.post("/login", zValidator("json", loginSchema), async (c) => {
 
     const user = await getUserByMail(email);
 
-    if (user && (
-        (user?.role === "PARTICIPANT" && app === "ops") || // Participant in Operations
-        (user?.role !== "PARTICIPANT" && app === "outreach") // Non-participant in Outreach
-    )) {
+    if (!user || !await Bun.password.verify(passwd, user.passwd_hash)) {
+        throw new HTTPException(401, { message: "Invalid email or password." });
+    }
+
+    if (
+        (user.role === "PARTICIPANT" && app === "ops") || // Participant in Operations
+        (user.role !== "PARTICIPANT" && app === "outreach") // Non-participant in Outreach
+    ) {
         throw new HTTPException(401, { message: "Access denied" })
     }
 
-    if (!user || !await Bun.password.verify(passwd, user.passwd_hash)) {
-        throw new HTTPException(401, { message: "Invalid email or password." });
+    if (user.status === "SUSPENDED") {
+        throw new HTTPException(403, { message: "Your account has been suspended" });
     }
 
     const accessToken = await createAccessToken(user.id, user.role);
@@ -203,7 +205,6 @@ auth.post(
         const { email } = c.req.valid("json");
 
         const user = await checkUserExists(email);
-        console.log(user)
         if (user) {
             const token = crypto.randomUUID();
 
@@ -216,7 +217,6 @@ auth.post(
             }
 
             await ioredis.set(`reset:token:${token}`, email, "EX", 900); // Valid for 15 mins
-            // console.log(resetLink);
         } else {
             console.error(`User doesn't exists. ${email}`);
         }

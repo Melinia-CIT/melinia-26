@@ -793,3 +793,30 @@ await runMigration("add indexes to operations tables", async tx => {
 })
 
 await sql.end()
+await runMigration("add user status for controlling accounts", async (tx) => {
+    await tx`
+        DO $$
+        BEGIN
+            CREATE TYPE user_status AS ENUM (
+                'INACTIVE',
+                'ACTIVE',
+                'SUSPENDED'
+            );
+        EXCEPTION
+            WHEN duplicate_object THEN NULL;
+        END $$;
+    `;
+
+    await tx`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS status user_status NOT NULL DEFAULT 'INACTIVE';
+    `;
+
+    await tx`
+        UPDATE users
+        SET status = 'ACTIVE'
+        WHERE payment_status IN ('PAID', 'EXEMPTED');
+    `;
+});
+
+await sql.end();

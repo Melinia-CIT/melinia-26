@@ -81,7 +81,7 @@ export async function getUser(id: string): Promise<Result<UserWithProfile, UserE
         console.error(err);
         return Result.err({
             code: "internal_error",
-            message: "Failed to fetch user" 
+            message: "Failed to fetch user"
         });
     }
 }
@@ -135,6 +135,13 @@ export async function updateUserPaymentStatus(
 export async function checkProfileExists(id: string): Promise<boolean> {
     const user = await sql`
         SELECT 1 from users where id = ${id} and profile_completed = true
+    `
+    return user.length > 0
+}
+
+export async function isUserSuspended(id: string): Promise<boolean> {
+    const user = await sql`
+        SELECT 1 from users where id = ${id} and status = 'SUSPENDED'; 
     `
     return user.length > 0
 }
