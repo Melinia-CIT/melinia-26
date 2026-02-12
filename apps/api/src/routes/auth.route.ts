@@ -137,9 +137,16 @@ auth.post("/register", zValidator("json", registrationSchema), async (c) => {
 });
 
 auth.post("/login", zValidator("json", loginSchema), async (c) => {
-    const { email, passwd } = c.req.valid("json");
+    const { email, passwd, app } = c.req.valid("json");
 
     const user = await getUserByMail(email);
+
+    if (user && (
+        (user?.role === "PARTICIPANT" && app === "ops") || // Participant in Operations
+        (user?.role !== "PARTICIPANT" && app === "outreach") // Non-participant in Outreach
+    )) {
+        throw new HTTPException(401, { message: "Access denied" })
+    }
 
     if (!user || !await Bun.password.verify(passwd, user.passwd_hash)) {
         throw new HTTPException(401, { message: "Invalid email or password." });

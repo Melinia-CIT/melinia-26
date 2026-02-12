@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
+import { check, z } from "zod"
 import {
     createEventSchema,
     EventParamSchema,
@@ -294,8 +294,8 @@ events.post(
         }
 
         // is Flagship event
-        if(event.event_type==='flagship'){
-            throw new HTTPException(403, {message:"Flagship events should be registered via Unstop platform"});
+        if (event.event_type === 'flagship') {
+            throw new HTTPException(403, { message: "Flagship events should be registered via Unstop platform" });
         }
 
         // Validate registration window
@@ -460,6 +460,7 @@ events.post(
         })
     }
 )
+
 events.delete(
     "/:id/registrations",
     authMiddleware,
@@ -505,5 +506,6 @@ events.delete(
         return c.json({ message: "Unregistered successfully from the event" }, 200)
     }
 )
+
 
 export default events

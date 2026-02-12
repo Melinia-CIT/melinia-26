@@ -4,6 +4,7 @@
  */
 
 import * as authApi from "@/api/auth";
+import { type Login } from "@melinia/shared";
 import {
 	clearToken,
 	getToken,
@@ -21,7 +22,7 @@ export interface AuthService {
 	/**
 	 * Login with credentials
 	 */
-	login: (credentials: authApi.LoginCredentials) => Promise<void>;
+	login: (credentials: Login) => Promise<void>;
 
 	/**
 	 * Logout (clear token and session)

@@ -58,3 +58,8 @@ export const participantOnlyMiddleware = createRoleMiddleware({
     allowedRoles: ["PARTICIPANT"],
     errorMessage: "Participant access required"
 });
+
+export const opsAuthMiddleware = createRoleMiddleware({
+    allowedRoles: ["ADMIN", "ORGANIZER", "VOLUNTEER"],
+    errorMessage: "Access denied"
+});

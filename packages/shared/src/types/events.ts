@@ -1,4 +1,6 @@
 import { z } from "zod";
+import type { InternalError, UserNotFound } from "./users";
+import type { PaymentPending } from "./payments";
 
 // Base
 export const baseEventSchema = z.object({
@@ -121,7 +123,7 @@ export const getCrewSchema =
             ph_no: z.string()
         })
 
-	
+
 // Event Patch Schema for incremental updates
 export const eventPatchSchema = baseEventSchema
     .omit({
@@ -143,7 +145,7 @@ export const eventPatchSchema = baseEventSchema
         if (data.registration_end !== undefined || data.start_time !== undefined) {
             const regEnd = data.registration_end || new Date('9999-12-31');
             const start = data.start_time || new Date('1970-01-01');
-            
+
             if (regEnd > start) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -152,11 +154,11 @@ export const eventPatchSchema = baseEventSchema
                 });
             }
         }
-        
+
         if (data.start_time !== undefined || data.end_time !== undefined) {
             const start = data.start_time || new Date('1970-01-01');
             const end = data.end_time || new Date('9999-12-31');
-            
+
             if (end <= start) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -165,11 +167,11 @@ export const eventPatchSchema = baseEventSchema
                 });
             }
         }
-        
+
         if (data.registration_start !== undefined || data.registration_end !== undefined) {
             const regStart = data.registration_start || new Date('1970-01-01');
             const regEnd = data.registration_end || new Date('9999-12-31');
-            
+
             if (regEnd <= regStart) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -178,7 +180,7 @@ export const eventPatchSchema = baseEventSchema
                 });
             }
         }
-        
+
         // Validate team size constraints
         if (data.min_team_size !== undefined && data.max_team_size !== undefined) {
             if (data.max_team_size < data.min_team_size) {
@@ -420,7 +422,7 @@ export const roundPatchSchema = baseRoundSchema
         if (data.start_time !== undefined || data.end_time !== undefined) {
             const start = data.start_time || new Date('1970-01-01');
             const end = data.end_time || new Date('9999-12-31');
-            
+
             if (end <= start) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -431,6 +433,20 @@ export const roundPatchSchema = baseRoundSchema
         }
     });
 
+// Check-In
+export const baseCheckInSchema = z.
+    object({
+        id: z.number(),
+        user_id: z.string(),
+        checkedin_at: z.coerce.date(),
+        checkedin_by: z.string()
+    })
+export const checkInParamSchema = z
+    .object({
+        user_id: z
+            .string()
+            .regex(/^MLNU[A-Z0-9]{6}$/, { error: "Invalid user_id" })
+    });
 
 
 
@@ -456,4 +472,11 @@ export type CreateRoundRules = z.infer<typeof createEventRoundRulesSchema>;
 export type Rule = z.infer<typeof baseRoundRulesSchema>;
 
 export type EventRegistration = z.infer<typeof eventRegistrationSchema>;
-export type RoundPatch = z.infer<typeof roundPatchSchema>; 
+export type RoundPatch = z.infer<typeof roundPatchSchema>;
+
+export type CheckIn = z.infer<typeof baseCheckInSchema>;
+export type AlreadyCheckedIn = {
+    code: "already_checked_in";
+    message: string
+}
+export type CheckInError = UserNotFound | AlreadyCheckedIn | PaymentPending | InternalError;

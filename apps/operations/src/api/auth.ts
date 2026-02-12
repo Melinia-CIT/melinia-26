@@ -4,25 +4,13 @@
  */
 
 import { http } from "./http";
-
-export interface LoginCredentials {
-	email: string;
-	passwd: string;
-}
-
-export interface LoginResponse {
-	accessToken: string;
-}
-
-export interface RefreshResponse {
-	accessToken: string;
-}
+import type { Login, LoginResponse, RefreshResponse } from "@melinia/shared";
 
 /**
  * Login with email and password
  */
 export async function login(
-	credentials: LoginCredentials,
+	credentials: Login,
 ): Promise<LoginResponse> {
 	const response = await http.post<LoginResponse>("/auth/login", credentials);
 	return response.data;
@@ -32,6 +20,6 @@ export async function login(
  * Refresh access token using the refresh cookie
  */
 export async function refresh(): Promise<RefreshResponse> {
-	const response = await http.post<RefreshResponse>("/auth/refresh", {});
+	const response = await http.post<RefreshResponse>("/auth/refresh");
 	return response.data;
 }
