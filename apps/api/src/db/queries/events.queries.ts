@@ -28,8 +28,8 @@ import {
     userRegisteredEventsSchema,
     userRegistrationStatus,
     type UserRegistrationStatus,
-    roundPatchSchema,
 } from "@melinia/shared"
+
 
 export async function insertEvent(created_by: string, data: CreateEvent, tx = sql): Promise<Event> {
     const [event] = await tx`
@@ -111,15 +111,15 @@ export async function insertRounds(
         INSERT INTO event_rounds
         (event_id, round_no, round_name, round_description, start_time, end_time)
         VALUES ${sql(
-            data.map(round => [
-                eventId,
-                round.round_no,
-                round.round_name,
-                round.round_description,
-                round.start_time.toISOString(),
-                round.end_time.toISOString(),
-            ])
-        )}
+        data.map(round => [
+            eventId,
+            round.round_no,
+            round.round_name,
+            round.round_description,
+            round.start_time.toISOString(),
+            round.end_time.toISOString(),
+        ])
+    )}
         RETURNING *;
     `
 
@@ -149,22 +149,22 @@ export async function createEvent(userId: string, data: CreateEvent): Promise<Ve
 
         const rounds = data.rounds?.length
             ? await Promise.all(
-                  data.rounds.map(async roundData => {
-                      const { rules, ...round } = roundData
+                data.rounds.map(async roundData => {
+                    const { rules, ...round } = roundData
 
-                      const [insertedRound] = await insertRounds(event.id, [round], tx)
+                    const [insertedRound] = await insertRounds(event.id, [round], tx)
 
-                      const insertedRules =
-                          insertedRound && rules?.length
-                              ? await insertRoundRules(event.id, insertedRound.id, rules, tx)
-                              : []
+                    const insertedRules =
+                        insertedRound && rules?.length
+                            ? await insertRoundRules(event.id, insertedRound.id, rules, tx)
+                            : []
 
-                      return {
-                          ...insertedRound,
-                          rules: insertedRules,
-                      }
-                  })
-              )
+                    return {
+                        ...insertedRound,
+                        rules: insertedRules,
+                    }
+                })
+            )
             : []
 
         const organizers = data?.crew?.organizers?.length

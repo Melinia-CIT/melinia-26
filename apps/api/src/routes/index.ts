@@ -6,3 +6,4 @@ export * from "./payments.route";
 export * from "./coupons.route";
 export * from "./colleges.route";
 export * from "./organizer.route";
+export * from "./ops.route";

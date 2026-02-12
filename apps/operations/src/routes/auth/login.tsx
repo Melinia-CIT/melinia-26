@@ -35,11 +35,11 @@ function LoginPage() {
 		setIsLoading(true);
 
 		try {
-			await auth.login({ email, passwd });
+			await auth.login({ email, passwd, app: "ops" });
 			await navigate({ to: redirect });
 		} catch (err: any) {
 			console.log(err);
-			setError(err?.message ? err?.message : "Invalid email or password");
+			setError(err?.response ? err?.response?.data.message : "Invalid email or password");
 		} finally {
 			setIsLoading(false);
 		}

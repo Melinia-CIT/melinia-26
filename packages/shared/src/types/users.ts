@@ -62,3 +62,27 @@ export type BaseProfile = z.infer<typeof baseProfileSchema>;
 export type CreateProfile = z.infer<typeof createProfileSchema>;
 export type Profile = z.infer<typeof profileSchema>;
 export type CreateOrganizer = z.infer<typeof createOrganizerSchema>;
+export type UserWithProfile = User & { profile: Profile }
+
+// Domain Error
+export type UserNotFound = {
+    code: "user_not_found";
+    message: string;
+}
+
+export type ProfileNotFound = {
+    code: "profile_not_found";
+    message: string;
+}
+
+export type ProfileNotCompleted = {
+    code: "profile_not_complete";
+    message: string;
+}
+
+export type InternalError = {
+    code: "internal_error";
+    message: string
+}
+
+export type UserError = UserNotFound | ProfileNotFound | ProfileNotCompleted | InternalError;

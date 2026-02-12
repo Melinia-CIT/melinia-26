@@ -29,6 +29,7 @@ export const registrationSchema = z.object({
 export const loginSchema = z.object({
     email: z.email(),
     passwd: z.string().min(1, "Password can't be empty"),
+    app: z.enum(["ops", "outreach"]).default("outreach").optional()
 })
 
 export const forgotPasswordSchema = z.object({
@@ -56,4 +57,8 @@ export type GenerateOTPFormData = z.infer<typeof generateOTPSchema>;
 export interface LoginResponse {
     message: string;
     accessToken: string;
+}
+
+export interface RefreshResponse {
+	accessToken: string;
 }

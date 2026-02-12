@@ -1,5 +1,6 @@
 import sql from "../connection"
-import { baseUserSchema, userSchema, type User, type BaseUser } from "@melinia/shared"
+import { baseUserSchema, userSchema, profileSchema, type User, type BaseUser, type UserError, type Profile, type UserWithProfile } from "@melinia/shared"
+import { Result } from "true-myth"
 
 // User
 export async function checkUserExists(email: string): Promise<boolean> {
@@ -28,6 +29,61 @@ export async function getUserById(id: string): Promise<User | null> {
     `
 
     return !user ? null : userSchema.parse(user)
+}
+
+export async function getUser(id: string): Promise<Result<UserWithProfile, UserError>> {
+    try {
+        const [user] = await sql`
+            SELECT * FROM users WHERE id = ${id};
+        `;
+
+        if (!user) {
+            return Result.err({
+                code: "user_not_found",
+                message: "User not found"
+            })
+        }
+
+        if (!user.profile_completed) {
+            return Result.err({
+                code: "profile_not_complete",
+                message: "User profile is not completed"
+            });
+        }
+
+        const [profile] = await sql`
+            SELECT p.first_name,
+                p.last_name,
+                c.name as college,
+                d.name as degree,
+                p.year,
+                p.created_at,
+                p.updated_at
+            FROM profile p
+            LEFT JOIN colleges c ON p.college_id = c.id
+            LEFT JOIN degrees d ON p.degree_id = d.id
+            INNER JOIN users u ON p.user_id = u.id
+            WHERE u.id = ${id};
+        `
+
+        if (!profile) {
+            return Result.err({
+                code: "profile_not_found",
+                message: "Profile not found"
+            });
+        }
+
+        return Result.ok({
+            ...userSchema.parse(user),
+            profile: profileSchema.parse(profile)
+        });
+    } catch (err) {
+        console.error(err);
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to fetch user" 
+        });
+    }
 }
 
 export async function insertUser(
