@@ -207,14 +207,14 @@ const Hero = () => {
                 >
                     <motion.div
                         whileHover={{ scale: 1.02 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
                         className="relative"
                     >
                         <div className="relative flex flex-col items-center">
                             <div className="relative">
                                 {/* Logo Image */}
                                 <motion.img
-                                    src="https://cdn.melinia.in/mln-logo.svg"
+                                    src="https://cdn.melinia.in/mln-logo.avif"
                                     alt="Melinia'26"
                                     className="w-64 md:w-80 lg:w-[22rem] xl:w-[26rem] 2xl:w-[32rem]"
                                     whileHover={{
