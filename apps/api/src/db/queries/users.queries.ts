@@ -1,5 +1,5 @@
 import sql from "../connection"
-import { baseUserSchema, userSchema, profileSchema, type User, type BaseUser, type UserError, type Profile, type UserWithProfile } from "@melinia/shared"
+import { baseUserSchema, userSchema, profileSchema, type User, type BaseUser, type UserError, type Profile, type UserWithProfile, type SuspendError, type UserStatus } from "@melinia/shared"
 import { Result } from "true-myth"
 
 // User
@@ -131,17 +131,35 @@ export async function updateUserPaymentStatus(
     return rows.length > 0
 }
 
-// Profile
-export async function checkProfileExists(id: string): Promise<boolean> {
-    const user = await sql`
-        SELECT 1 from users where id = ${id} and profile_completed = true
-    `
-    return user.length > 0
+export async function updateUserStatus(id: string, status: UserStatus): Promise<Result<User, SuspendError>> {
+    const [user] = await sql`
+        UPDATE users
+        SET status = ${status}
+        WHERE id = ${id}
+        RETURNING *;
+    `;
+
+    if (!user) {
+        return Result.err({
+            code: "user_not_found",
+            message: "User not found"
+        })
+    }
+
+    return Result.ok(userSchema.parse(user));
 }
 
 export async function isUserSuspended(id: string): Promise<boolean> {
     const user = await sql`
         SELECT 1 from users where id = ${id} and status = 'SUSPENDED'; 
+    `
+    return user.length > 0
+}
+
+// Profile
+export async function checkProfileExists(id: string): Promise<boolean> {
+    const user = await sql`
+        SELECT 1 from users where id = ${id} and profile_completed = true
     `
     return user.length > 0
 }

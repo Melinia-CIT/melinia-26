@@ -5,7 +5,7 @@ import { checkUserExists, getUserByMail, insertUser, updatePasswd } from "../db/
 import { ioredis } from "../utils/redis";
 import { generateOTP, getEnv } from "../utils/lib";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { AlgorithmTypes, sign, verify } from "hono/jwt";
+import { sign } from "hono/jwt";
 import { HTTPException } from "hono/http-exception";
 import { createAccessToken, createRefreshToken, verifyToken } from "../utils/jwt";
 import { createHash } from "crypto";
@@ -87,7 +87,6 @@ auth.post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
 
     return c.json({ message: "OTP verified successfully" }, 200);
 });
-
 
 auth.post("/register", zValidator("json", registrationSchema), async (c) => {
     const { passwd, confirmPasswd, couponCode } = c.req.valid("json");

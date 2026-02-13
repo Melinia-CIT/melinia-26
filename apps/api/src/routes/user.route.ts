@@ -3,6 +3,7 @@ import { zValidator } from "@hono/zod-validator"
 import {
     createProfileSchema,
     invitationStatusSchema,
+    userStatusParamSchema,
     type InvitationStatus,
 } from "@melinia/shared"
 import {
@@ -15,10 +16,11 @@ import {
     checkProfileExists,
     getUserRegisteredEvents,
     getUser,
+    updateUserStatus,
 } from "../db/queries"
 import { getPendingInvitationsForUser } from "../db/queries/teams.queries"
 
-import { authMiddleware, opsAuthMiddleware } from "../middleware/auth.middleware"
+import { adminOnlyMiddleware, authMiddleware, opsAuthMiddleware } from "../middleware/auth.middleware"
 import { HTTPException } from "hono/http-exception"
 
 export const users = new Hono()
@@ -170,3 +172,28 @@ users.get(
         return c.json({ data: user.value }, 200);
     }
 );
+
+users.post(
+    "/:id/status",
+    authMiddleware,
+    adminOnlyMiddleware,
+    zValidator("json", userStatusParamSchema),
+    async (c) => {
+        const id = c.req.param("id");
+        if (!id) {
+            return c.json({ message: "id is requried" }, 400);
+        }
+        const { status } = c.req.valid("json");
+
+        const user = await updateUserStatus(id, status);
+
+        if (user.isErr) {
+            switch (user.error.code) {
+                case "user_not_found":
+                    return c.json({ message: user.error.message }, 404);
+            }
+        }
+
+        return c.json({ data: user.value }, 200);
+    }
+)
