@@ -342,7 +342,7 @@ export function InfiniteMarqueeRow({
                                     animate={!shouldReduceMotion ? "animate" : undefined}
                                     whileHover={!shouldReduceMotion ? "hover" : undefined}
                                 >
-                                    <UserCard {...person} />
+                                    <UserCard {...person} blurUrl={person.blurUrl} />
                                 </motion.div>
                             ))}
                         </div>
