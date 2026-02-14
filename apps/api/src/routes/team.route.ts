@@ -23,7 +23,6 @@ import {
     getTeamPendingInvites,
     getTeamEvents,
     isTeamLeader,
-    updateTeamName, 
     deleteTeamById,
     removeTeamMember,
     isTeamRegistered,
@@ -110,12 +109,12 @@ teams.post(
                 }
 
                 // Check if member belongs to same college
-                const memberCollegeId = await getUserCollegeId(member.id);
-                if (memberCollegeId !== leaderCollegeId) {
-                    throw new HTTPException(400, {
-                        message: `Cannot create inter-college teams. User "${email}" belongs to a different college`
-                    });
-                }
+                // const memberCollegeId = await getUserCollegeId(member.id);
+                // if (memberCollegeId !== leaderCollegeId) {
+                //     throw new HTTPException(400, {
+                //         message: `Cannot create inter-college teams. User "${email}" belongs to a different college`
+                //     });
+                // }
 
                 //check payment status for teammate
                 if(member.payment_status==='UNPAID'){
@@ -513,13 +512,13 @@ teams.post(
             throw new HTTPException(400, { message: "Cannot invite yourself to the team" });
         }
 
-        // Check if invitee belongs to same college
-        const inviteeCollegeId = await getUserCollegeId(invitee.id);
-        if (inviteeCollegeId !== leaderCollegeId) {
-            throw new HTTPException(400, {
-                message: `Cannot invite user from a different college. "${email}" belongs to a different college`
-            });
-        }
+        // // Check if invitee belongs to same college
+        // const inviteeCollegeId = await getUserCollegeId(invitee.id);
+        // if (inviteeCollegeId !== leaderCollegeId) {
+        //     throw new HTTPException(400, {
+        //         message: `Cannot invite user from a different college. "${email}" belongs to a different college`
+        //     });
+        // }
 
         // Check if invitee profile is completed
         const profileCompleted = await checkProfileExists(invitee.id);
