@@ -1,13 +1,11 @@
 import { motion } from "framer-motion"
 import { LogoCloud } from "../ui/logo-clound-2"
-import { FloatingPathsBackground } from "../ui/floating-paths"
+import { OrbitingRingsBackground } from "../ui/orbiting-rings"
 
 export default function Sponsors() {
     return (
         <section className="relative w-full py-16 md:py-24 overflow-hidden bg-zinc-950">
-            <FloatingPathsBackground position={1} className="absolute inset-0">
-                <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/30 via-zinc-950/8 to-zinc-950/15" />
-            </FloatingPathsBackground>
+            <OrbitingRingsBackground className="absolute inset-0" />
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -20,7 +18,7 @@ export default function Sponsors() {
                         Our Sponsors
                     </h2>
                     <div className="h-2 w-24 bg-gradient-to-r from-[#FF0066] to-[#FF69B4] mx-auto mt-4 rotate-[2deg] shadow-[0_0_15px_rgba(255,0,102,0.8)]" />
- 
+
                     <LogoCloud />
                 </div>
             </motion.div>

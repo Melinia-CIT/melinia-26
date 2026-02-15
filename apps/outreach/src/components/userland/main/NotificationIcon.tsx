@@ -30,7 +30,7 @@ export const NotificationIcon = ({ onClick, isOpen }: NotificationIconProps) => 
         >
             <Bell
                 className={`w-6 sm:h-6 transition-all duration-200 ${
-                    hasNotifications ? "text-zinc-400 animate-pulse" : "text-zinc-500"
+                    hasNotifications ? "text-white animate-pulse" : "text-zinc-100"
                 } ${isOpen ? "scale-110" : ""}`}
             />
 
