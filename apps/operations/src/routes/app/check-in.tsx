@@ -160,10 +160,10 @@ function CheckInPage() {
 	};
 
 	return (
-		<div className="p-6 max-w-4xl mx-auto space-y-6">
+		<div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
 			{/* Header */}
 			<div className="space-y-1">
-				<h2 className="text-3xl font-bold text-white">Check-in</h2>
+				<h2 className="text-2xl md:text-3xl font-bold text-white">Check-in</h2>
 				<p className="text-neutral-500">
 					Scan QR codes or search for attendees to check them in
 				</p>
