@@ -792,7 +792,6 @@ await runMigration("add indexes to operations tables", async tx => {
     `
 })
 
-await sql.end()
 await runMigration("add user status for controlling accounts", async (tx) => {
     await tx`
         DO $$
