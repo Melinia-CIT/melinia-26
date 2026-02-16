@@ -13,9 +13,9 @@ ops.post(
     zValidator("json", checkInParamSchema),
     async (c) => {
         const checkInBy = c.get("user_id");
-        const { user_id } = c.req.valid("json");
+        const { participant_id } = c.req.valid("json");
 
-        const checkIn = await checkInParticipant(user_id, checkInBy);
+        const checkIn = await checkInParticipant(participant_id, checkInBy);
         if (checkIn.isErr) {
             const message = checkIn.error.message;
 

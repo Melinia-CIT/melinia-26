@@ -69,7 +69,7 @@ export function createRegistrationsApi(http: AxiosInstance) {
 			const { data } = await http.post<CheckInResponse>(
 				"/ops/check-in",
 				{
-					user_id: userId,
+					participant_id: userId,
 				},
 			);
 			return data;

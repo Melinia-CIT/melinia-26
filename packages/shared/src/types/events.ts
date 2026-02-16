@@ -437,13 +437,13 @@ export const roundPatchSchema = baseRoundSchema
 export const baseCheckInSchema = z.
     object({
         id: z.number(),
-        user_id: z.string(),
+        participant_id: z.string(),
         checkedin_at: z.coerce.date(),
         checkedin_by: z.string()
     })
 export const checkInParamSchema = z
     .object({
-        user_id: z
+        participant_id: z
             .string()
             .regex(/^MLNU[A-Z0-9]{6}$/, { error: "Invalid user_id" })
     });
