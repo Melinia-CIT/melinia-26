@@ -32,7 +32,7 @@ export async function checkInParticipant(
 
         const [checkIn] = await sql`
             INSERT INTO check_ins (
-                user_id,
+                participant_id,
                 checkedin_by
             ) VALUES (
                 ${userId},
@@ -55,7 +55,7 @@ export async function checkInParticipant(
             const constraint = err?.constraint_name
             if (constraint) {
                 switch (constraint) {
-                    case "check_ins_user_id_key":
+                    case "check_ins_participant_id_fkey":
                         return Result.err({
                             code: "already_checked_in",
                             message: "Participant already checked in"
