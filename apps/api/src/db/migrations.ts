@@ -29,7 +29,6 @@ async function runMigration(name: string, migrationFn: (tx: typeof sql) => Promi
 
         console.log(`Ok "${name}"`);
     });
-
     return;
 }
 
@@ -676,48 +675,57 @@ await runMigration("remove second check constraint from events table ", async (t
 
 await runMigration("create operations tables", async (tx) => {
     await tx`
-        CREATE TABLE IF NOT EXISTS event_checkins (
-            id SERIAL PRIMARY KEY,
-            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-            round_id INTEGER NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
-            checkin_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            checkin_by TEXT NOT NULL REFERENCES users(id) ON DELETE SET NULL,
-            UNIQUE(user_id, event_id, round_id)
-        );
-    `;
-    
-    await tx`
         CREATE TABLE IF NOT EXISTS check_ins (
             id SERIAL PRIMARY KEY,
-            user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+            participant_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             checkedin_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            checkedin_by TEXT NOT NULL REFERENCES users(id) ON DELETE SET NULL
+            checkedin_by TEXT REFERENCES users(id) ON DELETE SET NULL
         );
     `;
-    
+
     await tx`
-        CREATE TABLE IF NOT EXISTS user_points (
+        CREATE TABLE IF NOT EXISTS event_round_checkins (
             id SERIAL PRIMARY KEY,
             user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-            round_id INTEGER NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
-            points INTEGER NOT NULL CHECK (points >= 10 AND points <= 100),
-            awarded_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            awarded_by TEXT NOT NULL REFERENCES users(id) ON DELETE SET NULL,
-            UNIQUE(user_id, event_id, round_id)
+            round_id INTEGER NOT NULL REFERENCES event_rounds(id) ON DELETE CASCADE,
+            team_id TEXT REFERENCES teams(id) ON DELETE CASCADE, -- NULLABLE depends on SOLO or TEAM
+            checkedin_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            checkedin_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+
+            UNIQUE(user_id, round_id)
         );
     `;
-    
+
     await tx`
-        CREATE INDEX IF NOT EXISTS idx_event_checkins_user_id ON event_checkins(user_id);
-        CREATE INDEX IF NOT EXISTS idx_event_checkins_event_id ON event_checkins(event_id);
-        CREATE INDEX IF NOT EXISTS idx_event_checkins_round_id ON event_checkins(round_id);
-        CREATE INDEX IF NOT EXISTS idx_event_checkins_checkin_at ON event_checkins(checkin_at);
-        CREATE INDEX IF NOT EXISTS idx_checkins_checkin_at ON checkins(checkin_at);
-        CREATE INDEX IF NOT EXISTS idx_user_points_user_id ON user_points(user_id);
-        CREATE INDEX IF NOT EXISTS idx_user_points_event_id ON user_points(event_id);
-        CREATE INDEX IF NOT EXISTS idx_user_points_round_id ON user_points(round_id);
-        CREATE INDEX IF NOT EXISTS idx_user_points_awarded_at ON user_points(awarded_at);
+        CREATE TABLE IF NOT EXISTS round_results (
+            id SERIAL PRIMARY KEY,
+            round_id INTEGER NOT NULL REFERENCES event_rounds(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            team_id TEXT REFERENCES teams(id) ON DELETE CASCADE,
+            points INTEGER NOT NULL CHECK (points >= 0 AND points <= 100),
+            status TEXT NOT NULL CHECK (status IN ('ELIMINATED', 'DISQUALIFIED', 'QUALIFIED')),
+            eval_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+
+            eval_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            UNIQUE(user_id, round_id)
+        );
+    `
+
+    await tx`
+        CREATE TABLE IF NOT EXISTS event_results (
+            id SERIAL PRIMARY KEY,
+            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            team_id TEXT REFERENCES teams(id) ON DELETE CASCADE,
+            prize_id INTEGER REFERENCES event_prizes(id), -- Prize Position
+
+            awarded_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            awarded_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+
+            UNIQUE(event_id, user_id)
+        );
     `;
 });
+
+await sql.end();

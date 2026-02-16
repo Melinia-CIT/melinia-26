@@ -67,7 +67,7 @@ export function createRegistrationsApi(http: AxiosInstance) {
 
 		async checkIn(userId: string): Promise<CheckInResponse> {
 			const { data } = await http.post<CheckInResponse>(
-				"/registrations/checkin",
+				"/ops/check-in",
 				{
 					user_id: userId,
 				},
