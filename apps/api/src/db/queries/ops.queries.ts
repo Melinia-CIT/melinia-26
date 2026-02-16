@@ -9,12 +9,12 @@ import postgres from "postgres";
 
 
 export async function checkInParticipant(
-    userId: string,
+    participantId: string,
     checkInBy: string
 ): Promise<Result<CheckIn, CheckInError>> {
     try {
         const [user] = await sql`
-            SELECT 1, payment_status FROM users WHERE id = ${userId} AND role = 'PARTICIPANT';
+            SELECT 1, payment_status FROM users WHERE id = ${participantId} AND role = 'PARTICIPANT';
         `;
         if (!user) {
             return Result.err({
@@ -35,7 +35,7 @@ export async function checkInParticipant(
                 participant_id,
                 checkedin_by
             ) VALUES (
-                ${userId},
+                ${participantId},
                 ${checkInBy}
             )
             RETURNING *;
@@ -55,7 +55,7 @@ export async function checkInParticipant(
             const constraint = err?.constraint_name
             if (constraint) {
                 switch (constraint) {
-                    case "check_ins_participant_id_fkey":
+                    case "check_ins_participant_id_key":
                         return Result.err({
                             code: "already_checked_in",
                             message: "Participant already checked in"

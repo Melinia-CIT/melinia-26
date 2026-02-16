@@ -9,30 +9,33 @@ await sql`
     );
 `
 
-async function runMigration(name: string, migrationFn: (tx: typeof sql) => Promise<void>): Promise<void> {
-    await sql.begin(async (tx) => {
+async function runMigration(
+    name: string,
+    migrationFn: (tx: typeof sql) => Promise<void>
+): Promise<void> {
+    await sql.begin(async tx => {
         const [exists] = await tx`SELECT 1 FROM migrations WHERE name = ${name}`
 
         if (exists) {
-            console.log(`Skipping ${name} as already ran`);
-            return;
+            console.log(`Skipping ${name} as already ran`)
+            return
         }
 
-        console.log(`Running migration "${name}"`);
+        console.log(`Running migration "${name}"`)
 
-        await migrationFn(tx);
+        await migrationFn(tx)
 
         await tx`
             INSERT INTO migrations(name)
             VALUES (${name})
-        `;
+        `
 
-        console.log(`Ok "${name}"`);
-    });
+        console.log(`Ok "${name}"`)
+    })
     return;
 }
 
-await runMigration("create gen_id func", async (tx) => {
+await runMigration("create gen_id func", async tx => {
     await tx`
         CREATE OR REPLACE FUNCTION gen_id(entity CHAR)
         RETURNS TEXT
@@ -73,7 +76,7 @@ await runMigration("create gen_id func", async (tx) => {
     `
 })
 
-await runMigration("melinia db init", async (tx) => {
+await runMigration("melinia db init", async tx => {
     //colleges
     await tx`
         CREATE TABLE IF NOT EXISTS colleges (
@@ -225,7 +228,7 @@ await runMigration("melinia db init", async (tx) => {
     `
 })
 
-await runMigration("create invitations", async (tx) => {
+await runMigration("create invitations", async tx => {
     await tx`
         CREATE TABLE IF NOT EXISTS invitations (
             id SERIAL PRIMARY KEY,
@@ -237,7 +240,7 @@ await runMigration("create invitations", async (tx) => {
     `
 })
 
-await runMigration("add role column in users table", async (tx) => {
+await runMigration("add role column in users table", async tx => {
     await tx`
         DO $$
         BEGIN
@@ -258,14 +261,14 @@ await runMigration("add role column in users table", async (tx) => {
     `
 })
 
-await runMigration("add profile completion status", async (tx) => {
+await runMigration("add profile completion status", async tx => {
     await tx`
         ALTER TABLE users
         ADD COLUMN profile_completed BOOLEAN NOT NULL DEFAULT false;
     `
 })
 
-await runMigration("cascade invitations when team is deleted", async (tx) => {
+await runMigration("cascade invitations when team is deleted", async tx => {
     await tx`
         ALTER TABLE invitations
         DROP CONSTRAINT IF EXISTS invitations_team_id_fkey;
@@ -278,12 +281,12 @@ await runMigration("cascade invitations when team is deleted", async (tx) => {
     `
 })
 
-await runMigration("remove user_roles and roles table", async (tx) => {
+await runMigration("remove user_roles and roles table", async tx => {
     await tx`DROP TABLE IF EXISTS user_roles;`
     await tx`DROP TABLE IF EXISTS roles; `
 })
 
-await runMigration("automatic updates on updated_at column", async (tx) => {
+await runMigration("automatic updates on updated_at column", async tx => {
     await tx`
         CREATE OR REPLACE FUNCTION update_updated_at()
         RETURNS TRIGGER AS $$
@@ -320,7 +323,7 @@ await runMigration("automatic updates on updated_at column", async (tx) => {
     `
 })
 
-await runMigration("create event registrations", async (tx) => {
+await runMigration("create event registrations", async tx => {
     await tx`
         CREATE TABLE IF NOT EXISTS event_registrations (
             id SERIAL PRIMARY KEY,
@@ -333,7 +336,7 @@ await runMigration("create event registrations", async (tx) => {
     `
 })
 
-await runMigration("create payments table", async (tx) => {
+await runMigration("create payments table", async tx => {
     await tx`
         CREATE TABLE IF NOT EXISTS payments (
             id SERIAL PRIMARY KEY,
@@ -355,7 +358,7 @@ await runMigration("create payments table", async (tx) => {
     `
 })
 
-await runMigration("add fk in degrees", async (tx) => {
+await runMigration("add fk in degrees", async tx => {
     //TODO: add NOT NULL constraint
     await tx`
         ALTER TABLE degrees
@@ -363,7 +366,7 @@ await runMigration("add fk in degrees", async (tx) => {
     `
 })
 
-await runMigration("update profile schema for degrees and colleges", async (tx) => {
+await runMigration("update profile schema for degrees and colleges", async tx => {
     await tx`
         ALTER TABLE profile
         DROP COLUMN other_degree;
@@ -380,7 +383,7 @@ await runMigration("update profile schema for degrees and colleges", async (tx) 
     `
 })
 
-await runMigration("update degrees unique constraint", async (tx) => {
+await runMigration("update degrees unique constraint", async tx => {
     await tx`
         ALTER TABLE degrees
         DROP CONSTRAINT degrees_name_key;
@@ -392,14 +395,14 @@ await runMigration("update degrees unique constraint", async (tx) => {
     `
 })
 
-await runMigration("add unique constraint on the user_id in profile", async (tx) => {
+await runMigration("add unique constraint on the user_id in profile", async tx => {
     await tx`
         ALTER TABLE profile
         ADD CONSTRAINT profile_user_id_key UNIQUE(user_id);
     `
 })
 
-await runMigration("add razorpay timestamps to payments table", async (tx) => {
+await runMigration("add razorpay timestamps to payments table", async tx => {
     await tx`
         ALTER TABLE payments
         ADD COLUMN razorpay_order_created_at TIMESTAMPTZ;
@@ -411,7 +414,7 @@ await runMigration("add razorpay timestamps to payments table", async (tx) => {
     `
 })
 
-await runMigration("add event rules table ", async (tx) => {
+await runMigration("add event rules table ", async tx => {
     await tx`
         CREATE TABLE IF NOT EXISTS round_rules (
             id SERIAL PRIMARY KEY,
@@ -428,7 +431,7 @@ await runMigration("add event rules table ", async (tx) => {
     `
 })
 
-await runMigration("create user payment status type", async (tx) => {
+await runMigration("create user payment status type", async tx => {
     await tx`
         DO $$
         BEGIN
@@ -443,14 +446,14 @@ await runMigration("create user payment status type", async (tx) => {
     `
 })
 
-await runMigration("add payment status column to users", async (tx) => {
+await runMigration("add payment status column to users", async tx => {
     await tx`
         ALTER TABLE users
         ADD COLUMN payment_status user_payment_status NOT NULL DEFAULT 'UNPAID';
     `
 })
 
-await runMigration("create single use coupons table", async (tx) => {
+await runMigration("create single use coupons table", async tx => {
     await tx`
         CREATE TABLE IF NOT EXISTS coupons (
             id SERIAL PRIMARY KEY,
@@ -460,7 +463,7 @@ await runMigration("create single use coupons table", async (tx) => {
     `
 })
 
-await runMigration("create single use coupon redemptions table", async (tx) => {
+await runMigration("create single use coupon redemptions table", async tx => {
     await tx`
         CREATE TABLE IF NOT EXISTS coupon_redemptions (
             id SERIAL PRIMARY KEY,
@@ -471,7 +474,7 @@ await runMigration("create single use coupon redemptions table", async (tx) => {
     `
 })
 
-await runMigration("cascade event_registration when team is deleted", async (tx) => {
+await runMigration("cascade event_registration when team is deleted", async tx => {
     await tx`
         ALTER TABLE event_registrations
         DROP CONSTRAINT IF EXISTS event_registrations_team_id_fkey
@@ -484,46 +487,45 @@ await runMigration("cascade event_registration when team is deleted", async (tx)
     `
 })
 
-await runMigration("add round_name", async (tx) => {
+await runMigration("add round_name", async tx => {
     await tx`
         ALTER TABLE event_rounds
         ADD COLUMN round_name TEXT NOT NULL;
     `
 })
 
-await runMigration("add unique constraint for degrees name", async (tx) => {
+await runMigration("add unique constraint for degrees name", async tx => {
     await tx`
         ALTER TABLE degrees
         ADD CONSTRAINT uniq_degree_name UNIQUE (name);
     `
 })
 
-await runMigration("remove college_id ref from degrees", async (tx) => {
+await runMigration("remove college_id ref from degrees", async tx => {
     await tx`
         ALTER TABLE degrees
         DROP COLUMN college_id;
     `
 })
 
-await runMigration("seed colleges and degress", async (tx) => {
-    await seedColleges(tx);
-    await seedDegrees(tx);
+await runMigration("seed colleges and degress", async tx => {
+    await seedColleges(tx)
+    await seedDegrees(tx)
 })
 
-await runMigration("add pg trigram", async (tx) => {
+await runMigration("add pg trigram", async tx => {
     await tx`
         CREATE EXTENSION IF NOT EXISTS pg_trgm;
     `
-});
+})
 
-
-await runMigration("remove event_id in teams table", async (tx) => {
+await runMigration("remove event_id in teams table", async tx => {
     await tx`
         ALTER TABLE teams DROP COLUMN event_id;  
     `
-});
+})
 
-await runMigration("add updated_at triggers for event rounds, rules, prizes", async (tx) => {
+await runMigration("add updated_at triggers for event rounds, rules, prizes", async tx => {
     await tx`DROP TRIGGER IF EXISTS update_event_rounds_updated_at ON event_rounds;`
     await tx`DROP TRIGGER IF EXISTS update_round_rules_updated_at ON round_rules;`
     await tx`DROP TRIGGER IF EXISTS update_event_prizes_updated_at ON event_prizes;`
@@ -548,9 +550,9 @@ await runMigration("add updated_at triggers for event rounds, rules, prizes", as
         FOR EACH ROW
         EXECUTE FUNCTION update_updated_at();
     `
-});
+})
 
-await runMigration("add start and end time in event_rounds", async (tx) => {
+await runMigration("add start and end time in event_rounds", async tx => {
     await tx`
         ALTER TABLE event_rounds
         ADD COLUMN IF NOT EXISTS start_time TIMESTAMPTZ NOT NULL,
@@ -558,7 +560,7 @@ await runMigration("add start and end time in event_rounds", async (tx) => {
     `
 })
 
-await runMigration("add necessary indexes", async (tx) => {
+await runMigration("add necessary indexes", async tx => {
     // profile
     await tx`CREATE INDEX IF NOT EXISTS idx_profile_user_id ON profile(user_id);`
 
@@ -667,21 +669,21 @@ await runMigration("add necessary indexes", async (tx) => {
         CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_user_id
         ON coupon_redemptions(user_id);
     `
-});
-
-await runMigration("remove second check constraint from events table ", async (tx) => {
-    await tx`ALTER TABLE events DROP CONSTRAINT events_check2`;
 })
 
-await runMigration("create operations tables", async (tx) => {
+await runMigration("remove second check constraint from events table ", async tx => {
+    await tx`ALTER TABLE events DROP CONSTRAINT events_check2`
+})
+
+await runMigration("create operations tables", async tx => {
     await tx`
         CREATE TABLE IF NOT EXISTS check_ins (
             id SERIAL PRIMARY KEY,
-            participant_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            participant_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             checkedin_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             checkedin_by TEXT REFERENCES users(id) ON DELETE SET NULL
         );
-    `;
+    `
 
     await tx`
         CREATE TABLE IF NOT EXISTS event_round_checkins (
@@ -694,7 +696,7 @@ await runMigration("create operations tables", async (tx) => {
 
             UNIQUE(user_id, round_id)
         );
-    `;
+    `
 
     await tx`
         CREATE TABLE IF NOT EXISTS round_results (
@@ -725,7 +727,69 @@ await runMigration("create operations tables", async (tx) => {
 
             UNIQUE(event_id, user_id)
         );
-    `;
-});
+    `
+})
 
-await sql.end();
+await runMigration("add indexes to operations tables", async tx => {
+    // check_ins
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_check_ins_participant_id
+        ON check_ins(participant_id);
+    `
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_check_ins_checkedin_at
+        ON check_ins(checkedin_at);
+    `
+
+    // event_round_checkins
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_event_round_checkins_user_id
+        ON event_round_checkins(user_id);
+    `
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_event_round_checkins_round_id
+        ON event_round_checkins(round_id);
+    `
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_event_round_checkins_team_id
+        ON event_round_checkins(team_id);
+    `
+
+    // round_results
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_round_results_round_id
+        ON round_results(round_id);
+    `
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_round_results_user_id
+        ON round_results(user_id);
+    `
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_round_results_team_id
+        ON round_results(team_id);
+    `
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_round_results_status
+        ON round_results(status);
+    `
+
+    // event_results
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_event_results_event_id
+        ON event_results(event_id);
+    `
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_event_results_user_id
+        ON event_results(user_id);
+    `
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_event_results_team_id
+        ON event_results(team_id);
+    `
+    await tx`
+        CREATE INDEX IF NOT EXISTS idx_event_results_prize_id
+        ON event_results(prize_id);
+    `
+})
+
+await sql.end()
