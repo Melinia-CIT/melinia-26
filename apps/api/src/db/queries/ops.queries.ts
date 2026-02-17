@@ -2,7 +2,10 @@ import { Result } from "true-myth";
 import {
     type CheckIn,
     type CheckInError,
+    type GetCheckIn,
+    type GetCheckInError,
     baseCheckInSchema,
+    getCheckInSchema,
 } from "@melinia/shared"
 import sql from "../connection";
 import postgres from "postgres";
@@ -67,6 +70,55 @@ export async function checkInParticipant(
         return Result.err({
             code: "internal_error",
             message: "Failed to checkin"
+        });
+    }
+}
+
+export async function getCheckIns(from: number, limit: number): Promise<Result<GetCheckIn[], GetCheckInError>> {
+    try {
+        const checkIns = await sql`
+            SELECT
+                u.id AS participant_id,
+                p.first_name,
+                p.last_name,
+                c.name AS college,
+                d.name AS degree,
+                u.email,
+                ci.checkedin_at,
+                ci.checkedin_by
+            FROM check_ins ci
+            JOIN users u ON u.id = ci.participant_id
+            JOIN profile p ON p.user_id = u.id
+            JOIN colleges c ON c.id = p.college_id
+            JOIN degrees d ON d.id = p.degree_id
+            ORDER BY ci.checkedin_at
+            LIMIT ${limit}
+            OFFSET ${from}
+        `;
+
+        const parsedCheckIns = checkIns.map(checkIn => getCheckInSchema.parse(checkIn));
+        return Result.ok(parsedCheckIns);
+    } catch (err) {
+        console.error(err);
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to get checkedin participants"
+        });
+    }
+}
+
+export async function getTotalCheckIns(): Promise<Result<number, GetCheckInError>> {
+    try {
+        const [row] = await sql`
+            SELECT COUNT(*) FROM check_ins;
+        `;
+
+        return Result.ok(parseInt(row?.count, 10));
+    } catch (err) {
+        console.error(err);
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to get total checkedin participants count"
         });
     }
 }

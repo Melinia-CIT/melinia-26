@@ -28,7 +28,11 @@ import {
     userRegisteredEventsSchema,
     userRegistrationStatus,
     type UserRegistrationStatus,
+    type GetEventRegistration,
+    type InternalError,
+    getEventRegistrationSchema,
 } from "@melinia/shared"
+import { Result } from "true-myth"
 
 
 export async function insertEvent(created_by: string, data: CreateEvent, tx = sql): Promise<Event> {
@@ -904,4 +908,120 @@ export async function updateEventPrize(
     }
 
     return basePrizeSchema.parse(updatedPrize)
+}
+
+// TODO: return type issue
+export async function getEventRegistrations(
+    eventId: string, from: number, limit: number
+): Promise<Result<GetEventRegistration[], InternalError>> {
+    try {
+
+        const rows = await sql`
+            WITH base AS (
+                SELECT
+                    er.team_id,
+                    er.user_id,
+                    er.registered_at,
+                    p.first_name,
+                    p.last_name,
+                    c.name AS college,
+                    d.name AS degree,
+                    t.name AS team_name
+                FROM event_registrations er
+                JOIN users u        ON u.id = er.user_id
+                JOIN profile p      ON p.user_id = u.id
+                JOIN colleges c     ON c.id = p.college_id
+                JOIN degrees d      ON d.id = p.degree_id
+                LEFT JOIN teams t   ON t.id = er.team_id
+                WHERE er.event_id = ${eventId}
+            )
+            SELECT
+                team_id AS id,
+                'TEAM' AS type,
+                team_name AS name,
+                NULL AS first_name,
+                NULL AS last_name,
+                NULL AS college,
+                NULL AS degree,
+                json_agg(json_build_object(
+                    'participant_id', user_id,
+                    'first_name',     first_name,
+                    'last_name',      last_name,
+                    'college',        college,
+                    'degree',         degree
+                )) AS members,
+                MIN(registered_at) AS registered_at
+            FROM base
+            WHERE team_id IS NOT NULL
+            GROUP BY team_id, team_name
+
+            UNION ALL
+
+            SELECT
+                user_id AS id,
+                'SOLO' AS type,
+                NULL AS name,
+                first_name,
+                last_name,
+                college,
+                degree,
+                NULL AS members,
+                registered_at
+            FROM base
+            WHERE team_id IS NULL
+
+            ORDER BY registered_at
+            OFFSET ${from}
+            LIMIT ${limit}
+        `;
+
+        const eventRegistrations = rows.map(row => {
+            if (row.type === "SOLO") {
+                return getEventRegistrationSchema.parse({
+                    type: "SOLO",
+                    participant_id: row.id,
+                    first_name: row.first_name,
+                    last_name: row.last_name,
+                    college: row.college,
+                    degree: row.degree,
+                    registered_at: row.registered_at,
+                });
+            } else {
+                return getEventRegistrationSchema.parse({
+                    type: "TEAM",
+                    name: row.name,
+                    members: row.members,
+                    registered_at: row.registered_at,
+                });
+            }
+        });
+
+        return Result.ok(eventRegistrations);
+    } catch (err) {
+        console.error(err);
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to fetch the registrations"
+        })
+    }
+}
+
+export async function getEventRegCount(
+    eventId: string
+): Promise<Result<number, InternalError>> {
+    try {
+        const [row] = await sql`
+            SELECT COUNT(DISTINCT COALESCE(er.team_id, er.user_id))
+            FROM event_registrations er
+            WHERE event_id = ${eventId}
+        `;
+
+        return Result.ok(parseInt(row?.count ?? "0"))
+    } catch (err) {
+        console.error(`Failed to get event registration count ${err}`);
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to fetch event registartions"
+        })
+    }
 }

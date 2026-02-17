@@ -9,6 +9,7 @@ import {
     eventPatchSchema,
     roundPatchSchema,
     basePrizeSchema,
+    paginationSchema,
 } from "@melinia/shared"
 import sql from "../db/connection"
 import {
@@ -34,11 +35,14 @@ import {
     isTeamLeader,
     deregisterTeam,
     deregisterUser,
+    getEventRegCount,
+    getEventRegistrations,
 } from "../db/queries"
 import {
     authMiddleware,
     adminOnlyMiddleware,
     participantOnlyMiddleware,
+    opsAuthMiddleware,
 } from "../middleware/auth.middleware"
 import { HTTPException } from "hono/http-exception"
 import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
@@ -504,6 +508,48 @@ events.delete(
         await deregisterUser(userId, eventId)
 
         return c.json({ message: "Unregistered successfully from the event" }, 200)
+    }
+)
+
+events.get(
+    ":id/registrations",
+    authMiddleware,
+    opsAuthMiddleware,
+    zValidator("query", paginationSchema),
+    async (c) => {
+        const { id } = c.req.param();
+        const { from, limit } = c.req.valid("query");
+
+
+        const eventRegCountResult = await getEventRegCount(id);
+        if (eventRegCountResult.isErr) {
+            switch (eventRegCountResult.error.code) {
+                case "internal_error":
+                    return c.json({ message: eventRegCountResult.error.message }, 500);
+            }
+        }
+        const eventRegCount = eventRegCountResult.value;
+
+        const eventRegResult = await getEventRegistrations(id, from, limit);
+        if (eventRegResult.isErr) {
+            switch (eventRegResult.error.code) {
+                case "internal_error":
+                    return c.json({ message: eventRegResult.error.message }, 500);
+            }
+        }
+        const eventRegs = eventRegResult.value;
+
+        return c.json({
+            data: eventRegs,
+            pagination: {
+                from: from,
+                limit: limit,
+                total: eventRegCount,
+                returned: eventRegs.length,
+                has_more: (from + eventRegs.length) < eventRegCount 
+            }
+        }, 200)
+
     }
 )
 
