@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { quickActionItems } from "@/app/nav";
 
 export const Route = createFileRoute("/app/")({
 	component: DashboardPage,
@@ -33,6 +32,16 @@ function DashboardPage() {
 					value="15"
 					description="3 require immediate attention"
 				/>
+				<Link
+					to="/app/check-in"
+					className="bg-neutral-950 border border-neutral-800 p-6 space-y-2 block hover:bg-neutral-900 transition-colors duration-150"
+				>
+					<p className="text-sm font-medium text-neutral-500">Action</p>
+					<p className="text-3xl font-bold text-white">Check-in</p>
+					<p className="text-sm text-neutral-500">
+						Scan QR codes or search attendees
+					</p>
+				</Link>
 			</div>
 		</div>
 	)

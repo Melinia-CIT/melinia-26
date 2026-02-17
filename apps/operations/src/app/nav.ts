@@ -27,12 +27,6 @@ export const mainNavItems: NavItem[] = [
 		enabled: true,
 	},
 	{
-		label: "Check-in",
-		to: "/app/check-in",
-		description: "Search for attendees and mark them as checked in",
-		enabled: true,
-	},
-	{
 		label: "Events",
 		to: "/app/events",
 		description: "Manage schedule and venues",
