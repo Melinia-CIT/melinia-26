@@ -399,11 +399,35 @@ export const eventRegistrationSchema = z.object({
     team_id: z.string().optional().nullable()
 });
 
+export const getEventRegistrationSchema = z
+    .discriminatedUnion("type", [
+        z.object({
+            type: z.literal("TEAM"),
+            name: z.string(),
+            members: z.array(
+                z.object({
+                    participant_id: z.string(),
+                    first_name: z.string(),
+                    last_name: z.string(),
+                    college: z.string(),
+                    degree: z.string(),
+                })
+            ),
+            registered_at: z.coerce.date()
+        }),
+        z.object({
+            type: z.literal("SOLO"),
+            first_name: z.string(),
+            last_name: z.string(),
+            participant_id: z.string(),
+            college: z.string(),
+            degree: z.string(),
+            registered_at: z.coerce.date()
+        })
+    ])
 
 
 // round update schema
-
-
 export const roundPatchSchema = baseRoundSchema
     .omit({
         id: true,
@@ -434,19 +458,38 @@ export const roundPatchSchema = baseRoundSchema
     });
 
 // Check-In
-export const baseCheckInSchema = z.
-    object({
+export const baseCheckInSchema = z
+    .object({
         id: z.number(),
         participant_id: z.string(),
         checkedin_at: z.coerce.date(),
         checkedin_by: z.string()
     })
+
+export const getCheckInSchema = z
+    .object({
+        participant_id: z.string(),
+        first_name: z.string(),
+        last_name: z.string(),
+        college: z.string(),
+        degree: z.string(),
+        email: z.email(),
+        checkedin_at: z.coerce.date(),
+        checkedin_by: z.string()
+    })
+
 export const checkInParamSchema = z
     .object({
         participant_id: z
             .string()
             .regex(/^MLNU[A-Z0-9]{6}$/, { error: "Invalid user_id" })
     });
+
+export const paginationSchema = z
+    .object({
+        from: z.coerce.number().min(0).default(0),
+        limit: z.coerce.number().min(1).default(10),
+    })
 
 
 
@@ -457,6 +500,7 @@ export type VerboseEvent = z.infer<typeof verboseEventSchema>;
 export type GetVerboseEvent = z.infer<typeof getVerboseEventResponseSchema>;
 export type UserRegisteredEvents = z.infer<typeof userRegisteredEventsSchema>;
 export type UserRegistrationStatus = z.infer<typeof userRegistrationStatus>;
+export type GetEventRegistration = z.infer<typeof getEventRegistrationSchema>;
 
 export type CreateEventPrizes = z.infer<typeof createEventPrizesSchema>;
 export type Prize = z.infer<typeof basePrizeSchema>;
@@ -475,8 +519,10 @@ export type EventRegistration = z.infer<typeof eventRegistrationSchema>;
 export type RoundPatch = z.infer<typeof roundPatchSchema>;
 
 export type CheckIn = z.infer<typeof baseCheckInSchema>;
+export type GetCheckIn = z.infer<typeof getCheckInSchema>;
 export type AlreadyCheckedIn = {
     code: "already_checked_in";
     message: string
 }
 export type CheckInError = UserNotFound | AlreadyCheckedIn | PaymentPending | InternalError;
+export type GetCheckInError = InternalError;
