@@ -457,7 +457,7 @@ export const roundPatchSchema = baseRoundSchema
         }
     });
 
-// Check-In
+// Overall Fest CheckIns 
 export const baseCheckInSchema = z
     .object({
         id: z.number(),
@@ -485,12 +485,82 @@ export const checkInParamSchema = z
             .regex(/^MLNU[A-Z0-9]{6}$/, { error: "Invalid user_id" })
     });
 
+// EventsCheckIns
+export const getEventCheckInsParamSchema = z
+    .object({
+        eventId: z.string(),
+        roundId: z.coerce.number()
+    })
+
+export const getEventParticipantsParamSchema = getEventCheckInsParamSchema
+    .omit({
+        roundId: true
+    })
+    .extend({
+        roundNo: z.coerce.number().min(1, { error: "Round number must be greater than 1" })
+    })
+
+export const getEventCheckInSchema = z
+    .discriminatedUnion("type", [
+        z.object({
+            type: z.literal("TEAM"),
+            name: z.string(),
+            members: z.array(
+                z.object({
+                    participant_id: z.string(),
+                    first_name: z.string(),
+                    last_name: z.string(),
+                    college: z.string(),
+                    degree: z.string(),
+                })
+            ),
+            checkedin_at: z.coerce.date(),
+            checkedin_by: z.string(),
+        }),
+        z.object({
+            type: z.literal("SOLO"),
+            first_name: z.string(),
+            last_name: z.string(),
+            participant_id: z.string(),
+            college: z.string(),
+            degree: z.string(),
+            checkedin_at: z.coerce.date(),
+            checkedin_by: z.string(),
+        }),
+    ]);
+
+export const getEventParticipantSchema = z 
+    .discriminatedUnion("type", [
+        z.object({
+            type: z.literal("TEAM"),
+            name: z.string(),
+            members: z.array(
+                z.object({
+                    participant_id: z.string(),
+                    first_name: z.string(),
+                    last_name: z.string(),
+                    college: z.string(),
+                    degree: z.string(),
+                })
+            ),
+            registered_at: z.coerce.date(),
+        }),
+        z.object({
+            type: z.literal("SOLO"),
+            first_name: z.string(),
+            last_name: z.string(),
+            participant_id: z.string(),
+            college: z.string(),
+            degree: z.string(),
+            registered_at: z.coerce.date(),
+        }),
+    ]);
+
 export const paginationSchema = z
     .object({
         from: z.coerce.number().min(0).default(0),
         limit: z.coerce.number().min(1).default(10),
     })
-
 
 
 export type CreateEvent = z.infer<typeof createEventSchema>;
@@ -501,6 +571,10 @@ export type GetVerboseEvent = z.infer<typeof getVerboseEventResponseSchema>;
 export type UserRegisteredEvents = z.infer<typeof userRegisteredEventsSchema>;
 export type UserRegistrationStatus = z.infer<typeof userRegistrationStatus>;
 export type GetEventRegistration = z.infer<typeof getEventRegistrationSchema>;
+export type EventNotFound = {
+    code: "event_not_found",
+    message: string
+}
 
 export type CreateEventPrizes = z.infer<typeof createEventPrizesSchema>;
 export type Prize = z.infer<typeof basePrizeSchema>;
@@ -511,6 +585,10 @@ export type Crew = z.infer<typeof baseCrewSchema>;
 
 export type CreateRounds = z.infer<typeof createEventRoundsSchema>;
 export type Round = z.infer<typeof baseRoundSchema>;
+export type EventOrRoundNotFound = {
+    code: "event_or_round_not_found";
+    message: string;
+}
 
 export type CreateRoundRules = z.infer<typeof createEventRoundRulesSchema>;
 export type Rule = z.infer<typeof baseRoundRulesSchema>;
@@ -522,7 +600,13 @@ export type CheckIn = z.infer<typeof baseCheckInSchema>;
 export type GetCheckIn = z.infer<typeof getCheckInSchema>;
 export type AlreadyCheckedIn = {
     code: "already_checked_in";
-    message: string
+    message: string;
 }
 export type CheckInError = UserNotFound | AlreadyCheckedIn | PaymentPending | InternalError;
 export type GetCheckInError = InternalError;
+
+export type GetEventCheckIn = z.infer<typeof getEventCheckInSchema>;
+export type GetEventCheckInsError = EventOrRoundNotFound | InternalError;
+export type GetEventRegistrationsError = EventNotFound | InternalError;
+export type GetEventParticipant = z.infer<typeof getEventParticipantSchema>;
+export type GetEventParticipantsError = EventOrRoundNotFound | InternalError;

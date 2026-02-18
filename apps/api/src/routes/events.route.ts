@@ -10,6 +10,9 @@ import {
     roundPatchSchema,
     basePrizeSchema,
     paginationSchema,
+    getEventCheckInsParamSchema,
+    getEventParticipantsSchema,
+    getEventParticipantsParamSchema,
 } from "@melinia/shared"
 import sql from "../db/connection"
 import {
@@ -37,6 +40,12 @@ import {
     deregisterUser,
     getEventRegCount,
     getEventRegistrations,
+    getEventCheckIns,
+    getEventCheckInCount,
+    getEventCheckInsCount,
+    getEventParticipants,
+    getEventParticipantCount,
+    getEventParticipantsCount,
 } from "../db/queries"
 import {
     authMiddleware,
@@ -512,14 +521,24 @@ events.delete(
 )
 
 events.get(
-    ":id/registrations",
+    "/:id/registrations",
     authMiddleware,
     opsAuthMiddleware,
     zValidator("query", paginationSchema),
     async (c) => {
-        const { id } = c.req.param();
+        const id = c.req.param("id");
         const { from, limit } = c.req.valid("query");
 
+        const eventRegResult = await getEventRegistrations(id, from, limit);
+        if (eventRegResult.isErr) {
+            switch (eventRegResult.error.code) {
+                case "event_not_found":
+                    return c.json({ message: eventRegResult.error.message }, 404);
+                case "internal_error":
+                    return c.json({ message: eventRegResult.error.message }, 500);
+            }
+        }
+        const eventRegs = eventRegResult.value;
 
         const eventRegCountResult = await getEventRegCount(id);
         if (eventRegCountResult.isErr) {
@@ -530,15 +549,6 @@ events.get(
         }
         const eventRegCount = eventRegCountResult.value;
 
-        const eventRegResult = await getEventRegistrations(id, from, limit);
-        if (eventRegResult.isErr) {
-            switch (eventRegResult.error.code) {
-                case "internal_error":
-                    return c.json({ message: eventRegResult.error.message }, 500);
-            }
-        }
-        const eventRegs = eventRegResult.value;
-
         return c.json({
             data: eventRegs,
             pagination: {
@@ -546,10 +556,106 @@ events.get(
                 limit: limit,
                 total: eventRegCount,
                 returned: eventRegs.length,
-                has_more: (from + eventRegs.length) < eventRegCount 
+                has_more: (from + eventRegs.length) < eventRegCount
             }
         }, 200)
 
+    }
+)
+
+events.get(
+    "/:eventId/rounds/:roundNo/participants",
+    authMiddleware,
+    opsAuthMiddleware,
+    zValidator("param", getEventParticipantsParamSchema),
+    zValidator("query", paginationSchema),
+    async (c) => {
+        const { eventId, roundNo } = c.req.valid("param");
+        const { from, limit } = c.req.valid("query");
+
+        const eventParticipantsResult = await getEventParticipants(eventId, roundNo, from, limit)
+
+        if (eventParticipantsResult.isErr) {
+            const error = eventParticipantsResult.error;
+            switch (error.code) {
+                case "event_or_round_not_found":
+                    return c.json({ message: error.message }, 404);
+                case "internal_error":
+                    return c.json({ message: error.message }, 500);
+            }
+        }
+        const eventParticipants = eventParticipantsResult.value;
+
+        const eventParticipantsCountResult = await getEventParticipantsCount(eventId, roundNo);
+        if (eventParticipantsCountResult.isErr) {
+            const error = eventParticipantsCountResult.error;
+
+            switch (error.code) {
+                case "event_or_round_not_found":
+                    return c.json({ message: error.message }, 404);
+                case "internal_error":
+                    return c.json({ message: error.message }, 500);
+            }
+        }
+        const eventParticipantsCount = eventParticipantsCountResult.value;
+
+        return c.json({
+            data: eventParticipants,
+            pagination: {
+                from: from,
+                limit: limit,
+                total: eventParticipantsCount,
+                returned: eventParticipants.length,
+                has_more: (from + eventParticipants.length) < eventParticipantsCount
+            }
+        }, 200)
+    }
+)
+
+events.get(
+    "/:eventId/rounds/:roundId/checkins",
+    authMiddleware,
+    opsAuthMiddleware,
+    zValidator("param", getEventCheckInsParamSchema),
+    zValidator("query", paginationSchema),
+    async (c) => {
+        const { eventId, roundId } = c.req.valid("param");
+        const { from, limit } = c.req.valid("query");
+
+        const eventCheckInsResult = await getEventCheckIns(eventId, roundId, from, limit);
+        if (eventCheckInsResult.isErr) {
+            const error = eventCheckInsResult.error;
+
+            switch (error.code) {
+                case "event_or_round_not_found":
+                    return c.json({ message: error.message }, 404);
+                case "internal_error":
+                    return c.json({ message: error.message }, 500);
+            }
+        }
+        const eventCheckIns = eventCheckInsResult.value;
+
+        const eventCheckInsCountResult = await getEventCheckInsCount(eventId, roundId);
+        if (eventCheckInsCountResult.isErr) {
+            const error = eventCheckInsCountResult.error;
+
+            switch (error.code) {
+                case "internal_error":
+                    return c.json({ message: error.message }, 500);
+            }
+        }
+        const eventCheckInsCount = eventCheckInsCountResult.value;
+
+        return c.json({
+            data: eventCheckIns,
+            pagination: {
+                from: from,
+                limit: limit,
+                total: eventCheckInsCount,
+                returned: eventCheckIns.length,
+                has_more: (from + eventCheckIns.length) < eventCheckInsCount
+            }
+        }, 200)
     }
 )
 
