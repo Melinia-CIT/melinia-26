@@ -814,7 +814,7 @@ await runMigration("add user status for controlling accounts", async (tx) => {
     await tx`
         UPDATE users
         SET status = 'ACTIVE'
-        WHERE payment_status IN ('PAID', 'EXEMPTED');
+        WHERE profile_completed;
     `;
 });
 
