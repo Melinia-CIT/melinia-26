@@ -1,6 +1,7 @@
 import { z } from "zod";
-import type { InternalError, UserNotFound } from "./users";
+import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound,  } from "./users";
 import type { PaymentPending } from "./payments";
+import { memberSchema } from "./teams";
 
 // Base
 export const baseEventSchema = z.object({
@@ -448,6 +449,39 @@ export const checkInParamSchema = z
             .regex(/^MLNU[A-Z0-9]{6}$/, { error: "Invalid user_id" })
     });
 
+export const roundCheckInScanSchema = z.object({
+    user_id: z.string()
+});
+
+export const roundCheckInParamSchema = z.object({
+    user_ids: z.array(
+        z.string()
+    ).min(1),
+    team_id: z.string().nullable()
+});
+export const checkInTeamSchema = memberSchema.safeExtend({
+    status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPEND'])
+})
+export const baseScanResultSchema = z.object({
+    type: z.enum(["SOLO", "TEAM"]),
+    user_id: z.string().optional(),
+    name: z.string().optional(),
+    team_id: z.string().optional(),
+    team_name: z.string().optional(),
+    members: z.array(checkInTeamSchema).optional()
+});
+
+export const baseRoundCheckInSchema = z.object({
+    checked_in: z.array(z.object({
+        id: z.number(),
+        user_id: z.string(),
+        round_id: z.number(),
+        team_id: z.string().nullable(),
+        checkedin_at: z.coerce.date(),
+        checkedin_by: z.string()
+    }))
+});
+
 
 
 export type CreateEvent = z.infer<typeof createEventSchema>;
@@ -480,3 +514,45 @@ export type AlreadyCheckedIn = {
     message: string
 }
 export type CheckInError = UserNotFound | AlreadyCheckedIn | PaymentPending | InternalError;
+// Round Check-in Types
+export type CheckInTeam = z.infer<typeof checkInTeamSchema>;
+export type ScanResult = z.infer<typeof baseScanResultSchema>;
+export type RoundCheckIn = z.infer<typeof baseRoundCheckInSchema>;
+
+// Errors
+export type EventNotFound = {
+    code: "event_not_found";
+    message: string;
+};
+export type RoundNotFound = {
+    code: "round_not_found";
+    message: string;
+};
+export type NotRegistered = {
+    code: "not_registered";
+    message: string;
+};
+export type NotQualified = {
+    code: "not_qualified";
+    message: string;
+};
+export type AlreadyCheckedInRound = {
+    code: "already_checked_in";
+    message: string;
+};
+export type RoundCheckInError =
+    | UserNotFound
+    | EventNotFound
+    | RoundNotFound
+    | NotRegistered
+    | NotQualified
+    | AlreadyCheckedInRound
+    | InternalError;
+
+export type ScanError =
+    | UserNotFound
+    | EventNotFound
+    | RoundNotFound
+    | NotRegistered
+    | NotQualified
+    | InternalError;
