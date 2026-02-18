@@ -594,7 +594,8 @@ export const roundCheckInParamSchema = z.object({
     team_id: z.string().nullable()
 });
 export const checkInTeamSchema = memberSchema.safeExtend({
-    status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPEND'])
+    status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPEND']),
+    payment_status:z.enum(["PAID", "UNPAID", "EXEMPTED"])
 })
 export const baseScanResultSchema = z.object({
     type: z.enum(["SOLO", "TEAM"]),
@@ -694,6 +695,7 @@ export type RoundCheckInError =
     | NotRegistered
     | NotQualified
     | AlreadyCheckedInRound
+    | PaymentPending
     | InternalError;
 
 export type ScanError =
@@ -702,4 +704,5 @@ export type ScanError =
     | RoundNotFound
     | NotRegistered
     | NotQualified
+    | PaymentPending
     | InternalError;
