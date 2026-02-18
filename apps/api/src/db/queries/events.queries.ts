@@ -31,6 +31,13 @@ import {
     type GetEventRegistration,
     type InternalError,
     getEventRegistrationSchema,
+    getEventCheckInSchema,
+    type GetEventCheckIn,
+    type GetEventCheckInsError,
+    type GetEventRegistrationsError,
+    type GetEventParticipant,
+    type GetEventParticipantsError,
+    getEventParticipantSchema
 } from "@melinia/shared"
 import { Result } from "true-myth"
 
@@ -913,8 +920,21 @@ export async function updateEventPrize(
 // TODO: return type issue
 export async function getEventRegistrations(
     eventId: string, from: number, limit: number
-): Promise<Result<GetEventRegistration[], InternalError>> {
+): Promise<Result<GetEventRegistration[], GetEventRegistrationsError>> {
     try {
+        const [row] = await sql`
+            SELECT 1
+            FROM events e
+            WHERE e.id = ${eventId}; 
+        `
+
+        if (!row) {
+            console.error("Event not found. Invalid event_id provided.")
+            return Result.err({
+                "code": "event_not_found",
+                "message": "Invalid event id"
+            })
+        }
 
         const rows = await sql`
             WITH base AS (
@@ -1023,5 +1043,283 @@ export async function getEventRegCount(
             code: "internal_error",
             message: "Failed to fetch event registartions"
         })
+    }
+}
+
+export async function getEventCheckIns(
+    eventId: string, roundNo: number, from: number, limit: number
+): Promise<Result<GetEventCheckIn[], GetEventCheckInsError>> {
+    try {
+        const [row] = await sql`
+            SELECT 1
+            FROM events e
+            JOIN event_rounds er ON er.event_id = e.id
+            WHERE e.id = ${eventId} AND er.round_no = ${roundNo};
+        `;
+
+        if (!row) {
+            console.error("Event or Round not found. Invalid event_id or round_id provided.")
+            return Result.err({
+                "code": "event_or_round_not_found",
+                "message": "Invalid Event or Round"
+            });
+        }
+
+        const rows = await sql`
+            WITH base AS (
+                SELECT
+                    erc.team_id,
+                    erc.user_id,
+                    erc.checkedin_at,
+                    erc.checkedin_by,
+                    p.first_name,
+                    p.last_name,
+                    c.name AS college,
+                    d.name AS degree,
+                    t.name AS team_name
+                FROM event_round_checkins erc
+                JOIN users u        ON u.id = erc.user_id
+                JOIN profile p      ON p.user_id = u.id
+                JOIN colleges c     ON c.id = p.college_id
+                JOIN degrees d      ON d.id = p.degree_id
+                JOIN event_rounds r ON r.id = erc.round_id
+                LEFT JOIN teams t   ON t.id = erc.team_id
+                WHERE
+                    r.event_id = ${eventId} AND
+                    erc.round_id = ${roundNo}
+            )
+            SELECT
+                team_id AS id,
+                'TEAM' AS type,
+                team_name AS name,
+                NULL AS first_name,
+                NULL AS last_name,
+                NULL AS college,
+                NULL AS degree,
+                json_agg(json_build_object(
+                    'participant_id', user_id,
+                    'first_name',     first_name,
+                    'last_name',      last_name,
+                    'college',        college,
+                    'degree',         degree
+                )) AS members,
+                MIN(checkedin_at) AS checkedin_at,
+                MIN(checkedin_by) AS checkedin_by
+            FROM base
+            WHERE team_id IS NOT NULL
+            GROUP BY team_id, team_name
+            UNION ALL
+            SELECT
+                user_id AS id,
+                'SOLO' AS type,
+                NULL AS name,
+                first_name,
+                last_name,
+                college,
+                degree,
+                NULL AS members,
+                checkedin_at,
+                checkedin_by
+            FROM base
+            WHERE team_id IS NULL
+            ORDER BY checkedin_at DESC
+            OFFSET ${from}
+            LIMIT ${limit}
+        `;
+
+        const eventCheckIns = rows.map(row => {
+            if (row.type === "SOLO") {
+                return getEventCheckInSchema.parse({
+                    type: "SOLO",
+                    participant_id: row.id,
+                    first_name: row.first_name,
+                    last_name: row.last_name,
+                    college: row.college,
+                    degree: row.degree,
+                    checkedin_at: row.checkedin_at,
+                    checkedin_by: row.checkedin_by
+                });
+            } else {
+                return getEventCheckInSchema.parse({
+                    type: "TEAM",
+                    name: row.name,
+                    members: row.members,
+                    checkedin_at: row.checkedin_at,
+                    checkedin_by: row.checkedin_by
+                });
+            }
+        });
+
+        return Result.ok(eventCheckIns);
+    } catch (err) {
+        console.error(err);
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to fetch the registrations"
+        });
+    }
+}
+
+export async function getEventCheckInsCount(
+    eventId: string, roundId: number
+): Promise<Result<number, InternalError>> {
+    try {
+        const [row] = await sql`
+            SELECT COUNT(DISTINCT COALESCE(erc.team_id, erc.user_id))
+            FROM event_round_checkins erc
+            JOIN event_rounds r ON r.id = erc.round_id
+            WHERE r.event_id = ${eventId} AND erc.round_id = ${roundId}
+        `;
+        return Result.ok(parseInt(row?.count ?? "0"));
+    } catch (err) {
+        console.error(`Failed to get event checkins count ${err}`);
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to fetch event checkins count"
+        });
+    }
+}
+
+export async function getEventParticipants(
+    eventId: string, roundNo: number, from: number, limit: number
+): Promise<Result<GetEventParticipant[], GetEventParticipantsError>> {
+    try {
+        const rounds = await sql`
+            SELECT id, round_no FROM event_rounds
+            WHERE event_id = ${eventId} AND round_no IN (${roundNo}, ${roundNo - 1})
+        `;
+
+        const currentRound = rounds.find(r => r.round_no === roundNo);
+        const prevRound = rounds.find(r => r.round_no === roundNo - 1);
+
+        if (!currentRound) {
+            return Result.err({ code: "event_or_round_not_found", message: "Invalid Event or Round" });
+        }
+        if (roundNo > 1 && !prevRound) {
+            return Result.err({ code: "event_or_round_not_found", message: "Previous round not found" });
+        }
+
+        const PARTICIPANT_UNION = (from: number, limit: number) => sql`
+            SELECT team_id AS id, 'TEAM' AS type, team_name AS name,
+                NULL AS first_name, NULL AS last_name, NULL AS college, NULL AS degree,
+                json_agg(json_build_object(
+                    'participant_id', user_id,
+                    'first_name', first_name, 'last_name', last_name,
+                    'college', college, 'degree', degree
+                )) AS members,
+                MIN(sort_at) AS sort_at
+            FROM base WHERE team_id IS NOT NULL
+            GROUP BY team_id, team_name
+            UNION ALL
+            SELECT user_id AS id, 'SOLO' AS type, NULL AS name,
+                first_name, last_name, college, degree, NULL AS members, sort_at
+            FROM base WHERE team_id IS NULL
+            ORDER BY sort_at DESC
+            OFFSET ${from} LIMIT ${limit}
+        `;
+
+        function parseParticipantRow(row: any): GetEventParticipant {
+            if (row.type === "SOLO") {
+                return getEventParticipantSchema.parse({
+                    type: "SOLO",
+                    participant_id: row.id,
+                    first_name: row.first_name,
+                    last_name: row.last_name,
+                    college: row.college,
+                    degree: row.degree,
+                    registered_at: row.sort_at,
+                });
+            }
+            return getEventParticipantSchema.parse({
+                type: "TEAM",
+                team_id: row.id,
+                name: row.name,
+                members: row.members,
+                registered_at: row.sort_at,
+            });
+        }
+
+        if (roundNo === 1) {
+            const rows = await sql`
+                WITH base AS (
+                    SELECT er.team_id, er.user_id, er.registered_at AS sort_at,
+                           p.first_name, p.last_name,
+                           c.name AS college, d.name AS degree, t.name AS team_name
+                    FROM event_registrations er
+                    JOIN users u      ON u.id = er.user_id
+                    JOIN profile p    ON p.user_id = u.id
+                    JOIN colleges c   ON c.id = p.college_id
+                    JOIN degrees d    ON d.id = p.degree_id
+                    LEFT JOIN teams t ON t.id = er.team_id
+                    WHERE er.event_id = ${eventId}
+                )
+                ${PARTICIPANT_UNION(from, limit)}
+            `;
+            return Result.ok(rows.map(parseParticipantRow));
+        }
+
+        const rows = await sql`
+            WITH base AS (
+                SELECT rr.team_id, rr.user_id, rr.eval_at AS sort_at,
+                       p.first_name, p.last_name,
+                       c.name AS college, d.name AS degree, t.name AS team_name
+                FROM round_results rr
+                JOIN users u      ON u.id = rr.user_id
+                JOIN profile p    ON p.user_id = u.id
+                JOIN colleges c   ON c.id = p.college_id
+                JOIN degrees d    ON d.id = p.degree_id
+                LEFT JOIN teams t ON t.id = rr.team_id
+                WHERE rr.round_id = ${prevRound!.id}
+                  AND rr.status = 'QUALIFIED'
+            )
+            ${PARTICIPANT_UNION(from, limit)}
+        `;
+        return Result.ok(rows.map(parseParticipantRow));
+
+    } catch (err) {
+        console.error(`Failed to get event participants: ${err}`);
+        return Result.err({ code: "internal_error", message: "Failed to fetch participants" });
+    }
+}
+
+export async function getEventParticipantsCount(
+    eventId: string, roundNo: number
+): Promise<Result<number, GetEventParticipantsError>> {
+    try {
+        const rounds = await sql`
+            SELECT id, round_no FROM event_rounds
+            WHERE event_id = ${eventId} AND round_no IN (${roundNo}, ${roundNo - 1})
+        `;
+
+        const currentRound = rounds.find(r => r.round_no === roundNo);
+        const prevRound = rounds.find(r => r.round_no === roundNo - 1);
+
+        if (!currentRound) {
+            return Result.err({ code: "event_or_round_not_found", message: "Invalid Event or Round" });
+        }
+        if (roundNo > 1 && !prevRound) {
+            return Result.err({ code: "event_or_round_not_found", message: "Previous round not found" });
+        }
+
+        if (roundNo === 1) {
+            const [row] = await sql`
+                SELECT COUNT(DISTINCT COALESCE(er.team_id, er.user_id)) AS count
+                FROM event_registrations er
+                WHERE er.event_id = ${eventId}
+            `;
+            return Result.ok(parseInt(row?.count ?? "0"));
+        }
+
+        const [row] = await sql`
+            SELECT COUNT(DISTINCT COALESCE(rr.team_id, rr.user_id)) AS count
+            FROM round_results rr
+            WHERE rr.round_id = ${prevRound!.id}
+              AND rr.status = 'QUALIFIED'
+        `;
+        return Result.ok(parseInt(row?.count ?? "0"));
+
+    } catch (err) {
+        console.error(`Failed to get event participant count: ${err}`);
+        return Result.err({ code: "internal_error", message: "Failed to fetch participant count" });
     }
 }
