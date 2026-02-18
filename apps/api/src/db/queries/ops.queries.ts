@@ -58,8 +58,6 @@ export async function checkInParticipant(
         }
         return Result.ok(baseCheckInSchema.parse(checkIn));
     } catch (err) {
-        console.error(err);
-
         if (err instanceof postgres.PostgresError) {
             const constraint = err?.constraint_name
             if (constraint) {
@@ -318,7 +316,6 @@ export async function scanUserForRound(
         }
 
     } catch (err) {
-        console.error(err);
         return Result.err({
             code: "internal_error",
             message: "Failed to scan participant"
@@ -378,6 +375,7 @@ export async function checkInRoundParticipants(
                 });
             }
         } else {
+
             // Round 2+: All users must be QUALIFIED in the previous round
             const [prevRound] = await sql`
                 SELECT id FROM event_rounds
@@ -410,8 +408,7 @@ export async function checkInRoundParticipants(
         const alreadyCheckedIn = await sql`
             SELECT user_id FROM event_round_checkins
             WHERE round_id = ${round.id}
-            AND user_id = ANY(${userIds}::text[]);
-        `;
+            AND user_id = ANY(${userIds}::text[]);`;
         if (alreadyCheckedIn.length > 0) {
             const ids = alreadyCheckedIn.map(r => r.user_id).join(", ");
             return Result.err({
@@ -446,7 +443,6 @@ export async function checkInRoundParticipants(
         return Result.ok(baseRoundCheckInSchema.parse({ checked_in: checkIns }));
 
     } catch (err) {
-        console.error(err);
         if (err instanceof postgres.PostgresError) {
             const constraint = err?.constraint_name;
             if (constraint) {
