@@ -113,13 +113,18 @@ ops.post(
             switch (checkIn.error.code) {
                 case "round_not_found":
                     return c.json({ message }, 404);
+                case "event_not_found":
+                    return c.json({message}, 404);
                 case "user_not_found":
                     return c.json({ message }, 404);
                 case "already_checked_in":
                     return c.json({ message }, 409);
                 case "payment_pending":
                     return c.json({ message }, 402);
-                case "payment_pending":
+                case "not_qualified":
+                    return c.json({message}, 403);
+                case "not_registered":
+                    return c.json({message}, 403);
                 case "internal_error":
                     return c.json({ message }, 500);
             }
