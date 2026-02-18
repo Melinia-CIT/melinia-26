@@ -970,7 +970,7 @@ export async function getEventRegistrations(
             FROM base
             WHERE team_id IS NULL
 
-            ORDER BY registered_at
+            ORDER BY registered_at DESC
             OFFSET ${from}
             LIMIT ${limit}
         `;
