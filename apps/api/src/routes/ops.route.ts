@@ -74,6 +74,8 @@ ops.get(
                     return c.json({ message }, 403);
                 case "not_qualified":
                     return c.json({ message }, 403);
+                case "payment_pending":
+                    return c.json({message}, 402);
                 case "internal_error":
                     return c.json({ message }, 500);
             }
@@ -115,6 +117,9 @@ ops.post(
                     return c.json({ message }, 404);
                 case "already_checked_in":
                     return c.json({ message }, 409);
+                case "payment_pending":
+                    return c.json({ message }, 402);
+                case "payment_pending":
                 case "internal_error":
                     return c.json({ message }, 500);
             }
