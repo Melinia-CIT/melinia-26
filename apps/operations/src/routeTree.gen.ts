@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AppRegistrationsRouteImport } from './routes/app/registrations'
+import { Route as AppEventsRouteImport } from './routes/app/events'
 import { Route as AppCheckInRouteImport } from './routes/app/check-in'
 
 const AppRoute = AppRouteImport.update({
@@ -35,6 +36,11 @@ const AppRegistrationsRoute = AppRegistrationsRouteImport.update({
   path: '/registrations',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEventsRoute = AppEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCheckInRoute = AppCheckInRouteImport.update({
   id: '/check-in',
   path: '/check-in',
@@ -44,12 +50,14 @@ const AppCheckInRoute = AppCheckInRouteImport.update({
 export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/app/check-in': typeof AppCheckInRoute
+  '/app/events': typeof AppEventsRoute
   '/app/registrations': typeof AppRegistrationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/app/check-in': typeof AppCheckInRoute
+  '/app/events': typeof AppEventsRoute
   '/app/registrations': typeof AppRegistrationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/app': typeof AppIndexRoute
@@ -58,6 +66,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/app': typeof AppRouteWithChildren
   '/app/check-in': typeof AppCheckInRoute
+  '/app/events': typeof AppEventsRoute
   '/app/registrations': typeof AppRegistrationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/app/': typeof AppIndexRoute
@@ -67,15 +76,22 @@ export interface FileRouteTypes {
   fullPaths:
     | '/app'
     | '/app/check-in'
+    | '/app/events'
     | '/app/registrations'
     | '/auth/login'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/app/check-in' | '/app/registrations' | '/auth/login' | '/app'
+  to:
+    | '/app/check-in'
+    | '/app/events'
+    | '/app/registrations'
+    | '/auth/login'
+    | '/app'
   id:
     | '__root__'
     | '/app'
     | '/app/check-in'
+    | '/app/events'
     | '/app/registrations'
     | '/auth/login'
     | '/app/'
@@ -116,6 +132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRegistrationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/events': {
+      id: '/app/events'
+      path: '/events'
+      fullPath: '/app/events'
+      preLoaderRoute: typeof AppEventsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/check-in': {
       id: '/app/check-in'
       path: '/check-in'
@@ -128,12 +151,14 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppCheckInRoute: typeof AppCheckInRoute
+  AppEventsRoute: typeof AppEventsRoute
   AppRegistrationsRoute: typeof AppRegistrationsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppCheckInRoute: AppCheckInRoute,
+  AppEventsRoute: AppEventsRoute,
   AppRegistrationsRoute: AppRegistrationsRoute,
   AppIndexRoute: AppIndexRoute,
 }

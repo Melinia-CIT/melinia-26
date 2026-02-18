@@ -24,18 +24,18 @@ export function Button({
 		<BaseButton
 			className={cx(
 				// Base styles
-				"inline-flex items-center justify-center font-medium transition-colors",
+				"inline-flex items-center justify-center font-medium transition-colors cursor-pointer",
 				"border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
 				"disabled:opacity-50 disabled:pointer-events-none",
 				"rounded-none", // Square corners
 
 				// Variants (whitish cream - blends with dark bg)
 				variant === "primary" &&
-					"bg-stone-50 text-black border-stone-50 hover:bg-white hover:border-white",
+				"bg-white text-black border-white hover:bg-neutral-200 hover:border-neutral-200",
 				variant === "secondary" &&
-					"bg-transparent text-neutral-300 border-neutral-700 hover:bg-neutral-900 hover:border-neutral-600",
+				"bg-transparent text-neutral-300 border-neutral-700 hover:bg-neutral-900 hover:border-neutral-600",
 				variant === "ghost" &&
-					"bg-transparent text-neutral-300 border-transparent hover:bg-neutral-900",
+				"bg-transparent text-neutral-300 border-transparent hover:bg-neutral-900",
 
 				// Sizes
 				size === "sm" && "h-8 px-3 text-sm",
