@@ -917,7 +917,6 @@ export async function updateEventPrize(
     return basePrizeSchema.parse(updatedPrize)
 }
 
-// TODO: return type issue
 export async function getEventRegistrations(
     eventId: string, from: number, limit: number
 ): Promise<Result<GetEventRegistration[], GetEventRegistrationsError>> {
