@@ -70,6 +70,8 @@ export async function checkInParticipant(
         }
         return Result.ok(baseCheckInSchema.parse(checkIn))
     } catch (err) {
+        console.error(err)
+
         if (err instanceof postgres.PostgresError) {
             const constraint = err?.constraint_name
             if (constraint) {
@@ -473,7 +475,6 @@ export async function checkInRoundParticipants(
 
         return Result.ok(baseRoundCheckInSchema.parse({ checked_in: checkIns }))
     } catch (err) {
-        console.error(err)
         if (err instanceof postgres.PostgresError) {
             const constraint = err?.constraint_name
             if (constraint) {
@@ -482,13 +483,19 @@ export async function checkInRoundParticipants(
                         return Result.err({
                             code: "user_not_found",
                             message: "One or more participants not found",
+					})
+                    case "event_round_checkins_user_id_round_id_key":
+                        return Result.err({
+                            code: "already_checked_in",
+                            message: "Participant already checked in to this round",
                         })
                 }
             }
         }
+
         return Result.err({
             code: "internal_error",
-            message: "Failed to check-in participants",
+            message: "Failed to check in to round",
         })
     }
 }

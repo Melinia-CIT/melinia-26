@@ -630,6 +630,8 @@ export type GetEventParticipantsError = EventOrRoundNotFound | InternalError;
 export type EventRegistration = z.infer<typeof eventRegistrationSchema>
 export type RoundPatch = z.infer<typeof roundPatchSchema>
 
+
+
 export type CheckIn = z.infer<typeof baseCheckInSchema>
 export type AlreadyCheckedIn = {
     code: "already_checked_in"
@@ -704,7 +706,6 @@ export type RoundCheckInError =
           message: string
       }
     | AlreadyCheckedIn
-    | InternalError
     | UserNotFound
     | EventNotFound
     | RoundNotFound

@@ -27,6 +27,7 @@ import {
 
     getEventWinners,
 } from "../db/queries"
+
 import { z } from "zod"
 
 export const ops = new Hono()
@@ -60,10 +61,6 @@ ops.post(
     }
 )
 
-/**
- * POST /api/ops/events/:eventId/rounds/:roundNo/check-in
- * Check in participant to a specific event round
- */
 // Schema for route params
 const roundResultsParamSchema = z.object({
     eventId: z.string(),
@@ -233,7 +230,7 @@ ops.post(
     authMiddleware,
     opsAuthMiddleware,
     zValidator("json", assignPrizesSchema),
-    async c => {
+    async (c) => {
         const awardedBy = c.get("user_id")
         const eventId = c.req.param("eventId")
         const { results } = c.req.valid("json")
