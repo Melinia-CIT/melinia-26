@@ -133,7 +133,8 @@ users.get(
     async (c) => {
         try {
             const userId = c.get("user_id");
-            const registeredEvents = await getUserRegisteredEvents(userId);
+            const userRole = c.get("role")
+            const registeredEvents = await getUserRegisteredEvents(userId, userRole);
             return c.json({
                 events: registeredEvents
             }, 200);
