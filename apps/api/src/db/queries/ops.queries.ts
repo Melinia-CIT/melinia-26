@@ -147,33 +147,33 @@ export async function scanUserForRound(
     try {
         const [event] = await sql`
             SELECT id FROM events WHERE id = ${eventId};
-        `;
+        `
         if (!event) {
             return Result.err({
                 code: "event_not_found",
-                message: "Event not found"
-            });
+                message: "Event not found",
+            })
         }
 
         const [user] = await sql`
             SELECT id FROM users WHERE id = ${userId} AND role = 'PARTICIPANT';
-        `;
+        `
         if (!user) {
             return Result.err({
                 code: "user_not_found",
-                message: "Participant not found"
-            });
+                message: "Participant not found",
+            })
         }
 
         const [round] = await sql`
             SELECT id FROM event_rounds 
             WHERE event_id = ${eventId} AND round_no = ${roundNo};
-        `;
+        `
         if (!round) {
             return Result.err({
                 code: "round_not_found",
-                message: "Round not found"
-            });
+                message: "Round not found",
+            })
         }
 
         if (roundNo === 1) {
@@ -195,13 +195,13 @@ export async function scanUserForRound(
                 AND (er.user_id = ${userId} OR er.team_id IN (
                     SELECT team_id FROM team_members WHERE user_id = ${userId}
                 ));
-            `;
+            `
 
             if (!registration) {
                 return Result.err({
                     code: "not_registered",
-                    message: "Participant is not registered for this event"
-                });
+                    message: "Participant is not registered for this event",
+                })
             }
 
             if (registration.team_id) {
@@ -217,42 +217,45 @@ export async function scanUserForRound(
                     JOIN profile p ON p.user_id = tm.user_id
                     JOIN users u ON u.id = tm.user_id
                     WHERE tm.team_id = ${registration.team_id};
-                `;
-                return Result.ok(baseScanResultSchema.parse({
-                    type: "TEAM",
-                    team_id: registration.team_id,
-                    team_name: registration.team_name,
-                    members: members.map(m => ({
-                        user_id: m.user_id,
-                        first_name: m.first_name,
-                        last_name: m.last_name,
-                        email: m.email,
-                        status: m.status,
-                        payment_status: m.payment_status
-                    }))
-                }));
+                `
+                return Result.ok(
+                    baseScanResultSchema.parse({
+                        type: "TEAM",
+                        team_id: registration.team_id,
+                        team_name: registration.team_name,
+                        members: members.map(m => ({
+                            user_id: m.user_id,
+                            first_name: m.first_name,
+                            last_name: m.last_name,
+                            email: m.email,
+                            status: m.status,
+                            payment_status: m.payment_status,
+                        })),
+                    })
+                )
             }
 
-            return Result.ok(baseScanResultSchema.parse({
-                type: "SOLO",
-                user_id: registration.user_id,
-                first_name: registration.first_name,
-                last_name: registration.last_name,
-                email: registration.email,
-                status: registration.status,
-                payment_status: registration.payment_status
-            }));
-
+            return Result.ok(
+                baseScanResultSchema.parse({
+                    type: "SOLO",
+                    user_id: registration.user_id,
+                    first_name: registration.first_name,
+                    last_name: registration.last_name,
+                    email: registration.email,
+                    status: registration.status,
+                    payment_status: registration.payment_status,
+                })
+            )
         } else {
             const [prevRound] = await sql`
                 SELECT id FROM event_rounds
                 WHERE event_id = ${eventId} AND round_no = ${roundNo - 1};
-            `;
+            `
             if (!prevRound) {
                 return Result.err({
                     code: "round_not_found",
-                    message: "Previous round not found"
-                });
+                    message: "Previous round not found",
+                })
             }
 
             const [result] = await sql`
@@ -278,13 +281,13 @@ export async function scanUserForRound(
                         SELECT team_id FROM team_members WHERE user_id = ${userId}
                     )
                 );
-            `;
+            `
 
             if (!result) {
                 return Result.err({
                     code: "not_qualified",
-                    message: "Participant did not qualify in the previous round"
-                });
+                    message: "Participant did not qualify in the previous round",
+                })
             }
 
             if (result.team_id) {
@@ -300,39 +303,42 @@ export async function scanUserForRound(
                     JOIN profile p ON p.user_id = tm.user_id
                     JOIN users u ON u.id = tm.user_id
                     WHERE tm.team_id = ${result.team_id};
-                `;
-                return Result.ok(baseScanResultSchema.parse({
-                    type: "TEAM",
-                    team_id: result.team_id,
-                    team_name: result.team_name,
-                    members: members.map(m => ({
-                        user_id: m.user_id,
-                        first_name: m.first_name,
-                        last_name: m.last_name,
-                        email: m.email,
-                        status: m.status,
-                        payment_status: m.payment_status
-                    }))
-                }));
+                `
+                return Result.ok(
+                    baseScanResultSchema.parse({
+                        type: "TEAM",
+                        team_id: result.team_id,
+                        team_name: result.team_name,
+                        members: members.map(m => ({
+                            user_id: m.user_id,
+                            first_name: m.first_name,
+                            last_name: m.last_name,
+                            email: m.email,
+                            status: m.status,
+                            payment_status: m.payment_status,
+                        })),
+                    })
+                )
             }
 
-            return Result.ok(baseScanResultSchema.parse({
-                type: "SOLO",
-                user_id: result.user_id,
-                first_name: result.first_name,
-                last_name: result.last_name,
-                email: result.email,
-                status: result.status,
-                payment_status: result.payment_status
-            }));
+            return Result.ok(
+                baseScanResultSchema.parse({
+                    type: "SOLO",
+                    user_id: result.user_id,
+                    first_name: result.first_name,
+                    last_name: result.last_name,
+                    email: result.email,
+                    status: result.status,
+                    payment_status: result.payment_status,
+                })
+            )
         }
-
     } catch (err) {
         console.error(err)
         return Result.err({
             code: "internal_error",
-            message: "Failed to scan participant"
-        });
+            message: "Failed to scan participant",
+        })
     }
 }
 
@@ -347,12 +353,12 @@ export async function checkInRoundParticipants(
         const [round] = await sql`
             SELECT id FROM event_rounds
             WHERE event_id = ${eventId} AND round_no = ${roundNo};
-        `;
+        `
         if (!round) {
             return Result.err({
                 code: "round_not_found",
-                message: "Round not found"
-            });
+                message: "Round not found",
+            })
         }
 
         // Check payment status — all users must not be UNPAID
@@ -360,28 +366,27 @@ export async function checkInRoundParticipants(
             SELECT id FROM users
             WHERE id = ANY(${userIds}::text[])
             AND payment_status = 'UNPAID';
-        `;
+        `
         if (unpaidUsers.length > 0) {
-            const ids = unpaidUsers.map(u => u.id).join(", ");
+            const ids = unpaidUsers.map(u => u.id).join(", ")
             return Result.err({
                 code: "payment_pending",
-                message: `Payment pending for participants: ${ids}`
-            });
+                message: `Payment pending for participants: ${ids}`,
+            })
         }
 
         const suspendUsers = await sql`
             SELECT id FROM users
             WHERE id = ANY(${userIds}::text[])
             AND (status = 'SUSPENDED' OR status = 'INACTIVE');
-        `;
+        `
         if (suspendUsers.length > 0) {
-            const ids = suspendUsers.map(u => u.id).join(",");
+            const ids = suspendUsers.map(u => u.id).join(",")
             return Result.err({
                 code: "user_not_found",
-                message: `Users are Suspened or Inactive: ${ids}`
-            });
+                message: `Users are Suspened or Inactive: ${ids}`,
+            })
         }
-
 
         if (roundNo === 1) {
             // All users must be registered for the event
@@ -392,27 +397,26 @@ export async function checkInRoundParticipants(
                     er.user_id = ANY(${userIds}::text[])
                     OR er.team_id = ${teamId}
                 );
-            `;
-            const registeredIds = registeredUsers.map(r => r.user_id);
-            const notRegistered = userIds.filter(id => !registeredIds.includes(id));
+            `
+            const registeredIds = registeredUsers.map(r => r.user_id)
+            const notRegistered = userIds.filter(id => !registeredIds.includes(id))
             if (notRegistered.length > 0) {
                 return Result.err({
                     code: "not_registered",
-                    message: `Participants not registered: ${notRegistered.join(", ")}`
-                });
+                    message: `Participants not registered: ${notRegistered.join(", ")}`,
+                })
             }
         } else {
-
             // Round 2+: All users must be QUALIFIED in the previous round
             const [prevRound] = await sql`
                 SELECT id FROM event_rounds
                 WHERE event_id = ${eventId} AND round_no = ${roundNo - 1};
-            `;
+            `
             if (!prevRound) {
                 return Result.err({
                     code: "round_not_found",
-                    message: "Previous round not found"
-                });
+                    message: "Previous round not found",
+                })
             }
 
             const qualifiedUsers = await sql`
@@ -420,14 +424,14 @@ export async function checkInRoundParticipants(
                 WHERE round_id = ${prevRound.id}
                 AND status = 'QUALIFIED'
                 AND user_id = ANY(${userIds}::text[]);
-            `;
-            const qualifiedIds = qualifiedUsers.map(r => r.user_id);
-            const notQualified = userIds.filter(id => !qualifiedIds.includes(id));
+            `
+            const qualifiedIds = qualifiedUsers.map(r => r.user_id)
+            const notQualified = userIds.filter(id => !qualifiedIds.includes(id))
             if (notQualified.length > 0) {
                 return Result.err({
                     code: "not_qualified",
-                    message: `Participants not qualified from previous round: ${notQualified.join(", ")}`
-                });
+                    message: `Participants not qualified from previous round: ${notQualified.join(", ")}`,
+                })
             }
         }
 
@@ -435,13 +439,13 @@ export async function checkInRoundParticipants(
         const alreadyCheckedIn = await sql`
             SELECT user_id FROM event_round_checkins
             WHERE round_id = ${round.id}
-            AND user_id = ANY(${userIds}::text[]);`;
+            AND user_id = ANY(${userIds}::text[]);`
         if (alreadyCheckedIn.length > 0) {
-            const ids = alreadyCheckedIn.map(r => r.user_id).join(", ");
+            const ids = alreadyCheckedIn.map(r => r.user_id).join(", ")
             return Result.err({
                 code: "already_checked_in",
-                message: `Participants already checked in: ${ids}`
-            });
+                message: `Participants already checked in: ${ids}`,
+            })
         }
 
         const checkIns = await sql`
@@ -458,35 +462,34 @@ export async function checkInRoundParticipants(
                 ${checkInBy}
             FROM unnest(${userIds}::text[]) AS u(user_id)
             RETURNING *;
-        `;
+        `
 
         if (!checkIns.length) {
             return Result.err({
                 code: "internal_error",
-                message: "Failed to check-in participants"
-            });
+                message: "Failed to check-in participants",
+            })
         }
 
-        return Result.ok(baseRoundCheckInSchema.parse({ checked_in: checkIns }));
-
+        return Result.ok(baseRoundCheckInSchema.parse({ checked_in: checkIns }))
     } catch (err) {
         console.error(err)
         if (err instanceof postgres.PostgresError) {
-            const constraint = err?.constraint_name;
+            const constraint = err?.constraint_name
             if (constraint) {
                 switch (constraint) {
                     case "event_round_checkins_user_id_fkey":
                         return Result.err({
                             code: "user_not_found",
-                            message: "One or more participants not found"
-                        });
+                            message: "One or more participants not found",
+                        })
                 }
             }
         }
         return Result.err({
             code: "internal_error",
-            message: "Failed to check-in participants"
-        });
+            message: "Failed to check-in participants",
+        })
     }
 }
 
@@ -1109,6 +1112,47 @@ export async function assignEventPrizes(
         return Result.err({
             code: "internal_error",
             message: "Failed to assign event prizes",
+        })
+    }
+}
+
+export async function getEventWinners(eventId: string) {
+    try {
+        const [event] = await sql`
+            SELECT id FROM events WHERE id = ${eventId}
+        `
+
+        if (!event) {
+            return Result.err({
+                code: "event_not_found",
+                message: `Event ${eventId} not found`,
+            })
+        }
+
+        const winners = await sql`
+            SELECT 
+                er.id,
+                er.event_id,
+                er.user_id,
+                er.team_id,
+                er.prize_id,
+                er.points,
+                er.awarded_at,
+                er.awarded_by,
+                ep.position as prize_position,
+                ep.reward_value
+            FROM event_results er
+            LEFT JOIN event_prizes ep ON er.prize_id = ep.id
+            WHERE er.event_id = ${eventId}
+            ORDER BY ep.position ASC NULLS LAST
+        `
+
+        return Result.ok(winners)
+    } catch (error) {
+        console.error("Error in getEventWinners:", error)
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to fetch event winners",
         })
     }
 }
