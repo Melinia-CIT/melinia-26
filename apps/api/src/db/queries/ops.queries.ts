@@ -84,6 +84,7 @@ export async function getCheckIns(from: number, limit: number): Promise<Result<G
                 c.name AS college,
                 d.name AS degree,
                 u.email,
+                u.ph_no,
                 ci.checkedin_at,
                 ci.checkedin_by
             FROM check_ins ci
