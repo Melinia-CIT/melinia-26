@@ -438,91 +438,115 @@ export async function deleteEvent(eventId: string): Promise<Event> {
     return baseEventSchema.parse(deletedEvent)
 }
 
-export async function getUserRegisteredEvents(userId: string): Promise<UserRegisteredEvents> {
-    const regEvents = await sql`
-        SELECT
-            e.id,
-            e.name,
-            e.description,
-            e.participation_type,
-            e.event_type,
-            e.max_allowed,
-            e.min_team_size,
-            e.max_team_size,
-            e.venue,
-            e.registration_start,
-            e.registration_end,
-            e.start_time,
-            e.end_time,
-            e.created_by,
-            e.created_at,
-            e.updated_at,
+export async function getUserRegisteredEvents(userId: string, userRole: string): Promise<UserRegisteredEvents> {
+    if (userRole === 'PARTICIPANT') {
+        const regEvents = await sql`
+            SELECT
+                e.id,
+                e.name,
+                e.description,
+                e.participation_type,
+                e.event_type,
+                e.max_allowed,
+                e.min_team_size,
+                e.max_team_size,
+                e.venue,
+                e.registration_start,
+                e.registration_end,
+                e.start_time,
+                e.end_time,
+                e.created_by,
+                e.created_at,
+                e.updated_at,
 
-            /* registration object */
-            CASE
-                WHEN er.team_id IS NULL THEN
-                    jsonb_build_object(
-                        'mode', 'solo',
-                        'registered_at', er.registered_at
-                    )
-                ELSE
-                    jsonb_build_object(
-                        'mode', 'team',
-                        'registered_at', er.registered_at,
-                        'team', jsonb_build_object(
-                            'id', t.id,
-                            'name', t.name
+                /* registration object */
+                CASE
+                    WHEN er.team_id IS NULL THEN
+                        jsonb_build_object(
+                            'mode', 'solo',
+                            'registered_at', er.registered_at
                         )
-                    )
-            END AS registration,
+                    ELSE
+                        jsonb_build_object(
+                            'mode', 'team',
+                            'registered_at', er.registered_at,
+                            'team', jsonb_build_object(
+                                'id', t.id,
+                                'name', t.name
+                            )
+                        )
+                END AS registration,
 
-            /* rounds array */
-            COALESCE(
-                jsonb_agg(
-                    DISTINCT jsonb_build_object(
-                        'id', r.id,
-                        'round_name', r.round_name,
-                        'start_time', r.start_time,
-                        'end_time', r.end_time,
-                        'created_at', r.created_at,
-                        'updated_at', r.updated_at
-                    )
-                ) FILTER (WHERE r.id IS NOT NULL),
-                '[]'::jsonb
-            ) AS rounds
+                /* rounds array */
+                COALESCE(
+                    jsonb_agg(
+                        DISTINCT jsonb_build_object(
+                            'id', r.id,
+                            'round_name', r.round_name,
+                            'start_time', r.start_time,
+                            'end_time', r.end_time,
+                            'created_at', r.created_at,
+                            'updated_at', r.updated_at
+                        )
+                    ) FILTER (WHERE r.id IS NOT NULL),
+                    '[]'::jsonb
+                ) AS rounds
 
-        FROM event_registrations er
-        JOIN events e ON e.id = er.event_id
-        LEFT JOIN teams t ON t.id = er.team_id
-        LEFT JOIN event_rounds r ON r.event_id = e.id
+            FROM event_registrations er
+            JOIN events e ON e.id = er.event_id
+            LEFT JOIN teams t ON t.id = er.team_id
+            LEFT JOIN event_rounds r ON r.event_id = e.id
 
-        WHERE er.user_id = ${userId}
+            WHERE er.user_id = ${userId}
 
-        GROUP BY
-            e.id,
-            er.id,
-            t.id
+            GROUP BY
+                e.id,
+                er.id,
+                t.id
 
-        ORDER BY 
-            CASE e.event_type
-                WHEN 'flagship' THEN 1
-                WHEN 'technical' THEN 2
-                WHEN 'non-technical' THEN 3
-                ELSE 4
-            END,
-            e.start_time,
-            e.name;
-    `
-    const rounds = await getRounds(regEvents.map(regEvent => regEvent.id))
+            ORDER BY 
+                CASE e.event_type
+                    WHEN 'flagship' THEN 1
+                    WHEN 'technical' THEN 2
+                    WHEN 'non-technical' THEN 3
+                    ELSE 4
+                END,
+                e.start_time,
+                e.name;
+        `
+        const rounds = await getRounds(regEvents.map(regEvent => regEvent.id))
 
-    return userRegisteredEventsSchema.parse(
-        regEvents.map(event => {
-            return {
-                ...event,
-                rounds: rounds.filter(round => round.event_id == event.id),
-            }
-        })
-    )
+        return userRegisteredEventsSchema.parse(
+            regEvents.map(event => {
+                return {
+                    ...event,
+                    rounds: rounds.filter(round => round.event_id == event.id),
+                }
+            })
+        )
+    } else {
+        const regEvents = await sql`
+            SELECT 
+                e.id,
+                e.name,
+                e.description,
+                e.participation_type,
+                e.event_type,
+                e.max_allowed,
+                e.min_team_size,
+                e.max_team_size,
+                e.venue,
+                e.registration_start,
+                e.registration_end,
+                e.start_time,
+                e.end_time
+            FROM events e
+            JOIN event_crews ec ON ec.event_id = e.id
+            WHERE ec.user_id = ${userId};
+        `
+
+        return userRegisteredEventsSchema.parse(regEvents);
+    }
 }
 
 export async function checkEventExists(eventId: string): Promise<boolean> {
@@ -943,6 +967,8 @@ export async function getEventRegistrations(
                     er.registered_at,
                     p.first_name,
                     p.last_name,
+                    u.ph_no,
+                    u.email,
                     c.name AS college,
                     d.name AS degree,
                     t.name AS team_name
@@ -962,12 +988,16 @@ export async function getEventRegistrations(
                 NULL AS last_name,
                 NULL AS college,
                 NULL AS degree,
+                NULL AS ph_no,
+                NULL AS email,
                 json_agg(json_build_object(
                     'participant_id', user_id,
                     'first_name',     first_name,
                     'last_name',      last_name,
                     'college',        college,
-                    'degree',         degree
+                    'degree',         degree,
+                    'ph_no',          ph_no,
+                    'email',          email
                 )) AS members,
                 MIN(registered_at) AS registered_at
             FROM base
@@ -984,6 +1014,8 @@ export async function getEventRegistrations(
                 last_name,
                 college,
                 degree,
+                ph_no,
+                email,
                 NULL AS members,
                 registered_at
             FROM base
@@ -1004,6 +1036,8 @@ export async function getEventRegistrations(
                     college: row.college,
                     degree: row.degree,
                     registered_at: row.registered_at,
+                    ph_no: row.ph_no,
+                    email: row.email
                 });
             } else {
                 return getEventRegistrationSchema.parse({
@@ -1075,7 +1109,9 @@ export async function getEventCheckIns(
                     p.last_name,
                     c.name AS college,
                     d.name AS degree,
-                    t.name AS team_name
+                    t.name AS team_name,
+                    u.ph_no,
+                    u.email
                 FROM event_round_checkins erc
                 JOIN users u        ON u.id = erc.user_id
                 JOIN profile p      ON p.user_id = u.id
@@ -1085,7 +1121,7 @@ export async function getEventCheckIns(
                 LEFT JOIN teams t   ON t.id = erc.team_id
                 WHERE
                     r.event_id = ${eventId} AND
-                    erc.round_id = ${roundNo}
+                    r.round_no = ${roundNo}
             )
             SELECT
                 team_id AS id,
@@ -1095,12 +1131,16 @@ export async function getEventCheckIns(
                 NULL AS last_name,
                 NULL AS college,
                 NULL AS degree,
+                NULL AS ph_no,
+                NULL AS email,
                 json_agg(json_build_object(
                     'participant_id', user_id,
                     'first_name',     first_name,
                     'last_name',      last_name,
                     'college',        college,
-                    'degree',         degree
+                    'degree',         degree,
+                    'ph_no',          ph_no,
+                    'email',          email
                 )) AS members,
                 MIN(checkedin_at) AS checkedin_at,
                 MIN(checkedin_by) AS checkedin_by
@@ -1116,6 +1156,8 @@ export async function getEventCheckIns(
                 last_name,
                 college,
                 degree,
+                ph_no,
+                email,
                 NULL AS members,
                 checkedin_at,
                 checkedin_by
@@ -1135,6 +1177,8 @@ export async function getEventCheckIns(
                     last_name: row.last_name,
                     college: row.college,
                     degree: row.degree,
+                    ph_no: row.ph_no,
+                    email: row.email,
                     checkedin_at: row.checkedin_at,
                     checkedin_by: row.checkedin_by
                 });
@@ -1198,21 +1242,51 @@ export async function getEventParticipants(
             return Result.err({ code: "event_or_round_not_found", message: "Previous round not found" });
         }
 
+
         const PARTICIPANT_UNION = (from: number, limit: number) => sql`
-            SELECT team_id AS id, 'TEAM' AS type, team_name AS name,
-                NULL AS first_name, NULL AS last_name, NULL AS college, NULL AS degree,
-                json_agg(json_build_object(
-                    'participant_id', user_id,
-                    'first_name', first_name, 'last_name', last_name,
-                    'college', college, 'degree', degree
-                )) AS members,
+            SELECT 
+                team_id AS id, 
+                'TEAM' AS type, 
+                team_name AS name,
+                NULL AS first_name, 
+                NULL AS last_name, 
+                NULL AS college, 
+                NULL AS degree, 
+                NULL AS ph_no, 
+                NULL AS email,
+                json_agg(
+                    json_build_object(
+                        'participant_id', user_id,
+                        'first_name', first_name,
+                        'last_name', last_name,
+                        'college', college,
+                        'degree', degree,
+                        'ph_no', ph_no,
+                        'email', email
+                    )
+                ) AS members,
                 MIN(sort_at) AS sort_at
-            FROM base WHERE team_id IS NOT NULL
+            FROM base 
+            WHERE team_id IS NOT NULL
             GROUP BY team_id, team_name
+
             UNION ALL
-            SELECT user_id AS id, 'SOLO' AS type, NULL AS name,
-                first_name, last_name, college, degree, NULL AS members, sort_at
-            FROM base WHERE team_id IS NULL
+
+            SELECT 
+                user_id AS id, 
+                'SOLO' AS type, 
+                NULL AS name,
+                first_name, 
+                last_name, 
+                college, 
+                degree, 
+                ph_no, 
+                email, 
+                NULL AS members, 
+                sort_at
+            FROM base 
+            WHERE team_id IS NULL
+
             ORDER BY sort_at DESC
             OFFSET ${from} LIMIT ${limit}
         `;
@@ -1226,6 +1300,8 @@ export async function getEventParticipants(
                     last_name: row.last_name,
                     college: row.college,
                     degree: row.degree,
+                    ph_no: row.ph_no,
+                    email: row.email,
                     registered_at: row.sort_at,
                 });
             }
@@ -1241,9 +1317,17 @@ export async function getEventParticipants(
         if (roundNo === 1) {
             const rows = await sql`
                 WITH base AS (
-                    SELECT er.team_id, er.user_id, er.registered_at AS sort_at,
-                           p.first_name, p.last_name,
-                           c.name AS college, d.name AS degree, t.name AS team_name
+                    SELECT
+                        er.team_id,
+                        er.user_id,
+                        er.registered_at AS sort_at,
+                        p.first_name,
+                        p.last_name,
+                        c.name AS college,
+                        d.name AS degree,
+                        t.name AS team_name, 
+                        u.ph_no,
+                        u.email
                     FROM event_registrations er
                     JOIN users u      ON u.id = er.user_id
                     JOIN profile p    ON p.user_id = u.id
@@ -1261,7 +1345,7 @@ export async function getEventParticipants(
             WITH base AS (
                 SELECT rr.team_id, rr.user_id, rr.eval_at AS sort_at,
                        p.first_name, p.last_name,
-                       c.name AS college, d.name AS degree, t.name AS team_name
+                       c.name AS college, d.name AS degree, t.name AS team_name, u.ph_no, u.email
                 FROM round_results rr
                 JOIN users u      ON u.id = rr.user_id
                 JOIN profile p    ON p.user_id = u.id

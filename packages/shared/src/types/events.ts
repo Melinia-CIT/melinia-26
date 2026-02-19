@@ -391,6 +391,14 @@ export const userRegisteredEventsSchema = z
                         })
                 )
             })
+            .or(
+                baseEventSchema
+                    .omit({
+                        updated_at: true,
+                        created_at: true,
+                        created_by: true
+                    })
+            )
     )
     .default([])
 
@@ -411,6 +419,8 @@ export const getEventRegistrationSchema = z
                     last_name: z.string(),
                     college: z.string(),
                     degree: z.string(),
+                    ph_no: z.string(),
+                    email: z.email()
                 })
             ),
             registered_at: z.coerce.date()
@@ -422,6 +432,8 @@ export const getEventRegistrationSchema = z
             participant_id: z.string(),
             college: z.string(),
             degree: z.string(),
+            ph_no: z.string(),
+            email: z.email(),
             registered_at: z.coerce.date()
         })
     ])
@@ -474,6 +486,7 @@ export const getCheckInSchema = z
         college: z.string(),
         degree: z.string(),
         email: z.email(),
+        ph_no: z.string(),
         checkedin_at: z.coerce.date(),
         checkedin_by: z.string()
     })
@@ -512,6 +525,8 @@ export const getEventCheckInSchema = z
                     last_name: z.string(),
                     college: z.string(),
                     degree: z.string(),
+                    ph_no: z.string(),
+                    email: z.email()
                 })
             ),
             checkedin_at: z.coerce.date(),
@@ -524,12 +539,14 @@ export const getEventCheckInSchema = z
             participant_id: z.string(),
             college: z.string(),
             degree: z.string(),
+            ph_no: z.string(),
+            email: z.email(),
             checkedin_at: z.coerce.date(),
             checkedin_by: z.string(),
         }),
     ]);
 
-export const getEventParticipantSchema = z 
+export const getEventParticipantSchema = z
     .discriminatedUnion("type", [
         z.object({
             type: z.literal("TEAM"),
@@ -541,6 +558,8 @@ export const getEventParticipantSchema = z
                     last_name: z.string(),
                     college: z.string(),
                     degree: z.string(),
+                    ph_no: z.string(),
+                    email: z.email()
                 })
             ),
             registered_at: z.coerce.date(),
@@ -552,6 +571,8 @@ export const getEventParticipantSchema = z
             participant_id: z.string(),
             college: z.string(),
             degree: z.string(),
+            ph_no: z.string(),
+            email: z.email(),
             registered_at: z.coerce.date(),
         }),
     ]);

@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { check, z } from "zod"
+import { z } from "zod"
 import {
     createEventSchema,
     EventParamSchema,
@@ -11,7 +11,6 @@ import {
     basePrizeSchema,
     paginationSchema,
     getEventCheckInsParamSchema,
-    getEventParticipantsSchema,
     getEventParticipantsParamSchema,
 } from "@melinia/shared"
 import sql from "../db/connection"
@@ -41,10 +40,8 @@ import {
     getEventRegCount,
     getEventRegistrations,
     getEventCheckIns,
-    getEventCheckInCount,
     getEventCheckInsCount,
     getEventParticipants,
-    getEventParticipantCount,
     getEventParticipantsCount,
 } from "../db/queries"
 import {
