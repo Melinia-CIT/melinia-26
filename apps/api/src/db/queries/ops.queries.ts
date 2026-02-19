@@ -263,6 +263,7 @@ export async function scanUserForRound(
         }
 
     } catch (err) {
+        console.error(err)
         return Result.err({
             code: "internal_error",
             message: "Failed to scan participant"
@@ -302,6 +303,20 @@ export async function checkInRoundParticipants(
                 message: `Payment pending for participants: ${ids}`
             });
         }
+
+        const suspendUsers = await sql`
+            SELECT id FROM users
+            WHERE id = ANY(${userIds}::text[])
+            AND (status = 'SUSPENDED' OR status = 'INACTIVE');
+        `;
+        if (suspendUsers.length > 0) {
+            const ids = suspendUsers.map(u => u.id).join(",");
+            return Result.err({
+                code: "user_not_found",
+                message: `Users are Suspened or Inactive: ${ids}`
+            });
+        }
+
 
         if (roundNo === 1) {
             // All users must be registered for the event
@@ -390,6 +405,7 @@ export async function checkInRoundParticipants(
         return Result.ok(baseRoundCheckInSchema.parse({ checked_in: checkIns }));
 
     } catch (err) {
+        console.error(err)
         if (err instanceof postgres.PostgresError) {
             const constraint = err?.constraint_name;
             if (constraint) {

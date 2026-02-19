@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound,  } from "./users";
+import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError,  } from "./users";
 import type { PaymentPending } from "./payments";
 import { memberSchema } from "./teams";
 
@@ -549,6 +549,8 @@ export type RoundCheckInError =
     | NotQualified
     | AlreadyCheckedInRound
     | PaymentPending
+    | SuspendError
+    | ProfileNotCompleted
     | InternalError;
 
 export type ScanError =
@@ -558,4 +560,6 @@ export type ScanError =
     | NotRegistered
     | NotQualified
     | PaymentPending
+    | SuspendError
+    | ProfileNotCompleted
     | InternalError;
