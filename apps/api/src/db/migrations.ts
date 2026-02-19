@@ -32,7 +32,7 @@ async function runMigration(
 
         console.log(`Ok "${name}"`)
     })
-    return;
+    return
 }
 
 await runMigration("create gen_id func", async tx => {
@@ -792,7 +792,7 @@ await runMigration("add indexes to operations tables", async tx => {
     `
 })
 
-await runMigration("add user status for controlling accounts", async (tx) => {
+await runMigration("add user status for controlling accounts", async tx => {
     await tx`
         DO $$
         BEGIN
@@ -804,18 +804,25 @@ await runMigration("add user status for controlling accounts", async (tx) => {
         EXCEPTION
             WHEN duplicate_object THEN NULL;
         END $$;
-    `;
+    `
 
     await tx`
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS status user_status NOT NULL DEFAULT 'INACTIVE';
-    `;
+    `
 
     await tx`
         UPDATE users
         SET status = 'ACTIVE'
         WHERE payment_status IN ('PAID', 'EXEMPTED');
-    `;
-});
+    `
+})
 
-await sql.end();
+await runMigration("add points column to event_results", async tx => {
+    await tx`
+        ALTER TABLE event_results
+        ADD COLUMN IF NOT EXISTS points INTEGER NOT NULL DEFAULT 0 CHECK (points >= 0);
+    `
+})
+
+await sql.end()
