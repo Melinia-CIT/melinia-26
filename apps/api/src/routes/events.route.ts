@@ -12,6 +12,7 @@ import {
     paginationSchema,
     getEventCheckInsParamSchema,
     getEventParticipantsParamSchema,
+    assignVolunteersSchema
 } from "@melinia/shared"
 import sql from "../db/connection"
 import {
@@ -43,12 +44,14 @@ import {
     getEventCheckInsCount,
     getEventParticipants,
     getEventParticipantsCount,
+    assignVolunteersToEvent
 } from "../db/queries"
 import {
     authMiddleware,
     adminOnlyMiddleware,
     participantOnlyMiddleware,
     opsAuthMiddleware,
+    adminAndOrganizerMiddleware,
 } from "../middleware/auth.middleware"
 import { HTTPException } from "hono/http-exception"
 import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
@@ -98,6 +101,29 @@ events.get("/:id/status", authMiddleware, zValidator("param", EventParamSchema),
             throw err
         }
         throw new HTTPException(500, { message: "Failed to fetch event registration status" })
+    }
+})
+
+events.post("/:id/volunteer", authMiddleware, adminAndOrganizerMiddleware, zValidator("param", EventParamSchema), zValidator("json",assignVolunteersSchema), async c => {
+    try {
+        const { id } = c.req.valid("param")
+        const {volunteerIds}=c.req.valid("json")
+        const userId = c.get("user_id")
+
+        await assignVolunteersToEvent(id, volunteerIds, userId);
+
+        return c.json({
+            success:true,
+            event_id:id,
+            volunteers: volunteerIds,
+            message:`Volunteers assigned to event ${id}`
+        },201)
+    } catch (err) {
+        console.error(err)
+        if (err instanceof HTTPException) {
+            throw err
+        }
+        throw new HTTPException(500, { message: "Failed to assign volunteers" })
     }
 })
 
@@ -655,6 +681,7 @@ events.get(
         }, 200)
     }
 )
+
 
 
 export default events

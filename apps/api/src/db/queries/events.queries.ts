@@ -324,6 +324,109 @@ export async function getOrganizers(eventIds: string[]): Promise<GetCrew[]> {
     return organizers.map(og => getCrewSchema.parse(og))
 }
 
+export async function getVolunteers(eventIds: string[]): Promise<GetCrew[]> {
+    if (eventIds.length === 0) {
+        return []
+    }
+
+    const volunteers = await sql`
+        SELECT
+            ec.event_id,
+            ec.user_id,
+            p.first_name,
+            p.last_name,
+            u.ph_no,
+            ec.assigned_by,
+            ec.created_at
+        FROM event_crews ec
+        JOIN users u ON u.id = ec.user_id
+        JOIN profile p ON p.user_id = u.id
+        WHERE ec.event_id = ANY(${eventIds}) AND u.role = 'VOLUNTEER'
+        ORDER BY ec.event_id;
+    `
+
+    return volunteers.map(og => getCrewSchema.parse(og))
+}
+
+export async function assignVolunteersToEvent(
+    eventId: string,
+    volunteerIds: string[],
+    assignedBy: string,
+    tx = sql
+): Promise<Crew[]> {
+
+    const [event] = await tx`
+        SELECT 1 FROM events WHERE id = ${eventId};
+    `
+    if (!event) {
+        throw new HTTPException(404, { message: "Event not found" })
+    }
+
+    const [userRole] = await tx`
+    SELECT role
+    FROM users
+    WHERE id = ${assignedBy};
+`
+
+    if (!userRole) {
+        throw new HTTPException(404, { message: "Assigning user not found" })
+    }
+
+    if (userRole.role !== "ADMIN") {
+        const [organizerCheck] = await tx`
+            SELECT 1
+            FROM event_crews ec
+            WHERE ec.event_id = ${eventId}
+            AND ec.user_id = ${assignedBy};
+        `
+
+        if (!organizerCheck) {
+            throw new HTTPException(403, {
+                message: "Only admin or organizer of this event can assign volunteers"
+            })
+        }
+    }
+
+    if (!volunteerIds || volunteerIds.length === 0) {
+        throw new HTTPException(400, { message: "No volunteers provided" })
+    }
+
+    const users = await tx`
+        SELECT id, role
+        FROM users
+        WHERE id = ANY(${volunteerIds}::text[]);
+    `
+
+    const foundIds = users.map(u => u.id)
+
+    const notFoundIds = volunteerIds.filter(id => !foundIds.includes(id))
+    if (notFoundIds.length > 0) {
+        throw new HTTPException(400, {
+            message: `These user IDs do not exist: ${notFoundIds.join(", ")}`
+        })
+    }
+
+    const invalidRoleIds = users
+        .filter(u => u.role !== "VOLUNTEER")
+        .map(u => u.id)
+
+    if (invalidRoleIds.length > 0) {
+        throw new HTTPException(400, {
+            message: `These users are not volunteers: ${invalidRoleIds.join(", ")}`
+        })
+    }
+
+    const crews = await tx`
+        INSERT INTO event_crews (event_id, user_id, assigned_by)
+        VALUES ${sql(
+            volunteerIds.map(id => [eventId, id, assignedBy])
+        )}
+        RETURNING *;
+    `
+
+    return crews.map(crew => baseCrewSchema.parse(crew))
+}
+
 export async function getEvents(): Promise<GetVerboseEvent[]> {
     const events = await listEvents()
 
@@ -393,10 +496,11 @@ export async function getEventById(eventId: string): Promise<GetVerboseEvent> {
         throw new HTTPException(404, { message: "Event not found" })
     }
 
-    const [prizes, rounds, organizers] = await Promise.all([
-        await getPrizes([eventId]),
-        await getRounds([eventId]),
-        await getOrganizers([eventId]),
+    const [prizes, rounds, organizers, volunteers] = await Promise.all([
+        getPrizes([eventId]),
+        getRounds([eventId]),
+        getOrganizers([eventId]),
+        getVolunteers([eventId])
     ])
 
     const roundIds = rounds.map(rnd => rnd.id)
@@ -418,6 +522,7 @@ export async function getEventById(eventId: string): Promise<GetVerboseEvent> {
         prizes: prizes.filter(prize => prize.event_id === eventId),
         crew: {
             organizers: organizers.filter(og => og.event_id === eventId),
+            volunteers: volunteers.filter(og => og.event_id === eventId)
         },
     }
 

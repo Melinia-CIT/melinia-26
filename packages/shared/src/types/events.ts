@@ -291,6 +291,46 @@ export const verboseEventSchema = baseEventSchema.extend({
             .array(
                 baseCrewSchema.omit({
                     event_id: true,
+    })
+
+export const EventParamSchema = z
+    .object({
+        id: z.string()
+    })
+
+export const assignVolunteersSchema = z.object({
+    volunteer_ids: z.array(z.string()).min(1, "At least one volunteer ID required")
+})
+
+export const getVerboseEventResponseSchema =
+    verboseEventSchema
+        .extend({
+            crew: z
+                .object({
+                    organizers: z.array(
+                        baseCrewSchema
+                            .omit({
+                                event_id: true,
+                                assigned_by: true
+                            })
+                            .extend({
+                                first_name: z.string(),
+                                last_name: z.string(),
+                                ph_no: z.string()
+                            })
+                    ),
+                    volunteers: z.array(
+                        baseCrewSchema
+                            .omit({
+                                event_id: true,
+                                assigned_by: true
+                            })
+                            .extend({
+                                first_name: z.string(),
+                                last_name: z.string(),
+                                ph_no: z.string()
+                            })
+                    )
                 })
             )
             .optional()
