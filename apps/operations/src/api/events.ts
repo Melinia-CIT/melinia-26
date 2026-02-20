@@ -77,6 +77,34 @@ export interface EventDetail {
     rounds: Round[];
 }
 
+export interface RoundParticipantMember {
+    user_id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    status: string;
+    payment_status: string;
+}
+
+export interface RoundParticipantTeam {
+    type: "TEAM";
+    team_id: string;
+    team_name: string;
+    members: RoundParticipantMember[];
+}
+
+export interface RoundParticipantSolo {
+    type: "SOLO";
+    user_id: string;
+}
+
+export type RoundParticipant = RoundParticipantSolo | RoundParticipantTeam;
+
+export interface CheckInRoundResponse {
+    user_ids: string[];
+    team_id: string | null;
+}
+
 // ── API factory ────────────────────────────────────────────────────────────
 
 export function createEventsApi(http: AxiosInstance) {
@@ -98,6 +126,32 @@ export function createEventsApi(http: AxiosInstance) {
                         limit: params.limit ?? 10,
                     },
                 },
+            );
+            return data;
+        },
+
+        async getRoundParticipant(
+            eventId: string,
+            roundNo: number,
+            userId: string,
+        ): Promise<RoundParticipant> {
+            const { data } = await http.get<RoundParticipant>(
+                `/ops/events/${eventId}/round/${roundNo}/participants`,
+                {
+                    params: { user_id: userId },
+                },
+            );
+            return data;
+        },
+
+        async checkInRound(
+            eventId: string,
+            roundNo: number,
+            userId: string,
+        ): Promise<CheckInRoundResponse> {
+            const { data } = await http.post<CheckInRoundResponse>(
+                `/ops/events/${eventId}/round/${roundNo}/check-in`,
+                { user_id: userId } // send user_id in body if required, or is it via query params? Usually POST uses body. Wait, the curl snippet user provided earlier had body.
             );
             return data;
         },

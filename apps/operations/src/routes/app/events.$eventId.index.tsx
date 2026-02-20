@@ -11,7 +11,7 @@ import {
 import { useState } from 'react'
 import type { EventRegistration, EventRegistrationsResponse, Round, EventDetail } from '@/api/events'
 
-export const Route = createFileRoute('/app/events/$eventId')({
+export const Route = createFileRoute('/app/events/$eventId/')({
   component: EventRegistrationsPage,
 })
 
@@ -91,7 +91,7 @@ function EventRegistrationsPage() {
         ) : event?.rounds && event.rounds.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {event.rounds.sort((a, b) => a.round_no - b.round_no).map((round) => (
-              <RoundCard key={round.id} round={round} />
+              <RoundCard key={round.id} round={round} eventId={eventId} />
             ))}
           </div>
         ) : (
@@ -190,9 +190,13 @@ function EventRegistrationsPage() {
 
 // ── round card ──────────────────────────────────────────────────────────────
 
-function RoundCard({ round }: { round: Round }) {
+function RoundCard({ round, eventId }: { round: Round, eventId: string }) {
   return (
-    <div className="bg-neutral-950 border border-neutral-800 p-5 space-y-4 relative overflow-hidden group">
+    <Link
+      to="/app/events/$eventId/$roundNo"
+      params={{ eventId, roundNo: round.round_no.toString() }}
+      className="bg-neutral-950 border border-neutral-800 p-5 space-y-4 relative overflow-hidden group block hover:border-neutral-600 hover:bg-neutral-900 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+    >
       <div className="absolute top-0 right-0 p-3 text-[40px] font-black text-neutral-900/50 leading-none pointer-events-none select-none italic group-hover:text-neutral-800/50 transition-colors">
         #{round.round_no}
       </div>
@@ -208,7 +212,7 @@ function RoundCard({ round }: { round: Round }) {
           <span>{fmtTime(round.start_time)} – {fmtTime(round.end_time)}</span>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
