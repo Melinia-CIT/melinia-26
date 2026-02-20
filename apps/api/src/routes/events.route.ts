@@ -13,6 +13,8 @@ import {
     getEventCheckInsParamSchema,
     getEventParticipantsParamSchema,
     assignVolunteersSchema
+    assignVolunteersSchema,
+    AssignVolunteersError
 } from "@melinia/shared"
 import sql from "../db/connection"
 import {

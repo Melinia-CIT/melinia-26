@@ -19,6 +19,7 @@ import {
     type Rule,
     type VerboseEvent,
     type AssignEventCrews,
+    type AssignVolunteersError,
     type Crew,
     type GetVerboseEvent,
     type GetCrew,
@@ -39,7 +40,7 @@ import {
     type GetEventParticipantsError,
     getEventParticipantSchema
 } from "@melinia/shared"
-import { Result } from "true-myth"
+import { Result } from "true-myth";
 
 
 export async function insertEvent(created_by: string, data: CreateEvent, tx = sql): Promise<Event> {

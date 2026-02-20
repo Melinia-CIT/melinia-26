@@ -956,3 +956,45 @@ export type AssignPrizesError =
     | ParticipantNotCheckedIn
     | InvalidData
     | InternalError
+export type CheckInError = UserNotFound | AlreadyCheckedIn | PaymentPending | InternalError;
+
+// Volunteer Assignment Errors
+export type AssigningUserNotFound = {
+    code: "assigning_user_not_found"
+    message: string
+}
+
+export type PermissionDenied = {
+    code: "permission_denied"
+    message: string
+}
+
+export type VolunteersNotFound = {
+    code: "volunteers_not_found"
+    message: string
+}
+
+export type InvalidVolunteerRole = {
+    code: "invalid_volunteer_role"
+    message: string
+}
+
+export type VolunteerAlreadyAssigned = {
+    code: "volunteer_already_assigned"
+    message: string
+}
+
+export type EmptyVolunteerList = {
+    code: "empty_volunteer_list"
+    message: string
+}
+
+export type AssignVolunteersError =
+    | EventNotFound
+    | AssigningUserNotFound
+    | PermissionDenied
+    | VolunteersNotFound
+    | InvalidVolunteerRole
+    | VolunteerAlreadyAssigned
+    | EmptyVolunteerList
+    | InternalError
