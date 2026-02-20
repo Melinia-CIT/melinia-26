@@ -5,6 +5,7 @@ import PrizePool from "../components/outreach/PrizePool"
 import FAQ from "../components/outreach/FAQ"
 import Footer from "../components/outreach/Footer"
 import People from "../components/outreach/People"
+import Sponsors from "../components/outreach/Sponsors"
 
 const Home = () => {
     return (
@@ -13,6 +14,7 @@ const Home = () => {
             <Countdown />
             <Events />
             <PrizePool />
+            <Sponsors />
             <People />
             <FAQ />
             <Footer />
