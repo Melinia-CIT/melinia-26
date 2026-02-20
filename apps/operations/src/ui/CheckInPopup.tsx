@@ -1,0 +1,228 @@
+import { useQuery } from "@tanstack/react-query";
+import { Xmark } from "iconoir-react";
+import type { UserWithProfile } from "@melinia/shared";
+import type { Registration } from "@/api/registrations";
+import { Button } from "@/ui/Button";
+
+export interface CheckInPopupProps {
+	open: boolean;
+	onClose: () => void;
+
+	/** If present, renders registration details + check-in action */
+	registration: Registration | null;
+
+	/** For QR scans before registration data is available */
+	userId: string | null;
+
+	getUserById: (id: string) => Promise<UserWithProfile>;
+
+	onCheckIn: (userId: string) => void;
+	isCheckingIn: boolean;
+	checkInError: string | null;
+}
+
+export function CheckInPopup({
+	open,
+	onClose,
+	registration,
+	userId,
+	getUserById,
+	onCheckIn,
+	isCheckingIn,
+	checkInError,
+}: CheckInPopupProps) {
+	const effectiveUserId = userId ?? registration?.id ?? null;
+
+	const {
+		data: user,
+		isLoading,
+		isError,
+		error,
+	} = useQuery({
+		queryKey: ["users", "byId", effectiveUserId],
+		queryFn: () => getUserById(effectiveUserId as string),
+		enabled: open && !!effectiveUserId,
+	});
+
+	if (!open) return null;
+
+	return (
+		<div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+			<div className="w-full max-w-3xl bg-neutral-950 border border-neutral-800">
+				{/* Header */}
+				<div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-neutral-800">
+					<div className="space-y-1">
+						<h3 className="text-lg md:text-xl font-semibold text-white">
+							Check-in
+						</h3>
+						{effectiveUserId && (
+							<p className="text-xs text-neutral-500">ID: {effectiveUserId}</p>
+						)}
+					</div>
+					<button
+						type="button"
+						onClick={onClose}
+						className="p-2 text-neutral-400 hover:text-white transition-colors duration-150"
+						aria-label="Close"
+					>
+						<Xmark className="w-6 h-6" />
+					</button>
+				</div>
+
+				{/* Body */}
+				<div className="p-4 md:p-6 space-y-6">
+					{/* Check-in errors */}
+					{checkInError && (
+						<div className="p-4 bg-red-950/50 border border-red-900 text-red-500 text-sm">
+							{checkInError}
+						</div>
+					)}
+
+					{/* Registration details */}
+					{registration && (
+						<div className="space-y-3">
+							<div className="flex items-center justify-between">
+								<h4 className="text-sm font-medium text-white">
+									Registration
+								</h4>
+								<RegistrationStatusBadge status={registration.status} />
+							</div>
+
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<Info label="Name" value={registration.name} />
+								<Info label="Email" value={registration.email} />
+								<Info label="Phone" value={registration.phone} />
+								<Info label="College" value={registration.college} />
+								<Info
+									label="Check-in"
+									value={registration.checkedIn ? "Checked In" : "Not Checked In"}
+								/>
+								{registration.checkedInAt && (
+									<Info
+										label="Checked In At"
+										value={new Date(registration.checkedInAt).toLocaleString()}
+									/>
+								)}
+							</div>
+
+							{/* Check-in action */}
+							{!registration.checkedIn && (
+								<div className="pt-4 border-t border-neutral-800">
+									{registration.status === "verified" ? (
+										<div className="space-y-3">
+											<Button
+												variant="primary"
+												onClick={() => onCheckIn(registration.id)}
+												disabled={isCheckingIn}
+											>
+												{isCheckingIn ? "Checking in..." : "Check In Attendee"}
+											</Button>
+										</div>
+									) : (
+										<div className="p-4 bg-yellow-950/50 border border-yellow-900 text-yellow-500 text-sm">
+											This attendee must be verified before check-in
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+					)}
+
+					{/* User details */}
+					<div className="space-y-3">
+						<h4 className="text-sm font-medium text-white">User Details</h4>
+
+						{!effectiveUserId ? (
+							<div className="text-sm text-neutral-500">No user scanned.</div>
+						) : isLoading ? (
+							<div className="text-sm text-neutral-500">Loading user...</div>
+						) : isError ? (
+							<div className="p-4 bg-red-950/50 border border-red-900 text-red-500 text-sm">
+								Failed to fetch user details: {String(error)}
+							</div>
+						) : (
+							<UserDetails user={user as UserWithProfile} />
+						)}
+
+						{/* Check-in action for QR scans (no registration data yet) */}
+						{!registration && effectiveUserId && (
+							<div className="pt-4 border-t border-neutral-800">
+								<Button
+									variant="primary"
+									onClick={() => onCheckIn(effectiveUserId)}
+									disabled={isCheckingIn || isLoading || isError}
+									className="w-full"
+								>
+									{isCheckingIn ? "Checking in..." : "Check In"}
+								</Button>
+							</div>
+						)}
+					</div>
+				</div>
+
+				{/* Footer */}
+				<div className="px-4 md:px-6 py-4 border-t border-neutral-800">
+					<Button variant="secondary" onClick={onClose} className="w-full">
+						Close
+					</Button>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+	return (
+		<div className="space-y-1">
+			<p className="text-xs text-neutral-500">{label}</p>
+			<p className="text-sm text-white break-words">{value}</p>
+		</div>
+	);
+}
+
+function UserDetails({ user }: { user: UserWithProfile }) {
+	return (
+		<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<Info label="Email" value={user.email} />
+			<Info label="Phone" value={user.ph_no ?? "—"} />
+			<Info label="Role" value={user.role} />
+			<Info label="Status" value={user.status} />
+			<Info label="Payment" value={user.payment_status} />
+			<Info
+				label="Profile Completed"
+				value={user.profile_completed ? "Yes" : "No"}
+			/>
+			<Info label="First Name" value={user.profile.first_name} />
+			<Info label="Last Name" value={user.profile.last_name ?? "—"} />
+			<Info label="College" value={user.profile.college} />
+			<Info label="Degree" value={user.profile.degree} />
+			<Info label="Year" value={String(user.profile.year)} />
+		</div>
+	);
+}
+
+function RegistrationStatusBadge({
+	status,
+}: {
+	status: Registration["status"];
+}) {
+	const styles = {
+		pending: "bg-yellow-950/50 text-yellow-500 border-yellow-900",
+		verified: "bg-green-950/50 text-green-500 border-green-900",
+		rejected: "bg-red-950/50 text-red-500 border-red-900",
+	};
+
+	const labels = {
+		pending: "Pending",
+		verified: "Verified",
+		rejected: "Rejected",
+	};
+
+	return (
+		<span
+			className={`inline-block px-2 py-1 text-xs font-medium border ${styles[status]}`}
+		>
+			{labels[status]}
+		</span>
+	);
+}

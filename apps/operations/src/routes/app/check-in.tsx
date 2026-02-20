@@ -6,6 +6,7 @@ import type { Registration } from "@/api/registrations";
 import { Button } from "@/ui/Button";
 import { Field } from "@/ui/Field";
 import { Input } from "@/ui/Input";
+import { CheckInPopup } from "@/ui/CheckInPopup";
 import { QRScanner } from "@/ui/QRScanner";
 
 export const Route = createFileRoute("/app/check-in")({
@@ -17,8 +18,11 @@ function CheckInPage() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedRegistration, setSelectedRegistration] =
 		useState<Registration | null>(null);
+	const [popupOpen, setPopupOpen] = useState(false);
+	const [scannedUserId, setScannedUserId] = useState<string | null>(null);
 	const [showScanner, setShowScanner] = useState(false);
 	const [qrError, setQrError] = useState("");
+	const [checkInError, setCheckInError] = useState<string | null>(null);
 	const [isRequestingCamera, setIsRequestingCamera] = useState(false);
 
 	// Search query
@@ -38,29 +42,30 @@ function CheckInPage() {
 			queryClient.invalidateQueries({ queryKey: ["registrations"] });
 			// Clear QR error
 			setQrError("");
+			setCheckInError(null);
 		},
 		onError: (error) => {
 			console.error("Check-in error:", error);
-			setQrError("Failed to check in. Please try again.");
+			setCheckInError("Failed to check in. Please try again.");
 		},
 	});
 
 	const handleSearch = (query: string) => {
 		setSearchQuery(query);
 		setSelectedRegistration(null);
+		setScannedUserId(null);
+		setPopupOpen(false);
 		setQrError("");
+		setCheckInError(null);
 	};
 
 	const handleSelectRegistration = (registration: Registration) => {
 		setSelectedRegistration(registration);
 		setSearchQuery("");
+		setScannedUserId(null);
+		setPopupOpen(true);
 		setQrError("");
-	};
-
-	const handleCheckIn = () => {
-		if (selectedRegistration) {
-			checkInMutation.mutate(selectedRegistration.id);
-		}
+		setCheckInError(null);
 	};
 
 	const handleQRScan = (scannedText: string) => {
@@ -69,6 +74,7 @@ function CheckInPage() {
 		setQrError("");
 		setSearchQuery("");
 		setSelectedRegistration(null);
+		setCheckInError(null);
 
 		// Extract user_id from scanned text
 		// Expected format: "MLNUXXXXXX" or JSON with user_id field
@@ -91,8 +97,8 @@ function CheckInPage() {
 			return;
 		}
 
-		// Trigger check-in
-		checkInMutation.mutate(userId);
+		setScannedUserId(userId);
+		setPopupOpen(true);
 	};
 
 	const handleOpenScanner = async () => {
@@ -254,105 +260,6 @@ function CheckInPage() {
 				)}
 			</div>
 
-			{/* Selected registration details */}
-			{selectedRegistration && (
-				<div className="bg-neutral-950 border border-neutral-800 p-6 space-y-6">
-					<div className="flex items-start justify-between">
-						<h3 className="text-lg font-semibold text-white">
-							Attendee Details
-						</h3>
-						<button
-							type="button"
-							onClick={() => setSelectedRegistration(null)}
-							className="text-sm text-neutral-500 hover:text-white transition-colors duration-150"
-						>
-							Clear
-						</button>
-					</div>
-
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div className="space-y-1">
-							<p className="text-sm text-neutral-500">Name</p>
-							<p className="text-white font-medium">
-								{selectedRegistration.name}
-							</p>
-						</div>
-						<div className="space-y-1">
-							<p className="text-sm text-neutral-500">Email</p>
-							<p className="text-white">{selectedRegistration.email}</p>
-						</div>
-						<div className="space-y-1">
-							<p className="text-sm text-neutral-500">Phone</p>
-							<p className="text-white">{selectedRegistration.phone}</p>
-						</div>
-						<div className="space-y-1">
-							<p className="text-sm text-neutral-500">College</p>
-							<p className="text-white">{selectedRegistration.college}</p>
-						</div>
-						<div className="space-y-1">
-							<p className="text-sm text-neutral-500">Status</p>
-							<StatusBadge status={selectedRegistration.status} />
-						</div>
-						<div className="space-y-1">
-							<p className="text-sm text-neutral-500">Check-in Status</p>
-							{selectedRegistration.checkedIn ? (
-								<div className="space-y-1">
-									<span className="inline-block px-2 py-1 text-xs font-medium border bg-green-950/50 text-green-500 border-green-900">
-										Checked In
-									</span>
-									{selectedRegistration.checkedInAt && (
-										<p className="text-xs text-neutral-500">
-											{new Date(
-												selectedRegistration.checkedInAt,
-											).toLocaleString()}
-										</p>
-									)}
-								</div>
-							) : (
-								<span className="inline-block px-2 py-1 text-xs font-medium border bg-neutral-900 text-neutral-500 border-neutral-800">
-									Not Checked In
-								</span>
-							)}
-						</div>
-					</div>
-
-					{/* Check-in action */}
-					{!selectedRegistration.checkedIn && (
-						<div className="pt-4 border-t border-neutral-800">
-							{selectedRegistration.status === "verified" ? (
-								<div className="space-y-4">
-									<Button
-										variant="primary"
-										onClick={handleCheckIn}
-										disabled={checkInMutation.isPending}
-									>
-										{checkInMutation.isPending
-											? "Checking in..."
-											: "Check In Attendee"}
-									</Button>
-									{checkInMutation.isError && (
-										<p className="text-sm text-red-500">
-											Failed to check in: {String(checkInMutation.error)}
-										</p>
-									)}
-								</div>
-							) : (
-								<div className="p-4 bg-yellow-950/50 border border-yellow-900 text-yellow-500 text-sm">
-									This attendee must be verified before check-in
-								</div>
-							)}
-						</div>
-					)}
-
-					{/* Success message */}
-					{selectedRegistration.checkedIn && checkInMutation.isSuccess && (
-						<div className="p-4 bg-green-950/50 border border-green-900 text-green-500 text-sm">
-							✓ Successfully checked in!
-						</div>
-					)}
-				</div>
-			)}
-
 			{/* QR Scanner Modal */}
 			{showScanner && (
 				<QRScanner
@@ -360,6 +267,24 @@ function CheckInPage() {
 					onClose={() => setShowScanner(false)}
 				/>
 			)}
+
+			{/* Check-in Popup */}
+			<CheckInPopup
+				open={popupOpen}
+				onClose={() => {
+					setPopupOpen(false);
+					setSelectedRegistration(null);
+					setScannedUserId(null);
+					setCheckInError(null);
+					checkInMutation.reset();
+				}}
+				registration={selectedRegistration}
+				userId={scannedUserId}
+				getUserById={api.users.getById}
+				onCheckIn={(id) => checkInMutation.mutate(id)}
+				isCheckingIn={checkInMutation.isPending}
+				checkInError={checkInError}
+			/>
 		</div>
 	);
 }

@@ -11,6 +11,7 @@ import {
 	createRegistrationsApi,
 	type RegistrationsApi,
 } from "@/api/registrations";
+import { createUsersApi, type UsersApi } from "@/api/users";
 import type { AuthService } from "@/auth/authService";
 import { createAuthService } from "@/auth/authService";
 import { env } from "@/config/env";
@@ -22,6 +23,7 @@ export interface RouterContext {
 	api: {
 		baseUrl: string;
 		registrations: RegistrationsApi;
+		users: UsersApi;
 	};
 }
 
@@ -54,6 +56,7 @@ export function createRouterContext(): RouterContext {
 		api: {
 			baseUrl: env.apiBaseUrl,
 			registrations: createRegistrationsApi(http),
+			users: createUsersApi(http),
 		},
 	};
 }
