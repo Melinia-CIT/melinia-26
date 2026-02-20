@@ -2,34 +2,9 @@ import type { AxiosInstance } from "axios";
 
 // ── Registration types ─────────────────────────────────────────────────────
 
-export interface SoloRegistration {
-    type: "SOLO";
-    participant_id: string;
-    first_name: string;
-    last_name: string;
-    college: string;
-    degree: string;
-    ph_no: string;
-    registered_at: string;
-}
+import type { GetEventRegistration, ScanResult, Rule, Round, VerboseEvent as EventDetail } from "@melinia/shared";
 
-export interface TeamMember {
-    participant_id: string;
-    first_name: string;
-    last_name: string;
-    college: string;
-    degree: string;
-    ph_no: string;
-}
-
-export interface TeamRegistration {
-    type: "TEAM";
-    name: string;
-    members: TeamMember[];
-    registered_at: string;
-}
-
-export type EventRegistration = SoloRegistration | TeamRegistration;
+export type EventRegistration = GetEventRegistration;
 
 export interface Pagination {
     from: number;
@@ -49,56 +24,9 @@ export interface GetEventRegistrationsParams {
     limit?: number;
 }
 
-export interface Rule {
-    id: number;
-    rule_no: number;
-    rule_description: string;
-}
+export type { Rule, Round, EventDetail };
 
-export interface Round {
-    id: number;
-    round_no: number;
-    round_name: string;
-    round_description: string;
-    start_time: string;
-    end_time: string;
-    rules: Rule[];
-}
-
-export interface EventDetail {
-    id: string;
-    name: string;
-    description: string;
-    participation_type: string;
-    event_type: string;
-    venue: string;
-    start_time: string;
-    end_time: string;
-    rounds: Round[];
-}
-
-export interface RoundParticipantMember {
-    user_id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    status: string;
-    payment_status: string;
-}
-
-export interface RoundParticipantTeam {
-    type: "TEAM";
-    team_id: string;
-    team_name: string;
-    members: RoundParticipantMember[];
-}
-
-export interface RoundParticipantSolo {
-    type: "SOLO";
-    user_id: string;
-}
-
-export type RoundParticipant = RoundParticipantSolo | RoundParticipantTeam;
+export type RoundParticipant = ScanResult;
 
 export interface CheckInRoundResponse {
     user_ids: string[];
