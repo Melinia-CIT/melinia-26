@@ -18,6 +18,7 @@ export const Route = createFileRoute("/app/check-in")({
 
 function CheckInPage() {
 	const { api, queryClient } = Route.useRouteContext();
+	const [searchInput, setSearchInput] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedRegistration, setSelectedRegistration] =
 		useState<Registration | null>(null);
@@ -27,6 +28,8 @@ function CheckInPage() {
 	const [qrError, setQrError] = useState("");
 	const [checkInError, setCheckInError] = useState<string | null>(null);
 	const [isRequestingCamera, setIsRequestingCamera] = useState(false);
+
+	const participantIdPattern = /^MLNU[A-Za-z0-9]{6}$/;
 
 	// Search query
 	const { data: searchResults, isLoading: isSearching } = useQuery({
@@ -56,7 +59,22 @@ function CheckInPage() {
 	});
 
 	const handleSearch = (query: string) => {
-		setSearchQuery(query);
+		const normalizedQuery = query.trim();
+		const maybeParticipantId = normalizedQuery.toUpperCase();
+
+		// If a participant ID is typed manually, open the same flow as a QR scan.
+		if (participantIdPattern.test(maybeParticipantId)) {
+			setSelectedRegistration(null);
+			setScannedUserId(maybeParticipantId);
+			setPopupOpen(true);
+			setSearchInput("");
+			setSearchQuery("");
+			setQrError("");
+			setCheckInError(null);
+			return;
+		}
+
+		setSearchQuery(normalizedQuery);
 		setSelectedRegistration(null);
 		setScannedUserId(null);
 		setPopupOpen(false);
@@ -64,8 +82,13 @@ function CheckInPage() {
 		setCheckInError(null);
 	};
 
+	const handleSubmitSearch = () => {
+		handleSearch(searchInput);
+	};
+
 	const handleSelectRegistration = (registration: Registration) => {
 		setSelectedRegistration(registration);
+		setSearchInput("");
 		setSearchQuery("");
 		setScannedUserId(null);
 		setPopupOpen(true);
@@ -77,6 +100,7 @@ function CheckInPage() {
 		// Close scanner
 		setShowScanner(false);
 		setQrError("");
+		setSearchInput("");
 		setSearchQuery("");
 		setSelectedRegistration(null);
 		setCheckInError(null);
@@ -88,14 +112,16 @@ function CheckInPage() {
 		try {
 			// Try to parse as JSON first
 			const parsed = JSON.parse(scannedText);
-			userId = parsed.user_id || parsed.id || scannedText;
+			userId = String(parsed.user_id ?? parsed.id ?? scannedText);
 		} catch {
 			// Not JSON, use as-is
-			userId = scannedText.trim();
+			userId = scannedText;
 		}
 
+		userId = userId.trim().toUpperCase();
+
 		// Validate format (should match MLNU followed by 6 alphanumeric characters)
-		if (!/^MLNU[A-Za-z0-9]{6}$/.test(userId)) {
+		if (!participantIdPattern.test(userId)) {
 			setQrError(
 				`Invalid QR code format. Expected MLNU followed by 6 alphanumeric characters, got: ${userId}`,
 			);
@@ -206,14 +232,29 @@ function CheckInPage() {
 				<h3 className="text-lg font-semibold text-white">Manual Search</h3>
 				<Field
 					label="Search Participant"
-					description="Search by name, email, phone, or college (min 3 characters)"
+					description="Search by participant ID (MLNU......)"
 				>
-					<Input
-						type="text"
-						placeholder="Enter name, email, phone..."
-						value={searchQuery}
-						onChange={(e) => handleSearch(e.target.value)}
-					/>
+					<div className="flex gap-2">
+						<Input
+							type="text"
+							placeholder="Enter participant ID"
+							value={searchInput}
+							onChange={(e) => setSearchInput(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") {
+									e.preventDefault();
+									handleSubmitSearch();
+								}
+							}}
+							className="flex-1"
+						/>
+						<Button
+							variant="secondary"
+							onClick={handleSubmitSearch}
+						>
+							Search
+						</Button>
+					</div>
 				</Field>
 
 				{/* Search results */}

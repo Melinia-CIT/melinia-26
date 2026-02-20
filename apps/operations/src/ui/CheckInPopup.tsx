@@ -34,7 +34,11 @@ export function CheckInPopup({
 	checkInSuccess,
 	checkInError,
 }: CheckInPopupProps) {
-	const effectiveUserId = userId ?? registration?.id ?? null;
+	const normalizedUserId = userId?.trim() ? userId.trim().toUpperCase() : null;
+	const normalizedRegistrationId = registration?.id?.trim()
+		? registration.id.trim().toUpperCase()
+		: null;
+	const effectiveUserId = normalizedUserId ?? normalizedRegistrationId;
 
 	useEffect(() => {
 		if (!open || !checkInSuccess) return;
