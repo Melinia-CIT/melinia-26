@@ -1,25 +1,10 @@
 import type { AxiosInstance } from "axios";
 
-import type {
-    EventRegistration,
-    ScanResult,
-    Rule,
-    Round,
-    VerboseEvent as EventDetail,
-    GetEventCheckIn,
-    GetEventParticipant,
-    AssignRoundResults,
-    BulkOperationResult,
-    RoundResult,
-    UserResultError,
-    TeamResultError,
-    RoundResultWithParticipant,
-    PaginatedRoundResults,
-    GetRoundResultsQuery,
-} from "@melinia/shared";
+// ── Registration types ─────────────────────────────────────────────────────
 
-export type { EventRegistration, Rule, Round, EventDetail };
-export type { RoundResultWithParticipant, PaginatedRoundResults, GetRoundResultsQuery };
+import type { GetEventRegistration, ScanResult, Rule, Round, VerboseEvent as EventDetail } from "@melinia/shared";
+
+export type EventRegistration = GetEventRegistration;
 
 export interface Pagination {
     from: number;
@@ -39,13 +24,9 @@ export interface GetEventRegistrationsParams {
     limit?: number;
 }
 
-export type RoundParticipant = ScanResult;
-export type RoundCheckInEntry = GetEventCheckIn;
-export type RoundQualifiedParticipant = GetEventParticipant;
+export type { Rule, Round, EventDetail };
 
-// Re-export shared result types for use in routes
-export type { AssignRoundResults, BulkOperationResult, RoundResult, UserResultError, TeamResultError };
-export type RoundResultStatus = "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED";
+export type RoundParticipant = ScanResult;
 
 export interface CheckInRoundResponse {
     user_ids: string[];

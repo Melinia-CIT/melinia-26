@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError,  } from "./users";
+import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError, } from "./users";
 import type { PaymentPending } from "./payments";
 import { memberSchema } from "./teams";
 
