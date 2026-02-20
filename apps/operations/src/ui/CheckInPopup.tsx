@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Xmark } from "iconoir-react";
+import { useEffect } from "react";
 import type { UserWithProfile } from "@melinia/shared";
 import type { Registration } from "@/api/registrations";
 import { Button } from "@/ui/Button";
@@ -18,6 +19,7 @@ export interface CheckInPopupProps {
 
 	onCheckIn: (userId: string) => void;
 	isCheckingIn: boolean;
+	checkInSuccess: boolean;
 	checkInError: string | null;
 }
 
@@ -29,9 +31,18 @@ export function CheckInPopup({
 	getUserById,
 	onCheckIn,
 	isCheckingIn,
+	checkInSuccess,
 	checkInError,
 }: CheckInPopupProps) {
 	const effectiveUserId = userId ?? registration?.id ?? null;
+
+	useEffect(() => {
+		if (!open || !checkInSuccess) return;
+		const timeoutId = window.setTimeout(() => {
+			onClose();
+		}, 2000);
+		return () => window.clearTimeout(timeoutId);
+	}, [open, checkInSuccess, onClose]);
 
 	const {
 		data: user,
@@ -47,8 +58,8 @@ export function CheckInPopup({
 	if (!open) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-			<div className="w-full max-w-3xl bg-neutral-950 border border-neutral-800">
+		<div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 sm:p-4">
+			<div className="w-full max-w-3xl max-h-[calc(100dvh-1rem)] bg-neutral-950 border border-neutral-800 flex flex-col overflow-hidden">
 				{/* Header */}
 				<div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-neutral-800">
 					<div className="space-y-1">
@@ -70,7 +81,14 @@ export function CheckInPopup({
 				</div>
 
 				{/* Body */}
-				<div className="p-4 md:p-6 space-y-6">
+				<div className="p-4 md:p-6 space-y-6 flex-1 overflow-y-auto">
+					{/* Success */}
+					{checkInSuccess && (
+						<div className="p-4 bg-green-950/50 border border-green-900 text-green-500 text-sm">
+							✓ Successfully checked in (closing...)
+						</div>
+					)}
+
 					{/* Check-in errors */}
 					{checkInError && (
 						<div className="p-4 bg-red-950/50 border border-red-900 text-red-500 text-sm">
@@ -113,7 +131,7 @@ export function CheckInPopup({
 											<Button
 												variant="primary"
 												onClick={() => onCheckIn(registration.id)}
-												disabled={isCheckingIn}
+												disabled={isCheckingIn || checkInSuccess}
 											>
 												{isCheckingIn ? "Checking in..." : "Check In Attendee"}
 											</Button>
@@ -150,7 +168,7 @@ export function CheckInPopup({
 								<Button
 									variant="primary"
 									onClick={() => onCheckIn(effectiveUserId)}
-									disabled={isCheckingIn || isLoading || isError}
+									disabled={checkInSuccess || isCheckingIn || isLoading || isError}
 									className="w-full"
 								>
 									{isCheckingIn ? "Checking in..." : "Check In"}
@@ -161,7 +179,7 @@ export function CheckInPopup({
 				</div>
 
 				{/* Footer */}
-				<div className="px-4 md:px-6 py-4 border-t border-neutral-800">
+					<div className="px-4 md:px-6 py-4 border-t border-neutral-800 shrink-0">
 					<Button variant="secondary" onClick={onClose} className="w-full">
 						Close
 					</Button>

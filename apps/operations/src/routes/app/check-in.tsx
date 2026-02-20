@@ -2,12 +2,15 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { ScanQrCode } from "iconoir-react";
 import { useState } from "react";
+import type { AxiosError } from "axios";
 import type { Registration } from "@/api/registrations";
 import { Button } from "@/ui/Button";
 import { Field } from "@/ui/Field";
 import { Input } from "@/ui/Input";
 import { CheckInPopup } from "@/ui/CheckInPopup";
 import { QRScanner } from "@/ui/QRScanner";
+
+type ApiErrorBody = { message?: string };
 
 export const Route = createFileRoute("/app/check-in")({
 	component: CheckInPage,
@@ -46,7 +49,9 @@ function CheckInPage() {
 		},
 		onError: (error) => {
 			console.error("Check-in error:", error);
-			setCheckInError("Failed to check in. Please try again.");
+			const axiosErr = error as AxiosError<ApiErrorBody>;
+			const message = axiosErr.response?.data?.message;
+			setCheckInError(message || "Failed to check in. Please try again.");
 		},
 	});
 
@@ -283,6 +288,7 @@ function CheckInPage() {
 				getUserById={api.users.getById}
 				onCheckIn={(id) => checkInMutation.mutate(id)}
 				isCheckingIn={checkInMutation.isPending}
+				checkInSuccess={checkInMutation.isSuccess}
 				checkInError={checkInError}
 			/>
 		</div>
