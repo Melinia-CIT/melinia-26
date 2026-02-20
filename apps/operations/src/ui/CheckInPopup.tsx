@@ -199,19 +199,19 @@ function Info({ label, value }: { label: string; value: string }) {
 }
 
 function UserDetails({ user }: { user: UserWithProfile }) {
+	const fullName = `${user.profile.first_name} ${user.profile.last_name ?? ""}`.trim();
+
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<Info label="Name" value={fullName || "—"} />
 			<Info label="Email" value={user.email} />
 			<Info label="Phone" value={user.ph_no ?? "—"} />
-			<Info label="Role" value={user.role} />
 			<Info label="Status" value={user.status} />
 			<Info label="Payment" value={user.payment_status} />
 			<Info
 				label="Profile Completed"
 				value={user.profile_completed ? "Yes" : "No"}
 			/>
-			<Info label="First Name" value={user.profile.first_name} />
-			<Info label="Last Name" value={user.profile.last_name ?? "—"} />
 			<Info label="College" value={user.profile.college} />
 			<Info label="Degree" value={user.profile.degree} />
 			<Info label="Year" value={String(user.profile.year)} />
