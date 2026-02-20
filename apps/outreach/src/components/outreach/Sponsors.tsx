@@ -85,7 +85,7 @@ export default function Sponsors() {
                             href={klaSponsor.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group relative block bg-white rounded-xl sm:rounded-2xl border border-black/10 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 px-8 py-2 sm:px-12 sm:py-4 md:px-16 md:py-6 lg:px-20 lg:py-8"
+                            className="group relative block bg-white rounded-xl sm:rounded-2xl border border-black/10 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 px-8 py-5 sm:px-12 sm:py-4 md:px-16 md:py-6 lg:px-20 lg:py-8"
                         >
                             <motion.div
                                 className="absolute inset-0 overflow-hidden pointer-events-none rounded-xl sm:rounded-2xl z-20"
@@ -115,7 +115,7 @@ export default function Sponsors() {
                                 <img
                                     src={klaSponsor.src}
                                     alt={klaSponsor.alt}
-                                    className="relative z-10 h-10 w-[220px] sm:h-12 sm:w-auto md:h-14 lg:h-16 object-contain"
+                                    className="relative z-10 h-12 w-[220px] sm:h-12 sm:w-auto md:h-14 lg:h-16 object-contain"
                                 />
 
                                 {/* Shimmer Effect with mask - only on logo */}
