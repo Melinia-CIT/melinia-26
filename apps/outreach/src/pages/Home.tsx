@@ -14,7 +14,7 @@ const Home = () => {
             <Countdown />
             <Events />
             <PrizePool />
-            <Sponsors></Sponsors>
+            <Sponsors />
             <People />
             <FAQ />
             <Footer />
