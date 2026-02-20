@@ -20,6 +20,13 @@ import {
     type VerboseEvent,
     type AssignEventCrews,
     type AssignVolunteersError,
+    EventNotFound,
+    AssigningUserNotFound,
+    PermissionDenied,
+    VolunteersNotFound,
+    InvalidVolunteerRole,
+    VolunteerAlreadyAssigned,
+    EmptyVolunteerList,
     type Crew,
     type GetVerboseEvent,
     type GetCrew,
@@ -354,93 +361,65 @@ export async function assignVolunteersToEvent(
     volunteerIds: string[],
     assignedBy: string,
     tx = sql
-): Promise<Crew[]> {
-
-    const [event] = await tx`
-        SELECT 1 FROM events WHERE id = ${eventId};
-    `
-    if (!event) {
-        throw new HTTPException(404, { message: "Event not found" })
-    }
-
-    const [userRole] = await tx`
-    SELECT role
-    FROM users
-    WHERE id = ${assignedBy};
-`
-
-    if (!userRole) {
-        throw new HTTPException(404, { message: "Assigning user not found" })
-    }
-
-    if (userRole.role !== "ADMIN") {
-        const [organizerCheck] = await tx`
-            SELECT 1
-            FROM event_crews ec
-            WHERE ec.event_id = ${eventId}
-            AND ec.user_id = ${assignedBy};
-        `
-
-        if (!organizerCheck) {
-            throw new HTTPException(403, {
-                message: "Only admin or organizer of this event can assign volunteers"
-            })
+): Promise<Result<Crew[], AssignVolunteersError>> {
+    try {
+        const [event] = await tx`SELECT 1 FROM events WHERE id = ${eventId}`
+        if (!event) {
+            return Result.err({ code: "event_not_found", message: "Event not found" })
         }
+
+        const [userRole] = await tx`SELECT role FROM users WHERE id = ${assignedBy}`
+        if (!userRole) {
+            return Result.err({ code: "assigning_user_not_found", message: "Assigning user not found" })
+        }
+
+        if (userRole.role !== "ADMIN") {
+            const [organizerCheck] = await tx`
+                SELECT 1 FROM event_crews 
+                WHERE event_id = ${eventId} 
+                AND user_id = ${assignedBy}`
+            if (!organizerCheck) {
+                return Result.err({ code: "permission_denied", message: "Only admin or organizer of the respective event can assign volunteers" })
+            }
+        }
+
+        if (!volunteerIds || volunteerIds.length === 0) {
+            return Result.err({ code: "empty_volunteer_list", message: "No volunteers provided" })
+        }
+
+        const users = await tx`
+            SELECT id, role FROM users 
+            WHERE id = ANY(${volunteerIds}::text[])`
+        const foundIds = users.map(u => u.id)
+        const notFoundIds = volunteerIds.filter(id => !foundIds.includes(id))
+        if (notFoundIds.length > 0) {
+            return Result.err({ code: "volunteers_not_found", message: `These user IDs do not exist: ${notFoundIds.join(", ")}` })
+        }
+
+        const invalidRoleIds = users.filter(u => u.role !== "VOLUNTEER").map(u => u.id)
+        if (invalidRoleIds.length > 0) {
+            return Result.err({ code: "invalid_volunteer_role", message: `These users are not volunteers: ${invalidRoleIds.join(", ")}` })
+        }
+
+        const existingAssignments = await tx`
+            SELECT user_id FROM event_crews
+            WHERE event_id = ${eventId} AND user_id = ANY(${volunteerIds}::text[])`
+        const alreadyAssignedIds = existingAssignments.map(e => e.user_id)
+        if (alreadyAssignedIds.length > 0) {
+            return Result.err({ code: "volunteer_already_assigned", message: `Cannot assign same volunteer again: ${alreadyAssignedIds.join(", ")}` })
+        }
+
+        const crews = await tx`
+            INSERT INTO event_crews (event_id, user_id, assigned_by)
+            VALUES ${sql(volunteerIds.map(id => [eventId, id, assignedBy]))}
+            RETURNING *`
+        
+        const parsedCrews = crews.map(crew => baseCrewSchema.parse(crew))
+        return Result.ok(parsedCrews)
+    } catch (err) {
+        console.error(err)
+        return Result.err({ code: "internal_error", message: "Failed to assign volunteers" })
     }
-
-    if (!volunteerIds || volunteerIds.length === 0) {
-        throw new HTTPException(400, { message: "No volunteers provided" })
-    }
-
-    const users = await tx`
-        SELECT id, role
-        FROM users
-        WHERE id = ANY(${volunteerIds}::text[]);
-    `
-
-    const foundIds = users.map(u => u.id)
-
-    const notFoundIds = volunteerIds.filter(id => !foundIds.includes(id))
-    if (notFoundIds.length > 0) {
-        throw new HTTPException(400, {
-            message: `These user IDs do not exist: ${notFoundIds.join(", ")}`
-        })
-    }
-
-    const invalidRoleIds = users
-        .filter(u => u.role !== "VOLUNTEER")
-        .map(u => u.id)
-
-    if (invalidRoleIds.length > 0) {
-        throw new HTTPException(400, {
-            message: `These users are not volunteers: ${invalidRoleIds.join(", ")}`
-        })
-    }
-    
-    const existingAssignments = await tx`
-        SELECT user_id
-        FROM event_crews
-        WHERE event_id = ${eventId}
-        AND user_id = ANY(${volunteerIds}::text[]);
-    `
-
-    const alreadyAssignedIds = existingAssignments.map(e => e.user_id)
-
-    if (alreadyAssignedIds.length > 0) {
-        throw new HTTPException(400, {
-            message: `You cannot assign the same volunteer again to this event: ${alreadyAssignedIds.join(", ")}`
-        })
-    }
-
-    const crews = await tx`
-        INSERT INTO event_crews (event_id, user_id, assigned_by)
-        VALUES ${sql(
-            volunteerIds.map(id => [eventId, id, assignedBy])
-        )}
-        RETURNING *;
-    `
-
-    return crews.map(crew => baseCrewSchema.parse(crew))
 }
 
 export async function getEvents(): Promise<GetVerboseEvent[]> {

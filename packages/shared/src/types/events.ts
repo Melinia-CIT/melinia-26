@@ -291,7 +291,8 @@ export const verboseEventSchema = baseEventSchema.extend({
             .array(
                 baseCrewSchema.omit({
                     event_id: true,
-    })
+    }))})})
+
 
 export const EventParamSchema = z
     .object({
@@ -302,66 +303,41 @@ export const assignVolunteersSchema = z.object({
     volunteer_ids: z.array(z.string()).min(1, "At least one volunteer ID required")
 })
 
-export const getVerboseEventResponseSchema =
-    verboseEventSchema
-        .extend({
-            crew: z
-                .object({
-                    organizers: z.array(
-                        baseCrewSchema
-                            .omit({
-                                event_id: true,
-                                assigned_by: true
-                            })
-                            .extend({
-                                first_name: z.string(),
-                                last_name: z.string(),
-                                ph_no: z.string()
-                            })
-                    ),
-                    volunteers: z.array(
-                        baseCrewSchema
-                            .omit({
-                                event_id: true,
-                                assigned_by: true
-                            })
-                            .extend({
-                                first_name: z.string(),
-                                last_name: z.string(),
-                                ph_no: z.string()
-                            })
-                    )
-                })
-            )
-            .optional()
-            .default([]),
-    }),
-})
+export const getVerboseEventResponseSchema = verboseEventSchema.extend({
+    crew: z
+        .object({
+            organizers: z.array(
+                baseCrewSchema
+                    .omit({
+                        event_id: true,
+                        assigned_by: true
+                    })
+                    .extend({
+                        first_name: z.string(),
+                        last_name: z.string(),
+                        ph_no: z.string()
+                    })
+            ).optional().default([]),
+
+            volunteers: z.array(
+                baseCrewSchema
+                    .omit({
+                        event_id: true,
+                        assigned_by: true
+                    })
+                    .extend({
+                        first_name: z.string(),
+                        last_name: z.string(),
+                        ph_no: z.string()
+                    })
+            ).optional().default([]), 
+        }).optional(),
+});
 
 export const getEventsQuerySchema = z.object({
     expand: z.enum(["all"]).optional(),
 })
 
-export const EventParamSchema = z.object({
-    id: z.string(),
-})
-
-export const getVerboseEventResponseSchema = verboseEventSchema.extend({
-    crew: z.object({
-        organizers: z.array(
-            baseCrewSchema
-                .omit({
-                    event_id: true,
-                    assigned_by: true,
-                })
-                .extend({
-                    first_name: z.string(),
-                    last_name: z.string(),
-                    ph_no: z.string(),
-                })
-        ),
-    }),
-})
 
 export const RegisteredSolo = z.object({
     registered: z.literal(true),
@@ -956,7 +932,6 @@ export type AssignPrizesError =
     | ParticipantNotCheckedIn
     | InvalidData
     | InternalError
-export type CheckInError = UserNotFound | AlreadyCheckedIn | PaymentPending | InternalError;
 
 // Volunteer Assignment Errors
 export type AssigningUserNotFound = {

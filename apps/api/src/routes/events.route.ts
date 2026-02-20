@@ -12,10 +12,10 @@ import {
     paginationSchema,
     getEventCheckInsParamSchema,
     getEventParticipantsParamSchema,
-    assignVolunteersSchema
     assignVolunteersSchema,
     AssignVolunteersError
 } from "@melinia/shared"
+
 import sql from "../db/connection"
 import {
     createEvent,
@@ -106,29 +106,60 @@ events.get("/:id/status", authMiddleware, zValidator("param", EventParamSchema),
     }
 })
 
-events.post("/:id/volunteer", authMiddleware, adminAndOrganizerMiddleware, zValidator("param", EventParamSchema), zValidator("json",assignVolunteersSchema), async c => {
-    try {
-        const { id } = c.req.valid("param")
-        const {volunteer_ids}=c.req.valid("json")
-        const userId = c.get("user_id")
+events.post(
+    "/:id/volunteer",
+    authMiddleware,
+    adminAndOrganizerMiddleware,
+    zValidator("param", EventParamSchema),
+    zValidator("json", assignVolunteersSchema),
+    async (c) => {
+        try {
+            const userId = c.get("user_id");
+            const { id } = c.req.valid("param");
+            const { volunteer_ids } = c.req.valid("json");
 
-        await assignVolunteersToEvent(id, volunteer_ids, userId);
+            const result = await assignVolunteersToEvent(id, volunteer_ids, userId);
 
-        return c.json({
-            success:true,
-            event_id:id,
-            volunteers: volunteer_ids,
-            message:`Volunteers assigned to event ${id}`
-        },201)
-    } catch (err) {
-        console.error(err)
-        if (err instanceof HTTPException) {
-            throw err
+            if (result.isErr) {
+                const { code, message } = result.error;
+
+                switch (code) {
+                    case "event_not_found":
+                    case "assigning_user_not_found":
+                        return c.json({ message }, 404);
+
+                    case "permission_denied":
+                    case "empty_volunteer_list":
+                    case "volunteers_not_found":
+                    case "invalid_volunteer_role":
+                    case "volunteer_already_assigned":
+                        return c.json({ message }, 400);
+
+                    case "internal_error":
+                    default:
+                        console.error("Unexpected error assigning volunteers:", result.error);
+                        return c.json({ message }, 500);
+                }
+            }
+
+            return c.json(
+                {
+                    success: true,
+                    event_id: id,
+                    volunteers: result.value.map((v) => v.user_id),
+                    message: `Volunteers assigned to event ${id}`,
+                },
+                201
+            );
+        } catch (err) {
+            console.error("Unhandled exception in /:id/volunteer:", err);
+            return c.json(
+                { message: "Unexpected error occurred while assigning volunteers" },
+                500
+            );
         }
-        throw new HTTPException(500, { message: "Failed to assign volunteers" })
     }
-})
-
+);
 events.post(
     "/",
     authMiddleware,
