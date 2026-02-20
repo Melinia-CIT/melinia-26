@@ -107,15 +107,15 @@ events.get("/:id/status", authMiddleware, zValidator("param", EventParamSchema),
 events.post("/:id/volunteer", authMiddleware, adminAndOrganizerMiddleware, zValidator("param", EventParamSchema), zValidator("json",assignVolunteersSchema), async c => {
     try {
         const { id } = c.req.valid("param")
-        const {volunteerIds}=c.req.valid("json")
+        const {volunteer_ids}=c.req.valid("json")
         const userId = c.get("user_id")
 
-        await assignVolunteersToEvent(id, volunteerIds, userId);
+        await assignVolunteersToEvent(id, volunteer_ids, userId);
 
         return c.json({
             success:true,
             event_id:id,
-            volunteers: volunteerIds,
+            volunteers: volunteer_ids,
             message:`Volunteers assigned to event ${id}`
         },201)
     } catch (err) {

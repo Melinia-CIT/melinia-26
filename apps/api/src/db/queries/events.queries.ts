@@ -415,6 +415,21 @@ export async function assignVolunteersToEvent(
             message: `These users are not volunteers: ${invalidRoleIds.join(", ")}`
         })
     }
+    
+    const existingAssignments = await tx`
+        SELECT user_id
+        FROM event_crews
+        WHERE event_id = ${eventId}
+        AND user_id = ANY(${volunteerIds}::text[]);
+    `
+
+    const alreadyAssignedIds = existingAssignments.map(e => e.user_id)
+
+    if (alreadyAssignedIds.length > 0) {
+        throw new HTTPException(400, {
+            message: `You cannot assign the same volunteer again to this event: ${alreadyAssignedIds.join(", ")}`
+        })
+    }
 
     const crews = await tx`
         INSERT INTO event_crews (event_id, user_id, assigned_by)
