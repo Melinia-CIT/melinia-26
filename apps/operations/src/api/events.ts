@@ -9,6 +9,7 @@ export interface SoloRegistration {
     last_name: string;
     college: string;
     degree: string;
+    ph_no: string;
     registered_at: string;
 }
 
@@ -18,6 +19,7 @@ export interface TeamMember {
     last_name: string;
     college: string;
     degree: string;
+    ph_no: string;
 }
 
 export interface TeamRegistration {
@@ -47,10 +49,43 @@ export interface GetEventRegistrationsParams {
     limit?: number;
 }
 
+export interface Rule {
+    id: number;
+    rule_no: number;
+    rule_description: string;
+}
+
+export interface Round {
+    id: number;
+    round_no: number;
+    round_name: string;
+    round_description: string;
+    start_time: string;
+    end_time: string;
+    rules: Rule[];
+}
+
+export interface EventDetail {
+    id: string;
+    name: string;
+    description: string;
+    participation_type: string;
+    event_type: string;
+    venue: string;
+    start_time: string;
+    end_time: string;
+    rounds: Round[];
+}
+
 // ── API factory ────────────────────────────────────────────────────────────
 
 export function createEventsApi(http: AxiosInstance) {
     return {
+        async getById(id: string): Promise<EventDetail> {
+            const { data } = await http.get<{ event: EventDetail }>(`/events/${id}`);
+            return data.event;
+        },
+
         async getRegistrations(
             eventId: string,
             params: GetEventRegistrationsParams = {},
