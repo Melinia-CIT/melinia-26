@@ -11,6 +11,10 @@ export function createUsersApi(http: AxiosInstance) {
 			const { data } = await http.get<GetUserByIdResponse>(`/users/${id}`);
 			return data.data;
 		},
+		async getMyEvents(): Promise<any[]> {
+			const { data } = await http.get<{ events: any[] }>("/users/me/events");
+			return data.events;
+		},
 	};
 }
 

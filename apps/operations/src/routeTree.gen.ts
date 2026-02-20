@@ -15,6 +15,8 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AppRegistrationsRouteImport } from './routes/app/registrations'
 import { Route as AppEventsRouteImport } from './routes/app/events'
 import { Route as AppCheckInRouteImport } from './routes/app/check-in'
+import { Route as AppEventsIndexRouteImport } from './routes/app/events.index'
+import { Route as AppEventsEventIdRouteImport } from './routes/app/events.$eventId'
 
 const AppRoute = AppRouteImport.update({
   id: '/app',
@@ -46,30 +48,45 @@ const AppCheckInRoute = AppCheckInRouteImport.update({
   path: '/check-in',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEventsIndexRoute = AppEventsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppEventsRoute,
+} as any)
+const AppEventsEventIdRoute = AppEventsEventIdRouteImport.update({
+  id: '/$eventId',
+  path: '/$eventId',
+  getParentRoute: () => AppEventsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/app/check-in': typeof AppCheckInRoute
-  '/app/events': typeof AppEventsRoute
+  '/app/events': typeof AppEventsRouteWithChildren
   '/app/registrations': typeof AppRegistrationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/app/': typeof AppIndexRoute
+  '/app/events/$eventId': typeof AppEventsEventIdRoute
+  '/app/events/': typeof AppEventsIndexRoute
 }
 export interface FileRoutesByTo {
   '/app/check-in': typeof AppCheckInRoute
-  '/app/events': typeof AppEventsRoute
   '/app/registrations': typeof AppRegistrationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/app': typeof AppIndexRoute
+  '/app/events/$eventId': typeof AppEventsEventIdRoute
+  '/app/events': typeof AppEventsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/app': typeof AppRouteWithChildren
   '/app/check-in': typeof AppCheckInRoute
-  '/app/events': typeof AppEventsRoute
+  '/app/events': typeof AppEventsRouteWithChildren
   '/app/registrations': typeof AppRegistrationsRoute
   '/auth/login': typeof AuthLoginRoute
   '/app/': typeof AppIndexRoute
+  '/app/events/$eventId': typeof AppEventsEventIdRoute
+  '/app/events/': typeof AppEventsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -80,13 +97,16 @@ export interface FileRouteTypes {
     | '/app/registrations'
     | '/auth/login'
     | '/app/'
+    | '/app/events/$eventId'
+    | '/app/events/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/app/check-in'
-    | '/app/events'
     | '/app/registrations'
     | '/auth/login'
     | '/app'
+    | '/app/events/$eventId'
+    | '/app/events'
   id:
     | '__root__'
     | '/app'
@@ -95,6 +115,8 @@ export interface FileRouteTypes {
     | '/app/registrations'
     | '/auth/login'
     | '/app/'
+    | '/app/events/$eventId'
+    | '/app/events/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -146,19 +168,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCheckInRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/events/': {
+      id: '/app/events/'
+      path: '/'
+      fullPath: '/app/events/'
+      preLoaderRoute: typeof AppEventsIndexRouteImport
+      parentRoute: typeof AppEventsRoute
+    }
+    '/app/events/$eventId': {
+      id: '/app/events/$eventId'
+      path: '/$eventId'
+      fullPath: '/app/events/$eventId'
+      preLoaderRoute: typeof AppEventsEventIdRouteImport
+      parentRoute: typeof AppEventsRoute
+    }
   }
 }
 
+interface AppEventsRouteChildren {
+  AppEventsEventIdRoute: typeof AppEventsEventIdRoute
+  AppEventsIndexRoute: typeof AppEventsIndexRoute
+}
+
+const AppEventsRouteChildren: AppEventsRouteChildren = {
+  AppEventsEventIdRoute: AppEventsEventIdRoute,
+  AppEventsIndexRoute: AppEventsIndexRoute,
+}
+
+const AppEventsRouteWithChildren = AppEventsRoute._addFileChildren(
+  AppEventsRouteChildren,
+)
+
 interface AppRouteChildren {
   AppCheckInRoute: typeof AppCheckInRoute
-  AppEventsRoute: typeof AppEventsRoute
+  AppEventsRoute: typeof AppEventsRouteWithChildren
   AppRegistrationsRoute: typeof AppRegistrationsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppCheckInRoute: AppCheckInRoute,
-  AppEventsRoute: AppEventsRoute,
+  AppEventsRoute: AppEventsRouteWithChildren,
   AppRegistrationsRoute: AppRegistrationsRoute,
   AppIndexRoute: AppIndexRoute,
 }
