@@ -147,11 +147,12 @@ export function createEventsApi(http: AxiosInstance) {
         async checkInRound(
             eventId: string,
             roundNo: number,
-            userId: string,
-        ): Promise<CheckInRoundResponse> {
-            const { data } = await http.post<CheckInRoundResponse>(
+            userIds: string[],
+            teamId: string | null
+        ): Promise<{ message: string }> {
+            const { data } = await http.post<{ message: string }>(
                 `/ops/events/${eventId}/round/${roundNo}/check-in`,
-                { user_id: userId } // send user_id in body if required, or is it via query params? Usually POST uses body. Wait, the curl snippet user provided earlier had body.
+                { user_ids: userIds, team_id: teamId }
             );
             return data;
         },

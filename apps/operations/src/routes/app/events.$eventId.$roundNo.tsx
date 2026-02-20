@@ -46,7 +46,7 @@ function RoundCheckInPage() {
 
     // Check-in mutation
     const checkInMutation = useMutation({
-        mutationFn: (userId: string) => api.events.checkInRound(eventId, roundNumber, userId),
+        mutationFn: ({ userIds, teamId }: { userIds: string[], teamId: string | null }) => api.events.checkInRound(eventId, roundNumber, userIds, teamId),
         onSuccess: () => {
             setQrError("");
             setCheckInError(null);
@@ -257,7 +257,7 @@ function RoundCheckInPage() {
                 participant={participant ?? null}
                 isLoading={isParticipantLoading}
                 error={participantError}
-                onCheckIn={(userId) => checkInMutation.mutate(userId)}
+                onCheckIn={(data) => checkInMutation.mutate(data)}
                 isCheckingIn={checkInMutation.isPending}
                 checkInSuccess={checkInMutation.isSuccess}
                 checkInError={checkInError}
