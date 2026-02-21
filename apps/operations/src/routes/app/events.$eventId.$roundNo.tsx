@@ -405,6 +405,11 @@ function RoundCheckInPage() {
                         participationType={event?.participation_type}
                     />
                 )}
+                {activeTab === "results" && (
+                    <div className="p-12 text-center text-neutral-500">
+                        Round results will be available soon.
+                    </div>
+                )}
             </div>
 
             {/* QR Scanner Modal */}
