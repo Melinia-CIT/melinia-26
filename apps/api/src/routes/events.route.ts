@@ -13,7 +13,6 @@ import {
     getEventCheckInsParamSchema,
     getEventParticipantsParamSchema,
     assignVolunteersSchema,
-    AssignVolunteersError
 } from "@melinia/shared"
 
 import sql from "../db/connection"
@@ -107,7 +106,7 @@ events.get("/:id/status", authMiddleware, zValidator("param", EventParamSchema),
 })
 
 events.post(
-    "/:id/volunteer",
+    "/:id/volunteers",
     authMiddleware,
     adminAndOrganizerMiddleware,
     zValidator("param", EventParamSchema),
@@ -142,21 +141,17 @@ events.post(
                 }
             }
 
-            return c.json(
-                {
-                    success: true,
-                    event_id: id,
-                    volunteers: result.value.map((v) => v.user_id),
-                    message: `Volunteers assigned to event ${id}`,
-                },
-                201
-            );
+            return c.json({
+                success: true,
+                event_id: id,
+                volunteers: result.value.map((v) => v.user_id),
+                message: `Volunteers assigned to event ${id}`,
+            }, 201);
         } catch (err) {
             console.error("Unhandled exception in /:id/volunteer:", err);
-            return c.json(
-                { message: "Unexpected error occurred while assigning volunteers" },
-                500
-            );
+            return c.json({
+                message: "Unexpected error occurred while assigning volunteers"
+            }, 500);
         }
     }
 );

@@ -353,26 +353,29 @@ export async function assignVolunteersToEvent(
     eventId: string,
     volunteerIds: string[],
     assignedBy: string,
-    tx = sql
 ): Promise<Result<Crew[], AssignVolunteersError>> {
     try {
-        const [event] = await tx`SELECT 1 FROM events WHERE id = ${eventId}`
+        const [event] = await sql`SELECT 1 FROM events WHERE id = ${eventId};`;
         if (!event) {
-            return Result.err({ code: "event_not_found", message: "Event not found" })
+            return Result.err({ code: "event_not_found", message: "Event not found" });
         }
 
-        const [userRole] = await tx`SELECT role FROM users WHERE id = ${assignedBy}`
+        const [userRole] = await sql`SELECT role FROM users WHERE id = ${assignedBy};`
         if (!userRole) {
-            return Result.err({ code: "assigning_user_not_found", message: "Assigning user not found" })
+            return Result.err({ code: "assigning_user_not_found", message: "Assigning user not found" });
         }
 
         if (userRole.role !== "ADMIN") {
-            const [organizerCheck] = await tx`
+            const [organizerCheck] = await sql`
                 SELECT 1 FROM event_crews 
                 WHERE event_id = ${eventId} 
-                AND user_id = ${assignedBy}`
+                AND user_id = ${assignedBy};
+            `;
             if (!organizerCheck) {
-                return Result.err({ code: "permission_denied", message: "Only admin or organizer of the respective event can assign volunteers" })
+                return Result.err({
+                    code: "permission_denied",
+                    message: "Only admin or organizer of the respective event can assign volunteers"
+                });
             }
         }
 
@@ -380,9 +383,10 @@ export async function assignVolunteersToEvent(
             return Result.err({ code: "empty_volunteer_list", message: "No volunteers provided" })
         }
 
-        const users = await tx`
+        const users = await sql`
             SELECT id, role FROM users 
-            WHERE id = ANY(${volunteerIds}::text[])`
+            WHERE id = ANY(${volunteerIds}::text[]);
+        `
         const foundIds = users.map(u => u.id)
         const notFoundIds = volunteerIds.filter(id => !foundIds.includes(id))
         if (notFoundIds.length > 0) {
@@ -394,19 +398,21 @@ export async function assignVolunteersToEvent(
             return Result.err({ code: "invalid_volunteer_role", message: `These users are not volunteers: ${invalidRoleIds.join(", ")}` })
         }
 
-        const existingAssignments = await tx`
+        const existingAssignments = await sql`
             SELECT user_id FROM event_crews
-            WHERE event_id = ${eventId} AND user_id = ANY(${volunteerIds}::text[])`
+            WHERE event_id = ${eventId} AND user_id = ANY(${volunteerIds}::text[]);
+        `
         const alreadyAssignedIds = existingAssignments.map(e => e.user_id)
         if (alreadyAssignedIds.length > 0) {
             return Result.err({ code: "volunteer_already_assigned", message: `Cannot assign same volunteer again: ${alreadyAssignedIds.join(", ")}` })
         }
 
-        const crews = await tx`
+        const crews = await sql`
             INSERT INTO event_crews (event_id, user_id, assigned_by)
             VALUES ${sql(volunteerIds.map(id => [eventId, id, assignedBy]))}
-            RETURNING *`
-        
+            RETURNING *;
+        `
+
         const parsedCrews = crews.map(crew => baseCrewSchema.parse(crew))
         return Result.ok(parsedCrews)
     } catch (err) {
