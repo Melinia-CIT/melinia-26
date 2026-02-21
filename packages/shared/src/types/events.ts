@@ -512,7 +512,7 @@ export const getEventCheckInSchema = z
         z.object({
             team_id: z.string(),
             type: z.literal("TEAM"),
-            team_id: z.string().optional(),
+            team_id: z.string(),
             name: z.string(),
             members: z.array(
                 z.object({

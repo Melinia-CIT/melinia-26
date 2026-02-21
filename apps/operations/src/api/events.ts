@@ -1,10 +1,21 @@
 import type { AxiosInstance } from "axios";
 
-// ── Registration types ─────────────────────────────────────────────────────
+import type {
+    EventRegistration,
+    ScanResult,
+    Rule,
+    Round,
+    VerboseEvent as EventDetail,
+    GetEventCheckIn,
+    GetEventParticipant,
+    AssignRoundResults,
+    BulkOperationResult,
+    RoundResult,
+    UserResultError,
+    TeamResultError,
+} from "@melinia/shared";
 
-import type { GetEventRegistration, ScanResult, Rule, Round, VerboseEvent as EventDetail } from "@melinia/shared";
-
-export type EventRegistration = GetEventRegistration;
+export type { EventRegistration, Rule, Round, EventDetail };
 
 export interface Pagination {
     from: number;
@@ -24,9 +35,15 @@ export interface GetEventRegistrationsParams {
     limit?: number;
 }
 
-export type { Rule, Round, EventDetail };
+
 
 export type RoundParticipant = ScanResult;
+export type RoundCheckInEntry = GetEventCheckIn;
+export type RoundQualifiedParticipant = GetEventParticipant;
+
+// Re-export shared result types for use in routes
+export type { AssignRoundResults, BulkOperationResult, RoundResult, UserResultError, TeamResultError };
+export type RoundResultStatus = "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED";
 
 export interface CheckInRoundResponse {
     user_ids: string[];
@@ -50,13 +67,6 @@ export interface PostRoundResultsResponse {
     data: BulkOperationResult;
     user_errors?: UserResultError[];
     team_errors?: TeamResultError[];
-}
-
-export interface AddVolunteersResponse {
-    success: boolean;
-    event_id: string;
-    volunteers: string[];
-    message: string;
 }
 
 // ── API factory ────────────────────────────────────────────────────────────
@@ -153,29 +163,6 @@ export function createEventsApi(http: AxiosInstance) {
             const { data } = await http.post<PostRoundResultsResponse>(
                 `/ops/events/${eventId}/rounds/${roundNo}/results`,
                 payload,
-            );
-            return data;
-        },
-
-        async getRoundResults(
-            eventId: string,
-            roundNo: number | string,
-            params: Partial<GetRoundResultsQuery> = {},
-        ): Promise<PaginatedRoundResults> {
-            const { data } = await http.get<PaginatedRoundResults>(
-                `/ops/events/${eventId}/rounds/${roundNo}/results`,
-                { params },
-            );
-            return data;
-        },
-
-        async addVolunteers(
-            eventId: string,
-            volunteerIds: string[],
-        ): Promise<AddVolunteersResponse> {
-            const { data } = await http.post<AddVolunteersResponse>(
-                `/events/${eventId}/volunteers`,
-                { volunteer_ids: volunteerIds },
             );
             return data;
         },
