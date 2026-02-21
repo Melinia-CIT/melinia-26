@@ -351,10 +351,14 @@ export async function getVolunteers(eventIds: string[]): Promise<GetCrew[]> {
 
 export async function assignVolunteersToEvent(
     eventId: string,
-    volunteerIds: string[],
+    volunteerEmails: string[],
     assignedBy: string,
 ): Promise<Result<Crew[], AssignVolunteersError>> {
     try {
+        if (!volunteerEmails || volunteerEmails.length === 0) {
+            return Result.err({ code: "empty_volunteer_list", message: "No volunteers provided" })
+        }
+
         const [event] = await sql`SELECT 1 FROM events WHERE id = ${eventId};`;
         if (!event) {
             return Result.err({ code: "event_not_found", message: "Event not found" });
@@ -367,10 +371,10 @@ export async function assignVolunteersToEvent(
 
         if (userRole.role !== "ADMIN") {
             const [organizerCheck] = await sql`
-                SELECT 1 FROM event_crews 
-                WHERE event_id = ${eventId} 
-                AND user_id = ${assignedBy};
-            `;
+            SELECT 1 FROM event_crews 
+            WHERE event_id = ${eventId} 
+            AND user_id = ${assignedBy};
+        `;
             if (!organizerCheck) {
                 return Result.err({
                     code: "permission_denied",
@@ -379,37 +383,39 @@ export async function assignVolunteersToEvent(
             }
         }
 
-        if (!volunteerIds || volunteerIds.length === 0) {
-            return Result.err({ code: "empty_volunteer_list", message: "No volunteers provided" })
-        }
-
         const users = await sql`
-            SELECT id, role FROM users 
-            WHERE id = ANY(${volunteerIds}::text[]);
+            SELECT id, role, email FROM users 
+            WHERE email = ANY(${volunteerEmails});
         `
-        const foundIds = users.map(u => u.id)
-        const notFoundIds = volunteerIds.filter(id => !foundIds.includes(id))
-        if (notFoundIds.length > 0) {
-            return Result.err({ code: "volunteers_not_found", message: `These user IDs do not exist: ${notFoundIds.join(", ")}` })
+
+        const foundEmails = users.map(u => u.email)
+        const notFoundEmails = volunteerEmails.filter(email => !foundEmails.includes(email))
+        if (notFoundEmails.length > 0) {
+            return Result.err({ code: "volunteers_not_found", message: `These emails do not exist: ${notFoundEmails.join(", ")}` })
         }
 
-        const invalidRoleIds = users.filter(u => u.role !== "VOLUNTEER").map(u => u.id)
-        if (invalidRoleIds.length > 0) {
-            return Result.err({ code: "invalid_volunteer_role", message: `These users are not volunteers: ${invalidRoleIds.join(", ")}` })
+        const invalidRoleEmails = users.filter(u => u.role !== "VOLUNTEER").map(u => u.email)
+        if (invalidRoleEmails.length > 0) {
+            return Result.err({ code: "invalid_volunteer_role", message: `These users are not volunteers: ${invalidRoleEmails.join(", ")}` })
         }
 
         const existingAssignments = await sql`
             SELECT user_id FROM event_crews
-            WHERE event_id = ${eventId} AND user_id = ANY(${volunteerIds}::text[]);
+            WHERE event_id = ${eventId} AND user_id = ANY(${users.map(u => u.id)});
         `
-        const alreadyAssignedIds = existingAssignments.map(e => e.user_id)
-        if (alreadyAssignedIds.length > 0) {
-            return Result.err({ code: "volunteer_already_assigned", message: `Cannot assign same volunteer again: ${alreadyAssignedIds.join(", ")}` })
+
+        const assignedIds = new Set(existingAssignments.map(a => a.user_id))
+        const alreadyAssignedVolunteers = users
+            .filter(u => assignedIds.has(u.id))
+            .map(u => u.email)
+
+        if (alreadyAssignedVolunteers.length > 0) {
+            return Result.err({ code: "volunteer_already_assigned", message: `Cannot assign same volunteer again: ${alreadyAssignedVolunteers.join(", ")}` })
         }
 
         const crews = await sql`
             INSERT INTO event_crews (event_id, user_id, assigned_by)
-            VALUES ${sql(volunteerIds.map(id => [eventId, id, assignedBy]))}
+            VALUES ${sql(users.map(u => [eventId, u.id, assignedBy]))}
             RETURNING *;
         `
 

@@ -124,9 +124,6 @@ events.post(
 
                 switch (code) {
                     case "event_not_found":
-                    case "assigning_user_not_found":
-                        return c.json({ message }, 404);
-
                     case "permission_denied":
                     case "empty_volunteer_list":
                     case "volunteers_not_found":
