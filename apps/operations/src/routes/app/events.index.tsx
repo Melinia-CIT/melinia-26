@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
   Clock,
@@ -7,6 +7,7 @@ import {
   NavArrowRight,
   Group,
   User,
+  ArrowLeft,
 } from 'iconoir-react'
 import { useState } from 'react'
 import { Input } from '@/ui/Input'
@@ -50,6 +51,15 @@ function EventsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Back link */}
+      <Link
+        to="/app"
+        className="inline-flex items-center gap-2 text-xs text-neutral-500 hover:text-white transition-colors duration-150 uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Back to Dashboard
+      </Link>
+
       {/* Page header */}
       <div className="space-y-1">
         <h2 className="text-3xl font-bold text-white">My Events</h2>

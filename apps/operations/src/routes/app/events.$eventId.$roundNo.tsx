@@ -405,11 +405,6 @@ function RoundCheckInPage() {
                         participationType={event?.participation_type}
                     />
                 )}
-                {activeTab === "results" && (
-                    <div className="p-12 text-center text-neutral-500">
-                        Round results will be available soon.
-                    </div>
-                )}
             </div>
 
             {/* QR Scanner Modal */}
@@ -772,6 +767,7 @@ function CheckedInTable({
     participationType,
 }: CheckedInTableProps) {
     const { api } = Route.useRouteContext();
+    const queryClient = useQueryClient();
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [feedback, setFeedback] = useState<ResultFeedback | null>(null);
 
@@ -802,6 +798,11 @@ function CheckedInTable({
             const hasErrors = userErrors.length > 0 || teamErrors.length > 0;
 
             setSelected(new Set());
+
+            // Invalidate queries to refresh tables
+            queryClient.invalidateQueries({ queryKey: ['round-results'] });
+            queryClient.invalidateQueries({ queryKey: ['round-checkins'] });
+            queryClient.invalidateQueries({ queryKey: ['round-qualified'] });
 
             if (recorded === 0) {
                 setFeedback({ kind: "failure", userErrors, teamErrors });

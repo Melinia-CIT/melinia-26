@@ -103,7 +103,7 @@ export function RoundCheckInPopup({
                     {participant && !isLoading && !error && (
                         <div className="space-y-4">
                             {participant.type === "TEAM" ? (() => {
-                                const activeUserIds = participant.members
+                                const activeUserIds = (participant.members ?? [])
                                     .map(m => m.user_id)
                                     .filter(id => !removedUserIds.includes(id));
 
@@ -116,7 +116,7 @@ export function RoundCheckInPopup({
                                         </div>
 
                                         <div className="space-y-3">
-                                            {participant.members.map(member => {
+                                            {participant.members?.map(member => {
                                                 const isRemoved = removedUserIds.includes(member.user_id);
                                                 return (
                                                     <div key={member.user_id} className={`p-4 border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200 ${isRemoved ? 'bg-neutral-950/50 border-neutral-900 opacity-50' : 'bg-neutral-900 border-neutral-800'}`}>
@@ -143,7 +143,7 @@ export function RoundCheckInPopup({
                                         <div className="pt-2">
                                             <Button
                                                 variant="primary"
-                                                onClick={() => onCheckIn({ userIds: activeUserIds, teamId: participant.team_id })}
+                                                onClick={() => onCheckIn({ userIds: activeUserIds, teamId: participant.team_id ?? null })}
                                                 disabled={isCheckingIn || checkInSuccess || activeUserIds.length === 0}
                                                 className="w-full py-3"
                                             >
@@ -161,12 +161,12 @@ export function RoundCheckInPopup({
                                     </div>
                                     <div className="p-4 bg-neutral-900 border border-neutral-800 flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <p className="font-semibold text-white text-sm">Participant ID</p>
+                                            <p className="font-semibold text-white text-sm">{participant.first_name} {participant.last_name}</p>
                                             <p className="text-xs text-neutral-400 font-mono">{participant.user_id}</p>
                                         </div>
                                         <Button
                                             variant="primary"
-                                            onClick={() => onCheckIn({ userIds: [participant.user_id], teamId: null })}
+                                            onClick={() => onCheckIn({ userIds: [participant.user_id ?? ""], teamId: null })}
                                             disabled={isCheckingIn || checkInSuccess}
                                         >
                                             {isCheckingIn ? "Checking in..." : "Check In"}
