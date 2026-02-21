@@ -13,11 +13,13 @@ import type {
     RoundResult,
     UserResultError,
     TeamResultError,
+    RoundResultWithParticipant,
+    PaginatedRoundResults,
+    GetRoundResultsQuery,
 } from "@melinia/shared";
 
-import type { GetEventRegistration, ScanResult, Rule, Round, VerboseEvent as EventDetail } from "@melinia/shared";
-
-export type EventRegistration = GetEventRegistration;
+export type { EventRegistration, Rule, Round, EventDetail };
+export type { RoundResultWithParticipant, PaginatedRoundResults, GetRoundResultsQuery };
 
 export interface Pagination {
     from: number;
@@ -37,9 +39,9 @@ export interface GetEventRegistrationsParams {
     limit?: number;
 }
 
-
-
 export type RoundParticipant = ScanResult;
+export type RoundCheckInEntry = GetEventCheckIn;
+export type RoundQualifiedParticipant = GetEventParticipant;
 
 // Re-export shared result types for use in routes
 export type { AssignRoundResults, BulkOperationResult, RoundResult, UserResultError, TeamResultError };
@@ -163,6 +165,18 @@ export function createEventsApi(http: AxiosInstance) {
             const { data } = await http.post<PostRoundResultsResponse>(
                 `/ops/events/${eventId}/rounds/${roundNo}/results`,
                 payload,
+            );
+            return data;
+        },
+
+        async getRoundResults(
+            eventId: string,
+            roundNo: number | string,
+            params: Partial<GetRoundResultsQuery> = {},
+        ): Promise<PaginatedRoundResults> {
+            const { data } = await http.get<PaginatedRoundResults>(
+                `/ops/events/${eventId}/rounds/${roundNo}/results`,
+                { params },
             );
             return data;
         },

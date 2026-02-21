@@ -8,7 +8,7 @@ import { Field } from "@/ui/Field";
 import { Input } from "@/ui/Input";
 import { RoundCheckInPopup } from "@/ui/RoundCheckInPopup";
 import { QRScanner } from "@/ui/QRScanner";
-import type { RoundCheckInEntry, RoundQualifiedParticipant, RoundResultStatus } from "@/api/events";
+import type { RoundCheckInEntry, RoundQualifiedParticipant, RoundResultStatus, RoundResultWithParticipant } from "@/api/events";
 
 export const Route = createFileRoute('/app/events/$eventId/$roundNo')({
     component: RoundCheckInPage,
@@ -30,6 +30,7 @@ function RoundCheckInPage() {
     const [activeTab, setActiveTab] = useState<"participants" | "checkedin" | "results">("participants");
     const [checkInsPage, setCheckInsPage] = useState(0);
     const [qualifiedPage, setQualifiedPage] = useState(0);
+    const [resultsPage, setResultsPage] = useState(1); // API uses 1-based pages
     const PAGE_LIMIT = 10;
 
     const participantIdPattern = /^MLNU[A-Za-z0-9]{6}$/;
@@ -73,6 +74,18 @@ function RoundCheckInPage() {
         queryKey: ['round-qualified', eventId, roundNo, qualifiedPage],
         queryFn: () => api.events.getRoundParticipants(eventId, roundNo, { from: qualifiedPage * PAGE_LIMIT, limit: PAGE_LIMIT }),
         enabled: true,
+        staleTime: 1000 * 30,
+    });
+
+    // Fetch round results (for Results tab)
+    const {
+        data: roundResultsData,
+        isLoading: isResultsLoading,
+        error: resultsError,
+    } = useQuery({
+        queryKey: ['round-results', eventId, roundNo, resultsPage],
+        queryFn: () => api.events.getRoundResults(eventId, roundNo, { page: resultsPage, limit: PAGE_LIMIT }),
+        enabled: activeTab === "results",
         staleTime: 1000 * 30,
     });
 
@@ -377,9 +390,17 @@ function RoundCheckInPage() {
                     />
                 )}
                 {activeTab === "results" && (
-                    <div className="p-12 text-center text-neutral-500">
-                        Round results will be available soon.
-                    </div>
+                    <ResultsTable
+                        data={roundResultsData?.data ?? []}
+                        isLoading={isResultsLoading}
+                        error={resultsError as Error | null}
+                        page={resultsPage}
+                        totalPages={roundResultsData?.totalPages ?? 1}
+                        total={roundResultsData?.total ?? 0}
+                        pageLimit={PAGE_LIMIT}
+                        onPrev={() => setResultsPage(p => Math.max(1, p - 1))}
+                        onNext={() => setResultsPage(p => p + 1)}
+                    />
                 )}
             </div>
 
@@ -409,6 +430,276 @@ function RoundCheckInPage() {
                 checkInError={checkInError}
             />
         </div>
+    );
+}
+
+// ── Results Table ─────────────────────────────────────────────────────────────
+
+interface ResultsTableProps {
+    data: RoundResultWithParticipant[];
+    isLoading: boolean;
+    error: Error | null;
+    page: number;
+    totalPages: number;
+    total: number;
+    pageLimit: number;
+    onPrev: () => void;
+    onNext: () => void;
+}
+
+const STATUS_STYLES: Record<string, { badge: string; dot: string; label: string }> = {
+    QUALIFIED: { badge: "border-emerald-700 bg-emerald-950/40 text-emerald-400", dot: "bg-emerald-400", label: "Qualified" },
+    ELIMINATED: { badge: "border-amber-700  bg-amber-950/40  text-amber-400", dot: "bg-amber-400", label: "Eliminated" },
+    DISQUALIFIED: { badge: "border-red-800    bg-red-950/40    text-red-400", dot: "bg-red-400", label: "Disqualified" },
+};
+
+function ResultStatusBadge({ status }: { status: string }) {
+    const s = STATUS_STYLES[status] ?? { badge: "border-neutral-700 bg-neutral-900 text-neutral-400", dot: "bg-neutral-500", label: status };
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border whitespace-nowrap ${s.badge}`}>
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
+            {s.label}
+        </span>
+    );
+}
+
+function ResultsTable({ data, isLoading, error, page, totalPages, total, pageLimit, onPrev, onNext }: ResultsTableProps) {
+    if (isLoading) {
+        return (
+            <div className="p-12 text-center text-neutral-500 font-mono text-sm">
+                Loading results…
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-12 text-center space-y-2">
+                <p className="text-red-500 text-sm font-medium">Failed to load round results</p>
+                <p className="text-xs text-neutral-600 font-mono">{String(error)}</p>
+            </div>
+        );
+    }
+
+    if (data.length === 0) {
+        return (
+            <div className="p-12 text-center text-neutral-500 text-sm">
+                No results recorded for this round yet.
+            </div>
+        );
+    }
+
+    // Group adjacent results by team_id to use rowSpan
+    const groups: Array<{
+        type: "team" | "solo";
+        team_id?: string;
+        team_name?: string | null;
+        points: number;
+        status: string;
+        eval_at: Date;
+        eval_by: string;
+        members: RoundResultWithParticipant[];
+    }> = [];
+
+    data.forEach((item) => {
+        if (item.team_id) {
+            const lastGroup = groups[groups.length - 1];
+            if (lastGroup && lastGroup.type === "team" && lastGroup.team_id === item.team_id) {
+                lastGroup.members.push(item);
+            } else {
+                groups.push({
+                    type: "team",
+                    team_id: item.team_id,
+                    team_name: item.team_name,
+                    points: item.points,
+                    status: item.status,
+                    eval_at: item.eval_at,
+                    eval_by: item.eval_by,
+                    members: [item]
+                });
+            }
+        } else {
+            groups.push({
+                type: "solo",
+                points: item.points,
+                status: item.status,
+                eval_at: item.eval_at,
+                eval_by: item.eval_by,
+                members: [item]
+            });
+        }
+    });
+
+    const pageOffset = (page - 1) * pageLimit;
+
+    return (
+        <>
+            {/* Mobile card view */}
+            <div className="md:hidden divide-y divide-neutral-800">
+                {groups.map((group, gIdx) => {
+                    const isTeam = group.type === "team";
+                    return (
+                        <div key={isTeam ? `team-${group.team_id}` : `solo-${group.members[0].user_id}`} className="p-4 space-y-4">
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                    {isTeam ? (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <TypeBadge type="TEAM" />
+                                                <span className="font-bold text-sm text-white uppercase tracking-wider">{group.team_name}</span>
+                                            </div>
+                                            <div className="space-y-2 pl-2 border-l-2 border-neutral-800/80 ml-1">
+                                                {group.members.map(m => (
+                                                    <div key={m.user_id} className="text-xs text-neutral-400">
+                                                        <div className="font-medium text-neutral-300">{m.name}</div>
+                                                        <div className="text-[10px] text-neutral-600 font-mono mt-0.5">{m.user_id}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <TypeBadge type="SOLO" />
+                                                <span className="text-[10px] text-neutral-600 font-mono uppercase">Solo Entry</span>
+                                            </div>
+                                            <div className="font-semibold text-sm text-white">{group.members[0].name}</div>
+                                            <div className="text-[10px] text-neutral-500 font-mono">{group.members[0].email}</div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex flex-col items-end gap-3 pl-4 shrink-0">
+                                    <ResultStatusBadge status={group.status} />
+                                    <div className="flex flex-col items-end leading-none">
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-xl font-black text-white tabular-nums">{group.points}</span>
+                                            <span className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest">pts</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-neutral-700 font-mono pt-1 border-t border-neutral-800/40">
+                                <span>eval: {group.eval_by}</span>
+                                <span>{new Date(group.eval_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                            </div>
+                        </div>
+                    );
+                })}
+                {/* Mobile pagination */}
+                <div className="flex items-center justify-between px-4 py-3 bg-neutral-950/60 border-t border-neutral-800 text-xs text-neutral-500">
+                    <span className="font-mono">
+                        {total === 0 ? "No results" : `Showing ${groups.length} groups`}
+                    </span>
+                    <div className="flex gap-2">
+                        <button onClick={onPrev} disabled={page <= 1} className="p-1.5 border border-neutral-800 hover:border-neutral-600 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                            <NavArrowLeft className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={onNext} disabled={page >= totalPages} className="p-1.5 border border-neutral-800 hover:border-neutral-600 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                            <NavArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden md:block border border-neutral-800 bg-neutral-950 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-neutral-800 bg-neutral-900/60 font-mono">
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[320px]">Team / Entry</th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">Members</th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-l border-neutral-800/60 w-[240px]">Evaluated By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {groups.map((group, _gIdx) => {
+                                const isTeam = group.type === "team";
+                                return group.members.map((member, mIdx) => (
+                                    <tr key={member.id} className={`border-b border-neutral-800/60 last:border-0 hover:bg-neutral-900/10 transition-colors duration-150 ${mIdx > 0 ? 'bg-neutral-950/20' : ''}`}>
+
+                                        {/* Column 1: Team Info - spanned */}
+                                        {mIdx === 0 && (
+                                            <td rowSpan={group.members.length} className="px-6 py-6 border-r border-neutral-800/40 bg-neutral-900/20 align-top">
+                                                <div className="flex flex-col gap-4">
+                                                    <div>
+                                                        {isTeam ? (
+                                                            <>
+                                                                <div className="text-sm font-black text-white uppercase tracking-widest leading-none mb-1">{group.team_name}</div>
+                                                                <div className="text-[10px] text-neutral-600 font-mono tracking-tight">{group.team_id}</div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="flex items-center gap-2">
+                                                                <TypeBadge type="SOLO" />
+                                                                <span className="text-[10px] text-neutral-700 uppercase tracking-widest font-mono">Solo Entry</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-6 pt-2 border-t border-neutral-800/60">
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-[9px] text-neutral-600 uppercase font-bold tracking-tighter">Points</span>
+                                                            <div className="flex items-baseline gap-1">
+                                                                <span className="text-xl font-black text-white tabular-nums leading-none">{group.points}</span>
+                                                                <span className="text-[9px] text-neutral-700 font-bold uppercase tracking-widest">pts</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5 flex-1">
+                                                            <span className="text-[9px] text-neutral-600 uppercase font-bold tracking-tighter">Status</span>
+                                                            <ResultStatusBadge status={group.status} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        )}
+
+                                        {/* Column 2: Individual Members */}
+                                        <td className="px-6 py-4 align-middle">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-neutral-800 shrink-0" />
+                                                <div className="min-w-0">
+                                                    <div className="text-sm font-semibold text-white truncate leading-tight">{member.name}</div>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <div className="text-[10px] text-neutral-500 font-mono truncate">{member.email}</div>
+                                                        <span className="text-neutral-800 text-[10px]">|</span>
+                                                        <div className="text-[9px] text-neutral-600 font-mono">{member.user_id}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {/* Column 3: Evaluator Info - spanned */}
+                                        {mIdx === 0 && (
+                                            <td rowSpan={group.members.length} className="px-6 py-4 border-l border-neutral-800/40 bg-neutral-900/10 align-middle">
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-5 h-5 rounded-full bg-neutral-800 flex items-center justify-center text-[9px] text-neutral-500 font-bold uppercase">AD</div>
+                                                        <span className="text-[11px] text-neutral-400 font-mono font-medium">{group.eval_by}</span>
+                                                    </div>
+                                                    <div className="text-[10px] text-neutral-700 mt-1 pl-7">
+                                                        {new Date(group.eval_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ));
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <TablePagination
+                    page={page}
+                    totalPages={totalPages}
+                    total={total}
+                    pageLimit={pageLimit}
+                    onPrev={onPrev}
+                    onNext={onNext}
+                />
+            </div>
+        </>
     );
 }
 
@@ -454,7 +745,6 @@ function CheckedInTable({
 }: CheckedInTableProps) {
     const { api } = Route.useRouteContext();
     const [selected, setSelected] = useState<Set<string>>(new Set());
-    const [appliedStatus, setAppliedStatus] = useState<Record<string, ParticipantStatus>>({});
     const [feedback, setFeedback] = useState<ResultFeedback | null>(null);
 
     const allIds = data.map(entryId);
@@ -483,18 +773,6 @@ function CheckedInTable({
             const teamErrors = res.team_errors ?? [];
             const hasErrors = userErrors.length > 0 || teamErrors.length > 0;
 
-            // Apply statuses for entries that succeeded
-            const failedUserIds = new Set(userErrors.map(e => e.user_id));
-            const failedTeamIds = new Set(teamErrors.map(e => e.team_id));
-            const updates: Record<string, ParticipantStatus> = {};
-            vars.ids.forEach(id => {
-                const entry = entryMap.get(id)!;
-                const failed = entry.type === "SOLO"
-                    ? failedUserIds.has(entry.participant_id)
-                    : failedTeamIds.has(entry.team_id ?? entry.name);
-                if (!failed) updates[id] = vars.status;
-            });
-            setAppliedStatus(prev => ({ ...prev, ...updates }));
             setSelected(new Set());
 
             if (recorded === 0) {
@@ -662,7 +940,6 @@ function CheckedInTable({
                             entry={entry}
                             checked={selected.has(id)}
                             onToggle={() => toggleEntry(id)}
-                            status={appliedStatus[id]}
                         />
                     );
                 })}
@@ -695,9 +972,7 @@ function CheckedInTable({
                                 <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
                                     Phone Number
                                 </th>
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-l border-neutral-800/60 w-[140px]">
-                                    Status
-                                </th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -709,7 +984,6 @@ function CheckedInTable({
                                         entry={entry}
                                         checked={selected.has(id)}
                                         onToggle={() => toggleEntry(id)}
-                                        status={appliedStatus[id]}
                                     />
                                 );
                             })}
@@ -730,38 +1004,15 @@ function CheckedInTable({
     );
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status?: ParticipantStatus }) {
-    if (!status) return <span className="text-[10px] text-neutral-700 uppercase tracking-widest font-mono">—</span>;
-    const map: Record<ParticipantStatus, string> = {
-        QUALIFIED: "text-emerald-400 border-emerald-800 bg-emerald-950/40",
-        ELIMINATED: "text-amber-400 border-amber-800 bg-amber-950/40",
-        DISQUALIFIED: "text-red-400 border-red-900 bg-red-950/40",
-    };
-    const dotMap: Record<ParticipantStatus, string> = {
-        QUALIFIED: "bg-emerald-400",
-        ELIMINATED: "bg-amber-400",
-        DISQUALIFIED: "bg-red-400",
-    };
-    return (
-        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${map[status]}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${dotMap[status]}`} />
-            {status.charAt(0) + status.slice(1).toLowerCase()}
-        </span>
-    );
-}
-
 // ── Row + Card components (now controlled) ────────────────────────────────────
 
 interface CheckedInRowGroupProps {
     entry: RoundCheckInEntry;
     checked: boolean;
     onToggle: () => void;
-    status?: ParticipantStatus;
 }
 
-function CheckedInRowGroup({ entry, checked, onToggle, status }: CheckedInRowGroupProps) {
+function CheckedInRowGroup({ entry, checked, onToggle }: CheckedInRowGroupProps) {
     const rowHighlight = checked ? "bg-neutral-900/50" : "";
 
     if (entry.type === "SOLO") {
@@ -799,9 +1050,7 @@ function CheckedInRowGroup({ entry, checked, onToggle, status }: CheckedInRowGro
                 <td className="px-6 py-4">
                     <div className="text-xs text-neutral-500 font-mono">{entry.ph_no}</div>
                 </td>
-                <td className="px-6 py-4 border-l border-neutral-800/60">
-                    <StatusBadge status={status} />
-                </td>
+
             </tr>
         );
     }
@@ -848,11 +1097,7 @@ function CheckedInRowGroup({ entry, checked, onToggle, status }: CheckedInRowGro
                     <td className="px-6 py-4">
                         <div className="text-xs text-neutral-500 font-mono">{member.ph_no}</div>
                     </td>
-                    {mIdx === 0 && (
-                        <td rowSpan={entry.members.length} className="px-6 py-4 border-l border-neutral-800/60 align-middle">
-                            <StatusBadge status={status} />
-                        </td>
-                    )}
+
                 </tr>
             ))}
         </>
@@ -863,10 +1108,9 @@ interface CheckedInCardProps {
     entry: RoundCheckInEntry;
     checked: boolean;
     onToggle: () => void;
-    status?: ParticipantStatus;
 }
 
-function CheckedInCard({ entry, checked, onToggle, status }: CheckedInCardProps) {
+function CheckedInCard({ entry, checked, onToggle }: CheckedInCardProps) {
     const cardBase = `p-4 space-y-3 relative transition-colors duration-150 ${checked ? "bg-neutral-900/60" : ""}`;
     const checkboxCls = "w-5 h-5 bg-black border-neutral-700 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white shrink-0";
 
@@ -884,7 +1128,7 @@ function CheckedInCard({ entry, checked, onToggle, status }: CheckedInCardProps)
                     <span className="font-semibold text-white truncate flex-1">{entry.first_name} {entry.last_name}</span>
                 </>
             )}
-            {status && <StatusBadge status={status} />}
+
         </div>
     );
 
