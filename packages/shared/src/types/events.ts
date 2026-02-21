@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError,  } from "./users";
+import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError, } from "./users";
 import type { PaymentPending } from "./payments";
 import { memberSchema } from "./teams";
 
@@ -492,6 +492,7 @@ export const getEventParticipantsParamSchema = getEventCheckInsParamSchema
 export const getEventCheckInSchema = z
     .discriminatedUnion("type", [
         z.object({
+            team_id: z.string(),
             type: z.literal("TEAM"),
             name: z.string(),
             members: z.array(
@@ -509,10 +510,10 @@ export const getEventCheckInSchema = z
             checkedin_by: z.string(),
         }),
         z.object({
+            participant_id: z.string(),
             type: z.literal("SOLO"),
             first_name: z.string(),
             last_name: z.string(),
-            participant_id: z.string(),
             college: z.string(),
             degree: z.string(),
             ph_no: z.string(),
@@ -525,6 +526,7 @@ export const getEventCheckInSchema = z
 export const getEventParticipantSchema = z
     .discriminatedUnion("type", [
         z.object({
+            team_id: z.string(),
             type: z.literal("TEAM"),
             name: z.string(),
             members: z.array(
@@ -541,10 +543,10 @@ export const getEventParticipantSchema = z
             registered_at: z.coerce.date(),
         }),
         z.object({
+            participant_id: z.string(),
             type: z.literal("SOLO"),
             first_name: z.string(),
             last_name: z.string(),
-            participant_id: z.string(),
             college: z.string(),
             degree: z.string(),
             ph_no: z.string(),
@@ -570,7 +572,7 @@ export const roundCheckInParamSchema = z.object({
 });
 export const checkInTeamSchema = memberSchema.safeExtend({
     status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPEND']),
-    payment_status:z.enum(["PAID", "UNPAID", "EXEMPTED"])
+    payment_status: z.enum(["PAID", "UNPAID", "EXEMPTED"])
 })
 export const baseScanResultSchema = z.object({
     type: z.enum(["SOLO", "TEAM"]),
@@ -694,17 +696,17 @@ export type EventRoundCheckInInput = z.infer<typeof eventRoundCheckInSchema>
 
 export type RoundCheckInError =
     | {
-          code: "round_not_found"
-          message: string
-      }
+        code: "round_not_found"
+        message: string
+    }
     | {
-          code: "user_not_registered"
-          message: string
-      }
+        code: "user_not_registered"
+        message: string
+    }
     | {
-          code: "not_checked_in_globally"
-          message: string
-      }
+        code: "not_checked_in_globally"
+        message: string
+    }
     | AlreadyCheckedIn
     | UserNotFound
     | EventNotFound
