@@ -2,7 +2,7 @@ import type { AxiosInstance } from "axios";
 
 // ── Registration types ─────────────────────────────────────────────────────
 
-import type { GetEventRegistration, ScanResult, Rule, Round, VerboseEvent as EventDetail } from "@melinia/shared";
+import type { GetEventRegistration, ScanResult, Rule, Round, VerboseEvent as EventDetail, GetEventCheckIn, GetEventParticipant } from "@melinia/shared";
 
 export type EventRegistration = GetEventRegistration;
 
@@ -27,10 +27,22 @@ export interface GetEventRegistrationsParams {
 export type { Rule, Round, EventDetail };
 
 export type RoundParticipant = ScanResult;
+export type RoundCheckInEntry = GetEventCheckIn;
+export type RoundQualifiedParticipant = GetEventParticipant;
 
 export interface CheckInRoundResponse {
     user_ids: string[];
     team_id: string | null;
+}
+
+export interface RoundCheckInsResponse {
+    data: RoundCheckInEntry[];
+    pagination: Pagination;
+}
+
+export interface RoundParticipantsResponse {
+    data: RoundQualifiedParticipant[];
+    pagination: Pagination;
 }
 
 // ── API factory ────────────────────────────────────────────────────────────
@@ -81,6 +93,40 @@ export function createEventsApi(http: AxiosInstance) {
             const { data } = await http.post<{ message: string }>(
                 `/ops/events/${eventId}/round/${roundNo}/check-in`,
                 { user_ids: userIds, team_id: teamId }
+            );
+            return data;
+        },
+
+        async getRoundCheckIns(
+            eventId: string,
+            roundId: number | string,
+            params: { from?: number; limit?: number } = {},
+        ): Promise<RoundCheckInsResponse> {
+            const { data } = await http.get<RoundCheckInsResponse>(
+                `/events/${eventId}/rounds/${roundId}/checkins`,
+                {
+                    params: {
+                        from: params.from ?? 0,
+                        limit: params.limit ?? 10,
+                    },
+                },
+            );
+            return data;
+        },
+
+        async getRoundParticipants(
+            eventId: string,
+            roundNo: number | string,
+            params: { from?: number; limit?: number } = {},
+        ): Promise<RoundParticipantsResponse> {
+            const { data } = await http.get<RoundParticipantsResponse>(
+                `/events/${eventId}/rounds/${roundNo}/participants`,
+                {
+                    params: {
+                        from: params.from ?? 0,
+                        limit: params.limit ?? 10,
+                    },
+                },
             );
             return data;
         },
