@@ -635,7 +635,7 @@ export type GetEventCheckInsError = EventOrRoundNotFound | InternalError;
 export type GetEventRegistrationsError = EventNotFound | InternalError;
 export type GetEventParticipant = z.infer<typeof getEventParticipantSchema>;
 export type GetEventParticipantsError = EventOrRoundNotFound | InternalError;
-export type EventRegistration = z.infer<typeof eventRegistrationSchema>
+export type EventRegistration = z.infer<typeof getEventRegistrationSchema>
 export type RoundPatch = z.infer<typeof roundPatchSchema>
 
 
@@ -844,6 +844,7 @@ export type RoundResultWithParticipant = {
     user_id: string
     name: string
     email: string
+    ph_no: string
     team_id: string | null
     team_name: string | null
     points: number

@@ -367,11 +367,12 @@ function RoundCheckInPage() {
                         isLoading={isQualifiedLoading}
                         error={qualifiedError}
                         page={qualifiedPage}
-                        totalPages={qualifiedTotalPages}
-                        total={qualifiedData?.pagination.total ?? 0}
+                        totalPages={Math.ceil((qualifiedData?.pagination?.total ?? 0) / PAGE_LIMIT)}
+                        total={qualifiedData?.pagination?.total ?? 0}
                         pageLimit={PAGE_LIMIT}
                         onPrev={() => setQualifiedPage(p => Math.max(0, p - 1))}
                         onNext={() => setQualifiedPage(p => p + 1)}
+                        participationType={event?.participation_type}
                     />
                 )}
                 {activeTab === "checkedin" && (
@@ -382,11 +383,12 @@ function RoundCheckInPage() {
                         isLoading={isCheckInsLoading}
                         error={checkInsError}
                         page={checkInsPage}
-                        totalPages={checkInsTotalPages}
-                        total={checkInsData?.pagination.total ?? 0}
+                        totalPages={Math.ceil((checkInsData?.pagination?.total ?? 0) / PAGE_LIMIT)}
+                        total={checkInsData?.pagination?.total ?? 0}
                         pageLimit={PAGE_LIMIT}
                         onPrev={() => setCheckInsPage(p => Math.max(0, p - 1))}
                         onNext={() => setCheckInsPage(p => p + 1)}
+                        participationType={event?.participation_type}
                     />
                 )}
                 {activeTab === "results" && (
@@ -395,11 +397,12 @@ function RoundCheckInPage() {
                         isLoading={isResultsLoading}
                         error={resultsError as Error | null}
                         page={resultsPage}
-                        totalPages={roundResultsData?.totalPages ?? 1}
+                        totalPages={roundResultsData?.totalPages ?? 0}
                         total={roundResultsData?.total ?? 0}
                         pageLimit={PAGE_LIMIT}
                         onPrev={() => setResultsPage(p => Math.max(1, p - 1))}
                         onNext={() => setResultsPage(p => p + 1)}
+                        participationType={event?.participation_type}
                     />
                 )}
             </div>
@@ -445,6 +448,7 @@ interface ResultsTableProps {
     pageLimit: number;
     onPrev: () => void;
     onNext: () => void;
+    participationType?: string;
 }
 
 const STATUS_STYLES: Record<string, { badge: string; dot: string; label: string }> = {
@@ -463,7 +467,7 @@ function ResultStatusBadge({ status }: { status: string }) {
     );
 }
 
-function ResultsTable({ data, isLoading, error, page, totalPages, total, pageLimit, onPrev, onNext }: ResultsTableProps) {
+function ResultsTable({ data, isLoading, error, page, totalPages, total, pageLimit, onPrev, onNext, participationType }: ResultsTableProps) {
     if (isLoading) {
         return (
             <div className="p-12 text-center text-neutral-500 font-mono text-sm">
@@ -564,7 +568,7 @@ function ResultsTable({ data, isLoading, error, page, totalPages, total, pageLim
                                                 <span className="text-[10px] text-neutral-600 font-mono uppercase">Solo Entry</span>
                                             </div>
                                             <div className="font-semibold text-sm text-white">{group.members[0].name}</div>
-                                            <div className="text-[10px] text-neutral-500 font-mono">{group.members[0].email}</div>
+                                            <div className="text-[10px] text-neutral-500 font-mono">{group.members[0].ph_no}</div>
                                         </div>
                                     )}
                                 </div>
@@ -607,8 +611,12 @@ function ResultsTable({ data, isLoading, error, page, totalPages, total, pageLim
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-neutral-800 bg-neutral-900/60 font-mono">
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[320px]">Team / Entry</th>
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">Members</th>
+                                {participationType?.toUpperCase() === 'TEAM' && (
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[320px]">Team / Entry</th>
+                                )}
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                    {participationType?.toUpperCase() === 'TEAM' ? 'Members' : 'Participant / Result'}
+                                </th>
                                 <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-l border-neutral-800/60 w-[240px]">Evaluated By</th>
                             </tr>
                         </thead>
@@ -618,8 +626,8 @@ function ResultsTable({ data, isLoading, error, page, totalPages, total, pageLim
                                 return group.members.map((member, mIdx) => (
                                     <tr key={member.id} className={`border-b border-neutral-800/60 last:border-0 hover:bg-neutral-900/10 transition-colors duration-150 ${mIdx > 0 ? 'bg-neutral-950/20' : ''}`}>
 
-                                        {/* Column 1: Team Info - spanned */}
-                                        {mIdx === 0 && (
+                                        {/* Column 1: Team Info - spanned (Only for TEAM events) */}
+                                        {mIdx === 0 && participationType?.toUpperCase() === 'TEAM' && (
                                             <td rowSpan={group.members.length} className="px-6 py-6 border-r border-neutral-800/40 bg-neutral-900/20 align-top">
                                                 <div className="flex flex-col gap-4">
                                                     <div>
@@ -653,15 +661,28 @@ function ResultsTable({ data, isLoading, error, page, totalPages, total, pageLim
                                             </td>
                                         )}
 
-                                        {/* Column 2: Individual Members */}
+                                        {/* Column 2: Individual/Participant Members */}
                                         <td className="px-6 py-4 align-middle">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-neutral-800 shrink-0" />
-                                                <div className="min-w-0">
+                                            <div className="flex items-start gap-4">
+                                                {!isTeam && participationType?.toUpperCase() !== 'TEAM' && (
+                                                    <div className="flex flex-col gap-3 shrink-0 py-1">
+                                                        <TypeBadge type="SOLO" />
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-[9px] text-neutral-600 uppercase font-bold tracking-tighter">Result</span>
+                                                            <div className="flex items-baseline gap-1">
+                                                                <span className="text-xl font-black text-white tabular-nums">{group.points}</span>
+                                                                <span className="text-[8px] text-neutral-600 font-bold uppercase tracking-widest">pts</span>
+                                                            </div>
+                                                            <ResultStatusBadge status={group.status} />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div className="w-1.5 h-1.5 rounded-full bg-neutral-800 shrink-0 mt-2" />
+                                                <div className="min-w-0 flex-1">
                                                     <div className="text-sm font-semibold text-white truncate leading-tight">{member.name}</div>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <div className="text-[10px] text-neutral-500 font-mono truncate">{member.email}</div>
-                                                        <span className="text-neutral-800 text-[10px]">|</span>
+                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
+                                                        <div className="text-[10px] text-neutral-500 font-mono truncate">{member.ph_no}</div>
+                                                        <span className="text-neutral-800 text-[10px] hidden sm:inline">|</span>
                                                         <div className="text-[9px] text-neutral-600 font-mono">{member.user_id}</div>
                                                     </div>
                                                 </div>
@@ -728,6 +749,7 @@ interface CheckedInTableProps {
     pageLimit: number;
     onPrev: () => void;
     onNext: () => void;
+    participationType?: string;
 }
 
 function CheckedInTable({
@@ -742,6 +764,7 @@ function CheckedInTable({
     pageLimit,
     onPrev,
     onNext,
+    participationType,
 }: CheckedInTableProps) {
     const { api } = Route.useRouteContext();
     const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -960,9 +983,11 @@ function CheckedInTable({
                                         className="w-4 h-4 bg-black border-neutral-700 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white"
                                     />
                                 </th>
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
-                                    Team / Entry
-                                </th>
+                                {participationType?.toUpperCase() === 'TEAM' && (
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
+                                        Team / Entry
+                                    </th>
+                                )}
                                 <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
                                     Participant Name
                                 </th>
@@ -984,6 +1009,7 @@ function CheckedInTable({
                                         entry={entry}
                                         checked={selected.has(id)}
                                         onToggle={() => toggleEntry(id)}
+                                        participationType={participationType}
                                     />
                                 );
                             })}
@@ -1010,9 +1036,10 @@ interface CheckedInRowGroupProps {
     entry: RoundCheckInEntry;
     checked: boolean;
     onToggle: () => void;
+    participationType?: string;
 }
 
-function CheckedInRowGroup({ entry, checked, onToggle }: CheckedInRowGroupProps) {
+function CheckedInRowGroup({ entry, checked, onToggle, participationType }: CheckedInRowGroupProps) {
     const rowHighlight = checked ? "bg-neutral-900/50" : "";
 
     if (entry.type === "SOLO") {
@@ -1026,20 +1053,32 @@ function CheckedInRowGroup({ entry, checked, onToggle }: CheckedInRowGroupProps)
                         className="w-4 h-4 bg-black border-neutral-800 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white"
                     />
                 </td>
-                <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
-                    <div className="flex flex-col items-center justify-center space-y-2 text-center">
-                        <TypeBadge type="SOLO" />
-                        <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
-                            {entry.first_name}
+                {participationType?.toUpperCase() === 'TEAM' && (
+                    <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
+                        <div className="flex flex-col items-center justify-center space-y-2 text-center">
+                            <TypeBadge type="SOLO" />
+                            <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
+                                {entry.first_name}
+                            </div>
+                            <p className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider">
+                                {new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
                         </div>
-                        <p className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider">
-                            {new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                    </div>
-                </td>
+                    </td>
+                )}
                 <td className="px-6 py-4">
-                    <div className="text-sm font-semibold text-white">{entry.first_name} {entry.last_name}</div>
-                    <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{entry.participant_id}</div>
+                    <div className="flex flex-col gap-1.5">
+                        {participationType?.toUpperCase() !== 'TEAM' && (
+                            <div className="flex items-center gap-3 mb-0.5">
+                                <TypeBadge type="SOLO" />
+                                <span className="text-[10px] text-neutral-600 font-mono tracking-widest uppercase">
+                                    in: {new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            </div>
+                        )}
+                        <div className="text-sm font-semibold text-white">{entry.first_name} {entry.last_name}</div>
+                        <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{entry.participant_id}</div>
+                    </div>
                 </td>
                 <td className="px-6 py-4">
                     <div className="text-xs text-neutral-400">
@@ -1072,16 +1111,18 @@ function CheckedInRowGroup({ entry, checked, onToggle }: CheckedInRowGroupProps)
                                     className="w-4 h-4 bg-black border-neutral-800 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white"
                                 />
                             </td>
-                            <td rowSpan={entry.members.length} className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
-                                <div className="flex flex-col items-center justify-center space-y-2 sticky top-4 text-center">
-                                    <TypeBadge type="TEAM" />
-                                    <div className="text-sm font-black text-white uppercase tracking-widest leading-none">{entry.name}</div>
-                                    <div className="text-[9px] text-neutral-600 uppercase tracking-widest font-bold">{entry.members.length} members</div>
-                                    <p className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider">
-                                        {new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
-                                </div>
-                            </td>
+                            {participationType?.toUpperCase() === 'TEAM' && (
+                                <td rowSpan={entry.members.length} className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
+                                    <div className="flex flex-col items-center justify-center space-y-2 sticky top-4 text-center">
+                                        <TypeBadge type="TEAM" />
+                                        <div className="text-sm font-black text-white uppercase tracking-widest leading-none">{entry.name}</div>
+                                        <div className="text-[9px] text-neutral-600 uppercase tracking-widest font-bold">{entry.members.length} members</div>
+                                        <p className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider">
+                                            {new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                </td>
+                            )}
                         </>
                     )}
                     <td className="px-6 py-4">
@@ -1139,7 +1180,7 @@ function CheckedInCard({ entry, checked, onToggle }: CheckedInCardProps) {
                 <div className="space-y-1 pl-8">
                     {entry.members.map(m => (
                         <div key={m.participant_id} className="text-xs text-neutral-400 font-mono">
-                            {m.first_name} {m.last_name} • {m.email}
+                            {m.first_name} {m.last_name} • {m.ph_no}
                         </div>
                     ))}
                 </div>
@@ -1153,7 +1194,7 @@ function CheckedInCard({ entry, checked, onToggle }: CheckedInCardProps) {
     return (
         <div className={cardBase}>
             {header}
-            <div className="text-xs text-neutral-400 font-mono pl-8">{entry.participant_id} • {entry.email}</div>
+            <div className="text-xs text-neutral-400 font-mono pl-8">{entry.participant_id} • {entry.ph_no}</div>
             <div className="flex gap-4 text-xs text-neutral-500 items-center pl-8">
                 <span>{entry.college}</span>
                 <span className="ml-auto">{new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -1176,6 +1217,7 @@ interface QualifiedTableProps {
     pageLimit: number;
     onPrev: () => void;
     onNext: () => void;
+    participationType?: string;
 }
 
 function QualifiedTable({
@@ -1188,6 +1230,7 @@ function QualifiedTable({
     pageLimit,
     onPrev,
     onNext,
+    participationType,
 }: QualifiedTableProps) {
     if (isLoading) {
         return (
@@ -1229,9 +1272,11 @@ function QualifiedTable({
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
-                                    Team / Entry
-                                </th>
+                                {participationType?.toUpperCase() === 'TEAM' && (
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
+                                        Team / Entry
+                                    </th>
+                                )}
                                 <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
                                     Participant Name
                                 </th>
@@ -1245,7 +1290,7 @@ function QualifiedTable({
                         </thead>
                         <tbody>
                             {data.map((entry, idx) => (
-                                <QualifiedRowGroup key={idx} entry={entry} />
+                                <QualifiedRowGroup key={idx} entry={entry} participationType={participationType} />
                             ))}
                         </tbody>
                     </table>
@@ -1264,23 +1309,28 @@ function QualifiedTable({
     );
 }
 
-function QualifiedRowGroup({ entry }: { entry: RoundQualifiedParticipant }) {
+function QualifiedRowGroup({ entry, participationType }: { entry: RoundQualifiedParticipant; participationType?: string }) {
     if (entry.type === "SOLO") {
         return (
             <tr className="hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0">
-                <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
-                    <div className="flex flex-col items-center justify-center space-y-2 text-center">
-                        <TypeBadge type="SOLO" />
-                        <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
-                            {entry.first_name}
+                {participationType?.toUpperCase() === 'TEAM' && (
+                    <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
+                        <div className="flex flex-col items-center justify-center space-y-2 text-center">
+                            <TypeBadge type="SOLO" />
+                            <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
+                                {entry.first_name}
+                            </div>
                         </div>
-                    </div>
-                </td>
+                    </td>
+                )}
                 <td className="px-6 py-4">
-                    <div className="text-sm font-semibold text-white">
-                        {entry.first_name} {entry.last_name}
+                    <div className="flex flex-col gap-1.5">
+                        {participationType?.toUpperCase() !== 'TEAM' && <TypeBadge type="SOLO" />}
+                        <div className="text-sm font-semibold text-white">
+                            {entry.first_name} {entry.last_name}
+                        </div>
+                        <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{entry.participant_id}</div>
                     </div>
-                    <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{entry.participant_id}</div>
                 </td>
                 <td className="px-6 py-4">
                     <div className="text-xs text-neutral-400">
@@ -1302,7 +1352,7 @@ function QualifiedRowGroup({ entry }: { entry: RoundQualifiedParticipant }) {
                     key={member.participant_id}
                     className="hover:bg-neutral-900/20 transition-colors duration-150 border-b border-neutral-800/60 last:border-0"
                 >
-                    {mIdx === 0 && (
+                    {mIdx === 0 && participationType?.toUpperCase() === 'TEAM' && (
                         <td
                             rowSpan={entry.members.length}
                             className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle"
@@ -1352,13 +1402,12 @@ function QualifiedCard({ entry }: { entry: RoundQualifiedParticipant }) {
                 <div className="space-y-1">
                     {entry.members.map(m => (
                         <div key={m.participant_id} className="text-xs text-neutral-400 font-mono">
-                            {m.first_name} {m.last_name} • {m.email}
+                            {m.first_name} {m.last_name} • {m.ph_no}
                         </div>
                     ))}
                 </div>
                 <div className="flex gap-4 text-xs text-neutral-500">
                     <span>{entry.members[0]?.college ?? "—"}</span>
-                    <span className="ml-auto">{new Date(entry.registered_at).toLocaleString()}</span>
                 </div>
             </div>
         );
@@ -1369,10 +1418,9 @@ function QualifiedCard({ entry }: { entry: RoundQualifiedParticipant }) {
                 <TypeBadge type="SOLO" />
                 <span className="font-semibold text-white">{entry.first_name} {entry.last_name}</span>
             </div>
-            <div className="text-xs text-neutral-400 font-mono">{entry.participant_id} • {entry.email}</div>
+            <div className="text-xs text-neutral-400 font-mono">{entry.participant_id} • {entry.ph_no}</div>
             <div className="flex gap-4 text-xs text-neutral-500">
                 <span>{entry.college}</span>
-                <span className="ml-auto">{new Date(entry.registered_at).toLocaleString()}</span>
             </div>
         </div>
     );

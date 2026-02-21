@@ -18,10 +18,27 @@ export const Route = createFileRoute('/app/events/$eventId/')({
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 
-function fmtTime(iso: string) {
-  return new Date(iso)
+function fmtTime(date: string | Date) {
+  return new Date(date)
     .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
     .toUpperCase()
+}
+
+function TypeBadge({ type }: { type: 'TEAM' | 'SOLO' }) {
+  if (type === 'TEAM') {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold border uppercase tracking-tighter bg-blue-950/50 text-blue-400 border-blue-800 w-fit">
+        <Group className="w-2.5 h-2.5" />
+        Team
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold border uppercase tracking-tighter bg-blue-950/50 text-blue-400 border-blue-800 w-fit">
+      <User className="w-2.5 h-2.5" />
+      Solo
+    </span>
+  )
 }
 // ── page ──────────────────────────────────────────────────────────────────────
 
@@ -123,64 +140,80 @@ function EventRegistrationsPage() {
             </div>
           </div>
         ) : (
-          <div className="border border-neutral-800 bg-neutral-950 overflow-hidden">
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60">
-                      Team / Entry
-                    </th>
-                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
-                      Participant Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest hidden md:table-cell">
-                      College & Degree
-                    </th>
-                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
-                      Phone Number
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="">
-                  {registrations.map((reg, idx) => (
-                    <RegistrationRow key={`${reg.type}-${idx}`} reg={reg} />
-                  ))}
-                </tbody>
-              </table>
+          <div className="space-y-4">
+            {/* Mobile View */}
+            <div className="md:hidden divide-y divide-neutral-800 border border-neutral-800 bg-neutral-950 shadow-xl">
+              {registrations.map((reg, idx) => (
+                <RegistrationMobileCard key={`${reg.type}-${idx}`} reg={reg} />
+              ))}
             </div>
 
-            {/* Pagination */}
-            {pagination && (
-              <div className="flex items-center justify-between px-6 py-3 border-t border-neutral-800">
-                <span className="text-[10px] text-neutral-600 uppercase tracking-widest">
-                  {pagination.total === 0
-                    ? '0 results'
-                    : `${from + 1}–${Math.min(from + LIMIT, pagination.total)} of ${pagination.total}`}
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    disabled={from === 0}
-                    onClick={() => setFrom(Math.max(0, from - LIMIT))}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-neutral-800 text-neutral-400 hover:bg-neutral-900 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                  >
-                    <NavArrowLeft className="w-3 h-3" />
-                    Prev
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!pagination.has_more}
-                    onClick={() => setFrom(from + LIMIT)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-neutral-800 text-neutral-400 hover:bg-neutral-900 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                  >
-                    Next
-                    <NavArrowRight className="w-3 h-3" />
-                  </button>
-                </div>
+            {/* Desktop View */}
+            <div className="hidden md:block border border-neutral-800 bg-neutral-950 overflow-hidden shadow-2xl">
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-neutral-800 bg-neutral-900/60">
+                      {event?.participation_type?.toUpperCase() === 'TEAM' && (
+                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
+                          Team / Entry
+                        </th>
+                      )}
+                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                        Participant Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest hidden md:table-cell">
+                        College & Degree
+                      </th>
+                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                        Phone Number
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="">
+                    {registrations.map((reg, idx) => (
+                      <RegistrationRow
+                        key={`${reg.type}-${idx}`}
+                        reg={reg}
+                        showTeamColumn={event?.participation_type?.toUpperCase() === 'TEAM'}
+                      />
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
+
+              {/* Pagination */}
+              {pagination && (
+                <div className="flex items-center justify-between px-6 py-3 border-t border-neutral-800 bg-neutral-950">
+                  <span className="text-[10px] text-neutral-600 uppercase tracking-widest font-mono">
+                    {pagination.total === 0
+                      ? '0 results'
+                      : `${from + 1}–${Math.min(from + LIMIT, pagination.total)} of ${pagination.total}`}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={from === 0}
+                      onClick={() => setFrom(Math.max(0, from - LIMIT))}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-neutral-800 text-neutral-400 hover:bg-neutral-900 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    >
+                      <NavArrowLeft className="w-3 h-3" />
+                      Prev
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!pagination.has_more}
+                      onClick={() => setFrom(from + LIMIT)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-neutral-800 text-neutral-400 hover:bg-neutral-900 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    >
+                      Next
+                      <NavArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -188,9 +221,67 @@ function EventRegistrationsPage() {
   )
 }
 
+// ── mobile card ──────────────────────────────────────────────────────────────
+
+function RegistrationMobileCard({ reg }: { reg: EventRegistration }) {
+  if (reg.type === 'SOLO') {
+    return (
+      <div className="p-4 space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <TypeBadge type="SOLO" />
+            <div className="text-sm font-bold text-white uppercase tracking-wider truncate">
+              {reg.first_name} {reg.last_name}
+            </div>
+            <div className="text-[10px] text-neutral-500 font-mono">{reg.participant_id}</div>
+          </div>
+          <div className="shrink-0 pl-4">
+            <div className="text-[11px] text-neutral-400 font-mono tracking-tight">{reg.ph_no}</div>
+          </div>
+        </div>
+        <div className="pt-3 border-t border-neutral-800/40">
+          <div className="text-[11px] text-neutral-300 font-medium leading-relaxed">{reg.college}</div>
+          <div className="text-[10px] text-neutral-600 mt-0.5">{reg.degree}</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex items-start justify-between">
+        <div className="space-y-1.5">
+          <TypeBadge type="TEAM" />
+          <div className="text-sm font-black text-white uppercase tracking-widest">{reg.name}</div>
+          <div className="text-[9px] text-neutral-600 uppercase tracking-widest font-black">
+            {reg.members.length} members
+          </div>
+        </div>
+      </div>
+      <div className="space-y-4 pl-3 border-l-2 border-neutral-800 ml-1">
+        {reg.members.map((m) => (
+          <div key={m.participant_id} className="space-y-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-bold text-neutral-300">
+                {m.first_name} {m.last_name}
+              </span>
+              <span className="text-[10px] text-neutral-600 font-mono shrink-0">{m.ph_no}</span>
+            </div>
+            <div className="text-[10px] leading-relaxed">
+              <span className="text-neutral-500 font-medium">{m.college}</span>
+              <span className="mx-1.5 text-neutral-800">·</span>
+              <span className="text-neutral-700">{m.degree}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── round card ──────────────────────────────────────────────────────────────
 
-function RoundCard({ round, eventId }: { round: Round, eventId: string }) {
+function RoundCard({ round, eventId }: { round: EventDetail['rounds'][number]; eventId: string }) {
   return (
     <Link
       to="/app/events/$eventId/$roundNo"
@@ -219,34 +310,33 @@ function RoundCard({ round, eventId }: { round: Round, eventId: string }) {
 
 // ── registration rows ────────────────────────────────────────────────────────
 
-function RegistrationRow({ reg }: { reg: EventRegistration }) {
+function RegistrationRow({ reg, showTeamColumn }: { reg: EventRegistration; showTeamColumn: boolean }) {
   if (reg.type === 'SOLO') {
     return (
       <tr className="hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0">
-        <td className="px-6 py-3.5 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
-          <div className="flex flex-col items-center justify-center space-y-1.5 text-center">
-            <span className="inline-flex items-center gap-1 px-1 py-0.5 text-[8px] font-bold border uppercase tracking-tighter bg-neutral-950 text-neutral-500 border-neutral-800">
-              <User className="w-2.5 h-2.5" />
-              Solo
-            </span>
-            <div className="text-xs font-bold text-white uppercase tracking-wider leading-tight">
-              {reg.first_name}
+        {showTeamColumn && (
+          <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/20 align-middle">
+            <div className="flex flex-col items-center justify-center">
+              <TypeBadge type="SOLO" />
             </div>
+          </td>
+        )}
+        <td className="px-6 py-4">
+          <div className="flex flex-col gap-2">
+            {!showTeamColumn && <TypeBadge type="SOLO" />}
+            <div className="text-sm font-semibold text-white">
+              {reg.first_name} {reg.last_name}
+            </div>
+            <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{reg.participant_id}</div>
           </div>
         </td>
-        <td className="px-6 py-3.5">
-          <div className="text-sm font-semibold text-white">
-            {reg.first_name} {reg.last_name}
-          </div>
-          <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{reg.participant_id}</div>
-        </td>
-        <td className="px-6 py-3.5 hidden md:table-cell">
+        <td className="px-6 py-4 hidden md:table-cell">
           <div className="text-xs text-neutral-400">
-            <div className="truncate max-w-[240px]">{reg.college}</div>
+            <div className="truncate max-w-[240px] font-medium text-neutral-300">{reg.college}</div>
             <div className="text-[10px] text-neutral-600 mt-0.5">{reg.degree}</div>
           </div>
         </td>
-        <td className="px-6 py-3.5">
+        <td className="px-6 py-4">
           <div className="text-xs text-neutral-400 font-mono">{reg.ph_no}</div>
         </td>
       </tr>
@@ -261,16 +351,13 @@ function RegistrationRow({ reg }: { reg: EventRegistration }) {
           className={`hover:bg-neutral-900/20 transition-colors duration-150 border-b border-neutral-800/60 last:border-0 ${idx === 0 ? '' : 'border-t-0'
             }`}
         >
-          {idx === 0 && (
+          {idx === 0 && showTeamColumn && (
             <td
               rowSpan={reg.members.length}
-              className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle"
+              className="px-6 py-6 border-r border-neutral-800/60 bg-neutral-950/30 align-middle"
             >
               <div className="flex flex-col items-center justify-center space-y-2 sticky top-4 text-center">
-                <span className="inline-flex items-center gap-1 px-1 py-0.5 text-[8px] font-bold border uppercase tracking-tighter bg-neutral-900 text-neutral-400 border-neutral-800">
-                  <Group className="w-2.5 h-2.5" />
-                  Team
-                </span>
+                <TypeBadge type="TEAM" />
                 <div className="text-sm font-black text-white uppercase tracking-widest leading-none">
                   {reg.name}
                 </div>
@@ -281,7 +368,7 @@ function RegistrationRow({ reg }: { reg: EventRegistration }) {
             </td>
           )}
           <td className="px-6 py-3.5">
-            <div className="text-sm text-neutral-300">
+            <div className="text-sm text-neutral-300 font-medium">
               {member.first_name} {member.last_name}
             </div>
             <div className="text-[10px] text-neutral-600 font-mono mt-0.5">
@@ -290,7 +377,7 @@ function RegistrationRow({ reg }: { reg: EventRegistration }) {
           </td>
           <td className="px-6 py-3.5 hidden md:table-cell">
             <div className="text-xs text-neutral-500">
-              <div className="truncate max-w-[240px]">{member.college}</div>
+              <div className="truncate max-w-[240px] text-neutral-400">{member.college}</div>
               <div className="text-[10px] text-neutral-700 mt-0.5">{member.degree}</div>
             </div>
           </td>
