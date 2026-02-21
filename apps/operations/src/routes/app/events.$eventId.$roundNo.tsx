@@ -8,7 +8,7 @@ import { Field } from "@/ui/Field";
 import { Input } from "@/ui/Input";
 import { RoundCheckInPopup } from "@/ui/RoundCheckInPopup";
 import { QRScanner } from "@/ui/QRScanner";
-import type { RoundCheckInEntry, RoundQualifiedParticipant } from "@/api/events";
+import type { RoundCheckInEntry, RoundQualifiedParticipant, RoundResultStatus } from "@/api/events";
 
 export const Route = createFileRoute('/app/events/$eventId/$roundNo')({
     component: RoundCheckInPage,
@@ -27,7 +27,7 @@ function RoundCheckInPage() {
     const [isRequestingCamera, setIsRequestingCamera] = useState(false);
 
     // Participants section state
-    const [activeTab, setActiveTab] = useState<"checkedin" | "qualified">("checkedin");
+    const [activeTab, setActiveTab] = useState<"participants" | "checkedin" | "results">("participants");
     const [checkInsPage, setCheckInsPage] = useState(0);
     const [qualifiedPage, setQualifiedPage] = useState(0);
     const PAGE_LIMIT = 10;
@@ -203,7 +203,7 @@ function RoundCheckInPage() {
 
     // Derived counts for badges
     const checkInCount = checkInsData ? (checkInsData.pagination.total || checkInsData.data.length) : 0;
-    const qualifiedCount = qualifiedData ? (qualifiedData.pagination.total || qualifiedData.data.length) : 0;
+    const participantsCount = qualifiedData ? (qualifiedData.pagination.total || qualifiedData.data.length) : 0;
 
     return (
         <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
@@ -270,7 +270,7 @@ function RoundCheckInPage() {
                             className="flex-1"
                         />
                         <Button
-                            variant="secondary"
+                            variant="primary"
                             onClick={() => handleSearch(searchInput)}
                         >
                             Enter
@@ -281,66 +281,74 @@ function RoundCheckInPage() {
 
             {/* ── Participants Section ───────────────────────────────────────────── */}
             <div className="bg-neutral-950 border border-neutral-800">
-                {/* Section Header */}
-                <div className="px-6 py-4 border-b border-neutral-800">
-                    <h3 className="text-lg font-semibold text-white">Participants</h3>
-                    <p className="text-xs text-neutral-500 mt-0.5">
-                        View participants who have checked-in or are qualified for this round.
-                    </p>
-                </div>
+                {/* Tab Navigation */}
+                <div className="border-b border-neutral-800">
+                    {/* Mobile Dropdown */}
+                    <div className="md:hidden p-4 bg-neutral-900/30">
+                        <select
+                            value={activeTab}
+                            onChange={(e) => setActiveTab(e.target.value as any)}
+                            className="w-full bg-neutral-950 border border-neutral-800 text-white px-4 py-3 text-xs uppercase tracking-widest font-bold focus:outline-none focus:ring-1 focus:ring-white appearance-none"
+                            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'white\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
+                        >
+                            <option value="participants">Participants ({participantsCount})</option>
+                            <option value="checkedin">Checked-In ({checkInCount})</option>
+                            <option value="results">Results</option>
+                        </select>
+                    </div>
 
-                {/* Tab Bar */}
-                <div className="flex border-b border-neutral-800">
-                    <button
-                        id="tab-checkedin"
-                        type="button"
-                        onClick={() => setActiveTab("checkedin")}
-                        className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "checkedin"
-                            ? "text-white border-white"
-                            : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                            }`}
-                    >
-                        Checked-In
-                        <span className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "checkedin"
-                            ? "bg-white text-black border-white"
-                            : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                            }`}>
-                            {checkInCount}
-                        </span>
-                    </button>
-                    <button
-                        id="tab-qualified"
-                        type="button"
-                        onClick={() => setActiveTab("qualified")}
-                        className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "qualified"
-                            ? "text-white border-white"
-                            : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                            }`}
-                    >
-                        Qualified
-                        <span className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "qualified"
-                            ? "bg-white text-black border-white"
-                            : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                            }`}>
-                            {qualifiedCount}
-                        </span>
-                    </button>
+                    {/* Desktop Tabs */}
+                    <div className="hidden md:flex overflow-x-auto scrollbar-hide">
+                        <button
+                            id="tab-participants"
+                            type="button"
+                            onClick={() => setActiveTab("participants")}
+                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "participants"
+                                ? "text-white border-white"
+                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
+                                }`}
+                        >
+                            Participants
+                            <span className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "participants"
+                                ? "bg-white text-black border-white"
+                                : "bg-neutral-800 text-neutral-400 border-neutral-700"
+                                }`}>
+                                {participantsCount}
+                            </span>
+                        </button>
+                        <button
+                            id="tab-checkedin"
+                            type="button"
+                            onClick={() => setActiveTab("checkedin")}
+                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "checkedin"
+                                ? "text-white border-white"
+                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
+                                }`}
+                        >
+                            Checked-In
+                            <span className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "checkedin"
+                                ? "bg-white text-black border-white"
+                                : "bg-neutral-800 text-neutral-400 border-neutral-700"
+                                }`}>
+                                {checkInCount}
+                            </span>
+                        </button>
+                        <button
+                            id="tab-results"
+                            type="button"
+                            onClick={() => setActiveTab("results")}
+                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "results"
+                                ? "text-white border-white"
+                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
+                                }`}
+                        >
+                            Results
+                        </button>
+                    </div>
                 </div>
 
                 {/* Tab Content */}
-                {activeTab === "checkedin" ? (
-                    <CheckedInTable
-                        data={checkInsData?.data ?? []}
-                        isLoading={isCheckInsLoading}
-                        error={checkInsError}
-                        page={checkInsPage}
-                        totalPages={checkInsTotalPages}
-                        total={checkInsData?.pagination.total ?? 0}
-                        pageLimit={PAGE_LIMIT}
-                        onPrev={() => setCheckInsPage(p => Math.max(0, p - 1))}
-                        onNext={() => setCheckInsPage(p => p + 1)}
-                    />
-                ) : (
+                {activeTab === "participants" && (
                     <QualifiedTable
                         data={qualifiedData?.data ?? []}
                         isLoading={isQualifiedLoading}
@@ -352,6 +360,26 @@ function RoundCheckInPage() {
                         onPrev={() => setQualifiedPage(p => Math.max(0, p - 1))}
                         onNext={() => setQualifiedPage(p => p + 1)}
                     />
+                )}
+                {activeTab === "checkedin" && (
+                    <CheckedInTable
+                        eventId={eventId}
+                        roundNo={roundNo}
+                        data={checkInsData?.data ?? []}
+                        isLoading={isCheckInsLoading}
+                        error={checkInsError}
+                        page={checkInsPage}
+                        totalPages={checkInsTotalPages}
+                        total={checkInsData?.pagination.total ?? 0}
+                        pageLimit={PAGE_LIMIT}
+                        onPrev={() => setCheckInsPage(p => Math.max(0, p - 1))}
+                        onNext={() => setCheckInsPage(p => p + 1)}
+                    />
+                )}
+                {activeTab === "results" && (
+                    <div className="p-12 text-center text-neutral-500">
+                        Round results will be available soon.
+                    </div>
                 )}
             </div>
 
@@ -386,7 +414,20 @@ function RoundCheckInPage() {
 
 // ── Checked-In Table ─────────────────────────────────────────────────────────
 
+type ParticipantStatus = RoundResultStatus;
+
+function entryId(entry: RoundCheckInEntry): string {
+    return entry.type === "TEAM" ? `team:${entry.name}` : `solo:${entry.participant_id}`;
+}
+
+type ResultFeedback =
+    | { kind: "success"; count: number }
+    | { kind: "partial"; count: number; total: number; userErrors: { user_id: string; error: string }[]; teamErrors: { team_id: string; error: string }[] }
+    | { kind: "failure"; userErrors: { user_id: string; error: string }[]; teamErrors: { team_id: string; error: string }[] };
+
 interface CheckedInTableProps {
+    eventId: string;
+    roundNo: string;
     data: RoundCheckInEntry[];
     isLoading: boolean;
     error: Error | null;
@@ -399,6 +440,8 @@ interface CheckedInTableProps {
 }
 
 function CheckedInTable({
+    eventId,
+    roundNo,
     data,
     isLoading,
     error,
@@ -409,6 +452,87 @@ function CheckedInTable({
     onPrev,
     onNext,
 }: CheckedInTableProps) {
+    const { api } = Route.useRouteContext();
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [appliedStatus, setAppliedStatus] = useState<Record<string, ParticipantStatus>>({});
+    const [feedback, setFeedback] = useState<ResultFeedback | null>(null);
+
+    const allIds = data.map(entryId);
+    const allSelected = allIds.length > 0 && allIds.every(id => selected.has(id));
+    const someSelected = allIds.some(id => selected.has(id)) && !allSelected;
+
+    // Build a lookup: entryId → entry (so we can extract the right id field for API)
+    const entryMap = new Map(data.map(e => [entryId(e), e]));
+
+    const resultMutation = useMutation({
+        mutationFn: (vars: { ids: string[]; status: ParticipantStatus }) => {
+            const results = vars.ids.map(id => {
+                const entry = entryMap.get(id)!;
+                if (entry.type === "TEAM") {
+                    // team_id is optional until backend includes it in check-in responses
+                    return { team_id: entry.team_id ?? entry.name, status: vars.status };
+                }
+                return { user_id: entry.participant_id, status: vars.status };
+            });
+            return api.events.postRoundResults(eventId, roundNo, { results });
+        },
+        onSuccess: (res, vars) => {
+            const submittedCount = vars.ids.length;
+            const recorded = res.data.recorded_count;
+            const userErrors = res.user_errors ?? [];
+            const teamErrors = res.team_errors ?? [];
+            const hasErrors = userErrors.length > 0 || teamErrors.length > 0;
+
+            // Apply statuses for entries that succeeded
+            const failedUserIds = new Set(userErrors.map(e => e.user_id));
+            const failedTeamIds = new Set(teamErrors.map(e => e.team_id));
+            const updates: Record<string, ParticipantStatus> = {};
+            vars.ids.forEach(id => {
+                const entry = entryMap.get(id)!;
+                const failed = entry.type === "SOLO"
+                    ? failedUserIds.has(entry.participant_id)
+                    : failedTeamIds.has(entry.team_id ?? entry.name);
+                if (!failed) updates[id] = vars.status;
+            });
+            setAppliedStatus(prev => ({ ...prev, ...updates }));
+            setSelected(new Set());
+
+            if (recorded === 0) {
+                setFeedback({ kind: "failure", userErrors, teamErrors });
+            } else if (hasErrors) {
+                setFeedback({ kind: "partial", count: recorded, total: submittedCount, userErrors, teamErrors });
+            } else {
+                setFeedback({ kind: "success", count: recorded });
+                setTimeout(() => setFeedback(null), 4000);
+            }
+        },
+        onError: () => {
+            setFeedback({ kind: "failure", userErrors: [], teamErrors: [] });
+        },
+    });
+
+    function applyStatus(status: ParticipantStatus) {
+        setFeedback(null);
+        resultMutation.mutate({ ids: Array.from(selected), status });
+    }
+
+    function toggleAll() {
+        if (allSelected) setSelected(new Set());
+        else setSelected(new Set(allIds));
+    }
+
+    function toggleEntry(id: string) {
+        setSelected(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    }
+
+    const selectedCount = selected.size;
+    const isPending = resultMutation.isPending;
+
     if (isLoading) {
         return (
             <div className="p-12 text-center text-neutral-500">
@@ -435,156 +559,366 @@ function CheckedInTable({
     }
 
     return (
-        <>
+        <div className="relative">
+            {/* ── Result Feedback Banner ── */}
+            {feedback && (
+                <div className={`px-4 md:px-6 py-3 border-b text-xs font-medium flex flex-col gap-2 ${feedback.kind === "success"
+                    ? "bg-emerald-950/50 border-emerald-800 text-emerald-300"
+                    : feedback.kind === "partial"
+                        ? "bg-amber-950/50 border-amber-800 text-amber-300"
+                        : "bg-red-950/50 border-red-900 text-red-400"
+                    }`}>
+                    <div className="flex items-start justify-between gap-3">
+                        <span>
+                            {feedback.kind === "success" && `✓ ${feedback.count} ${feedback.count === 1 ? "entry" : "entries"} updated successfully.`}
+                            {feedback.kind === "partial" && `⚠ ${feedback.count}/${feedback.total} entries updated. ${feedback.userErrors.length + feedback.teamErrors.length} failed:`}
+                            {feedback.kind === "failure" && "✗ Failed to update any entries. Please try again."}
+                        </span>
+                        <button onClick={() => setFeedback(null)} className="text-current opacity-60 hover:opacity-100 shrink-0 text-base leading-none">✕</button>
+                    </div>
+                    {(feedback.kind === "partial" || feedback.kind === "failure") && (
+                        <div className="space-y-0.5 pl-2 border-l-2 border-current/30">
+                            {feedback.userErrors.map(e => (
+                                <div key={e.user_id} className="font-mono opacity-80">{e.user_id}: {e.error}</div>
+                            ))}
+                            {feedback.teamErrors.map(e => (
+                                <div key={e.team_id} className="font-mono opacity-80">{e.team_id}: {e.error}</div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── Status Action Bar ── */}
+            <div
+                className={`sticky top-0 z-20 transition-all duration-300 ease-out overflow-hidden ${selectedCount > 0
+                    ? "max-h-32 opacity-100"
+                    : "max-h-0 opacity-0 pointer-events-none"
+                    }`}
+            >
+                <div className="bg-neutral-900 border-b border-neutral-700 px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap shadow-lg shadow-black/40">
+                    {/* Count + label */}
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white text-black text-[11px] font-black shrink-0">
+                            {selectedCount}
+                        </span>
+                        <span className="text-xs text-neutral-300 font-medium">
+                            {selectedCount === 1 ? "entry" : "entries"} selected
+                        </span>
+                    </div>
+
+                    {/* Status buttons — wrap on very small screens */}
+                    <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+                        {isPending && (
+                            <span className="text-[11px] text-neutral-500 uppercase tracking-widest animate-pulse mr-1">Saving…</span>
+                        )}
+                        <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => applyStatus("QUALIFIED")}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest border border-emerald-700 bg-emerald-950/60 text-emerald-400 hover:bg-emerald-900/60 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400"
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                            Qualified
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => applyStatus("ELIMINATED")}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest border border-amber-700 bg-amber-950/60 text-amber-400 hover:bg-amber-900/60 hover:border-amber-500 hover:text-amber-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                            Eliminated
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => applyStatus("DISQUALIFIED")}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest border border-red-800 bg-red-950/60 text-red-400 hover:bg-red-900/60 hover:border-red-600 hover:text-red-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400"
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
+                            Disqualified
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => setSelected(new Set())}
+                            className="px-2 py-1.5 text-[11px] text-neutral-600 hover:text-neutral-400 disabled:opacity-40 transition-colors duration-150 focus-visible:outline-none"
+                            aria-label="Clear selection"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             {/* Mobile card view */}
             <div className="md:hidden divide-y divide-neutral-800">
-                {data.map((entry, idx) => (
-                    <CheckedInCard key={idx} entry={entry} />
-                ))}
+                {data.map((entry, idx) => {
+                    const id = entryId(entry);
+                    return (
+                        <CheckedInCard
+                            key={idx}
+                            entry={entry}
+                            checked={selected.has(id)}
+                            onToggle={() => toggleEntry(id)}
+                            status={appliedStatus[id]}
+                        />
+                    );
+                })}
             </div>
 
             {/* Desktop table view */}
-            <div className="hidden md:block overflow-x-auto">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-neutral-800">
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                Type
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                Name / Participant
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                Members
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                College
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                Checked-In At
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-800">
-                        {data.map((entry, idx) =>
-                            entry.type === "TEAM" ? (
-                                <TeamCheckInRow key={idx} entry={entry} />
-                            ) : (
-                                <SoloCheckInRow key={idx} entry={entry} />
-                            )
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            <div className="hidden md:block border border-neutral-800 bg-neutral-950 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-neutral-800 bg-neutral-900/60 font-mono">
+                                <th className="w-12 px-6 py-3 border-r border-neutral-800/60 bg-neutral-900/40">
+                                    <input
+                                        type="checkbox"
+                                        checked={allSelected}
+                                        ref={el => { if (el) el.indeterminate = someSelected; }}
+                                        onChange={toggleAll}
+                                        className="w-4 h-4 bg-black border-neutral-700 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white"
+                                    />
+                                </th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
+                                    Team / Entry
+                                </th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                    Participant Name
+                                </th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                    College & Degree
+                                </th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                    Phone Number
+                                </th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-l border-neutral-800/60 w-[140px]">
+                                    Status
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.map((entry, idx) => {
+                                const id = entryId(entry);
+                                return (
+                                    <CheckedInRowGroup
+                                        key={idx}
+                                        entry={entry}
+                                        checked={selected.has(id)}
+                                        onToggle={() => toggleEntry(id)}
+                                        status={appliedStatus[id]}
+                                    />
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
 
-            <TablePagination
-                page={page}
-                totalPages={totalPages}
-                total={total}
-                pageLimit={pageLimit}
-                onPrev={onPrev}
-                onNext={onNext}
-            />
+                <TablePagination
+                    page={page}
+                    totalPages={totalPages}
+                    total={total}
+                    pageLimit={pageLimit}
+                    onPrev={onPrev}
+                    onNext={onNext}
+                />
+            </div>
+        </div>
+    );
+}
+
+// ── Status badge ──────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }: { status?: ParticipantStatus }) {
+    if (!status) return <span className="text-[10px] text-neutral-700 uppercase tracking-widest font-mono">—</span>;
+    const map: Record<ParticipantStatus, string> = {
+        QUALIFIED: "text-emerald-400 border-emerald-800 bg-emerald-950/40",
+        ELIMINATED: "text-amber-400 border-amber-800 bg-amber-950/40",
+        DISQUALIFIED: "text-red-400 border-red-900 bg-red-950/40",
+    };
+    const dotMap: Record<ParticipantStatus, string> = {
+        QUALIFIED: "bg-emerald-400",
+        ELIMINATED: "bg-amber-400",
+        DISQUALIFIED: "bg-red-400",
+    };
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${map[status]}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${dotMap[status]}`} />
+            {status.charAt(0) + status.slice(1).toLowerCase()}
+        </span>
+    );
+}
+
+// ── Row + Card components (now controlled) ────────────────────────────────────
+
+interface CheckedInRowGroupProps {
+    entry: RoundCheckInEntry;
+    checked: boolean;
+    onToggle: () => void;
+    status?: ParticipantStatus;
+}
+
+function CheckedInRowGroup({ entry, checked, onToggle, status }: CheckedInRowGroupProps) {
+    const rowHighlight = checked ? "bg-neutral-900/50" : "";
+
+    if (entry.type === "SOLO") {
+        return (
+            <tr className={`hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0 ${rowHighlight}`}>
+                <td className="w-12 px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/20 align-middle">
+                    <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={onToggle}
+                        className="w-4 h-4 bg-black border-neutral-800 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white"
+                    />
+                </td>
+                <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
+                    <div className="flex flex-col items-center justify-center space-y-2 text-center">
+                        <TypeBadge type="SOLO" />
+                        <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
+                            {entry.first_name}
+                        </div>
+                        <p className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider">
+                            {new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                    </div>
+                </td>
+                <td className="px-6 py-4">
+                    <div className="text-sm font-semibold text-white">{entry.first_name} {entry.last_name}</div>
+                    <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{entry.participant_id}</div>
+                </td>
+                <td className="px-6 py-4">
+                    <div className="text-xs text-neutral-400">
+                        <div className="truncate max-w-[240px]">{entry.college}</div>
+                        <div className="text-[10px] text-neutral-600 mt-0.5">{entry.degree}</div>
+                    </div>
+                </td>
+                <td className="px-6 py-4">
+                    <div className="text-xs text-neutral-500 font-mono">{entry.ph_no}</div>
+                </td>
+                <td className="px-6 py-4 border-l border-neutral-800/60">
+                    <StatusBadge status={status} />
+                </td>
+            </tr>
+        );
+    }
+
+    return (
+        <>
+            {entry.members.map((member, mIdx) => (
+                <tr
+                    key={member.participant_id}
+                    className={`hover:bg-neutral-900/20 transition-colors duration-150 border-b border-neutral-800/60 last:border-0 ${checked ? "bg-neutral-900/30" : ""}`}
+                >
+                    {mIdx === 0 && (
+                        <>
+                            <td rowSpan={entry.members.length} className="w-12 px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/20 align-middle">
+                                <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={onToggle}
+                                    className="w-4 h-4 bg-black border-neutral-800 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white"
+                                />
+                            </td>
+                            <td rowSpan={entry.members.length} className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
+                                <div className="flex flex-col items-center justify-center space-y-2 sticky top-4 text-center">
+                                    <TypeBadge type="TEAM" />
+                                    <div className="text-sm font-black text-white uppercase tracking-widest leading-none">{entry.name}</div>
+                                    <div className="text-[9px] text-neutral-600 uppercase tracking-widest font-bold">{entry.members.length} members</div>
+                                    <p className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider">
+                                        {new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </div>
+                            </td>
+                        </>
+                    )}
+                    <td className="px-6 py-4">
+                        <div className="text-sm text-neutral-300">{member.first_name} {member.last_name}</div>
+                        <div className="text-[10px] text-neutral-600 font-mono mt-0.5">{member.participant_id}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                        <div className="text-xs text-neutral-500">
+                            <div className="truncate max-w-[240px]">{member.college}</div>
+                            <div className="text-[10px] text-neutral-700 mt-0.5">{member.degree}</div>
+                        </div>
+                    </td>
+                    <td className="px-6 py-4">
+                        <div className="text-xs text-neutral-500 font-mono">{member.ph_no}</div>
+                    </td>
+                    {mIdx === 0 && (
+                        <td rowSpan={entry.members.length} className="px-6 py-4 border-l border-neutral-800/60 align-middle">
+                            <StatusBadge status={status} />
+                        </td>
+                    )}
+                </tr>
+            ))}
         </>
     );
 }
 
-function CheckedInCard({ entry }: { entry: RoundCheckInEntry }) {
+interface CheckedInCardProps {
+    entry: RoundCheckInEntry;
+    checked: boolean;
+    onToggle: () => void;
+    status?: ParticipantStatus;
+}
+
+function CheckedInCard({ entry, checked, onToggle, status }: CheckedInCardProps) {
+    const cardBase = `p-4 space-y-3 relative transition-colors duration-150 ${checked ? "bg-neutral-900/60" : ""}`;
+    const checkboxCls = "w-5 h-5 bg-black border-neutral-700 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white shrink-0";
+
+    const header = (
+        <div className="flex items-center gap-3">
+            <input type="checkbox" checked={checked} onChange={onToggle} className={checkboxCls} />
+            {entry.type === "TEAM" ? (
+                <>
+                    <TypeBadge type="TEAM" />
+                    <span className="font-semibold text-white truncate flex-1">{entry.name}</span>
+                </>
+            ) : (
+                <>
+                    <TypeBadge type="SOLO" />
+                    <span className="font-semibold text-white truncate flex-1">{entry.first_name} {entry.last_name}</span>
+                </>
+            )}
+            {status && <StatusBadge status={status} />}
+        </div>
+    );
+
     if (entry.type === "TEAM") {
         return (
-            <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                    <TypeBadge type="TEAM" />
-                    <span className="font-semibold text-white">{entry.name}</span>
-                </div>
-                <div className="space-y-1">
+            <div className={cardBase}>
+                {header}
+                <div className="space-y-1 pl-8">
                     {entry.members.map(m => (
                         <div key={m.participant_id} className="text-xs text-neutral-400 font-mono">
                             {m.first_name} {m.last_name} • {m.email}
                         </div>
                     ))}
                 </div>
-                <div className="flex gap-4 text-xs text-neutral-500">
+                <div className="flex gap-4 text-xs text-neutral-500 items-center pl-8">
                     <span>{entry.members[0]?.college ?? "—"}</span>
-                    <span className="ml-auto">{new Date(entry.checkedin_at).toLocaleString()}</span>
+                    <span className="ml-auto">{new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
             </div>
         );
     }
     return (
-        <div className="p-4 space-y-2">
-            <div className="flex items-center gap-2">
-                <TypeBadge type="SOLO" />
-                <span className="font-semibold text-white">{entry.first_name} {entry.last_name}</span>
-            </div>
-            <div className="text-xs text-neutral-400 font-mono">{entry.participant_id} • {entry.email}</div>
-            <div className="flex gap-4 text-xs text-neutral-500">
+        <div className={cardBase}>
+            {header}
+            <div className="text-xs text-neutral-400 font-mono pl-8">{entry.participant_id} • {entry.email}</div>
+            <div className="flex gap-4 text-xs text-neutral-500 items-center pl-8">
                 <span>{entry.college}</span>
-                <span className="ml-auto">{new Date(entry.checkedin_at).toLocaleString()}</span>
+                <span className="ml-auto">{new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
         </div>
     );
 }
 
-function TeamCheckInRow({ entry }: { entry: Extract<RoundCheckInEntry, { type: "TEAM" }> }) {
-    return (
-        <tr className="hover:bg-neutral-900 transition-colors duration-150 align-top">
-            <td className="px-6 py-4 text-sm">
-                <TypeBadge type="TEAM" />
-            </td>
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-1.5">
-                    <Group className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-                    <span className="text-sm font-medium text-white">{entry.name}</span>
-                </div>
-            </td>
-            <td className="px-6 py-4">
-                <div className="space-y-1">
-                    {entry.members.map(m => (
-                        <div key={m.participant_id} className="text-xs text-neutral-400">
-                            <span className="text-neutral-200">{m.first_name} {m.last_name}</span>
-                            <span className="text-neutral-600 font-mono ml-1.5">{m.participant_id}</span>
-                        </div>
-                    ))}
-                </div>
-            </td>
-            <td className="px-6 py-4 text-sm text-neutral-400">
-                {entry.members[0]?.college ?? "—"}
-            </td>
-            <td className="px-6 py-4 text-sm text-neutral-400 whitespace-nowrap">
-                {new Date(entry.checkedin_at).toLocaleString()}
-            </td>
-        </tr>
-    );
-}
 
-function SoloCheckInRow({ entry }: { entry: Extract<RoundCheckInEntry, { type: "SOLO" }> }) {
-    return (
-        <tr className="hover:bg-neutral-900 transition-colors duration-150">
-            <td className="px-6 py-4 text-sm">
-                <TypeBadge type="SOLO" />
-            </td>
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-                    <div>
-                        <p className="text-sm font-medium text-white">{entry.first_name} {entry.last_name}</p>
-                        <p className="text-xs text-neutral-500 font-mono">{entry.participant_id}</p>
-                    </div>
-                </div>
-            </td>
-            <td className="px-6 py-4 text-xs text-neutral-400">
-                {entry.email}
-            </td>
-            <td className="px-6 py-4 text-sm text-neutral-400">
-                {entry.college}
-            </td>
-            <td className="px-6 py-4 text-sm text-neutral-400 whitespace-nowrap">
-                {new Date(entry.checkedin_at).toLocaleString()}
-            </td>
-        </tr>
-    );
-}
 
 // ── Qualified Table ───────────────────────────────────────────────────────────
 
@@ -646,47 +980,119 @@ function QualifiedTable({
             </div>
 
             {/* Desktop table view */}
-            <div className="hidden md:block overflow-x-auto">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-neutral-800">
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                Type
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                Name / Participant
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                Members
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                College
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                                Registered At
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-800">
-                        {data.map((entry, idx) =>
-                            entry.type === "TEAM" ? (
-                                <TeamQualifiedRow key={idx} entry={entry} />
-                            ) : (
-                                <SoloQualifiedRow key={idx} entry={entry} />
-                            )
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            <div className="hidden md:block border border-neutral-800 bg-neutral-950 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-neutral-800 bg-neutral-900/60">
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
+                                    Team / Entry
+                                </th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                    Participant Name
+                                </th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                    College & Degree
+                                </th>
+                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                    Phone Number
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.map((entry, idx) => (
+                                <QualifiedRowGroup key={idx} entry={entry} />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
-            <TablePagination
-                page={page}
-                totalPages={totalPages}
-                total={total}
-                pageLimit={pageLimit}
-                onPrev={onPrev}
-                onNext={onNext}
-            />
+                <TablePagination
+                    page={page}
+                    totalPages={totalPages}
+                    total={total}
+                    pageLimit={pageLimit}
+                    onPrev={onPrev}
+                    onNext={onNext}
+                />
+            </div>
+        </>
+    );
+}
+
+function QualifiedRowGroup({ entry }: { entry: RoundQualifiedParticipant }) {
+    if (entry.type === "SOLO") {
+        return (
+            <tr className="hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0">
+                <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
+                    <div className="flex flex-col items-center justify-center space-y-2 text-center">
+                        <TypeBadge type="SOLO" />
+                        <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
+                            {entry.first_name}
+                        </div>
+                    </div>
+                </td>
+                <td className="px-6 py-4">
+                    <div className="text-sm font-semibold text-white">
+                        {entry.first_name} {entry.last_name}
+                    </div>
+                    <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{entry.participant_id}</div>
+                </td>
+                <td className="px-6 py-4">
+                    <div className="text-xs text-neutral-400">
+                        <div className="truncate max-w-[240px]">{entry.college}</div>
+                        <div className="text-[10px] text-neutral-600 mt-0.5">{entry.degree}</div>
+                    </div>
+                </td>
+                <td className="px-6 py-4">
+                    <div className="text-xs text-neutral-500 font-mono">{entry.ph_no}</div>
+                </td>
+            </tr>
+        );
+    }
+
+    return (
+        <>
+            {entry.members.map((member, mIdx) => (
+                <tr
+                    key={member.participant_id}
+                    className="hover:bg-neutral-900/20 transition-colors duration-150 border-b border-neutral-800/60 last:border-0"
+                >
+                    {mIdx === 0 && (
+                        <td
+                            rowSpan={entry.members.length}
+                            className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle"
+                        >
+                            <div className="flex flex-col items-center justify-center space-y-2 sticky top-4 text-center">
+                                <TypeBadge type="TEAM" />
+                                <div className="text-sm font-black text-white uppercase tracking-widest leading-none">
+                                    {entry.name}
+                                </div>
+                                <div className="text-[9px] text-neutral-600 uppercase tracking-widest font-bold">
+                                    {entry.members.length} members
+                                </div>
+                            </div>
+                        </td>
+                    )}
+                    <td className="px-6 py-4">
+                        <div className="text-sm text-neutral-300">
+                            {member.first_name} {member.last_name}
+                        </div>
+                        <div className="text-[10px] text-neutral-600 font-mono mt-0.5">
+                            {member.participant_id}
+                        </div>
+                    </td>
+                    <td className="px-6 py-4">
+                        <div className="text-xs text-neutral-500">
+                            <div className="truncate max-w-[240px]">{member.college}</div>
+                            <div className="text-[10px] text-neutral-700 mt-0.5">{member.degree}</div>
+                        </div>
+                    </td>
+                    <td className="px-6 py-4">
+                        <div className="text-xs text-neutral-500 font-mono">{member.ph_no}</div>
+                    </td>
+                </tr>
+            ))}
         </>
     );
 }
@@ -728,79 +1134,21 @@ function QualifiedCard({ entry }: { entry: RoundQualifiedParticipant }) {
     );
 }
 
-function TeamQualifiedRow({ entry }: { entry: Extract<RoundQualifiedParticipant, { type: "TEAM" }> }) {
-    return (
-        <tr className="hover:bg-neutral-900 transition-colors duration-150 align-top">
-            <td className="px-6 py-4 text-sm">
-                <TypeBadge type="TEAM" />
-            </td>
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-1.5">
-                    <Group className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-                    <span className="text-sm font-medium text-white">{entry.name}</span>
-                </div>
-            </td>
-            <td className="px-6 py-4">
-                <div className="space-y-1">
-                    {entry.members.map(m => (
-                        <div key={m.participant_id} className="text-xs text-neutral-400">
-                            <span className="text-neutral-200">{m.first_name} {m.last_name}</span>
-                            <span className="text-neutral-600 font-mono ml-1.5">{m.participant_id}</span>
-                        </div>
-                    ))}
-                </div>
-            </td>
-            <td className="px-6 py-4 text-sm text-neutral-400">
-                {entry.members[0]?.college ?? "—"}
-            </td>
-            <td className="px-6 py-4 text-sm text-neutral-400 whitespace-nowrap">
-                {new Date(entry.registered_at).toLocaleString()}
-            </td>
-        </tr>
-    );
-}
 
-function SoloQualifiedRow({ entry }: { entry: Extract<RoundQualifiedParticipant, { type: "SOLO" }> }) {
-    return (
-        <tr className="hover:bg-neutral-900 transition-colors duration-150">
-            <td className="px-6 py-4 text-sm">
-                <TypeBadge type="SOLO" />
-            </td>
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-                    <div>
-                        <p className="text-sm font-medium text-white">{entry.first_name} {entry.last_name}</p>
-                        <p className="text-xs text-neutral-500 font-mono">{entry.participant_id}</p>
-                    </div>
-                </div>
-            </td>
-            <td className="px-6 py-4 text-xs text-neutral-400">
-                {entry.email}
-            </td>
-            <td className="px-6 py-4 text-sm text-neutral-400">
-                {entry.college}
-            </td>
-            <td className="px-6 py-4 text-sm text-neutral-400 whitespace-nowrap">
-                {new Date(entry.registered_at).toLocaleString()}
-            </td>
-        </tr>
-    );
-}
 
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
 function TypeBadge({ type }: { type: "TEAM" | "SOLO" }) {
     if (type === "TEAM") {
         return (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border border-blue-800 bg-blue-950/50 text-blue-400">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border border-blue-800 bg-blue-950/50 text-blue-400 w-fit">
                 <Group className="w-2.5 h-2.5" />
                 Team
             </span>
         );
     }
     return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border border-neutral-700 bg-neutral-900 text-neutral-400">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border border-blue-800 bg-blue-950/50 text-blue-400 w-fit">
             <User className="w-2.5 h-2.5" />
             Solo
         </span>

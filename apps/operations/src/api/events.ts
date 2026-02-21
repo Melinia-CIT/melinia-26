@@ -1,10 +1,21 @@
 import type { AxiosInstance } from "axios";
 
-// ── Registration types ─────────────────────────────────────────────────────
+import type {
+    EventRegistration,
+    ScanResult,
+    Rule,
+    Round,
+    VerboseEvent as EventDetail,
+    GetEventCheckIn,
+    GetEventParticipant,
+    AssignRoundResults,
+    BulkOperationResult,
+    RoundResult,
+    UserResultError,
+    TeamResultError,
+} from "@melinia/shared";
 
-import type { GetEventRegistration, ScanResult, Rule, Round, VerboseEvent as EventDetail, GetEventCheckIn, GetEventParticipant } from "@melinia/shared";
-
-export type EventRegistration = GetEventRegistration;
+export type { EventRegistration, Rule, Round, EventDetail };
 
 export interface Pagination {
     from: number;
@@ -24,11 +35,15 @@ export interface GetEventRegistrationsParams {
     limit?: number;
 }
 
-export type { Rule, Round, EventDetail };
+
 
 export type RoundParticipant = ScanResult;
 export type RoundCheckInEntry = GetEventCheckIn;
 export type RoundQualifiedParticipant = GetEventParticipant;
+
+// Re-export shared result types for use in routes
+export type { AssignRoundResults, BulkOperationResult, RoundResult, UserResultError, TeamResultError };
+export type RoundResultStatus = "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED";
 
 export interface CheckInRoundResponse {
     user_ids: string[];
@@ -43,6 +58,15 @@ export interface RoundCheckInsResponse {
 export interface RoundParticipantsResponse {
     data: RoundQualifiedParticipant[];
     pagination: Pagination;
+}
+
+// ── Post round results response shape ─────────────────────────────────────
+
+export interface PostRoundResultsResponse {
+    message: string;
+    data: BulkOperationResult;
+    user_errors?: UserResultError[];
+    team_errors?: TeamResultError[];
 }
 
 // ── API factory ────────────────────────────────────────────────────────────
@@ -127,6 +151,18 @@ export function createEventsApi(http: AxiosInstance) {
                         limit: params.limit ?? 10,
                     },
                 },
+            );
+            return data;
+        },
+
+        async postRoundResults(
+            eventId: string,
+            roundNo: number | string,
+            payload: AssignRoundResults,
+        ): Promise<PostRoundResultsResponse> {
+            const { data } = await http.post<PostRoundResultsResponse>(
+                `/ops/events/${eventId}/rounds/${roundNo}/results`,
+                payload,
             );
             return data;
         },
