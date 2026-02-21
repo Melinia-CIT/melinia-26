@@ -1171,8 +1171,8 @@ export async function getEventCheckIns(
         const eventCheckIns = rows.map(row => {
             if (row.type === "SOLO") {
                 return getEventCheckInSchema.parse({
-                    type: "SOLO",
                     participant_id: row.id,
+                    type: "SOLO",
                     first_name: row.first_name,
                     last_name: row.last_name,
                     college: row.college,
@@ -1184,6 +1184,7 @@ export async function getEventCheckIns(
                 });
             } else {
                 return getEventCheckInSchema.parse({
+                    team_id: row.id,
                     type: "TEAM",
                     name: row.name,
                     members: row.members,
@@ -1294,8 +1295,8 @@ export async function getEventParticipants(
         function parseParticipantRow(row: any): GetEventParticipant {
             if (row.type === "SOLO") {
                 return getEventParticipantSchema.parse({
-                    type: "SOLO",
                     participant_id: row.id,
+                    type: "SOLO",
                     first_name: row.first_name,
                     last_name: row.last_name,
                     college: row.college,
@@ -1306,8 +1307,8 @@ export async function getEventParticipants(
                 });
             }
             return getEventParticipantSchema.parse({
-                type: "TEAM",
                 team_id: row.id,
+                type: "TEAM",
                 name: row.name,
                 members: row.members,
                 registered_at: row.sort_at,

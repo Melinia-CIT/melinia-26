@@ -492,6 +492,7 @@ export const getEventParticipantsParamSchema = getEventCheckInsParamSchema
 export const getEventCheckInSchema = z
     .discriminatedUnion("type", [
         z.object({
+            team_id: z.string(),
             type: z.literal("TEAM"),
             team_id: z.string(),
             name: z.string(),
@@ -510,10 +511,10 @@ export const getEventCheckInSchema = z
             checkedin_by: z.string(),
         }),
         z.object({
+            participant_id: z.string(),
             type: z.literal("SOLO"),
             first_name: z.string(),
             last_name: z.string(),
-            participant_id: z.string(),
             college: z.string(),
             degree: z.string(),
             ph_no: z.string(),
@@ -526,6 +527,7 @@ export const getEventCheckInSchema = z
 export const getEventParticipantSchema = z
     .discriminatedUnion("type", [
         z.object({
+            team_id: z.string(),
             type: z.literal("TEAM"),
             name: z.string(),
             members: z.array(
@@ -542,10 +544,10 @@ export const getEventParticipantSchema = z
             registered_at: z.coerce.date(),
         }),
         z.object({
+            participant_id: z.string(),
             type: z.literal("SOLO"),
             first_name: z.string(),
             last_name: z.string(),
-            participant_id: z.string(),
             college: z.string(),
             degree: z.string(),
             ph_no: z.string(),
