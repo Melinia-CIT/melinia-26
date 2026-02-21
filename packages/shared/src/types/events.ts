@@ -608,6 +608,12 @@ export const baseRoundCheckInSchema = z.object({
     }))
 });
 
+export const fetchLeaderBoardSchema = z.object({
+    college_id: z.string(),
+    college_name: z.string(),
+    points: z.number()
+});
+
 export type CreateEvent = z.infer<typeof createEventSchema>
 export type Event = z.infer<typeof baseEventSchema>
 export type EventPatch = z.infer<typeof eventPatchSchema>
@@ -636,6 +642,7 @@ export type Rule = z.infer<typeof baseRoundRulesSchema>;
 
 
 export type GetCheckIn = z.infer<typeof getCheckInSchema>;
+export type FetchLeaderBoard = z.infer<typeof fetchLeaderBoardSchema>
 export type GetCheckInError = InternalError;
 
 export type GetEventCheckIn = z.infer<typeof getEventCheckInSchema>;
@@ -735,6 +742,11 @@ export type RoundCheckInError =
 
 export type ParticipantNotCheckedInToRound = {
     code: "participant_not_checked_in_to_round"
+    message: string
+}
+
+export type LeaderboardNotFound = {
+    code: "leaderboard_not_found"
     message: string
 }
 
@@ -972,4 +984,7 @@ export type AssignVolunteersError =
     | InvalidVolunteerRole
     | VolunteerAlreadyAssigned
     | EmptyVolunteerList
+    | InternalError
+
+export type GetLeaderboardError =
     | InternalError

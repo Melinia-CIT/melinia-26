@@ -1,9 +1,11 @@
 import { Hono } from "hono"
+import { stream, streamSSE } from "hono/streaming"
 import {
     searchColleges,
     getColleges,
     searchDegrees,
     getDegrees,
+    getCollegeLeaderboard
 } from "../db/queries/colleges.queries"
 import {
     getCollegeCache,
@@ -19,6 +21,8 @@ import {
 } from "../utils/cache/college.cache"
 import { sendSuccess, sendError } from "../utils/response"
 import { adminOnlyMiddleware, authMiddleware } from "../middleware/auth.middleware"
+import { paginationSchema } from "@packages/shared/dist"
+import { zValidator } from "@hono/zod-validator"
 
 export const college = new Hono()
 
@@ -114,3 +118,56 @@ college.post("/invalidate-cache", authMiddleware, adminOnlyMiddleware, async c =
         return c.json("Failed to invalidate cache", 500);
     }
 })
+
+college.get(
+    "/leaderboard",
+    zValidator("query", paginationSchema),
+    async (c) => {
+        const { from, limit } = c.req.valid("query")
+
+        return streamSSE(c, async (stream) => {
+            try {
+                while (true) {
+                    const result = await getCollegeLeaderboard(from, limit)
+
+                    if (result.isErr) {
+                        console.error("Leaderboard query error:")
+                        console.dir(result.error, { depth: null })
+
+                        await stream.writeSSE({
+                            event: "error",
+                            data: JSON.stringify(result.error),
+                        })
+
+                        return
+                    }
+
+                    await stream.writeSSE({
+                        event: "leaderboard",
+                        data: JSON.stringify({
+                            success: true,
+                            data: result.value.data,
+                            total: result.value.total,
+                            from,
+                            limit,
+                        }),
+                    })
+
+                    await new Promise((resolve) =>
+                        setTimeout(resolve, 5000)
+                    )
+                }
+            } catch (err) {
+                console.error("SSE stream crashed:")
+                console.dir(err, { depth: null })
+
+                await stream.writeSSE({
+                    event: "error",
+                    data: JSON.stringify({
+                        message: "Stream failure",
+                    }),
+                })
+            }
+        })
+    }
+)

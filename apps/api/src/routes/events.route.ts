@@ -160,6 +160,7 @@ events.post(
         }
     }
 );
+
 events.post(
     "/",
     authMiddleware,
