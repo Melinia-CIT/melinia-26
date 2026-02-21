@@ -23,3 +23,9 @@ export async function refresh(): Promise<RefreshResponse> {
 	const response = await http.post<RefreshResponse>("/auth/refresh");
 	return response.data;
 }
+/**
+ * Logout and clear session cookies on the server
+ */
+export async function logout(): Promise<void> {
+	await http.post("/auth/logout");
+}

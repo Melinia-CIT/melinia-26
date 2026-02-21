@@ -27,7 +27,7 @@ export interface AuthService {
 	/**
 	 * Logout (clear token and session)
 	 */
-	logout: () => void;
+	logout: () => Promise<void>;
 
 	/**
 	 * Ensure user has a valid session (refresh if needed)
@@ -59,8 +59,12 @@ export function createAuthService(): AuthService {
 			setToken(response.accessToken);
 		},
 
-		logout() {
-			clearToken();
+		async logout() {
+			try {
+				await authApi.logout();
+			} finally {
+				clearToken();
+			}
 		},
 
 		async ensureSession() {

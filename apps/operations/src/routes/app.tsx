@@ -27,8 +27,8 @@ function AppLayout() {
 	const navigate = useNavigate();
 	const { auth } = Route.useRouteContext();
 
-	const handleLogout = () => {
-		auth.logout();
+	const handleLogout = async () => {
+		await auth.logout();
 		navigate({ to: authRoutes.logout, search: { redirect: "/app" } });
 	}
 
