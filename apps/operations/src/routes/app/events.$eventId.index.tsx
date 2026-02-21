@@ -7,8 +7,11 @@ import {
   NavArrowLeft,
   NavArrowRight,
   Clock,
+  Plus,
 } from 'iconoir-react'
 import { useState } from 'react'
+import { Button } from '@/ui/Button'
+import { AddVolunteersModal } from '@/ui/AddVolunteersModal'
 import type { EventRegistration, EventRegistrationsResponse, Round, EventDetail } from '@/api/events'
 
 export const Route = createFileRoute('/app/events/$eventId/')({
@@ -48,6 +51,7 @@ function EventRegistrationsPage() {
   const { eventId } = Route.useParams()
   const { api } = Route.useRouteContext()
   const [from, setFrom] = useState(0)
+  const [showVolunteersModal, setShowVolunteersModal] = useState(false)
 
   // Fetch detailed event data (includes rounds)
   const { data: event, isLoading: isEventLoading } = useQuery<EventDetail>({
@@ -82,16 +86,31 @@ function EventRegistrationsPage() {
       </Link>
 
       {/* Page header */}
-      <div className="space-y-1">
-        <h2 className="text-3xl font-bold text-white">
-          {event?.name ?? 'Loading…'}
-        </h2>
-        <div className="flex items-center gap-4 text-sm text-neutral-500">
-          <span>{event?.event_type?.toUpperCase()}</span>
-          <span>•</span>
-          <span>{event?.participation_type?.toUpperCase()} participation</span>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-1">
+          <h2 className="text-3xl font-bold text-white">
+            {event?.name ?? 'Loading…'}
+          </h2>
+          <div className="flex items-center gap-4 text-sm text-neutral-500">
+            <span>{event?.event_type?.toUpperCase()}</span>
+            <span>•</span>
+            <span>{event?.participation_type?.toUpperCase()} participation</span>
+          </div>
         </div>
+        <Button
+          onClick={() => setShowVolunteersModal(true)}
+          className="bg-white text-black hover:bg-neutral-200 border-none px-6 py-2.5 font-bold flex items-center gap-2 shrink-0 h-fit"
+        >
+          <Plus className="w-5 h-5" />
+          Add Volunteers
+        </Button>
       </div>
+
+      <AddVolunteersModal
+        open={showVolunteersModal}
+        onClose={() => setShowVolunteersModal(false)}
+        eventName={event?.name ?? ''}
+      />
 
       {/* Rounds section */}
       <div className="space-y-4">
