@@ -1,11 +1,10 @@
 import {
 	createFileRoute,
-	Link,
 	Outlet,
 	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
-import { authRoutes, mainNavItems } from "@/app/nav";
+import { authRoutes } from "@/app/nav";
 import { Button } from "@/ui/Button";
 
 export const Route = createFileRoute("/app")({
@@ -28,40 +27,22 @@ function AppLayout() {
 	const navigate = useNavigate();
 	const { auth } = Route.useRouteContext();
 
-	const handleLogout = () => {
-		auth.logout();
+	const handleLogout = async () => {
+		await auth.logout();
 		navigate({ to: authRoutes.logout, search: { redirect: "/app" } });
 	}
 
 	return (
 		<div className="min-h-screen flex flex-col bg-black">
 			{/* Top bar */}
-			<header className="h-16 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between px-6">
-				<div className="flex items-center gap-6">
-					<h1 className="text-xl font-bold text-white tracking-tight">
+			<header className="h-16 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between px-4 md:px-6 relative z-50">
+				<div className="flex items-center gap-4 md:gap-6">
+					<h1 className="text-lg md:text-xl font-bold text-white tracking-tight">
 						MELINIA'26 OPS
 					</h1>
-
-					{/* Navigation */}
-					<nav className="flex items-center gap-1">
-						{mainNavItems
-							.filter((item) => item.enabled)
-							.map((item) => (
-								<Link
-									key={item.to}
-									to={item.to}
-									className="px-3 py-1.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-900 transition-colors duration-150"
-									activeProps={{
-										className: "text-white bg-neutral-900",
-									}}
-								>
-									{item.label}
-								</Link>
-							))}
-					</nav>
 				</div>
 
-				<div className="flex items-center gap-4">
+				<div className="flex items-center gap-2 md:gap-4">
 					<Button variant="ghost" size="sm" onClick={handleLogout}>
 						Logout
 					</Button>

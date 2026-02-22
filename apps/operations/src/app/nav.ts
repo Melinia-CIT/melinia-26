@@ -27,17 +27,12 @@ export const mainNavItems: NavItem[] = [
 		enabled: true,
 	},
 	{
-		label: "Check-in",
-		to: "/app/check-in",
-		description: "Search for attendees and mark them as checked in",
-		enabled: true,
-	},
-	{
 		label: "Events",
 		to: "/app/events",
 		description: "Manage schedule and venues",
-		enabled: false, // Not yet implemented
+		enabled: true,
 	},
+
 	{
 		label: "Volunteers",
 		to: "/app/volunteers",
@@ -60,8 +55,9 @@ export const quickActionItems: NavItem[] = [
 		label: "View Events",
 		to: "/app/events",
 		description: "Manage schedule",
-		enabled: false,
+		enabled: true,
 	},
+
 	{
 		label: "Registrations",
 		to: "/app/registrations",

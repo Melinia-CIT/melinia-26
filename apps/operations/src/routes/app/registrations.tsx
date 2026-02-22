@@ -36,10 +36,10 @@ function RegistrationsPage() {
 	})
 
 	return (
-		<div className="p-6 max-w-7xl mx-auto space-y-6">
+		<div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
 			{/* Header */}
 			<div className="space-y-1">
-				<h2 className="text-3xl font-bold text-white">Registrations</h2>
+				<h2 className="text-2xl md:text-3xl font-bold text-white">Registrations</h2>
 				<p className="text-neutral-500">
 					View and manage all fest registrations
 				</p>
@@ -133,8 +133,46 @@ function RegistrationsPage() {
 					</div>
 				) : (
 					<>
-						{/* Table */}
-						<div className="overflow-x-auto">
+						{/* Mobile Card View */}
+						<div className="md:hidden divide-y divide-neutral-800">
+							{data.data.map((registration) => (
+								<div
+									key={registration.id}
+									className="p-4 space-y-3 hover:bg-neutral-900 transition-colors duration-150"
+								>
+									<div className="flex justify-between items-start">
+										<div className="space-y-1">
+											<p className="font-bold text-white">{registration.name}</p>
+											<p className="text-sm text-neutral-400">{registration.email}</p>
+										</div>
+										<StatusBadge status={registration.status} />
+									</div>
+									<div className="grid grid-cols-2 gap-2 text-xs">
+										<div className="space-y-1">
+											<p className="text-neutral-500 uppercase tracking-wider">Phone</p>
+											<p className="text-neutral-300">{registration.phone}</p>
+										</div>
+										<div className="space-y-1">
+											<p className="text-neutral-500 uppercase tracking-wider">College</p>
+											<p className="text-neutral-300 truncate">{registration.college}</p>
+										</div>
+										<div className="space-y-1">
+											<p className="text-neutral-500 uppercase tracking-wider">Check-in</p>
+											<CheckInBadge checkedIn={registration.checkedIn} />
+										</div>
+										<div className="space-y-1">
+											<p className="text-neutral-500 uppercase tracking-wider">Registered</p>
+											<p className="text-neutral-300">
+												{new Date(registration.registeredAt).toLocaleDateString()}
+											</p>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+
+						{/* Desktop Table View */}
+						<div className="hidden md:block overflow-x-auto">
 							<table className="w-full">
 								<thead>
 									<tr className="border-b border-neutral-800">
