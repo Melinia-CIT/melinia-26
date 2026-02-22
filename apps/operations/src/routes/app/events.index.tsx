@@ -132,7 +132,7 @@ function EventCard({ event, onClick }: EventCardProps) {
         <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-500">
           {EVENT_TYPE_LABEL[event.event_type] ?? event.event_type}
         </span>
-        <span className="flex items-center gap-1 text-[9px] uppercase tracking-widest text-neutral-600">
+        <span className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-950/50 border border-blue-800 text-blue-400 text-[9px] font-bold uppercase tracking-widest">
           {isSolo ? <User className="w-3 h-3" /> : <Group className="w-3 h-3" />}
           {event.participation_type}
         </span>

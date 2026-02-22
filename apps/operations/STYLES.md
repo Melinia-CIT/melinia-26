@@ -22,30 +22,30 @@ This document defines the design system, styling conventions, colors, and UI gui
 
 ```css
 /* Backgrounds */
---color-bg: #0a0a0a;                    /* Page background (black) */
---color-surface: #141414;               /* Card surface */
---color-surface-elevated: #1a1a1a;      /* Elevated elements */
+--color-bg: #1f1f1f;                    /* Page background */
+--color-surface: #262626;               /* Card surface */
+--color-surface-elevated: #2e2e2e;      /* Elevated elements */
 
 /* Borders */
---color-border: #2a2a2a;                /* Default border */
---color-border-strong: #3a3a3a;         /* Strong/emphasis border */
+--color-border: #333333;                /* Default border */
+--color-border-strong: #4a4a4a;         /* Strong/emphasis border */
 
 /* Text */
---color-text: #e5e5e5;                  /* Primary text (white-ish) */
---color-text-secondary: #a3a3a3;        /* Secondary text (medium gray) */
---color-text-tertiary: #737373;         /* Tertiary text (dark gray) */
+--color-text: #f5f5f5;                  /* Primary text (white-ish) */
+--color-text-secondary: #b3b3b3;        /* Secondary text (medium gray) */
+--color-text-tertiary: #8c8c8c;         /* Tertiary text (dark gray) */
 
 /* Accent (monochrome) */
 --color-accent: #ffffff;                /* Pure white accent */
---color-accent-hover: #d4d4d4;          /* Hover state */
---color-accent-muted: #525252;          /* Muted accent */
+--color-accent-hover: #e5e5e5;          /* Hover state */
+--color-accent-muted: #737373;          /* Muted accent */
 ```
 
 ### Tailwind Color Mapping
 
 ```
-Background:    bg-black (#0a0a0a via CSS var)
-Cards:         bg-neutral-950, border-neutral-800
+Background:    bg-black (#1f1f1f via CSS var)
+Cards:         bg-neutral-950 (#262626), border-neutral-800 (#333333)
 Buttons:       bg-stone-50 (whitish cream), hover:bg-white
 Text Primary:  text-white
 Text Secondary: text-neutral-500, text-neutral-400
