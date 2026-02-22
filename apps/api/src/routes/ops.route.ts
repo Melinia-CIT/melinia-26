@@ -22,6 +22,9 @@ import {
 	checkInRoundParticipants, getRegistrationRecordForUser, scanUserForRound,
 	assignRoundResults,
 	getRoundResults,
+	getRoundResultsCount,
+	getRoundResultsByTeam,
+	getRoundResultsByTeamCount,
 	getTeamsForOperations,
 	assignEventPrizes,
 
@@ -157,6 +160,9 @@ ops.post(
 /**
  * GET /api/ops/events/:eventId/rounds/:roundNo/results
  * Get all results for a specific round with participant details
+ * Query params:
+ *   - group_by: "team" | "individual" (default: "individual")
+ *     When "team", results are grouped by team with members nested
  */
 ops.get(
     "/events/:eventId/rounds/:roundNo/results",
@@ -166,9 +172,46 @@ ops.get(
     zValidator("query", getRoundResultsQuerySchema),
     async c => {
         const { eventId, roundNo } = c.req.valid("param")
-        const queryParams = c.req.valid("query")
+        const { from, limit, status, sort, group_by } = c.req.valid("query")
 
-        const result = await getRoundResults(eventId, roundNo, queryParams)
+        if (group_by === "team") {
+            const result = await getRoundResultsByTeam(eventId, roundNo, from, limit, { status, sort })
+            if (result.isErr) {
+                const { code, message } = result.error
+                switch (code) {
+                    case "round_not_found":
+                        return c.json({ message }, 404)
+                    case "internal_error":
+                        return c.json({ message }, 500)
+                }
+            }
+            const teamResults = result.value
+
+            const countResult = await getRoundResultsByTeamCount(eventId, roundNo, status)
+            if (countResult.isErr) {
+                const { code, message } = countResult.error
+                switch (code) {
+                    case "round_not_found":
+                        return c.json({ message }, 404)
+                    case "internal_error":
+                        return c.json({ message }, 500)
+                }
+            }
+            const teamResultsCount = countResult.value
+
+            return c.json({
+                data: teamResults,
+                pagination: {
+                    from: from,
+                    limit: limit,
+                    total: teamResultsCount,
+                    returned: teamResults.length,
+                    has_more: (from + teamResults.length) < teamResultsCount
+                }
+            }, 200)
+        }
+
+        const result = await getRoundResults(eventId, roundNo, from, limit, { status, sort })
 
         if (result.isErr) {
             const { code, message } = result.error
@@ -180,8 +223,31 @@ ops.get(
                     return c.json({ message }, 500)
             }
         }
+        const roundResults = result.value
 
-        return c.json(result.value, 200)
+        const countResult = await getRoundResultsCount(eventId, roundNo, status)
+        if (countResult.isErr) {
+            const { code, message } = countResult.error
+
+            switch (code) {
+                case "round_not_found":
+                    return c.json({ message }, 404)
+                case "internal_error":
+                    return c.json({ message }, 500)
+            }
+        }
+        const roundResultsCount = countResult.value
+
+        return c.json({
+            data: roundResults,
+            pagination: {
+                from: from,
+                limit: limit,
+                total: roundResultsCount,
+                returned: roundResults.length,
+                has_more: (from + roundResults.length) < roundResultsCount
+            }
+        }, 200)
     }
 )
 

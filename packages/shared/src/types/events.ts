@@ -862,8 +862,9 @@ export type AssignResultsError =
 export const getRoundResultsQuerySchema = z.object({
     status: z.enum(["QUALIFIED", "ELIMINATED", "DISQUALIFIED", "all"]).optional(),
     sort: z.enum(["points_desc", "points_asc", "name_asc"]).optional().default("points_desc"),
-    page: z.coerce.number().int().min(1).optional().default(1),
-    limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+    from: z.coerce.number().min(0).default(0),
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+    group_by: z.enum(["team", "individual"]).optional().default("individual"),
 })
 
 export type GetRoundResultsQuery = z.infer<typeof getRoundResultsQuerySchema>
@@ -883,13 +884,30 @@ export type RoundResultWithParticipant = {
     eval_by: string
 }
 
+// Team-grouped Round Result
+export type TeamRoundResult = {
+    team_id: string
+    team_name: string
+    points: number
+    status: string
+    eval_at: Date
+    members: Array<{
+        user_id: string
+        name: string
+        email: string
+    }>
+}
+
 // Paginated Round Results Response
 export type PaginatedRoundResults = {
     data: RoundResultWithParticipant[]
-    total: number
-    page: number
-    limit: number
-    totalPages: number
+    pagination: {
+        from: number
+        limit: number
+        total: number
+        returned: number
+        has_more: boolean
+    }
 }
 
 export type GetRoundResultsError = RoundNotFound | InternalError
