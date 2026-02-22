@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { ScanQrCode } from "iconoir-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ScanQrCode, ArrowLeft } from "iconoir-react";
 import { useState } from "react";
 import type { AxiosError } from "axios";
 import type { Registration } from "@/api/registrations";
@@ -197,7 +197,15 @@ function CheckInPage() {
 	};
 
 	return (
-		<div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+		<div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+			{/* Back link */}
+			<Link
+				to="/app"
+				className="inline-flex items-center gap-2 text-xs text-neutral-500 hover:text-white transition-colors duration-150 uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+			>
+				<ArrowLeft className="w-3.5 h-3.5" />
+				Back to Dashboard
+			</Link>
 			{/* Header */}
 			<div className="space-y-1">
 				<h2 className="text-2xl md:text-3xl font-bold text-white">Check-in</h2>
@@ -249,7 +257,7 @@ function CheckInPage() {
 							className="flex-1"
 						/>
 						<Button
-							variant="secondary"
+							variant="primary"
 							onClick={handleSubmitSearch}
 						>
 							Search

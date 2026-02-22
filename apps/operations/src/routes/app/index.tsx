@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Button } from "@/ui/Button";
+import { ScanQrCode, Calendar, NavArrowRight } from "iconoir-react";
 
 export const Route = createFileRoute("/app/")({
 	component: DashboardPage,
@@ -7,68 +7,49 @@ export const Route = createFileRoute("/app/")({
 
 function DashboardPage() {
 	return (
-		<div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+		<div className="p-4 md:p-6 max-w-7xl mx-auto min-h-[70vh] flex flex-col items-center justify-center space-y-12">
 			{/* Page header */}
-			<div className="space-y-1">
-				<h2 className="text-2xl md:text-3xl font-bold text-white">Dashboard</h2>
-				<p className="text-neutral-500">
+			<div className="space-y-2 text-center">
+				<h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">Dashboard</h2>
+				<p className="text-neutral-500 text-base md:text-lg">
 					Welcome to the operations portal for your college fest
 				</p>
 			</div>
 
-			{/* Actions section */}
-			<div className="bg-neutral-950 border border-neutral-800 p-4 space-y-4">
-				<p className="text-sm font-medium text-neutral-500 uppercase tracking-wider">
-					Actions
-				</p>
-				<div className="flex flex-wrap gap-4">
-					<Link to="/app/check-in">
-						<Button variant="primary" size="md">
-							Global Check-in
-						</Button>
-					</Link>
-					<Link to="/app/events">
-						<Button variant="primary" size="md">
-							Events
-						</Button>
-					</Link>
-				</div>
+			{/* Centered action tiles */}
+			<div className="grid grid-cols-1 gap-6 w-full max-w-2xl">
+				<Link
+					to="/app/check-in"
+					className="group block p-8 bg-neutral-950 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+				>
+					<div className="flex items-center gap-6">
+						<div className="p-4 bg-blue-950/50 border border-blue-800 text-blue-400 group-hover:text-blue-300 group-hover:border-blue-700 transition-colors">
+							<ScanQrCode className="w-8 h-8" />
+						</div>
+						<div className="flex-1">
+							<h3 className="text-xl font-bold text-white group-hover:text-stone-50 uppercase tracking-widest">Fest Check-in</h3>
+							<p className="text-sm text-neutral-500 mt-1">Scan QR codes or search for attendees</p>
+						</div>
+						<NavArrowRight className="w-6 h-6 text-neutral-700 group-hover:text-neutral-400 transition-colors" />
+					</div>
+				</Link>
+
+				<Link
+					to="/app/events"
+					className="group block p-8 bg-neutral-950 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+				>
+					<div className="flex items-center gap-6">
+						<div className="p-4 bg-blue-950/50 border border-blue-800 text-blue-400 group-hover:text-blue-300 group-hover:border-blue-700 transition-colors">
+							<Calendar className="w-8 h-8" />
+						</div>
+						<div className="flex-1">
+							<h3 className="text-xl font-bold text-white group-hover:text-stone-50 uppercase tracking-widest">Events</h3>
+							<p className="text-sm text-neutral-500 mt-1">Manage event rounds and results</p>
+						</div>
+						<NavArrowRight className="w-6 h-6 text-neutral-700 group-hover:text-neutral-400 transition-colors" />
+					</div>
+				</Link>
 			</div>
-
-			{/* Stats cards */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<StatCard
-					label="Registrations Today"
-					value="234"
-					description="12% increase from yesterday"
-				/>
-				<StatCard
-					label="Check-ins"
-					value="189"
-					description="80% of registered attendees"
-				/>
-				<StatCard
-					label="Pending Verifications"
-					value="15"
-					description="3 require immediate attention"
-				/>
-			</div>
-		</div>
-	)
-}
-
-interface StatCardProps {
-	label: string;
-	value: string;
-	description: string;
-}
-
-function StatCard({ label, value, description }: StatCardProps) {
-	return (
-		<div className="bg-neutral-950 border border-neutral-800 p-6 space-y-2">
-			<p className="text-sm font-medium text-neutral-500">{label}</p>
-			<p className="text-3xl font-bold text-white">{value}</p>
-			<p className="text-sm text-neutral-500">{description}</p>
 		</div>
 	)
 }

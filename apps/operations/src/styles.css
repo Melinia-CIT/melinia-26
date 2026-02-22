@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+@theme {
+	/* Neutral UI matching dark scheme for tiles */
+	--color-neutral-50: #fafafa;
+	--color-neutral-100: #f5f5f5;
+	--color-neutral-200: #e5e5e5;
+	--color-neutral-300: #d4d4d4;
+	--color-neutral-400: #b3b3b3;
+	--color-neutral-500: #8c8c8c;
+	--color-neutral-600: #737373;
+	--color-neutral-700: #4a4a4a;
+	--color-neutral-800: #333333;
+	--color-neutral-900: #2e2e2e;
+	--color-neutral-950: #262626;
+}
+
 /* ============================================
    Dark theme + square corners + subtle motion
    Monochrome base with semantic colors for states
@@ -10,19 +25,19 @@
 	color-scheme: dark;
 
 	/* Monochrome base palette (dark mode) */
-	--color-bg: #0a0a0a;
-	--color-surface: #141414;
-	--color-surface-elevated: #1a1a1a;
-	--color-border: #2a2a2a;
-	--color-border-strong: #3a3a3a;
-	--color-text: #e5e5e5;
-	--color-text-secondary: #a3a3a3;
-	--color-text-tertiary: #737373;
-	
+	--color-bg: #1f1f1f;
+	--color-surface: #262626;
+	--color-surface-elevated: #2e2e2e;
+	--color-border: #333333;
+	--color-border-strong: #4a4a4a;
+	--color-text: #f5f5f5;
+	--color-text-secondary: #b3b3b3;
+	--color-text-tertiary: #8c8c8c;
+
 	/* Monochrome accent (subtle gray) */
 	--color-accent: #ffffff;
-	--color-accent-hover: #d4d4d4;
-	--color-accent-muted: #525252;
+	--color-accent-hover: #e5e5e5;
+	--color-accent-muted: #737373;
 
 	/* Semantic state colors (not monochrome) */
 	--color-error: #ef4444;
@@ -51,6 +66,7 @@
 
 /* Disable animations for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
 	*,
 	*::before,
 	*::after {
@@ -103,6 +119,7 @@ textarea {
 	0% {
 		transform: translateY(0);
 	}
+
 	100% {
 		transform: translateY(256px);
 	}
@@ -111,11 +128,13 @@ textarea {
 .animate-scan {
 	animation: scan 2s ease-in-out infinite;
 }
+
 @keyframes slideDown {
 	0% {
 		opacity: 0;
 		transform: translateY(-10px);
 	}
+
 	100% {
 		opacity: 1;
 		transform: translateY(0);

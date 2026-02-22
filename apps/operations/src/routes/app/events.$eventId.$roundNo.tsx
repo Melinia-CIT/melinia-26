@@ -205,7 +205,7 @@ function RoundCheckInPage() {
     const participantsCount = qualifiedData ? (qualifiedData.pagination.total || qualifiedData.data.length) : 0;
 
     return (
-        <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+        <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
             {/* Back link */}
             <Link
                 to="/app/events/$eventId"
@@ -358,6 +358,7 @@ function RoundCheckInPage() {
                         pageLimit={PAGE_LIMIT}
                         onPrev={() => setQualifiedPage(p => Math.max(0, p - 1))}
                         onNext={() => setQualifiedPage(p => p + 1)}
+                        onSetPage={setQualifiedPage}
                     />
                 )}
                 {activeTab === "checkedin" && (
@@ -373,6 +374,7 @@ function RoundCheckInPage() {
                         pageLimit={PAGE_LIMIT}
                         onPrev={() => setCheckInsPage(p => Math.max(0, p - 1))}
                         onNext={() => setCheckInsPage(p => p + 1)}
+                        onSetPage={setCheckInsPage}
                     />
                 )}
                 {activeTab === "results" && (
@@ -434,6 +436,7 @@ interface CheckedInTableProps {
     pageLimit: number;
     onPrev: () => void;
     onNext: () => void;
+    onSetPage: (page: number) => void;
     participationType?: string;
 }
 
@@ -449,6 +452,7 @@ function CheckedInTable({
     pageLimit,
     onPrev,
     onNext,
+    onSetPage,
 }: CheckedInTableProps) {
     const { api } = Route.useRouteContext();
     const queryClient = useQueryClient();
@@ -733,6 +737,7 @@ function CheckedInTable({
                 pageLimit={pageLimit}
                 onPrev={onPrev}
                 onNext={onNext}
+                onSetPage={onSetPage}
             />
         </div>
     );
@@ -931,6 +936,7 @@ interface QualifiedTableProps {
     pageLimit: number;
     onPrev: () => void;
     onNext: () => void;
+    onSetPage: (page: number) => void;
     participationType?: string;
 }
 
@@ -944,6 +950,7 @@ function QualifiedTable({
     pageLimit,
     onPrev,
     onNext,
+    onSetPage,
 }: QualifiedTableProps) {
     if (isLoading) {
         return (
@@ -1015,6 +1022,7 @@ function QualifiedTable({
                 pageLimit={pageLimit}
                 onPrev={onPrev}
                 onNext={onNext}
+                onSetPage={onSetPage}
             />
         </>
     );
@@ -1269,11 +1277,14 @@ function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) 
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-[240px] border-r border-neutral-800/60">
-                                            Summary & Evaluation
+                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-[200px] border-r border-neutral-800/60">
+                                            Entity
                                         </th>
                                         <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
-                                            Participant Details
+                                            Participants
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-[240px] border-l border-neutral-800/60">
+                                            Evaluation
                                         </th>
                                     </tr>
                                 </thead>
@@ -1294,6 +1305,7 @@ function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) 
                         pageLimit={PAGE_LIMIT}
                         onPrev={() => setPage(p => Math.max(0, p - 1))}
                         onNext={() => setPage(p => p + 1)}
+                        onSetPage={setPage}
                     />
                 </>
             )}
@@ -1323,11 +1335,10 @@ function ResultRowGroup({ members }: { members: RoundResultWithParticipant[] }) 
                     key={r.id}
                     className={`hover:bg-neutral-900/20 transition-colors duration-150 border-b border-neutral-800/60 last:border-0 ${idx === 0 ? "" : "border-t-0"}`}
                 >
-                    {/* Summary Column - Rowspanned on the left */}
+                    {/* Entity Column - Left Rowspan */}
                     {idx === 0 && (
-                        <td className="px-6 py-6 align-top bg-neutral-950/30 border-r border-neutral-800/60" rowSpan={members.length}>
+                        <td className="px-6 py-6 align-top bg-neutral-950/10 border-r border-neutral-800/60" rowSpan={members.length}>
                             <div className="flex flex-col gap-4 sticky top-4">
-                                {/* Type & Name */}
                                 {first.team_id ? (
                                     <div className="space-y-1.5">
                                         <TypeBadge type="TEAM" />
@@ -1339,12 +1350,31 @@ function ResultRowGroup({ members }: { members: RoundResultWithParticipant[] }) 
                                 ) : (
                                     <div className="space-y-1.5">
                                         <TypeBadge type="SOLO" />
-                                        <div className="text-[10px] text-neutral-500 font-medium uppercase tracking-tight">Individual</div>
+                                        <div className="text-[10px] text-neutral-500 font-medium uppercase tracking-tight">Individual Entry</div>
                                     </div>
                                 )}
+                            </div>
+                        </td>
+                    )}
 
+                    {/* Participant Details Column */}
+                    <td className="px-6 py-5 align-top">
+                        <div className="flex flex-col">
+                            <div className="text-sm font-semibold text-neutral-200">{r.name}</div>
+                            <div className="flex items-center gap-3 mt-1.5">
+                                <span className="text-[10px] text-neutral-500 font-mono uppercase">{r.user_id}</span>
+                                <span className="w-1 h-1 rounded-full bg-neutral-800" />
+                                <span className="text-[10px] text-emerald-500/80 font-mono font-medium">{r.ph_no}</span>
+                            </div>
+                        </div>
+                    </td>
+
+                    {/* Evaluation Column - Right Rowspan */}
+                    {idx === 0 && (
+                        <td className="px-6 py-6 align-top bg-neutral-950/30 border-l border-neutral-800/60" rowSpan={members.length}>
+                            <div className="flex flex-col gap-4 sticky top-4">
                                 {/* Evaluation Metrics */}
-                                <div className="flex items-center gap-3 py-3 border-y border-neutral-800/50">
+                                <div className="flex items-center gap-3 py-3 border-b border-neutral-800/50">
                                     <div className="shrink-0">
                                         <div className="text-xl font-black text-white tabular-nums leading-none">{first.points}</div>
                                         <div className="text-[9px] text-neutral-600 uppercase tracking-widest font-bold mt-1">Points</div>
@@ -1369,18 +1399,6 @@ function ResultRowGroup({ members }: { members: RoundResultWithParticipant[] }) 
                             </div>
                         </td>
                     )}
-
-                    {/* Participant Details */}
-                    <td className="px-6 py-5 align-top">
-                        <div className="flex flex-col">
-                            <div className="text-sm font-semibold text-neutral-200">{r.name}</div>
-                            <div className="flex items-center gap-3 mt-1.5">
-                                <span className="text-[10px] text-neutral-500 font-mono uppercase">{r.user_id}</span>
-                                <span className="w-1 h-1 rounded-full bg-neutral-800" />
-                                <span className="text-[10px] text-emerald-500/80 font-mono font-medium">{r.ph_no}</span>
-                            </div>
-                        </div>
-                    </td>
                 </tr>
             ))}
         </>
@@ -1480,46 +1498,87 @@ interface TablePaginationProps {
     pageLimit: number;
     onPrev: () => void;
     onNext: () => void;
+    onSetPage?: (page: number) => void;
 }
 
-function TablePagination({ page, totalPages, total, pageLimit, onPrev, onNext }: TablePaginationProps) {
+function TablePagination({ page, totalPages, total, pageLimit, onPrev, onNext, onSetPage }: TablePaginationProps) {
     const from = total === 0 ? 0 : page * pageLimit + 1;
     const to = Math.min((page + 1) * pageLimit, total);
 
+    const renderPageNumbers = () => {
+        if (!onSetPage || totalPages <= 1) return null;
+
+        const pages: (number | string)[] = [];
+
+        if (totalPages <= 7) {
+            for (let i = 0; i < totalPages; i++) pages.push(i);
+        } else {
+            if (page < 3) {
+                pages.push(0, 1, 2, 3, '...', totalPages - 1);
+            } else if (page > totalPages - 4) {
+                pages.push(0, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1);
+            } else {
+                pages.push(0, '...', page - 1, page, page + 1, '...', totalPages - 1);
+            }
+        }
+
+        return (
+            <div className="flex items-center gap-1 hidden sm:flex">
+                {pages.map((p, i) => {
+                    if (p === '...') {
+                        return <span key={`ellipsis-${i}`} className="px-2 text-[10px] text-neutral-600">...</span>;
+                    }
+                    const isCurrent = p === page;
+                    return (
+                        <button
+                            key={p}
+                            type="button"
+                            onClick={() => onSetPage(p as number)}
+                            className={`min-w-[28px] h-[28px] flex items-center justify-center text-[10px] font-bold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white border ${isCurrent
+                                ? 'bg-white text-black border-white'
+                                : 'border-neutral-800 text-neutral-400 bg-transparent hover:bg-neutral-900 hover:text-white'
+                                }`}
+                        >
+                            {(p as number) + 1}
+                        </button>
+                    );
+                })}
+            </div>
+        );
+    };
+
     return (
-        <div className="px-6 py-3 border-t border-neutral-800 bg-neutral-950 flex items-center justify-between">
-            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
-                <span className="text-[10px] text-neutral-600 uppercase tracking-widest font-mono">
-                    {total === 0
-                        ? "No results"
-                        : `${from}–${to} of ${total} entries`}
-                </span>
-                {total > 0 && (
-                    <span className="text-[10px] text-neutral-800 uppercase tracking-tighter">
-                        Page {page + 1} of {totalPages}
-                    </span>
-                )}
-            </div>
-            <div className="flex gap-2">
-                <button
-                    type="button"
-                    onClick={onPrev}
-                    disabled={page === 0}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-neutral-800 text-neutral-500 hover:bg-neutral-900 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
-                >
-                    <NavArrowLeft className="w-3.5 h-3.5" />
-                    Prev
-                </button>
-                <button
-                    type="button"
-                    onClick={onNext}
-                    disabled={page >= totalPages - 1}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-neutral-800 text-neutral-500 hover:bg-neutral-900 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
-                >
-                    Next
-                    <NavArrowRight className="w-3.5 h-3.5" />
-                </button>
-            </div>
+        <div className="px-6 py-3 border-t border-neutral-800 bg-neutral-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <span className="text-[10px] text-neutral-600 uppercase tracking-widest font-mono">
+                {total === 0
+                    ? "No results"
+                    : `${from}–${to} of ${total} entries`}
+            </span>
+            {total > 0 && (
+                <div className="flex items-center gap-1">
+                    <button
+                        type="button"
+                        onClick={onPrev}
+                        disabled={page === 0}
+                        className="inline-flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-neutral-800 text-neutral-500 hover:bg-neutral-900 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
+                    >
+                        <NavArrowLeft className="w-3.5 h-3.5" />
+                        Prev
+                    </button>
+
+                    {renderPageNumbers()}
+
+                    <button
+                        type="button"
+                        onClick={onNext}
+                        disabled={page >= totalPages - 1}
+                        className="inline-flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-neutral-800 text-neutral-500 hover:bg-neutral-900 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
+                    >
+                        Next
+                        <NavArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

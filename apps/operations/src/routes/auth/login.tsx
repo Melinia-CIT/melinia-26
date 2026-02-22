@@ -46,7 +46,7 @@ function LoginPage() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-black px-4">
+		<div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] px-4">
 			<div className="w-full max-w-md">
 				<div className="bg-neutral-950 border border-neutral-800 p-8 space-y-6">
 					{/* Header */}

@@ -33,7 +33,7 @@ function AppLayout() {
 	}
 
 	return (
-		<div className="min-h-screen flex flex-col bg-black">
+		<div className="min-h-screen flex flex-col bg-[var(--color-bg)]">
 			{/* Top bar */}
 			<header className="h-16 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between px-4 md:px-6 relative z-50">
 				<div className="flex items-center gap-4 md:gap-6">
