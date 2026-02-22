@@ -5,7 +5,7 @@ import type {
     ScanResult,
     Rule,
     Round,
-    VerboseEvent as EventDetail,
+    GetVerboseEvent as EventDetail,
     GetEventCheckIn,
     GetEventParticipant,
     AssignRoundResults,
@@ -178,6 +178,17 @@ export function createEventsApi(http: AxiosInstance) {
             const { data } = await http.get<PaginatedRoundResults>(
                 `/ops/events/${eventId}/rounds/${roundNo}/results`,
                 { params },
+            );
+            return data;
+        },
+
+        async assignVolunteers(
+            eventId: string,
+            volunteerIds: string[],
+        ): Promise<{ success: boolean; event_id: string; volunteers: string[]; message: string }> {
+            const { data } = await http.post<{ success: boolean; event_id: string; volunteers: string[]; message: string }>(
+                `/events/${eventId}/volunteers`,
+                { volunteer_ids: volunteerIds }
             );
             return data;
         },

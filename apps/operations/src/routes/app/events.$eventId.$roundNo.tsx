@@ -457,7 +457,6 @@ function CheckedInTable({
     const { api } = Route.useRouteContext();
     const queryClient = useQueryClient();
     const [selected, setSelected] = useState<Set<string>>(new Set());
-    const [appliedStatus, setAppliedStatus] = useState<Record<string, ParticipantStatus>>({});
     const [feedback, setFeedback] = useState<ResultFeedback | null>(null);
 
     const allIds = data.map(entryId);
@@ -486,18 +485,6 @@ function CheckedInTable({
             const teamErrors = res.team_errors ?? [];
             const hasErrors = userErrors.length > 0 || teamErrors.length > 0;
 
-            // Apply statuses for entries that succeeded
-            const failedUserIds = new Set(userErrors.map(e => e.user_id));
-            const failedTeamIds = new Set(teamErrors.map(e => e.team_id));
-            const updates: Record<string, ParticipantStatus> = {};
-            vars.ids.forEach(id => {
-                const entry = entryMap.get(id)!;
-                const failed = entry.type === "SOLO"
-                    ? failedUserIds.has(entry.participant_id)
-                    : failedTeamIds.has(entry.team_id ?? entry.name);
-                if (!failed) updates[id] = vars.status;
-            });
-            setAppliedStatus(prev => ({ ...prev, ...updates }));
             setSelected(new Set());
 
             if (recorded === 0) {

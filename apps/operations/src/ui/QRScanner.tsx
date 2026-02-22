@@ -6,6 +6,7 @@
 import { BrowserMultiFormatReader } from "@zxing/library";
 import { ScanQrCode, Xmark } from "iconoir-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "./Button";
 
 interface QRScannerProps {
@@ -87,8 +88,8 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
 		};
 	}, [onScan]);
 
-	return (
-		<div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+	return createPortal(
+		<div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4 min-h-[100dvh]" style={{ height: '100dvh' }}>
 			<div className="w-full max-w-2xl space-y-4">
 				{/* Header */}
 				<div className="flex items-center justify-between">
@@ -163,6 +164,7 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
 					Cancel
 				</Button>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }
