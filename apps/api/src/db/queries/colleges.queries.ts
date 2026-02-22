@@ -53,21 +53,45 @@ export async function getCollegeLeaderboard(
                 SELECT
                     c.id AS college_id,
                     c.name AS college_name,
-                    COALESCE(SUM(combined.points), 0) AS points,
+
+                    -- Total points scored by the college
+                    COALESCE(SUM(user_points.total_points), 0) AS total_points,
+
+                    -- Number of users who participated (scored at least once)
+                    COUNT(user_points.user_id) AS participant_count,
+
+                    -- Fair score: average points per user (rounded to 2 decimals)
+                    COALESCE(
+                        ROUND(AVG(user_points.total_points), 2),
+                        0
+                    ) AS avg_points_per_user,
+
+                    -- Rank colleges by the same rounded value (consistent ranking)
                     DENSE_RANK() OVER (
-                        ORDER BY COALESCE(SUM(combined.points), 0) DESC
+                        ORDER BY COALESCE(ROUND(AVG(user_points.total_points), 2), 0) DESC
                     ) AS rank
+
                 FROM profile p
                 JOIN users u ON u.id = p.user_id
                 JOIN colleges c ON c.id = p.college_id
+
+                -- Per-user total points
                 LEFT JOIN (
-                    SELECT user_id, points FROM round_results
-                    UNION ALL
-                    SELECT user_id, points FROM event_results
-                ) combined ON combined.user_id = u.id
+                    SELECT
+                        combined.user_id,
+                        SUM(combined.points) AS total_points
+                    FROM (
+                        SELECT user_id, points FROM round_results
+                        UNION ALL
+                        SELECT user_id, points FROM event_results
+                    ) combined
+                    GROUP BY combined.user_id
+                    HAVING SUM(combined.points) > 0
+                ) user_points ON user_points.user_id = u.id
+
                 GROUP BY c.id, c.name
             ) leaderboard
-            ORDER BY points DESC
+            ORDER BY avg_points_per_user DESC
             LIMIT ${limit} OFFSET ${from};
         `
 
