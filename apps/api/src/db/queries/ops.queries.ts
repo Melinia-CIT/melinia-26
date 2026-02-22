@@ -131,7 +131,7 @@ export async function getCheckIns(from: number, limit: number): Promise<Result<G
 export async function getTotalCheckIns(): Promise<Result<number, GetCheckInError>> {
     try {
         const [row] = await sql`
-            SELECT COUNT(*) FROM check_ins;
+            SELECT COUNT(*) AS count FROM check_ins;
         `;
 
         return Result.ok(parseInt(row?.count, 10));
@@ -140,7 +140,7 @@ export async function getTotalCheckIns(): Promise<Result<number, GetCheckInError
         return Result.err({
             code: "internal_error",
             message: "Failed to get total checkedin participants count"
-			  });
+        });
     }
 }
 export async function scanUserForRound(
@@ -485,7 +485,7 @@ export async function checkInRoundParticipants(
                         return Result.err({
                             code: "user_not_found",
                             message: "One or more participants not found",
-					})
+                        })
                     case "event_round_checkins_user_id_round_id_key":
                         return Result.err({
                             code: "already_checked_in",
@@ -751,6 +751,7 @@ export async function getRoundResults(
                 rr.user_id,
                 CONCAT(p.first_name, ' ', COALESCE(p.last_name, '')) as name,
                 u.email,
+                u.ph_no,
                 rr.team_id,
                 t.name as team_name,
                 rr.points,

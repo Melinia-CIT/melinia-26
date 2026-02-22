@@ -724,16 +724,16 @@ function CheckedInTable({
                         </tbody>
                     </table>
                 </div>
-
-                <TablePagination
-                    page={page}
-                    totalPages={totalPages}
-                    total={total}
-                    pageLimit={pageLimit}
-                    onPrev={onPrev}
-                    onNext={onNext}
-                />
             </div>
+
+            <TablePagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageLimit={pageLimit}
+                onPrev={onPrev}
+                onNext={onNext}
+            />
         </div>
     );
 }
@@ -1006,16 +1006,16 @@ function QualifiedTable({
                         </tbody>
                     </table>
                 </div>
-
-                <TablePagination
-                    page={page}
-                    totalPages={totalPages}
-                    total={total}
-                    pageLimit={pageLimit}
-                    onPrev={onPrev}
-                    onNext={onNext}
-                />
             </div>
+
+            <TablePagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageLimit={pageLimit}
+                onPrev={onPrev}
+                onNext={onNext}
+            />
         </>
     );
 }
@@ -1141,7 +1141,7 @@ function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) 
     const { api } = Route.useRouteContext();
     const [statusFilter, setStatusFilter] = useState<"all" | "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED">("all");
     const [sort, setSort] = useState<"points_desc" | "points_asc" | "name_asc">("points_desc");
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const PAGE_LIMIT = 50;
 
     const { data, isLoading, error, refetch } = useQuery({
@@ -1149,7 +1149,7 @@ function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) 
         queryFn: () => api.events.getRoundResults(eventId, roundNo, {
             status: statusFilter,
             sort,
-            page,
+            page: page + 1,
             limit: PAGE_LIMIT,
         }),
         staleTime: 1000 * 30,
@@ -1163,6 +1163,21 @@ function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) 
         acc[r.status] = (acc[r.status] ?? 0) + 1;
         return acc;
     }, {});
+
+    // Group results by team_id
+    const groupedResults: { id: string, members: RoundResultWithParticipant[] }[] = [];
+    results.forEach(r => {
+        if (r.team_id) {
+            const group = groupedResults.find(g => g.id === r.team_id);
+            if (group) {
+                group.members.push(r);
+            } else {
+                groupedResults.push({ id: r.team_id, members: [r] });
+            }
+        } else {
+            groupedResults.push({ id: r.user_id, members: [r] });
+        }
+    });
 
     return (
         <div>
@@ -1242,69 +1257,51 @@ function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) 
             {!isLoading && !error && results.length > 0 && (
                 <>
                     {/* Mobile cards */}
-                    <div className="md:hidden divide-y divide-neutral-800">
-                        {results.map(r => (
-                            <ResultCard key={r.id} result={r} />
+                    <div className="md:hidden divide-y divide-neutral-800 border border-neutral-800 bg-neutral-950 shadow-xl overflow-hidden">
+                        {groupedResults.map(g => (
+                            <ResultCardGroup key={g.id} members={g.members} />
                         ))}
                     </div>
 
-                    {/* Desktop table */}
-                    <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-10 font-mono">#</th>
-                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">Participant</th>
-                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">Team</th>
-                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-24">Points</th>
-                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-36">Status</th>
-                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">Metadata</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {results.map((r, idx) => (
-                                    <ResultRow key={r.id} result={r} rank={(page - 1) * PAGE_LIMIT + idx + 1} />
-                                ))}
-                            </tbody>
-                        </table>
+                    {/* Desktop View */}
+                    <div className="hidden md:block border border-neutral-800 bg-neutral-950 overflow-hidden shadow-2xl mt-4">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-neutral-800 bg-neutral-900/60">
+                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-[240px] border-r border-neutral-800/60">
+                                            Summary & Evaluation
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                            Participant Details
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {groupedResults.map((group) => (
+                                        <ResultRowGroup key={group.id} members={group.members} />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     {/* Pagination */}
-                    <div className="px-6 py-4 border-t border-neutral-800 flex items-center justify-between">
-                        <p className="text-sm text-neutral-500">
-                            {total === 0 ? "No results" : `Showing ${(page - 1) * PAGE_LIMIT + 1}–${Math.min(page * PAGE_LIMIT, total)} of ${total}`}
-                        </p>
-                        <div className="flex gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page <= 1}
-                                className="p-2 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
-                                aria-label="Previous page"
-                            >
-                                <NavArrowLeft className="w-4 h-4" />
-                            </button>
-                            <span className="px-3 py-2 text-sm text-neutral-400 border border-neutral-800 min-w-[3rem] text-center">
-                                {page} / {totalPages}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => setPage(p => p + 1)}
-                                disabled={page >= totalPages}
-                                className="p-2 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
-                                aria-label="Next page"
-                            >
-                                <NavArrowRight className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
+                    <TablePagination
+                        page={page}
+                        totalPages={totalPages}
+                        total={total}
+                        pageLimit={PAGE_LIMIT}
+                        onPrev={() => setPage(p => Math.max(0, p - 1))}
+                        onNext={() => setPage(p => p + 1)}
+                    />
                 </>
             )}
         </div>
     );
 }
 
-function ResultRow({ result, rank }: { result: RoundResultWithParticipant; rank: number }) {
+function ResultRowGroup({ members }: { members: RoundResultWithParticipant[] }) {
     const statusColor: Record<string, string> = {
         QUALIFIED: "text-emerald-400 border-emerald-800 bg-emerald-950/40",
         ELIMINATED: "text-amber-400 border-amber-800 bg-amber-950/40",
@@ -1315,77 +1312,142 @@ function ResultRow({ result, rank }: { result: RoundResultWithParticipant; rank:
         ELIMINATED: "bg-amber-400",
         DISQUALIFIED: "bg-red-400",
     };
-    const s = result.status;
+
+    const first = members[0];
+    const s = first.status;
+
     return (
-        <tr className="hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0">
-            <td className="px-6 py-4 text-[11px] font-mono text-neutral-600">{rank}</td>
-            <td className="px-6 py-4">
-                <div className="text-sm font-semibold text-white">{result.name}</div>
-                <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{result.user_id}</div>
-                <div className="text-[10px] text-neutral-600 mt-0.5">{result.email}</div>
-            </td>
-            <td className="px-6 py-4">
-                {result.team_id ? (
-                    <div>
-                        <div className="text-xs text-neutral-300 font-medium">{result.team_name ?? result.team_id}</div>
-                        <div className="text-[10px] text-neutral-600 font-mono mt-0.5">{result.team_id}</div>
-                    </div>
-                ) : (
-                    <span className="text-[10px] text-neutral-700 font-mono">—</span>
-                )}
-            </td>
-            <td className="px-6 py-4">
-                <span className="text-sm font-black text-white tabular-nums">{result.points}</span>
-                <span className="text-[10px] text-neutral-600 ml-1 uppercase">pts</span>
-            </td>
-            <td className="px-6 py-4">
-                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${statusColor[s] ?? "border-neutral-700 text-neutral-400"}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${dotColor[s] ?? "bg-neutral-400"}`} />
-                    {s.charAt(0) + s.slice(1).toLowerCase()}
-                </span>
-            </td>
-            <td className="px-6 py-4">
-                <div className="text-xs text-neutral-400">
-                    {new Date(result.eval_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
-                </div>
-                <div className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider flex items-center gap-1">
-                    <User className="w-2.5 h-2.5" />
-                    By {result.eval_by}
-                </div>
-            </td>
-        </tr>
+        <>
+            {members.map((r, idx) => (
+                <tr
+                    key={r.id}
+                    className={`hover:bg-neutral-900/20 transition-colors duration-150 border-b border-neutral-800/60 last:border-0 ${idx === 0 ? "" : "border-t-0"}`}
+                >
+                    {/* Summary Column - Rowspanned on the left */}
+                    {idx === 0 && (
+                        <td className="px-6 py-6 align-top bg-neutral-950/30 border-r border-neutral-800/60" rowSpan={members.length}>
+                            <div className="flex flex-col gap-4 sticky top-4">
+                                {/* Type & Name */}
+                                {first.team_id ? (
+                                    <div className="space-y-1.5">
+                                        <TypeBadge type="TEAM" />
+                                        <div className="text-sm font-black text-white uppercase tracking-widest leading-none">
+                                            {first.team_name ?? first.team_id}
+                                        </div>
+                                        <div className="text-[10px] text-neutral-600 font-mono tracking-tight">{first.team_id}</div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1.5">
+                                        <TypeBadge type="SOLO" />
+                                        <div className="text-[10px] text-neutral-500 font-medium uppercase tracking-tight">Individual</div>
+                                    </div>
+                                )}
+
+                                {/* Evaluation Metrics */}
+                                <div className="flex items-center gap-3 py-3 border-y border-neutral-800/50">
+                                    <div className="shrink-0">
+                                        <div className="text-xl font-black text-white tabular-nums leading-none">{first.points}</div>
+                                        <div className="text-[9px] text-neutral-600 uppercase tracking-widest font-bold mt-1">Points</div>
+                                    </div>
+                                    <div className="h-8 w-px bg-neutral-800/50" />
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold uppercase tracking-widest border ${statusColor[s] ?? "border-neutral-700 text-neutral-400"}`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${dotColor[s] ?? "bg-neutral-400"}`} />
+                                        {s}
+                                    </span>
+                                </div>
+
+                                {/* Evaluator Metadata */}
+                                <div className="space-y-1">
+                                    <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-2">
+                                        <User className="w-3.5 h-3.5 text-neutral-700" />
+                                        {first.eval_by}
+                                    </div>
+                                    <div className="text-[10px] text-neutral-600 font-mono pl-5">
+                                        {new Date(first.eval_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    )}
+
+                    {/* Participant Details */}
+                    <td className="px-6 py-5 align-top">
+                        <div className="flex flex-col">
+                            <div className="text-sm font-semibold text-neutral-200">{r.name}</div>
+                            <div className="flex items-center gap-3 mt-1.5">
+                                <span className="text-[10px] text-neutral-500 font-mono uppercase">{r.user_id}</span>
+                                <span className="w-1 h-1 rounded-full bg-neutral-800" />
+                                <span className="text-[10px] text-emerald-500/80 font-mono font-medium">{r.ph_no}</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            ))}
+        </>
     );
 }
 
-function ResultCard({ result }: { result: RoundResultWithParticipant }) {
+function ResultCardGroup({ members }: { members: RoundResultWithParticipant[] }) {
     const statusColor: Record<string, string> = {
         QUALIFIED: "text-emerald-400",
         ELIMINATED: "text-amber-400",
         DISQUALIFIED: "text-red-400",
     };
+    const first = members[0];
+
     return (
-        <div className="p-4 space-y-2">
-            <div className="flex items-center justify-between gap-3">
-                <div>
-                    <div className="font-semibold text-white">{result.name}</div>
-                    <div className="text-[10px] text-neutral-500 font-mono">{result.user_id}</div>
+        <div className="p-5 space-y-6">
+            {/* Evaluation Header */}
+            <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2 flex-1">
+                    {first.team_id ? (
+                        <>
+                            <TypeBadge type="TEAM" />
+                            <div className="text-base font-black text-white uppercase tracking-widest leading-tight">{first.team_name ?? first.team_id}</div>
+                            <div className="text-[10px] text-neutral-600 font-mono tracking-tighter">{first.team_id}</div>
+                        </>
+                    ) : (
+                        <div className="space-y-2">
+                            <TypeBadge type="SOLO" />
+                            <div className="text-sm font-black text-white uppercase tracking-widest">Individual Result</div>
+                        </div>
+                    )}
                 </div>
                 <div className="text-right shrink-0">
-                    <div className="text-lg font-black text-white tabular-nums">{result.points} <span className="text-xs font-normal text-neutral-600">pts</span></div>
-                    <div className={`text-[10px] font-bold uppercase tracking-widest ${statusColor[result.status] ?? "text-neutral-400"}`}>{result.status}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-neutral-600 mb-1">Raw Score</div>
+                    <div className="text-2xl font-black text-white tabular-nums leading-none tracking-tighter">{first.points}</div>
+                    <div className={`text-[10px] font-black uppercase tracking-widest mt-2 px-1.5 py-0.5 border ${statusColor[first.status] ? "border-current opacity-90" : "border-neutral-800 text-neutral-500"} ${statusColor[first.status] ?? ""}`}>
+                        {first.status}
+                    </div>
                 </div>
             </div>
-            {result.team_id && (
-                <div className="text-xs text-neutral-500 flex items-center gap-1.5">
-                    <Group className="w-3 h-3" />
-                    {result.team_name ?? result.team_id}
+
+            {/* Members Section - Styled like Event Registration Mobile View */}
+            <div className="space-y-5 pl-4 border-l-2 border-neutral-900">
+                <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-700">
+                    {members.length === 1 ? "PARTICIPANT" : `MEMBERS (${members.length})`}
                 </div>
-            )}
-            <div className="flex items-center justify-between gap-3 text-[10px] text-neutral-600">
-                <div>{new Date(result.eval_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</div>
-                <div className="flex items-center gap-1 uppercase tracking-wider">
-                    <User className="w-2.5 h-2.5" />
-                    {result.eval_by}
+                <div className="space-y-4">
+                    {members.map(m => (
+                        <div key={m.id} className="group">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="text-xs font-bold text-neutral-200">{m.name}</div>
+                                <div className="text-[10px] text-emerald-500/60 font-mono font-medium">{m.ph_no}</div>
+                            </div>
+                            <div className="text-[10px] text-neutral-600 font-mono mt-0.5 uppercase tracking-tighter">{m.user_id}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Evaluation Metadata Footer */}
+            <div className="flex flex-col gap-1 pt-4 border-t border-neutral-800/50">
+                <div className="flex items-center gap-2 text-[10px] text-neutral-500 font-bold uppercase tracking-widest">
+                    <User className="w-3.5 h-3.5 text-neutral-800" />
+                    Evaluated by {first.eval_by}
+                </div>
+                <div className="text-[10px] text-neutral-700 font-mono pl-5 italic">
+                    {new Date(first.eval_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
                 </div>
             </div>
         </div>
@@ -1421,35 +1483,41 @@ interface TablePaginationProps {
 }
 
 function TablePagination({ page, totalPages, total, pageLimit, onPrev, onNext }: TablePaginationProps) {
-    const from = page * pageLimit + 1;
+    const from = total === 0 ? 0 : page * pageLimit + 1;
     const to = Math.min((page + 1) * pageLimit, total);
 
     return (
-        <div className="px-6 py-4 border-t border-neutral-800 flex items-center justify-between">
-            <p className="text-sm text-neutral-500">
-                {total === 0 ? "No results" : `Showing ${from}–${to} of ${total}`}
-            </p>
+        <div className="px-6 py-3 border-t border-neutral-800 bg-neutral-950 flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                <span className="text-[10px] text-neutral-600 uppercase tracking-widest font-mono">
+                    {total === 0
+                        ? "No results"
+                        : `${from}–${to} of ${total} entries`}
+                </span>
+                {total > 0 && (
+                    <span className="text-[10px] text-neutral-800 uppercase tracking-tighter">
+                        Page {page + 1} of {totalPages}
+                    </span>
+                )}
+            </div>
             <div className="flex gap-2">
                 <button
                     type="button"
                     onClick={onPrev}
                     disabled={page === 0}
-                    className="p-2 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
-                    aria-label="Previous page"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-neutral-800 text-neutral-500 hover:bg-neutral-900 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
                 >
-                    <NavArrowLeft className="w-4 h-4" />
+                    <NavArrowLeft className="w-3.5 h-3.5" />
+                    Prev
                 </button>
-                <span className="px-3 py-2 text-sm text-neutral-400 border border-neutral-800 min-w-[3rem] text-center">
-                    {page + 1} / {totalPages}
-                </span>
                 <button
                     type="button"
                     onClick={onNext}
                     disabled={page >= totalPages - 1}
-                    className="p-2 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
-                    aria-label="Next page"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-neutral-800 text-neutral-500 hover:bg-neutral-900 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
                 >
-                    <NavArrowRight className="w-4 h-4" />
+                    Next
+                    <NavArrowRight className="w-3.5 h-3.5" />
                 </button>
             </div>
         </div>
