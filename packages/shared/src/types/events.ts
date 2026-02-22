@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError, } from "./users";
+import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError,  } from "./users";
 import type { PaymentPending } from "./payments";
 import { memberSchema } from "./teams";
 
@@ -302,6 +302,45 @@ export const getEventsQuerySchema = z.object({
     expand: z.enum(["all"]).optional(),
 })
 
+export const assignVolunteersSchema = z.object({
+    volunteer_ids: z.array(z.string()).min(1, "At least one volunteer ID required")
+})
+
+export const getVerboseEventResponseSchema = verboseEventSchema.extend({
+    crew: z
+        .object({
+            organizers: z.array(
+                baseCrewSchema
+                    .omit({
+                        event_id: true,
+                        assigned_by: true
+                    })
+                    .extend({
+                        first_name: z.string(),
+                        last_name: z.string(),
+                        ph_no: z.string()
+                    })
+            ).optional().default([]),
+
+            volunteers: z.array(
+                baseCrewSchema
+                    .omit({
+                        event_id: true,
+                        assigned_by: true
+                    })
+                    .extend({
+                        first_name: z.string(),
+                        last_name: z.string(),
+                        ph_no: z.string()
+                    })
+            ).optional().default([]), 
+        }).optional(),
+});
+
+export const getEventsQuerySchema = z.object({
+    expand: z.enum(["all"]).optional(),
+})
+
 export const EventParamSchema = z.object({
     id: z.string(),
 })
@@ -594,6 +633,12 @@ export const baseRoundCheckInSchema = z.object({
     }))
 });
 
+export const fetchLeaderBoardSchema = z.object({
+    college_id: z.string(),
+    college_name: z.string(),
+    points: z.number()
+});
+
 export type CreateEvent = z.infer<typeof createEventSchema>
 export type Event = z.infer<typeof baseEventSchema>
 export type EventPatch = z.infer<typeof eventPatchSchema>
@@ -622,6 +667,7 @@ export type Rule = z.infer<typeof baseRoundRulesSchema>;
 
 
 export type GetCheckIn = z.infer<typeof getCheckInSchema>;
+export type FetchLeaderBoard = z.infer<typeof fetchLeaderBoardSchema>
 export type GetCheckInError = InternalError;
 
 export type GetEventCheckIn = z.infer<typeof getEventCheckInSchema>;
@@ -721,6 +767,11 @@ export type RoundCheckInError =
 
 export type ParticipantNotCheckedInToRound = {
     code: "participant_not_checked_in_to_round"
+    message: string
+}
+
+export type LeaderboardNotFound = {
+    code: "leaderboard_not_found"
     message: string
 }
 
@@ -917,4 +968,48 @@ export type AssignPrizesError =
     | PrizeNotFound
     | ParticipantNotCheckedIn
     | InvalidData
+    | InternalError
+
+// Volunteer Assignment Errors
+export type AssigningUserNotFound = {
+    code: "assigning_user_not_found"
+    message: string
+}
+
+export type PermissionDenied = {
+    code: "permission_denied"
+    message: string
+}
+
+export type VolunteersNotFound = {
+    code: "volunteers_not_found"
+    message: string
+}
+
+export type InvalidVolunteerRole = {
+    code: "invalid_volunteer_role"
+    message: string
+}
+
+export type VolunteerAlreadyAssigned = {
+    code: "volunteer_already_assigned"
+    message: string
+}
+
+export type EmptyVolunteerList = {
+    code: "empty_volunteer_list"
+    message: string
+}
+
+export type AssignVolunteersError =
+    | EventNotFound
+    | AssigningUserNotFound
+    | PermissionDenied
+    | VolunteersNotFound
+    | InvalidVolunteerRole
+    | VolunteerAlreadyAssigned
+    | EmptyVolunteerList
+    | InternalError
+
+export type GetLeaderboardError =
     | InternalError

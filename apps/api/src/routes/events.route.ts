@@ -12,7 +12,9 @@ import {
     paginationSchema,
     getEventCheckInsParamSchema,
     getEventParticipantsParamSchema,
+    assignVolunteersSchema,
 } from "@melinia/shared"
+
 import sql from "../db/connection"
 import {
     createEvent,
@@ -43,12 +45,14 @@ import {
     getEventCheckInsCount,
     getEventParticipants,
     getEventParticipantsCount,
+    assignVolunteersToEvent
 } from "../db/queries"
 import {
     authMiddleware,
     adminOnlyMiddleware,
     participantOnlyMiddleware,
     opsAuthMiddleware,
+    adminAndOrganizerMiddleware,
 } from "../middleware/auth.middleware"
 import { HTTPException } from "hono/http-exception"
 import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
@@ -100,6 +104,54 @@ events.get("/:id/status", authMiddleware, zValidator("param", EventParamSchema),
         throw new HTTPException(500, { message: "Failed to fetch event registration status" })
     }
 })
+
+events.post(
+    "/:id/volunteers",
+    authMiddleware,
+    adminAndOrganizerMiddleware,
+    zValidator("param", EventParamSchema),
+    zValidator("json", assignVolunteersSchema),
+    async (c) => {
+        try {
+            const userId = c.get("user_id");
+            const { id } = c.req.valid("param");
+            const { volunteer_ids } = c.req.valid("json");
+
+            const result = await assignVolunteersToEvent(id, volunteer_ids, userId);
+
+            if (result.isErr) {
+                const { code, message } = result.error;
+
+                switch (code) {
+                    case "event_not_found":
+                    case "permission_denied":
+                    case "empty_volunteer_list":
+                    case "volunteers_not_found":
+                    case "invalid_volunteer_role":
+                    case "volunteer_already_assigned":
+                        return c.json({ message }, 400);
+
+                    case "internal_error":
+                    default:
+                        console.error("Unexpected error assigning volunteers:", result.error);
+                        return c.json({ message }, 500);
+                }
+            }
+
+            return c.json({
+                success: true,
+                event_id: id,
+                volunteers: result.value.map((v) => v.user_id),
+                message: `Volunteers assigned to event ${id}`,
+            }, 201);
+        } catch (err) {
+            console.error("Unhandled exception in /:id/volunteer:", err);
+            return c.json({
+                message: "Unexpected error occurred while assigning volunteers"
+            }, 500);
+        }
+    }
+);
 
 events.post(
     "/",
@@ -655,6 +707,7 @@ events.get(
         }, 200)
     }
 )
+
 
 
 export default events
