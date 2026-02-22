@@ -28,10 +28,8 @@ function RoundCheckInPage() {
 
     // Participants section state
     const [activeTab, setActiveTab] = useState<"participants" | "checkedin" | "results">("participants");
-    const [activeTab, setActiveTab] = useState<"participants" | "checkedin" | "results">("participants");
     const [checkInsPage, setCheckInsPage] = useState(0);
     const [qualifiedPage, setQualifiedPage] = useState(0);
-    const [resultsPage, setResultsPage] = useState(1); // API uses 1-based pages
     const PAGE_LIMIT = 10;
 
     const participantIdPattern = /^MLNU[A-Za-z0-9]{6}$/;
@@ -78,19 +76,6 @@ function RoundCheckInPage() {
         staleTime: 1000 * 30,
     });
 
-    // Fetch round results (for Results tab)
-    const {
-        data: roundResultsData,
-        isLoading: isResultsLoading,
-        error: resultsError,
-    } = useQuery({
-        queryKey: ['round-results', eventId, roundNo, resultsPage],
-        queryFn: () => api.events.getRoundResults(eventId, roundNo, { page: resultsPage, limit: PAGE_LIMIT }),
-        enabled: activeTab === "results",
-        staleTime: 1000 * 30,
-    });
-
-    // Check-in mutation
     const checkInMutation = useMutation({
         mutationFn: ({ userIds, teamId }: { userIds: string[], teamId: string | null }) => api.events.checkInRound(eventId, roundNumber, userIds, teamId),
         onSuccess: () => {
@@ -218,7 +203,6 @@ function RoundCheckInPage() {
     // Derived counts for badges
     const checkInCount = checkInsData ? (checkInsData.pagination.total || checkInsData.data.length) : 0;
     const participantsCount = qualifiedData ? (qualifiedData.pagination.total || qualifiedData.data.length) : 0;
-    const participantsCount = qualifiedData ? (qualifiedData.pagination.total || qualifiedData.data.length) : 0;
 
     return (
         <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
@@ -286,7 +270,6 @@ function RoundCheckInPage() {
                         />
                         <Button
                             variant="primary"
-                            variant="primary"
                             onClick={() => handleSearch(searchInput)}
                         >
                             Enter
@@ -312,70 +295,7 @@ function RoundCheckInPage() {
                             <option value="results">Results</option>
                         </select>
                     </div>
-                {/* Tab Navigation */}
-                <div className="border-b border-neutral-800">
-                    {/* Mobile Dropdown */}
-                    <div className="md:hidden p-4 bg-neutral-900/30">
-                        <select
-                            value={activeTab}
-                            onChange={(e) => setActiveTab(e.target.value as any)}
-                            className="w-full bg-neutral-950 border border-neutral-800 text-white px-4 py-3 text-xs uppercase tracking-widest font-bold focus:outline-none focus:ring-1 focus:ring-white appearance-none"
-                            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'white\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
-                        >
-                            <option value="participants">Participants ({participantsCount})</option>
-                            <option value="checkedin">Checked-In ({checkInCount})</option>
-                            <option value="results">Results</option>
-                        </select>
-                    </div>
 
-                    {/* Desktop Tabs */}
-                    <div className="hidden md:flex overflow-x-auto scrollbar-hide">
-                        <button
-                            id="tab-participants"
-                            type="button"
-                            onClick={() => setActiveTab("participants")}
-                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "participants"
-                                ? "text-white border-white"
-                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                                }`}
-                        >
-                            Participants
-                            <span className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "participants"
-                                ? "bg-white text-black border-white"
-                                : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                                }`}>
-                                {participantsCount}
-                            </span>
-                        </button>
-                        <button
-                            id="tab-checkedin"
-                            type="button"
-                            onClick={() => setActiveTab("checkedin")}
-                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "checkedin"
-                                ? "text-white border-white"
-                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                                }`}
-                        >
-                            Checked-In
-                            <span className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "checkedin"
-                                ? "bg-white text-black border-white"
-                                : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                                }`}>
-                                {checkInCount}
-                            </span>
-                        </button>
-                        <button
-                            id="tab-results"
-                            type="button"
-                            onClick={() => setActiveTab("results")}
-                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "results"
-                                ? "text-white border-white"
-                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                                }`}
-                        >
-                            Results
-                        </button>
-                    </div>
                     {/* Desktop Tabs */}
                     <div className="hidden md:flex overflow-x-auto scrollbar-hide">
                         <button
@@ -440,11 +360,6 @@ function RoundCheckInPage() {
                         onNext={() => setQualifiedPage(p => p + 1)}
                     />
                 )}
-                {activeTab === "results" && (
-                    <div className="p-12 text-center text-neutral-500">
-                        Round results will be available soon.
-                    </div>
-                )}
                 {activeTab === "checkedin" && (
                     <CheckedInTable
                         eventId={eventId}
@@ -496,294 +411,6 @@ function RoundCheckInPage() {
     );
 }
 
-// ── Results Table ─────────────────────────────────────────────────────────────
-
-interface ResultsTableProps {
-    data: RoundResultWithParticipant[];
-    isLoading: boolean;
-    error: Error | null;
-    page: number;
-    totalPages: number;
-    total: number;
-    pageLimit: number;
-    onPrev: () => void;
-    onNext: () => void;
-    participationType?: string;
-}
-
-const STATUS_STYLES: Record<string, { badge: string; dot: string; label: string }> = {
-    QUALIFIED: { badge: "border-emerald-700 bg-emerald-950/40 text-emerald-400", dot: "bg-emerald-400", label: "Qualified" },
-    ELIMINATED: { badge: "border-amber-700  bg-amber-950/40  text-amber-400", dot: "bg-amber-400", label: "Eliminated" },
-    DISQUALIFIED: { badge: "border-red-800    bg-red-950/40    text-red-400", dot: "bg-red-400", label: "Disqualified" },
-};
-
-function ResultStatusBadge({ status }: { status: string }) {
-    const s = STATUS_STYLES[status] ?? { badge: "border-neutral-700 bg-neutral-900 text-neutral-400", dot: "bg-neutral-500", label: status };
-    return (
-        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border whitespace-nowrap ${s.badge}`}>
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
-            {s.label}
-        </span>
-    );
-}
-
-function ResultsTable({ data, isLoading, error, page, totalPages, total, pageLimit, onPrev, onNext, participationType }: ResultsTableProps) {
-    if (isLoading) {
-        return (
-            <div className="p-12 text-center text-neutral-500 font-mono text-sm">
-                Loading results…
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="p-12 text-center space-y-2">
-                <p className="text-red-500 text-sm font-medium">Failed to load round results</p>
-                <p className="text-xs text-neutral-600 font-mono">{String(error)}</p>
-            </div>
-        );
-    }
-
-    if (data.length === 0) {
-        return (
-            <div className="p-12 text-center text-neutral-500 text-sm">
-                No results recorded for this round yet.
-            </div>
-        );
-    }
-
-    // Group adjacent results by team_id to use rowSpan
-    const groups: Array<{
-        type: "team" | "solo";
-        team_id?: string;
-        team_name?: string | null;
-        points: number;
-        status: string;
-        eval_at: Date;
-        eval_by: string;
-        members: RoundResultWithParticipant[];
-    }> = [];
-
-    data.forEach((item) => {
-        if (item.team_id) {
-            const lastGroup = groups[groups.length - 1];
-            if (lastGroup && lastGroup.type === "team" && lastGroup.team_id === item.team_id) {
-                lastGroup.members.push(item);
-            } else {
-                groups.push({
-                    type: "team",
-                    team_id: item.team_id,
-                    team_name: item.team_name,
-                    points: item.points,
-                    status: item.status,
-                    eval_at: item.eval_at,
-                    eval_by: item.eval_by,
-                    members: [item]
-                });
-            }
-        } else {
-            groups.push({
-                type: "solo",
-                points: item.points,
-                status: item.status,
-                eval_at: item.eval_at,
-                eval_by: item.eval_by,
-                members: [item]
-            });
-        }
-    });
-
-    const pageOffset = (page - 1) * pageLimit;
-
-    return (
-        <>
-            {/* Mobile card view */}
-            <div className="md:hidden divide-y divide-neutral-800">
-                {groups.map((group, gIdx) => {
-                    const isTeam = group.type === "team";
-                    return (
-                        <div key={isTeam ? `team-${group.team_id}` : `solo-${group.members[0].user_id}`} className="p-4 space-y-4">
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                    {isTeam ? (
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-2">
-                                                <TypeBadge type="TEAM" />
-                                                <span className="font-bold text-sm text-white uppercase tracking-wider">{group.team_name}</span>
-                                            </div>
-                                            <div className="space-y-2 pl-2 border-l-2 border-neutral-800/80 ml-1">
-                                                {group.members.map(m => (
-                                                    <div key={m.user_id} className="text-xs text-neutral-400">
-                                                        <div className="font-medium text-neutral-300">{m.name}</div>
-                                                        <div className="text-[10px] text-neutral-600 font-mono mt-0.5">{m.user_id}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <TypeBadge type="SOLO" />
-                                                <span className="text-[10px] text-neutral-600 font-mono uppercase">Solo Entry</span>
-                                            </div>
-                                            <div className="font-semibold text-sm text-white">{group.members[0].name}</div>
-                                            <div className="text-[10px] text-neutral-500 font-mono">{group.members[0].ph_no}</div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex flex-col items-end gap-3 pl-4 shrink-0">
-                                    <ResultStatusBadge status={group.status} />
-                                    <div className="flex flex-col items-end leading-none">
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-xl font-black text-white tabular-nums">{group.points}</span>
-                                            <span className="text-[9px] text-neutral-600 font-bold uppercase tracking-widest">pts</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between text-[10px] text-neutral-700 font-mono pt-1 border-t border-neutral-800/40">
-                                <span>eval: {group.eval_by}</span>
-                                <span>{new Date(group.eval_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                            </div>
-                        </div>
-                    );
-                })}
-                {/* Mobile pagination */}
-                <div className="flex items-center justify-between px-4 py-3 bg-neutral-950/60 border-t border-neutral-800 text-xs text-neutral-500">
-                    <span className="font-mono">
-                        {total === 0 ? "No results" : `Showing ${groups.length} groups`}
-                    </span>
-                    <div className="flex gap-2">
-                        <button onClick={onPrev} disabled={page <= 1} className="p-1.5 border border-neutral-800 hover:border-neutral-600 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                            <NavArrowLeft className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={onNext} disabled={page >= totalPages} className="p-1.5 border border-neutral-800 hover:border-neutral-600 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                            <NavArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Desktop table view */}
-            <div className="hidden md:block border border-neutral-800 bg-neutral-950 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-neutral-800 bg-neutral-900/60 font-mono">
-                                {participationType?.toUpperCase() === 'TEAM' && (
-                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[320px]">Team / Entry</th>
-                                )}
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
-                                    {participationType?.toUpperCase() === 'TEAM' ? 'Members' : 'Participant / Result'}
-                                </th>
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-l border-neutral-800/60 w-[240px]">Evaluated By</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {groups.map((group, _gIdx) => {
-                                const isTeam = group.type === "team";
-                                return group.members.map((member, mIdx) => (
-                                    <tr key={member.id} className={`border-b border-neutral-800/60 last:border-0 hover:bg-neutral-900/10 transition-colors duration-150 ${mIdx > 0 ? 'bg-neutral-950/20' : ''}`}>
-
-                                        {/* Column 1: Team Info - spanned (Only for TEAM events) */}
-                                        {mIdx === 0 && participationType?.toUpperCase() === 'TEAM' && (
-                                            <td rowSpan={group.members.length} className="px-6 py-6 border-r border-neutral-800/40 bg-neutral-900/20 align-top">
-                                                <div className="flex flex-col gap-4">
-                                                    <div>
-                                                        {isTeam ? (
-                                                            <>
-                                                                <div className="text-sm font-black text-white uppercase tracking-widest leading-none mb-1">{group.team_name}</div>
-                                                                <div className="text-[10px] text-neutral-600 font-mono tracking-tight">{group.team_id}</div>
-                                                            </>
-                                                        ) : (
-                                                            <div className="flex items-center gap-2">
-                                                                <TypeBadge type="SOLO" />
-                                                                <span className="text-[10px] text-neutral-700 uppercase tracking-widest font-mono">Solo Entry</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex items-center gap-6 pt-2 border-t border-neutral-800/60">
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className="text-[9px] text-neutral-600 uppercase font-bold tracking-tighter">Points</span>
-                                                            <div className="flex items-baseline gap-1">
-                                                                <span className="text-xl font-black text-white tabular-nums leading-none">{group.points}</span>
-                                                                <span className="text-[9px] text-neutral-700 font-bold uppercase tracking-widest">pts</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-col gap-1.5 flex-1">
-                                                            <span className="text-[9px] text-neutral-600 uppercase font-bold tracking-tighter">Status</span>
-                                                            <ResultStatusBadge status={group.status} />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        )}
-
-                                        {/* Column 2: Individual/Participant Members */}
-                                        <td className="px-6 py-4 align-middle">
-                                            <div className="flex items-start gap-4">
-                                                {!isTeam && participationType?.toUpperCase() !== 'TEAM' && (
-                                                    <div className="flex flex-col gap-3 shrink-0 py-1">
-                                                        <TypeBadge type="SOLO" />
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className="text-[9px] text-neutral-600 uppercase font-bold tracking-tighter">Result</span>
-                                                            <div className="flex items-baseline gap-1">
-                                                                <span className="text-xl font-black text-white tabular-nums">{group.points}</span>
-                                                                <span className="text-[8px] text-neutral-600 font-bold uppercase tracking-widest">pts</span>
-                                                            </div>
-                                                            <ResultStatusBadge status={group.status} />
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                <div className="w-1.5 h-1.5 rounded-full bg-neutral-800 shrink-0 mt-2" />
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="text-sm font-semibold text-white truncate leading-tight">{member.name}</div>
-                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-                                                        <div className="text-[10px] text-neutral-500 font-mono truncate">{member.ph_no}</div>
-                                                        <span className="text-neutral-800 text-[10px] hidden sm:inline">|</span>
-                                                        <div className="text-[9px] text-neutral-600 font-mono">{member.user_id}</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        {/* Column 3: Evaluator Info - spanned */}
-                                        {mIdx === 0 && (
-                                            <td rowSpan={group.members.length} className="px-6 py-4 border-l border-neutral-800/40 bg-neutral-900/10 align-middle">
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-5 h-5 rounded-full bg-neutral-800 flex items-center justify-center text-[9px] text-neutral-500 font-bold uppercase">AD</div>
-                                                        <span className="text-[11px] text-neutral-400 font-mono font-medium">{group.eval_by}</span>
-                                                    </div>
-                                                    <div className="text-[10px] text-neutral-700 mt-1 pl-7">
-                                                        {new Date(group.eval_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        )}
-                                    </tr>
-                                ));
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-
-
-                <TablePagination
-                    page={page}
-                    totalPages={totalPages}
-                    total={total}
-                    pageLimit={pageLimit}
-                    onPrev={onPrev}
-                    onNext={onNext}
-                />
-            </div>
-        </>
-    );
-}
-
 // ── Checked-In Table ─────────────────────────────────────────────────────────
 
 type ParticipantStatus = RoundResultStatus;
@@ -797,20 +424,7 @@ type ResultFeedback =
     | { kind: "partial"; count: number; total: number; userErrors: { user_id: string; error: string }[]; teamErrors: { team_id: string; error: string }[] }
     | { kind: "failure"; userErrors: { user_id: string; error: string }[]; teamErrors: { team_id: string; error: string }[] };
 
-type ParticipantStatus = RoundResultStatus;
-
-function entryId(entry: RoundCheckInEntry): string {
-    return entry.type === "TEAM" ? `team:${entry.name}` : `solo:${entry.participant_id}`;
-}
-
-type ResultFeedback =
-    | { kind: "success"; count: number }
-    | { kind: "partial"; count: number; total: number; userErrors: { user_id: string; error: string }[]; teamErrors: { team_id: string; error: string }[] }
-    | { kind: "failure"; userErrors: { user_id: string; error: string }[]; teamErrors: { team_id: string; error: string }[] };
-
 interface CheckedInTableProps {
-    eventId: string;
-    roundNo: string;
     eventId: string;
     roundNo: string;
     data: RoundCheckInEntry[];
@@ -828,8 +442,6 @@ interface CheckedInTableProps {
 function CheckedInTable({
     eventId,
     roundNo,
-    eventId,
-    roundNo,
     data,
     isLoading,
     error,
@@ -839,7 +451,6 @@ function CheckedInTable({
     pageLimit,
     onPrev,
     onNext,
-    participationType,
 }: CheckedInTableProps) {
     const { api } = Route.useRouteContext();
     const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -1041,99 +652,6 @@ function CheckedInTable({
                 </div>
             </div>
 
-        <div className="relative">
-            {/* ── Result Feedback Banner ── */}
-            {feedback && (
-                <div className={`px-4 md:px-6 py-3 border-b text-xs font-medium flex flex-col gap-2 ${feedback.kind === "success"
-                    ? "bg-emerald-950/50 border-emerald-800 text-emerald-300"
-                    : feedback.kind === "partial"
-                        ? "bg-amber-950/50 border-amber-800 text-amber-300"
-                        : "bg-red-950/50 border-red-900 text-red-400"
-                    }`}>
-                    <div className="flex items-start justify-between gap-3">
-                        <span>
-                            {feedback.kind === "success" && `✓ ${feedback.count} ${feedback.count === 1 ? "entry" : "entries"} updated successfully.`}
-                            {feedback.kind === "partial" && `⚠ ${feedback.count}/${feedback.total} entries updated. ${feedback.userErrors.length + feedback.teamErrors.length} failed:`}
-                            {feedback.kind === "failure" && "✗ Failed to update any entries. Please try again."}
-                        </span>
-                        <button onClick={() => setFeedback(null)} className="text-current opacity-60 hover:opacity-100 shrink-0 text-base leading-none">✕</button>
-                    </div>
-                    {(feedback.kind === "partial" || feedback.kind === "failure") && (
-                        <div className="space-y-0.5 pl-2 border-l-2 border-current/30">
-                            {feedback.userErrors.map(e => (
-                                <div key={e.user_id} className="font-mono opacity-80">{e.user_id}: {e.error}</div>
-                            ))}
-                            {feedback.teamErrors.map(e => (
-                                <div key={e.team_id} className="font-mono opacity-80">{e.team_id}: {e.error}</div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* ── Status Action Bar ── */}
-            <div
-                className={`sticky top-0 z-20 transition-all duration-300 ease-out overflow-hidden ${selectedCount > 0
-                    ? "max-h-32 opacity-100"
-                    : "max-h-0 opacity-0 pointer-events-none"
-                    }`}
-            >
-                <div className="bg-neutral-900 border-b border-neutral-700 px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap shadow-lg shadow-black/40">
-                    {/* Count + label */}
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white text-black text-[11px] font-black shrink-0">
-                            {selectedCount}
-                        </span>
-                        <span className="text-xs text-neutral-300 font-medium">
-                            {selectedCount === 1 ? "entry" : "entries"} selected
-                        </span>
-                    </div>
-
-                    {/* Status buttons — wrap on very small screens */}
-                    <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-                        {isPending && (
-                            <span className="text-[11px] text-neutral-500 uppercase tracking-widest animate-pulse mr-1">Saving…</span>
-                        )}
-                        <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() => applyStatus("QUALIFIED")}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest border border-emerald-700 bg-emerald-950/60 text-emerald-400 hover:bg-emerald-900/60 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400"
-                        >
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                            Qualified
-                        </button>
-                        <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() => applyStatus("ELIMINATED")}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest border border-amber-700 bg-amber-950/60 text-amber-400 hover:bg-amber-900/60 hover:border-amber-500 hover:text-amber-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
-                        >
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
-                            Eliminated
-                        </button>
-                        <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() => applyStatus("DISQUALIFIED")}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest border border-red-800 bg-red-950/60 text-red-400 hover:bg-red-900/60 hover:border-red-600 hover:text-red-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400"
-                        >
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
-                            Disqualified
-                        </button>
-                        <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() => setSelected(new Set())}
-                            className="px-2 py-1.5 text-[11px] text-neutral-600 hover:text-neutral-400 disabled:opacity-40 transition-colors duration-150 focus-visible:outline-none"
-                            aria-label="Clear selection"
-                        >
-                            ✕
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             {/* Mobile card view */}
             <div className="md:hidden divide-y divide-neutral-800">
                 {data.map((entry, idx) => {
@@ -1199,16 +717,6 @@ function CheckedInTable({
                     </table>
                 </div>
 
-                <TablePagination
-                    page={page}
-                    totalPages={totalPages}
-                    total={total}
-                    pageLimit={pageLimit}
-                    onPrev={onPrev}
-                    onNext={onNext}
-                />
-            </div>
-        </div>
                 <TablePagination
                     page={page}
                     totalPages={totalPages}
@@ -1439,7 +947,6 @@ function QualifiedTable({
     pageLimit,
     onPrev,
     onNext,
-    participationType,
 }: QualifiedTableProps) {
     if (isLoading) {
         return (
@@ -1637,14 +1144,12 @@ function TypeBadge({ type }: { type: "TEAM" | "SOLO" }) {
     if (type === "TEAM") {
         return (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border border-blue-800 bg-blue-950/50 text-blue-400 w-fit">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border border-blue-800 bg-blue-950/50 text-blue-400 w-fit">
                 <Group className="w-2.5 h-2.5" />
                 Team
             </span>
         );
     }
     return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border border-blue-800 bg-blue-950/50 text-blue-400 w-fit">
         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border border-blue-800 bg-blue-950/50 text-blue-400 w-fit">
             <User className="w-2.5 h-2.5" />
             Solo
