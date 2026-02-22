@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Spark } from "iconoir-react"
+import { Spark, Xmark } from "iconoir-react"
+import katex from "katex"
+import "katex/dist/katex.min.css"
 import apiClient from "../../lib/axios"
 
 type LeaderboardRow = {
@@ -141,11 +143,22 @@ const useLeaderboardStream = (enabled: boolean) => {
     return state
 }
 
+const renderLatex = (latex: string) => {
+    try {
+        return katex.renderToString(latex, {
+            throwOnError: false,
+            displayMode: true,
+        })
+    } catch {
+        return latex
+    }
+}
+
 const Leaderboard = () => {
     const targetTime = useMemo(() => new Date("2026-02-25T08:00:00+05:30"), [])
     const [now, setNow] = useState(() => new Date())
     const forceLeaderboard = import.meta.env.VITE_FORCE_LEADERBOARD === "true"
-    const showLeaderboard = true //forceLeaderboard || now >= targetTime
+    const showLeaderboard = forceLeaderboard || now >= targetTime
     const { rows, pagination, status, lastUpdatedAt } = useLeaderboardStream(showLeaderboard)
     const [tooltip, setTooltip] = useState<{
         id: number | null
@@ -180,7 +193,7 @@ const Leaderboard = () => {
     const rest = rows.slice(3)
 
     const maxPoints = useMemo(() => {
-        return topThree.reduce((max, row) => Math.max(max, row.total_points), 1)
+        return topThree.reduce((max, row) => Math.max(max, row.avg_points_per_user), 1)
     }, [topThree])
 
     const statusTone =
@@ -215,9 +228,9 @@ const Leaderboard = () => {
                         <button
                             type="button"
                             onClick={() => setShowInfoModal(true)}
-                            className="w-5 h-5 md:w-6 md:h-6 rounded-full border border-zinc-600 flex items-center justify-center text-[10px] md:text-xs text-zinc-400 hover:text-white hover:border-zinc-400 transition-colors"
+                            className="px-2 py-1 rounded-md border border-zinc-600/60 bg-zinc-800/40 text-[10px] text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 hover:bg-zinc-700/50 transition-all font-sans"
                         >
-                            i
+                            How it works?
                         </button>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-zinc-400">
@@ -251,39 +264,32 @@ const Leaderboard = () => {
                 </div>
 
                 {!showLeaderboard ? (
-                    <section className="mb-10 min-h-[60vh] flex items-center justify-center">
+                    <section className="min-h-[80vh] flex items-center justify-center">
                         <div className="flex flex-col items-center justify-center text-center py-10">
-                            <div className="flex items-center gap-3 text-zinc-300">
-                                <Spark className="text-amber-300" width={22} height={22} />
-                                <span className="text-sm uppercase tracking-[0.3em] font-inst">
-                                    Countdown
-                                </span>
-                                <Spark className="text-amber-300" width={22} height={22} />
-                            </div>
-                            <div className="mt-6 flex items-end gap-3 md:gap-6 font-inst">
+                            <div className="mt-6 flex items-end justify-center gap-1 md:gap-2 font-inst">
                                 {[
                                     { value: days, label: "Days" },
                                     { value: hours, label: "Hours" },
                                     { value: minutes, label: "Mins" },
                                     { value: seconds, label: "Secs" },
                                 ].map((item, index) => (
-                                    <div key={item.label} className="flex items-baseline gap-2">
-                                        <span className="text-4xl md:text-6xl tracking-tight">
+                                    <div key={item.label} className="flex items-center gap-2">
+                                        <span className="text-4xl md:text-6xl tracking-tight w-16 md:w-20 text-center">
                                             {String(item.value).padStart(2, "0")}
                                         </span>
                                         {index < 3 && (
-                                            <span className="text-xl md:text-2xl text-zinc-500">
+                                            <span className="text-xl md:text-2xl text-zinc-500 pb-1">
                                                 :
                                             </span>
                                         )}
                                     </div>
                                 ))}
                             </div>
-                            <div className="mt-4 flex items-center gap-6 text-[10px] md:text-xs uppercase tracking-[0.3em] text-zinc-400 font-inst">
-                                <span>Days</span>
-                                <span>Hours</span>
-                                <span>Mins</span>
-                                <span>Secs</span>
+                            <div className="mt-4 flex items-center justify-center gap-5 text-[10px] md:text-xs uppercase tracking-[0.3em] text-zinc-400 font-inst">
+                                <span className="w-16 md:w-20 text-center">Days</span>
+                                <span className="w-16 md:w-20 text-center">Hours</span>
+                                <span className="w-16 md:w-20 text-center">Mins</span>
+                                <span className="w-16 md:w-20 text-center">Secs</span>
                             </div>
                         </div>
                     </section>
@@ -308,7 +314,9 @@ const Leaderboard = () => {
                                     : topThree.map((row, index) => {
                                           const height = Math.max(
                                               20,
-                                              Math.round((row.total_points / maxPoints) * 160)
+                                              Math.round(
+                                                  (row.avg_points_per_user / maxPoints) * 160
+                                              )
                                           )
                                           const colors = [
                                               "from-[#FFD700]/90 via-[#FFC04D]/70 to-[#FFE57A]/80",
@@ -384,7 +392,7 @@ const Leaderboard = () => {
                                                           {row.college_name}
                                                       </div>
                                                       <div className="text-xs text-zinc-400">
-                                                          {row.total_points} pts
+                                                          {row.avg_points_per_user} pts
                                                       </div>
                                                   </div>
                                               </div>
@@ -457,17 +465,20 @@ const Leaderboard = () => {
                                                 )
                                             }
                                         >
-                                            <div className="flex items-center gap-3 min-w-0">
+                                            <div className="flex items-center gap-3 min-w-0 sm:flex-1">
                                                 <span className="text-sm text-zinc-400 w-10">
                                                     #{row.rank}
                                                 </span>
-                                                <span className="text-sm text-white truncate">
+                                                <span className="text-sm text-white truncate hidden sm:block">
                                                     {row.college_name}
                                                 </span>
                                             </div>
                                             <div className="text-sm text-zinc-300">
-                                                {row.total_points} pts
+                                                {row.avg_points_per_user} pts
                                             </div>
+                                            <span className="text-sm text-white truncate sm:hidden">
+                                                {row.college_name}
+                                            </span>
                                         </button>
                                     </div>
                                 ))
@@ -512,107 +523,73 @@ const Leaderboard = () => {
                         tabIndex={-1}
                     >
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-white font-sans">
+                            <h2 className="text-xl font-semibold text-white font-inst">
                                 How Rankings Work
                             </h2>
                             <button
                                 type="button"
                                 onClick={() => setShowInfoModal(false)}
-                                className="text-zinc-400 hover:text-white transition-colors text-lg leading-none"
+                                className="text-zinc-400 hover:text-white transition-colors"
                                 aria-label="Close"
                             >
-                                ✕
+                                <Xmark className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
                             </button>
                         </div>
-                        <div className="space-y-4 text-sm text-zinc-300 font-sans">
+                        <div className="space-y-4 text-sm text-zinc-300 ">
                             <p>
                                 Colleges are ranked by{" "}
                                 <span className="text-white font-medium">Avg Points per User</span>{" "}
-                                — the average points earned by each participant from that college.
+                                - the average points earned by each participant from respective
+                                college.
                             </p>
-                            <div className="bg-zinc-950 rounded-xl p-4 space-y-4">
-                                <div className="text-sm">
-                                    <div className="text-zinc-500 mb-1 font-sans">Total Points</div>
-                                    <div className="font-mono text-zinc-300">
-                                        <span className="text-cyan-400">P</span>
-                                        <sub className="total"> = </sub>
-                                        <span className="italic">Σ</span>
-                                        <sub>i=1</sub>
-                                        <sup>n</sup>
-                                        <span className="text-amber-400">p</span>
-                                        <sub>i</sub>
-                                    </div>
-                                    <div className="text-xs text-zinc-500 mt-1">
-                                        Sum of all points from all participants
-                                    </div>
+                            <div className="bg-zinc-950 rounded-xl p-4 space-y-6 font-mono">
+                                <div className="text-zinc-500 mb-2">Total Points</div>
+                                <div
+                                    className=" text-base text-zinc-200 overflow-x-auto"
+                                    dangerouslySetInnerHTML={{
+                                        __html: renderLatex("P = \\sum_{i=1}^{n} p_i"),
+                                    }}
+                                />
+                                <div className="text-zinc-500 mt-1">
+                                    Sum of all points from all participants
                                 </div>
-                                <div className="text-sm">
-                                    <div className="text-zinc-500 mb-1 font-sans">
-                                        Participant Count
-                                    </div>
-                                    <div className="font-mono text-zinc-300">
-                                        <span className="text-cyan-400">N</span>
-                                        <sub className="total"> = count(</sub>
-                                        <span className="text-amber-400">p</span>
-                                        <sub>i</sub>
-                                        <sub className="total"> &gt; 0)</sub>
-                                    </div>
-                                    <div className="text-xs text-zinc-500 mt-1">
-                                        Number of users who scored at least once
-                                    </div>
+                                <div className="text-zinc-500 mb-2">Participant Count</div>
+                                <div
+                                    className="text-base text-zinc-200 overflow-x-auto"
+                                    dangerouslySetInnerHTML={{
+                                        __html: renderLatex(
+                                            "N = \\left| \\{ p_i \\mid p_i > 0 \\} \\right|"
+                                        ),
+                                    }}
+                                />
+                                <div className="text-zinc-500 mt-1">
+                                    Number of users who scored at least once
                                 </div>
-                                <div className="text-sm">
-                                    <div className="text-zinc-500 mb-1 font-sans">
-                                        Avg Points per User
-                                    </div>
-                                    <div className="font-mono text-zinc-300">
-                                        <span className="text-cyan-400">μ</span>
-                                        <sub className="total"> = </sub>
-                                        <span className="text-purple-400">P</span>
-                                        <sub className="total"> / </sub>
-                                        <span className="text-cyan-400">N</span>
-                                        <sub className="total"> = round(</sub>
-                                        <span className="text-purple-400">P</span>
-                                        <sub className="total"> / </sub>
-                                        <span className="text-cyan-400">N</span>
-                                        <sub className="total">, 2)</sub>
-                                    </div>
-                                    <div className="text-xs text-zinc-500 mt-1">
-                                        Fair score: total points ÷ participants (rounded to 2
-                                        decimals)
-                                    </div>
+                                <div className="text-zinc-500 mb-2 ">Avg Points per User</div>
+                                <div
+                                    className=" text-base text-zinc-200 overflow-x-auto"
+                                    dangerouslySetInnerHTML={{
+                                        __html: renderLatex(
+                                            "\\mu = \\frac{P}{N} = \\operatorname{round}\\left(\\frac{P}{N}, 2\\right)"
+                                        ),
+                                    }}
+                                />
+                                <div className="text-zinc-500 mt-1">
+                                    Fair score: total points ÷ participants (rounded to 2 decimals)
                                 </div>
-                                <div className="text-sm">
-                                    <div className="text-zinc-500 mb-1 font-sans">Rank</div>
-                                    <div className="font-mono text-zinc-300">
-                                        <span className="text-green-400">rank</span>
-                                        <sub className="total"> = dense_rank(</sub>
-                                        <span className="text-cyan-400">μ</span>
-                                        <sub className="total"> DESC)</sub>
-                                    </div>
-                                    <div className="text-xs text-zinc-500 mt-1">
-                                        Dense rank ordered by avg_points_per_user descending
-                                    </div>
+                                <div className="text-zinc-500 mb-2">Rank</div>
+                                <div
+                                    className=" text-base text-zinc-200 overflow-x-auto"
+                                    dangerouslySetInnerHTML={{
+                                        __html: renderLatex(
+                                            "\\operatorname{rank} = \\operatorname{DENSE\\\_RANK}(\\mu \\text{ DESC})"
+                                        ),
+                                    }}
+                                />
+                                <div className="text-zinc-500 mt-1">
+                                    Dense rank ordered by avg_points_per_user descending
                                 </div>
                             </div>
-                            <ul className="list-disc list-inside space-y-1 text-zinc-400">
-                                <li>
-                                    <span className="text-white">total_points</span> — Sum of all
-                                    points earned by participants
-                                </li>
-                                <li>
-                                    <span className="text-white">participant_count</span> — Number
-                                    of users who scored at least once
-                                </li>
-                                <li>
-                                    <span className="text-white">avg_points_per_user</span> — Fair
-                                    score (total ÷ participants)
-                                </li>
-                                <li>
-                                    <span className="text-white">rank</span> — Dense rank by
-                                    avg_points_per_user
-                                </li>
-                            </ul>
                         </div>
                     </div>
                 </div>
