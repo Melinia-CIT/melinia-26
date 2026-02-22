@@ -19,6 +19,7 @@ import {
     type Rule,
     type VerboseEvent,
     type AssignEventCrews,
+    type AssignVolunteersError,
     type Crew,
     type GetVerboseEvent,
     type GetCrew,
@@ -39,7 +40,7 @@ import {
     type GetEventParticipantsError,
     getEventParticipantSchema
 } from "@melinia/shared"
-import { Result } from "true-myth"
+import { Result } from "true-myth";
 
 
 export async function insertEvent(created_by: string, data: CreateEvent, tx = sql): Promise<Event> {
@@ -324,6 +325,108 @@ export async function getOrganizers(eventIds: string[]): Promise<GetCrew[]> {
     return organizers.map(og => getCrewSchema.parse(og))
 }
 
+export async function getVolunteers(eventIds: string[]): Promise<GetCrew[]> {
+    if (eventIds.length === 0) {
+        return []
+    }
+
+    const volunteers = await sql`
+        SELECT
+            ec.event_id,
+            ec.user_id,
+            p.first_name,
+            p.last_name,
+            u.ph_no,
+            ec.assigned_by,
+            ec.created_at
+        FROM event_crews ec
+        JOIN users u ON u.id = ec.user_id
+        JOIN profile p ON p.user_id = u.id
+        WHERE ec.event_id = ANY(${eventIds}) AND u.role = 'VOLUNTEER'
+        ORDER BY ec.event_id;
+    `
+
+    return volunteers.map(og => getCrewSchema.parse(og))
+}
+
+export async function assignVolunteersToEvent(
+    eventId: string,
+    volunteerEmails: string[],
+    assignedBy: string,
+): Promise<Result<Crew[], AssignVolunteersError>> {
+    try {
+        if (!volunteerEmails || volunteerEmails.length === 0) {
+            return Result.err({ code: "empty_volunteer_list", message: "No volunteers provided" })
+        }
+
+        const [event] = await sql`SELECT 1 FROM events WHERE id = ${eventId};`;
+        if (!event) {
+            return Result.err({ code: "event_not_found", message: "Event not found" });
+        }
+
+        const [userRole] = await sql`SELECT role FROM users WHERE id = ${assignedBy};`
+        if (!userRole) {
+            return Result.err({ code: "assigning_user_not_found", message: "Assigning user not found" });
+        }
+
+        if (userRole.role !== "ADMIN") {
+            const [organizerCheck] = await sql`
+            SELECT 1 FROM event_crews 
+            WHERE event_id = ${eventId} 
+            AND user_id = ${assignedBy};
+        `;
+            if (!organizerCheck) {
+                return Result.err({
+                    code: "permission_denied",
+                    message: "Only admin or organizer of the respective event can assign volunteers"
+                });
+            }
+        }
+
+        const users = await sql`
+            SELECT id, role, email FROM users 
+            WHERE email = ANY(${volunteerEmails});
+        `
+
+        const foundEmails = users.map(u => u.email)
+        const notFoundEmails = volunteerEmails.filter(email => !foundEmails.includes(email))
+        if (notFoundEmails.length > 0) {
+            return Result.err({ code: "volunteers_not_found", message: `These emails do not exist: ${notFoundEmails.join(", ")}` })
+        }
+
+        const invalidRoleEmails = users.filter(u => u.role !== "VOLUNTEER").map(u => u.email)
+        if (invalidRoleEmails.length > 0) {
+            return Result.err({ code: "invalid_volunteer_role", message: `These users are not volunteers: ${invalidRoleEmails.join(", ")}` })
+        }
+
+        const existingAssignments = await sql`
+            SELECT user_id FROM event_crews
+            WHERE event_id = ${eventId} AND user_id = ANY(${users.map(u => u.id)});
+        `
+
+        const assignedIds = new Set(existingAssignments.map(a => a.user_id))
+        const alreadyAssignedVolunteers = users
+            .filter(u => assignedIds.has(u.id))
+            .map(u => u.email)
+
+        if (alreadyAssignedVolunteers.length > 0) {
+            return Result.err({ code: "volunteer_already_assigned", message: `Cannot assign same volunteer again: ${alreadyAssignedVolunteers.join(", ")}` })
+        }
+
+        const crews = await sql`
+            INSERT INTO event_crews (event_id, user_id, assigned_by)
+            VALUES ${sql(users.map(u => [eventId, u.id, assignedBy]))}
+            RETURNING *;
+        `
+
+        const parsedCrews = crews.map(crew => baseCrewSchema.parse(crew))
+        return Result.ok(parsedCrews)
+    } catch (err) {
+        console.error(err)
+        return Result.err({ code: "internal_error", message: "Failed to assign volunteers" })
+    }
+}
+
 export async function getEvents(): Promise<GetVerboseEvent[]> {
     const events = await listEvents()
 
@@ -393,10 +496,11 @@ export async function getEventById(eventId: string): Promise<GetVerboseEvent> {
         throw new HTTPException(404, { message: "Event not found" })
     }
 
-    const [prizes, rounds, organizers] = await Promise.all([
-        await getPrizes([eventId]),
-        await getRounds([eventId]),
-        await getOrganizers([eventId]),
+    const [prizes, rounds, organizers, volunteers] = await Promise.all([
+        getPrizes([eventId]),
+        getRounds([eventId]),
+        getOrganizers([eventId]),
+        getVolunteers([eventId])
     ])
 
     const roundIds = rounds.map(rnd => rnd.id)
@@ -418,6 +522,7 @@ export async function getEventById(eventId: string): Promise<GetVerboseEvent> {
         prizes: prizes.filter(prize => prize.event_id === eventId),
         crew: {
             organizers: organizers.filter(og => og.event_id === eventId),
+            volunteers: volunteers.filter(og => og.event_id === eventId)
         },
     }
 
