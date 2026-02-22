@@ -6,6 +6,7 @@ import {
   User,
   NavArrowLeft,
   NavArrowRight,
+  NavArrowDown,
   Clock,
   Plus,
 } from 'iconoir-react'
@@ -13,6 +14,13 @@ import { useState } from 'react'
 import { Button } from '@/ui/Button'
 import { AddVolunteersModal } from '@/ui/AddVolunteersModal'
 import type { EventRegistration, EventRegistrationsResponse, EventDetail } from '@/api/events'
+
+type CrewMember = {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  ph_no: string;
+}
 
 export const Route = createFileRoute('/app/events/$eventId/')({
   component: EventRegistrationsPage,
@@ -53,6 +61,7 @@ function EventRegistrationsPage() {
   const queryClient = useQueryClient()
   const [from, setFrom] = useState(0)
   const [showVolunteersModal, setShowVolunteersModal] = useState(false)
+  const [showCrew, setShowCrew] = useState(false)
   const [addVolunteersError, setAddVolunteersError] = useState<string | null>(null)
 
   // Fetch detailed event data (includes rounds)
@@ -74,16 +83,16 @@ function EventRegistrationsPage() {
 
   const addVolunteersMutation = useMutation({
     mutationFn: (emails: string[]) => {
-      // TODO: Implement addVolunteers API method
-      console.log('Adding volunteers:', emails);
-      return Promise.resolve();
+      return api.events.assignVolunteers(eventId, emails);
     },
     onSuccess: () => {
       setAddVolunteersError(null);
       queryClient.invalidateQueries({ queryKey: ['event-detail', eventId] });
     },
-    onError: () => {
-      setAddVolunteersError("Failed to add volunteers.");
+    onError: (error) => {
+      const axiosErr = error as any;
+      const message = axiosErr.response?.data?.message || "Failed to add volunteers.";
+      setAddVolunteersError(message);
     }
   });
 
@@ -158,6 +167,68 @@ function EventRegistrationsPage() {
         ) : (
           <div className="p-6 border border-neutral-800 text-neutral-500 text-sm italic">
             No rounds defined for this event.
+          </div>
+        )}
+      </div>
+
+      {/* Volunteers section */}
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => setShowCrew(!showCrew)}
+          className="w-full bg-neutral-950 border border-neutral-800 p-4 flex items-center justify-between group hover:border-neutral-600 transition-all duration-200 focus:outline-none"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`p-2 bg-blue-950/20 border border-blue-900/50 text-blue-400 group-hover:text-blue-300 transition-colors`}>
+              <User className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+              <div className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em] leading-none mb-1">
+                Event Staff
+              </div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest">
+                Volunteers
+              </h3>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            {event?.crew?.volunteers && (
+              <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">
+                {event.crew.volunteers.length} members
+              </span>
+            )}
+            <NavArrowDown className={`w-5 h-5 text-neutral-500 group-hover:text-white transition-all duration-300 ${showCrew ? 'rotate-180' : ''}`} />
+          </div>
+        </button>
+
+        {showCrew && (
+          <div className="animate-slide-down bg-neutral-900/10 border-x border-b border-neutral-800/50 p-6 overflow-hidden">
+            {event?.crew?.volunteers && event.crew.volunteers.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {(event.crew.volunteers as unknown as CrewMember[]).map((person) => (
+                  <div
+                    key={person.user_id}
+                    className="bg-neutral-950/50 border border-neutral-800/60 p-4 flex items-center justify-between group hover:border-neutral-600 transition-all duration-200"
+                  >
+                    <div className="space-y-1">
+                      <div className="text-sm font-bold text-white uppercase tracking-wider">
+                        {person.first_name} {person.last_name}
+                      </div>
+                      <div className="text-[10px] text-neutral-500 font-mono italic">
+                        {person.user_id}
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-neutral-400 font-mono self-end">
+                      {person.ph_no}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-xs text-neutral-600 italic font-mono uppercase tracking-[0.2em]">
+                No volunteers assigned to this event.
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -336,7 +407,7 @@ function RoundCard({ round, eventId }: { round: EventDetail['rounds'][number]; e
         className="absolute top-0 right-0 p-3 text-[48px] font-black leading-none pointer-events-none select-none italic transition-all duration-300 opacity-20 group-hover:opacity-40"
         style={{
           WebkitTextStroke: '1px var(--color-blue-800)',
-          WebkitTextFillColor: 'var(--color-blue-950)',
+          WebkitTextFillColor: 'var(--color-blue-800)',
         }}
       >
         #{round.round_no}
