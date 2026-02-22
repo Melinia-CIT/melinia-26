@@ -173,7 +173,7 @@ college.get(
                             }),
                         });
 
-                        await stream.sleep(500);
+                        await stream.sleep(1000);
                     }
                 } catch (err) {
                     console.error(`SSE stream crashed: ${err}`);
