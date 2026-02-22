@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Xmark } from "iconoir-react";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { UserWithProfile } from "@melinia/shared";
 import type { Registration } from "@/api/registrations";
 import { Button } from "@/ui/Button";
@@ -61,9 +62,9 @@ export function CheckInPopup({
 
 	if (!open) return null;
 
-	return (
-		<div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 sm:p-4">
-			<div className="w-full max-w-4xl max-h-[calc(100dvh-1rem)] bg-neutral-950 border border-neutral-800 flex flex-col overflow-hidden">
+	return createPortal(
+		<div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-2 sm:p-4 min-h-[100dvh]" style={{ height: '100dvh' }}>
+			<div className="w-full max-w-4xl max-h-[calc(100dvh-1rem)] bg-neutral-950 border border-neutral-800 flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
 				{/* Header */}
 				<div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-neutral-800">
 					<div className="space-y-1">
@@ -189,7 +190,8 @@ export function CheckInPopup({
 					</Button>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }
 

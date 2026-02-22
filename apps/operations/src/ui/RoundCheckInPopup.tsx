@@ -1,5 +1,6 @@
 import { Xmark, Group, User } from "iconoir-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { AxiosError } from "axios";
 import type { RoundParticipant } from "@/api/events";
 import { Button } from "@/ui/Button";
@@ -53,9 +54,9 @@ export function RoundCheckInPopup({
 
     if (!open) return null;
 
-    return (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 sm:p-4">
-            <div className="w-full max-w-4xl max-h-[calc(100dvh-1rem)] bg-neutral-950 border border-neutral-800 flex flex-col overflow-hidden">
+    return createPortal(
+        <div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-2 sm:p-4 min-h-[100dvh]" style={{ height: '100dvh' }}>
+            <div className="w-full max-w-4xl max-h-[calc(100dvh-1rem)] bg-neutral-950 border border-neutral-800 flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-neutral-800">
                     <div className="space-y-1">
@@ -123,9 +124,14 @@ export function RoundCheckInPopup({
                                                         <div className="space-y-1">
                                                             <p className={`font-semibold text-sm transition-colors ${isRemoved ? 'text-neutral-500 line-through' : 'text-white'}`}>{member.first_name} {member.last_name}</p>
                                                             <p className="text-xs text-neutral-400 font-mono">{member.user_id} • {member.email}</p>
-                                                            <div className="flex gap-2 mt-1">
-                                                                <span className="text-[10px] px-1.5 py-0.5 border border-neutral-700 bg-neutral-800 text-neutral-400 uppercase">{member.status}</span>
-                                                                <span className="text-[10px] px-1.5 py-0.5 border border-neutral-700 bg-neutral-800 text-neutral-400 uppercase">{member.payment_status}</span>
+                                                            <div className="flex gap-2 mt-1.5">
+                                                                <span className={`inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 border uppercase font-bold tracking-wider ${member.status?.toUpperCase() === 'ACTIVE' ? 'text-emerald-400 border-emerald-800 bg-emerald-950/40' : 'border-neutral-700 bg-neutral-800 text-neutral-400'}`}>
+                                                                    {member.status?.toUpperCase() === 'ACTIVE' && <span className="w-1 h-1 rounded-full bg-emerald-400" />}
+                                                                    {member.status}
+                                                                </span>
+                                                                <span className={`text-[10px] px-2 py-0.5 border uppercase font-bold tracking-wider ${member.payment_status?.toUpperCase() === 'PAID' ? 'text-emerald-400 border-emerald-800 bg-emerald-950/40' : 'border-neutral-700 bg-neutral-800 text-neutral-400'}`}>
+                                                                    {member.payment_status}
+                                                                </span>
                                                             </div>
                                                         </div>
                                                         <Button
@@ -157,6 +163,7 @@ export function RoundCheckInPopup({
                                     <div className="flex items-center gap-2">
                                         <User className="w-5 h-5 text-neutral-500" />
                                         <h4 className="text-lg font-bold text-white uppercase tracking-wider">Solo Participant</h4>
+                                        <h4 className="text-lg font-bold text-white uppercase tracking-wider">Solo Participant</h4>
                                         <span className="text-xs text-neutral-600 font-mono ml-2">ID: {participant.user_id}</span>
                                     </div>
                                     <div className="p-4 bg-neutral-900 border border-neutral-800 flex items-center justify-between">
@@ -178,13 +185,8 @@ export function RoundCheckInPopup({
                     )}
                 </div>
 
-                {/* Footer */}
-                <div className="px-4 md:px-6 py-4 border-t border-neutral-800 shrink-0">
-                    <Button variant="secondary" onClick={onClose} className="w-full">
-                        Close
-                    </Button>
-                </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

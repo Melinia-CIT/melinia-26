@@ -1,5 +1,6 @@
 import { Xmark, Mail, Plus, Trash } from "iconoir-react";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "./Button";
 import { Input } from "./Input";
 
@@ -64,8 +65,12 @@ export function AddVolunteersModal({
 
     if (!open) return null;
 
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    // Use Portal to render the modal at the end of body to avoid layout clipping/scrolling issues
+    return createPortal(
+        <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto min-h-[100dvh]"
+            style={{ height: '100dvh' }}
+        >
             <div className="w-full max-w-lg bg-neutral-950 border border-neutral-800 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="px-6 py-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/40">
@@ -155,11 +160,12 @@ export function AddVolunteersModal({
                             disabled={isAdding || addSuccess || emails.every(e => e.value.trim() === "")}
                             className="flex-1 bg-white text-black hover:bg-neutral-200 font-bold border-none"
                         >
-                            {isAdding ? "Sending..." : "Send Invitations"}
+                            {isAdding ? "Adding..." : "Add Volunteer(s)"}
                         </Button>
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
