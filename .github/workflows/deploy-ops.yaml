@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - operations-dev
     paths:
       - "apps/operations/**"
       - "packages/shared/**"
