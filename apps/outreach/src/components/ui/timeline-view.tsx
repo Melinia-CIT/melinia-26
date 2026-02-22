@@ -12,6 +12,18 @@ type UserRegEvents = {
     events: UserRegisteredEvents
 }
 
+type UserRegisteredEvent = UserRegisteredEvents[number]
+type RegisteredEventWithRounds = UserRegisteredEvent & {
+    rounds: {
+        round_name: string
+        start_time: Date
+        end_time: Date
+    }[]
+}
+
+const hasRounds = (event: UserRegisteredEvent): event is RegisteredEventWithRounds =>
+    "rounds" in event
+
 export type { TimelineEvent }
 
 function isSameDay(date1: Date, date2: Date): boolean {
@@ -65,15 +77,17 @@ const TimelineView = ({ onEventClick, className }: TimelineViewProps) => {
     const allTimelineEvents: TimelineEvent[] = useMemo(() => {
         if (!registeredEvents) return []
         return registeredEvents.flatMap(event =>
-            (event.rounds || []).map((round, index) => ({
-                id: `${event.id}-${index}`,
-                eventId: event.id,
-                name: `${event.name} - ${round.round_name}`,
-                startTime: round.start_time,
-                endTime: round.end_time,
-                eventType: event.event_type,
-                venue: event.venue,
-            }))
+            hasRounds(event)
+                ? event.rounds.map((round, index) => ({
+                      id: `${event.id}-${index}`,
+                      eventId: event.id,
+                      name: `${event.name} - ${round.round_name}`,
+                      startTime: round.start_time,
+                      endTime: round.end_time,
+                      eventType: event.event_type,
+                      venue: event.venue,
+                  }))
+                : []
         )
     }, [registeredEvents])
 
