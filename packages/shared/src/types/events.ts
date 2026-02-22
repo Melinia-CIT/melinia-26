@@ -333,33 +333,12 @@ export const getVerboseEventResponseSchema = verboseEventSchema.extend({
                         last_name: z.string(),
                         ph_no: z.string()
                     })
-            ).optional().default([]), 
-        }).optional(),
+            ).optional(), 
+        })
 });
-
-export const getEventsQuerySchema = z.object({
-    expand: z.enum(["all"]).optional(),
-})
 
 export const EventParamSchema = z.object({
     id: z.string(),
-})
-
-export const getVerboseEventResponseSchema = verboseEventSchema.extend({
-    crew: z.object({
-        organizers: z.array(
-            baseCrewSchema
-                .omit({
-                    event_id: true,
-                    assigned_by: true,
-                })
-                .extend({
-                    first_name: z.string(),
-                    last_name: z.string(),
-                    ph_no: z.string(),
-                })
-        ),
-    }),
 })
 
 export const RegisteredSolo = z.object({
