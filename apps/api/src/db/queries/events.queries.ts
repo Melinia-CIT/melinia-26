@@ -1314,10 +1314,10 @@ export async function getEventCheckInsCount(
 ): Promise<Result<number, InternalError>> {
     try {
         const [row] = await sql`
-            SELECT COUNT(DISTINCT COALESCE(erc.team_id, erc.user_id))
+            SELECT COUNT(DISTINCT COALESCE(erc.team_id, erc.user_id)) AS count
             FROM event_round_checkins erc
             JOIN event_rounds r ON r.id = erc.round_id
-            WHERE r.event_id = ${eventId} AND erc.round_id = ${roundId}
+            WHERE r.event_id = ${eventId} AND r.round_no = ${roundId}
         `;
         return Result.ok(parseInt(row?.count ?? "0"));
     } catch (err) {
