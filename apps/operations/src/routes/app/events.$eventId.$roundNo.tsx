@@ -743,28 +743,6 @@ function CheckedInTable({
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status?: ParticipantStatus }) {
-    if (!status) return <span className="text-[10px] text-neutral-700 uppercase tracking-widest font-mono">—</span>;
-    const map: Record<ParticipantStatus, string> = {
-        QUALIFIED: "text-emerald-400 border-emerald-800 bg-emerald-950/40",
-        ELIMINATED: "text-amber-400 border-amber-800 bg-amber-950/40",
-        DISQUALIFIED: "text-red-400 border-red-900 bg-red-950/40",
-    };
-    const dotMap: Record<ParticipantStatus, string> = {
-        QUALIFIED: "bg-emerald-400",
-        ELIMINATED: "bg-amber-400",
-        DISQUALIFIED: "bg-red-400",
-    };
-    return (
-        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${map[status]}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${dotMap[status]}`} />
-            {status.charAt(0) + status.slice(1).toLowerCase()}
-        </span>
-    );
-}
-
-// ── Row + Card components (now controlled) ────────────────────────────────────
-
 interface CheckedInRowGroupProps {
     entry: RoundCheckInEntry;
     checked: boolean;
@@ -1167,15 +1145,15 @@ function ResultsTab({ eventId, roundNo, participationType }: { eventId: string; 
         queryFn: () => api.events.getRoundResults(eventId, roundNo, {
             status: statusFilter,
             sort,
-            page: page + 1,
+            from: page * PAGE_LIMIT,
             limit: PAGE_LIMIT,
         }),
         staleTime: 1000 * 30,
     });
 
     const results = data?.data ?? [];
-    const total = data?.total ?? 0;
-    const totalPages = data?.totalPages ?? 1;
+    const total = data?.pagination.total ?? 0;
+    const totalPages = Math.ceil(total / PAGE_LIMIT) || 1;
 
     const statusCounts = results.reduce<Record<string, number>>((acc, r) => {
         acc[r.status] = (acc[r.status] ?? 0) + 1;
