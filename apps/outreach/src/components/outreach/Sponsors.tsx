@@ -14,6 +14,11 @@ const sponsors: Sponsor[] = [
         href: "https://www.kla.com",
     },
     {
+        src: "https://cdn.melinia.in/aivar.webp",
+        alt: "Aivar Innovations",
+        href: "https://aivar.tech",
+    },
+    {
         src: "https://cdn.melinia.in/shellkode.svg",
         alt: "ShellKode",
         href: "https://www.shellkode.com",
@@ -40,20 +45,28 @@ export default function Sponsors() {
     const privacyWeaveSponsor =
         sponsors.find(sponsor => sponsor.alt === "PrivacyWeave") || sponsors[2]
     const shellKodeSponsor = sponsors.find(sponsor => sponsor.alt === "ShellKode") || sponsors[1]
+    const aivarSponsor =
+        sponsors.find(sponsor => sponsor.alt === "Aivar Innovations") || sponsors[1]
     const profitStorySponsor =
         sponsors.find(sponsor => sponsor.alt === "profitstory.ai") || sponsors[4]
     const galaxySponsor =
         sponsors.find(sponsor => sponsor.alt === "Galaxy Computer Land") || sponsors[3]
-    const cardClassName =
-        "flex items-center justify-center bg-white rounded-xl sm:rounded-2xl border border-black/10 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 px-3 py-2 sm:px-4 sm:py-3 md:px-5 md:py-4 w-full sm:w-auto max-w-[220px] sm:max-w-[240px] md:max-w-[260px] min-h-[72px] sm:min-h-[80px] md:min-h-[96px] overflow-hidden"
+    const cardBaseClassName =
+        "flex items-center justify-center bg-white rounded-xl sm:rounded-2xl border border-black/10 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 w-full sm:w-auto overflow-hidden"
+    const platinumCardClassName = `${cardBaseClassName} px-4 py-3 sm:px-5 sm:py-4 md:px-6 md:py-5 max-w-[240px] sm:max-w-[260px] md:max-w-[280px] min-h-[88px] sm:min-h-[96px] md:min-h-[104px]`
+    const goldCardClassName = `${cardBaseClassName} px-3 py-2 sm:px-4 sm:py-3 md:px-5 md:py-4 max-w-[220px] sm:max-w-[240px] md:max-w-[260px] min-h-[72px] sm:min-h-[80px] md:min-h-[96px]`
+    const silverCardClassName = `${cardBaseClassName} px-3 py-2 sm:px-4 sm:py-3 md:px-4 md:py-3 max-w-[200px] sm:max-w-[220px] md:max-w-[240px] min-h-[68px] sm:min-h-[76px] md:min-h-[84px]`
+    const bronzeCardClassName = `${cardBaseClassName} px-3 py-2 sm:px-3 sm:py-2 md:px-4 md:py-2 max-w-[180px] sm:max-w-[200px] md:max-w-[220px] min-h-[64px] sm:min-h-[72px] md:min-h-[80px]`
     const getLogoClassName = (alt: string) =>
         alt === "PrivacyWeave"
-            ? "h-7 sm:h-8 md:h-10 lg:h-12 w-[140px] sm:w-[160px] md:w-[180px] lg:w-[200px] object-cover rounded-lg"
-            : alt === "profitstory.ai"
-              ? "h-8 sm:h-9 md:h-11 lg:h-12 w-[170px] sm:w-[190px] md:w-[210px] lg:w-[220px] object-contain scale-[2.5]"
-              : alt === "Galaxy Computer Land"
-                ? "h-8 sm:h-9 md:h-11 lg:h-12 w-[170px] sm:w-[190px] md:w-[210px] lg:w-[220px] object-contain"
-                : "h-7 sm:h-8 md:h-10 lg:h-12 w-auto max-w-[140px] sm:max-w-[160px] md:max-w-[180px] lg:max-w-[200px] object-contain"
+            ? "h-8 sm:h-9 md:h-11 lg:h-12 w-[160px] sm:w-[180px] md:w-[200px] lg:w-[220px] object-cover rounded-lg"
+            : alt === "Aivar Innovations"
+              ? "h-17 sm:h-19 md:h-21 lg:h-23 w-17 sm:w-19 md:w-21 lg:w-23 object-contain"
+              : alt === "profitstory.ai"
+                ? "h-7 sm:h-8 md:h-10 lg:h-11 w-[150px] sm:w-[170px] md:w-[190px] lg:w-[200px] object-contain scale-[2.2]"
+                : alt === "Galaxy Computer Land"
+                  ? "h-6 sm:h-7 md:h-8 lg:h-9 w-[130px] sm:w-[150px] md:w-[170px] lg:w-[180px] object-contain"
+                  : "h-7 sm:h-8 md:h-10 lg:h-12 w-auto max-w-[140px] sm:max-w-[160px] md:max-w-[180px] lg:max-w-[200px] object-contain"
 
     return (
         <section className="relative w-full py-12 md:py-16 lg:py-24 overflow-hidden bg-zinc-950">
@@ -157,6 +170,32 @@ export default function Sponsors() {
                     </div>
 
                     <div className="text-center">
+                        <h3 className="font-space text-base sm:text-lg md:text-xl font-bold uppercase tracking-[0.25em] bg-gradient-to-r from-[#E5E4E2] via-[#F5F5F5] to-[#E5E4E2] bg-clip-text text-transparent">
+                            Plantinum
+                        </h3>
+                        <div className="h-0.5 w-16 sm:w-20 bg-gradient-to-r from-transparent via-[#E5E4E2] to-transparent mx-auto mt-2" />
+                    </div>
+                    <div className="mt-4 sm:mt-6 md:mt-8 mb-8 sm:mb-10 md:mb-12 flex justify-center w-full">
+                        <motion.a
+                            key={aivarSponsor.alt}
+                            href={aivarSponsor.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                            className={platinumCardClassName}
+                        >
+                            <img
+                                src={aivarSponsor.src}
+                                alt={aivarSponsor.alt}
+                                className={getLogoClassName(aivarSponsor.alt)}
+                            />
+                        </motion.a>
+                    </div>
+
+                    <div className="text-center">
                         <h3 className="font-space text-base sm:text-lg md:text-xl font-bold uppercase tracking-[0.25em] bg-gradient-to-r from-[#E8D9B0] via-[#F6E7C8] to-[#E8D9B0] bg-clip-text text-transparent">
                             Gold
                         </h3>
@@ -172,7 +211,7 @@ export default function Sponsors() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
-                            className={cardClassName}
+                            className={goldCardClassName}
                         >
                             <img
                                 src={privacyWeaveSponsor.src}
@@ -199,7 +238,7 @@ export default function Sponsors() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                                className={cardClassName}
+                                className={silverCardClassName}
                             >
                                 <img
                                     src={sponsor.src}
@@ -226,7 +265,7 @@ export default function Sponsors() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
-                            className={cardClassName}
+                            className={bronzeCardClassName}
                         >
                             <img
                                 src={galaxySponsor.src}

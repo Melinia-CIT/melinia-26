@@ -210,7 +210,7 @@ export default function Footer() {
                     <div className="lg:col-span-6 flex flex-col gap-8">
                         <div>
                             <motion.img
-                                src="https://cdn.melinia.in/mln-logo.svg"
+                                src="https://cdn.melinia.in/mln-logo.avif"
                                 alt="Melinia'26"
                                 className="w-48 md:w-56 mb-8"
                                 initial={{ opacity: 0, scale: 0.9 }}
