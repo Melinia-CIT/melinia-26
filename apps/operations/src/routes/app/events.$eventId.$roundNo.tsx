@@ -359,6 +359,7 @@ function RoundCheckInPage() {
                         onPrev={() => setQualifiedPage(p => Math.max(0, p - 1))}
                         onNext={() => setQualifiedPage(p => p + 1)}
                         onSetPage={setQualifiedPage}
+                        participationType={event?.participation_type}
                     />
                 )}
                 {activeTab === "checkedin" && (
@@ -375,10 +376,11 @@ function RoundCheckInPage() {
                         onPrev={() => setCheckInsPage(p => Math.max(0, p - 1))}
                         onNext={() => setCheckInsPage(p => p + 1)}
                         onSetPage={setCheckInsPage}
+                        participationType={event?.participation_type}
                     />
                 )}
                 {activeTab === "results" && (
-                    <ResultsTab eventId={eventId} roundNo={roundNo} />
+                    <ResultsTab eventId={eventId} roundNo={roundNo} participationType={event?.participation_type} />
                 )}
             </div>
 
@@ -453,6 +455,7 @@ function CheckedInTable({
     onPrev,
     onNext,
     onSetPage,
+    participationType,
 }: CheckedInTableProps) {
     const { api } = Route.useRouteContext();
     const queryClient = useQueryClient();
@@ -686,12 +689,20 @@ function CheckedInTable({
                                         className="w-4 h-4 bg-black border-neutral-700 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white"
                                     />
                                 </th>
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
-                                    Team / Entry
-                                </th>
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
-                                    Participant Name
-                                </th>
+                                {participationType?.toUpperCase() === 'SOLO' ? (
+                                    <th colSpan={2} className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60">
+                                        Participant Details
+                                    </th>
+                                ) : (
+                                    <>
+                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
+                                            Team / Entry
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                            Participant Name
+                                        </th>
+                                    </>
+                                )}
                                 <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
                                     College & Degree
                                 </th>
@@ -766,28 +777,30 @@ function CheckedInRowGroup({ entry, checked, onToggle }: CheckedInRowGroupProps)
     if (entry.type === "SOLO") {
         return (
             <tr className={`hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0 ${rowHighlight}`}>
-                <td className="w-12 px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/20 align-middle">
+                <td className="w-12 px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/20 align-middle text-center">
                     <input
                         type="checkbox"
                         checked={checked}
                         onChange={onToggle}
-                        className="w-4 h-4 bg-black border-neutral-800 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white"
+                        className="w-4 h-4 bg-black border-neutral-800 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white mt-1"
                     />
                 </td>
-                <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
-                    <div className="flex flex-col items-center justify-center space-y-2 text-center">
-                        <TypeBadge type="SOLO" />
-                        <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
-                            {entry.first_name}
+                <td colSpan={2} className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-center justify-center space-y-1.5 min-w-[70px]">
+                            <TypeBadge type="SOLO" />
+                            <p className="text-[9px] text-neutral-600 font-mono uppercase tracking-tighter">
+                                {new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
                         </div>
-                        <p className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider">
-                            {new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                        <div className="h-8 w-px bg-neutral-800/40" />
+                        <div className="space-y-1">
+                            <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
+                                {entry.first_name} {entry.last_name}
+                            </div>
+                            <div className="text-[10px] text-neutral-500 font-mono">{entry.participant_id}</div>
+                        </div>
                     </div>
-                </td>
-                <td className="px-6 py-4">
-                    <div className="text-sm font-semibold text-white">{entry.first_name} {entry.last_name}</div>
-                    <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{entry.participant_id}</div>
                 </td>
                 <td className="px-6 py-4">
                     <div className="text-xs text-neutral-400">
@@ -938,6 +951,7 @@ function QualifiedTable({
     onPrev,
     onNext,
     onSetPage,
+    participationType,
 }: QualifiedTableProps) {
     if (isLoading) {
         return (
@@ -979,12 +993,20 @@ function QualifiedTable({
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
-                                    Team / Entry
-                                </th>
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
-                                    Participant Name
-                                </th>
+                                {participationType?.toUpperCase() === 'SOLO' ? (
+                                    <th colSpan={2} className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60">
+                                        Participant Details
+                                    </th>
+                                ) : (
+                                    <>
+                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
+                                            Team / Entry
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                            Participant Name
+                                        </th>
+                                    </>
+                                )}
                                 <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
                                     College & Degree
                                 </th>
@@ -1019,19 +1041,20 @@ function QualifiedRowGroup({ entry }: { entry: RoundQualifiedParticipant }) {
     if (entry.type === "SOLO") {
         return (
             <tr className="hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0">
-                <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
-                    <div className="flex flex-col items-center justify-center space-y-2 text-center">
-                        <TypeBadge type="SOLO" />
-                        <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
-                            {entry.first_name}
+                <td colSpan={2} className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle">
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-center justify-center space-y-1.5 min-w-[70px]">
+                            <TypeBadge type="SOLO" />
+                            <div className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">Solo</div>
+                        </div>
+                        <div className="h-8 w-px bg-neutral-800/40" />
+                        <div className="space-y-1">
+                            <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
+                                {entry.first_name} {entry.last_name}
+                            </div>
+                            <div className="text-[10px] text-neutral-500 font-mono">{entry.participant_id}</div>
                         </div>
                     </div>
-                </td>
-                <td className="px-6 py-4">
-                    <div className="text-sm font-semibold text-white">
-                        {entry.first_name} {entry.last_name}
-                    </div>
-                    <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{entry.participant_id}</div>
                 </td>
                 <td className="px-6 py-4">
                     <div className="text-xs text-neutral-400">
@@ -1132,7 +1155,7 @@ function QualifiedCard({ entry }: { entry: RoundQualifiedParticipant }) {
 
 // ── Results Tab ───────────────────────────────────────────────────────────────
 
-function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) {
+function ResultsTab({ eventId, roundNo, participationType }: { eventId: string; roundNo: string; participationType?: string }) {
     const { api } = Route.useRouteContext();
     const [statusFilter, setStatusFilter] = useState<"all" | "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED">("all");
     const [sort, setSort] = useState<"points_desc" | "points_asc" | "name_asc">("points_desc");
@@ -1264,12 +1287,20 @@ function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) 
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-[200px] border-r border-neutral-800/60">
-                                            Entity
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
-                                            Participants
-                                        </th>
+                                        {participationType?.toUpperCase() === 'SOLO' ? (
+                                            <th colSpan={2} className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60">
+                                                Participant Details
+                                            </th>
+                                        ) : (
+                                            <>
+                                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-[200px] border-r border-neutral-800/60">
+                                                    Entity
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                                    Participants
+                                                </th>
+                                            </>
+                                        )}
                                         <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-[240px] border-l border-neutral-800/60">
                                             Evaluation
                                         </th>
@@ -1277,7 +1308,7 @@ function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) 
                                 </thead>
                                 <tbody>
                                     {groupedResults.map((group) => (
-                                        <ResultRowGroup key={group.id} members={group.members} />
+                                        <ResultRowGroup key={group.id} members={group.members} participationType={participationType} />
                                     ))}
                                 </tbody>
                             </table>
@@ -1300,7 +1331,7 @@ function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) 
     );
 }
 
-function ResultRowGroup({ members }: { members: RoundResultWithParticipant[] }) {
+function ResultRowGroup({ members, participationType }: { members: RoundResultWithParticipant[]; participationType?: string }) {
     const statusColor: Record<string, string> = {
         QUALIFIED: "text-emerald-400 border-emerald-800 bg-emerald-950/40",
         ELIMINATED: "text-amber-400 border-amber-800 bg-amber-950/40",
@@ -1322,39 +1353,61 @@ function ResultRowGroup({ members }: { members: RoundResultWithParticipant[] }) 
                     key={r.id}
                     className={`hover:bg-neutral-900/20 transition-colors duration-150 border-b border-neutral-800/60 last:border-0 ${idx === 0 ? "" : "border-t-0"}`}
                 >
-                    {/* Entity Column - Left Rowspan */}
+                    {/* Main Details Section */}
                     {idx === 0 && (
-                        <td className="px-6 py-6 align-top bg-neutral-950/10 border-r border-neutral-800/60" rowSpan={members.length}>
-                            <div className="flex flex-col gap-4 sticky top-4">
-                                {first.team_id ? (
-                                    <div className="space-y-1.5">
-                                        <TypeBadge type="TEAM" />
-                                        <div className="text-sm font-black text-white uppercase tracking-widest leading-none">
-                                            {first.team_name ?? first.team_id}
-                                        </div>
-                                        <div className="text-[10px] text-neutral-600 font-mono tracking-tight">{first.team_id}</div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-1.5">
+                        participationType?.toUpperCase() === 'SOLO' ? (
+                            <td colSpan={2} className="px-6 py-6 align-top bg-neutral-950/10 border-r border-neutral-800/60">
+                                <div className="flex items-center gap-6">
+                                    <div className="flex flex-col items-center justify-center space-y-1.5 min-w-[70px]">
                                         <TypeBadge type="SOLO" />
-                                        <div className="text-[10px] text-neutral-500 font-medium uppercase tracking-tight">Individual Entry</div>
+                                        <div className="text-[10px] text-neutral-500 font-medium uppercase tracking-tight">Individual</div>
                                     </div>
-                                )}
-                            </div>
-                        </td>
+                                    <div className="h-10 w-px bg-neutral-800/40" />
+                                    <div className="flex flex-col">
+                                        <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">{r.name}</div>
+                                        <div className="flex items-center gap-3 mt-1.5">
+                                            <span className="text-[10px] text-neutral-500 font-mono uppercase">{r.user_id}</span>
+                                            <span className="w-1 h-1 rounded-full bg-neutral-800" />
+                                            <span className="text-[10px] text-emerald-500/80 font-mono font-medium">{r.ph_no}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        ) : (
+                            <>
+                                {/* Entity Column - Left Rowspan */}
+                                <td className="px-6 py-6 align-top bg-neutral-950/10 border-r border-neutral-800/60" rowSpan={members.length}>
+                                    <div className="flex flex-col gap-4 sticky top-4">
+                                        {first.team_id ? (
+                                            <div className="space-y-1.5">
+                                                <TypeBadge type="TEAM" />
+                                                <div className="text-sm font-black text-white uppercase tracking-widest leading-none">
+                                                    {first.team_name ?? first.team_id}
+                                                </div>
+                                                <div className="text-[10px] text-neutral-600 font-mono tracking-tight">{first.team_id}</div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-1.5">
+                                                <TypeBadge type="SOLO" />
+                                                <div className="text-[10px] text-neutral-500 font-medium uppercase tracking-tight">Individual Entry</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </td>
+                                {/* Participant Details Column */}
+                                <td className="px-6 py-5 align-top">
+                                    <div className="flex flex-col">
+                                        <div className="text-sm font-semibold text-neutral-200">{r.name}</div>
+                                        <div className="flex items-center gap-3 mt-1.5">
+                                            <span className="text-[10px] text-neutral-500 font-mono uppercase">{r.user_id}</span>
+                                            <span className="w-1 h-1 rounded-full bg-neutral-800" />
+                                            <span className="text-[10px] text-emerald-500/80 font-mono font-medium">{r.ph_no}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </>
+                        )
                     )}
-
-                    {/* Participant Details Column */}
-                    <td className="px-6 py-5 align-top">
-                        <div className="flex flex-col">
-                            <div className="text-sm font-semibold text-neutral-200">{r.name}</div>
-                            <div className="flex items-center gap-3 mt-1.5">
-                                <span className="text-[10px] text-neutral-500 font-mono uppercase">{r.user_id}</span>
-                                <span className="w-1 h-1 rounded-full bg-neutral-800" />
-                                <span className="text-[10px] text-emerald-500/80 font-mono font-medium">{r.ph_no}</span>
-                            </div>
-                        </div>
-                    </td>
 
                     {/* Evaluation Column - Right Rowspan */}
                     {idx === 0 && (
