@@ -171,7 +171,7 @@ export default function Sponsors() {
 
                     <div className="text-center">
                         <h3 className="font-space text-base sm:text-lg md:text-xl font-bold uppercase tracking-[0.25em] bg-gradient-to-r from-[#E5E4E2] via-[#F5F5F5] to-[#E5E4E2] bg-clip-text text-transparent">
-                            Plantinum
+                            Platinum
                         </h3>
                         <div className="h-0.5 w-16 sm:w-20 bg-gradient-to-r from-transparent via-[#E5E4E2] to-transparent mx-auto mt-2" />
                     </div>
