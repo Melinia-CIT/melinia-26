@@ -333,7 +333,7 @@ export const getVerboseEventResponseSchema = verboseEventSchema.extend({
                         last_name: z.string(),
                         ph_no: z.string()
                     })
-            ).optional(), 
+            ).optional(),
         })
 });
 
@@ -512,7 +512,6 @@ export const getEventCheckInSchema = z
         z.object({
             team_id: z.string(),
             type: z.literal("TEAM"),
-            team_id: z.string(),
             name: z.string(),
             members: z.array(
                 z.object({
@@ -531,7 +530,6 @@ export const getEventCheckInSchema = z
         z.object({
             participant_id: z.string(),
             type: z.literal("SOLO"),
-            participant_id: z.string(),
             first_name: z.string(),
             last_name: z.string(),
             college: z.string(),
