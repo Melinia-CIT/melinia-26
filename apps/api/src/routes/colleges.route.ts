@@ -1,9 +1,12 @@
 import { Hono } from "hono"
+import { stream, streamSSE } from "hono/streaming"
 import {
     searchColleges,
     getColleges,
     searchDegrees,
     getDegrees,
+    getCollegeLeaderboard,
+    getLeaderboardCollegesCount
 } from "../db/queries/colleges.queries"
 import {
     getCollegeCache,
@@ -19,6 +22,9 @@ import {
 } from "../utils/cache/college.cache"
 import { sendSuccess, sendError } from "../utils/response"
 import { adminOnlyMiddleware, authMiddleware } from "../middleware/auth.middleware"
+import { paginationSchema } from "@packages/shared/dist"
+import { zValidator } from "@hono/zod-validator"
+import { SwitchLayoutGroupContext } from "framer-motion"
 
 export const college = new Hono()
 
@@ -114,3 +120,73 @@ college.post("/invalidate-cache", authMiddleware, adminOnlyMiddleware, async c =
         return c.json("Failed to invalidate cache", 500);
     }
 })
+
+college.get(
+    "/leaderboard",
+    zValidator("query", paginationSchema),
+    async (c) => {
+        const { from, limit } = c.req.valid("query")
+
+        return streamSSE(c, async (stream) => {
+            try {
+                while (true) {
+                    const collegeLeaderboardResult = await getCollegeLeaderboard(from, limit);
+                    const leaderboardCollegesCountRes = await getLeaderboardCollegesCount();
+
+                    if (collegeLeaderboardResult.isErr) {
+                        const error = collegeLeaderboardResult.error;
+
+                        console.error(`Leaderboard query error | ${error.code}:${error.message}`);
+                        await stream.writeSSE({
+                            event: "error",
+                            data: JSON.stringify(error),
+                        });
+                        return;
+                    }
+
+                    if (leaderboardCollegesCountRes.isErr) {
+                        const error = leaderboardCollegesCountRes.error;
+
+                        console.error(`Leaderboard count query error | ${error.code}:${error.message}`);
+                        await stream.writeSSE({
+                            event: "error",
+                            data: JSON.stringify(error),
+                        });
+                        return;
+                    }
+
+                    const collegeLeaderboard = collegeLeaderboardResult.value;
+                    const leaderboardCollegesCount = leaderboardCollegesCountRes.value;
+
+                    await stream.writeSSE({
+                        event: "leaderboard",
+                        data: JSON.stringify({
+                            success: true,
+                            data: collegeLeaderboard,
+                            pagination: {
+                                from: from,
+                                limit: limit,
+                                total: leaderboardCollegesCount,
+                                returned: collegeLeaderboard.length,
+                                has_more: (from + collegeLeaderboard.length) < leaderboardCollegesCount
+                            }
+                        }),
+                    });
+
+                    await new Promise((resolve) =>
+                        setTimeout(resolve, 5000)
+                    );
+                }
+            } catch (err) {
+                console.error("SSE stream crashed:")
+
+                await stream.writeSSE({
+                    event: "error",
+                    data: JSON.stringify({
+                        message: "Stream failure",
+                    }),
+                })
+            }
+        })
+    }
+)

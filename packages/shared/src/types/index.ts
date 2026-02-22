@@ -4,3 +4,5 @@ export * from "./auth";
 export * from "./teams";
 export * from "./invitations";
 export * from "./coupons";
+export * from "./payments";
+export * from "./colleges";

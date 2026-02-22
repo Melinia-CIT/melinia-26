@@ -172,10 +172,12 @@ export async function updateProfile(userId: string, profileData: CreateProfile):
 export async function setProfileCompleted(userId: string) {
     const [result] = await sql`
         UPDATE users
-        SET profile_completed = true
+        SET 
+            profile_completed = true,
+            status = 'ACTIVE'
         WHERE id = ${userId}
         RETURNING *;
-    `
+    `;
 
-    return result
+    return result;
 }
