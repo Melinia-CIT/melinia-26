@@ -25,6 +25,8 @@ import {
     type PrizeAssignment,
     type BulkPrizeResult,
     type AssignPrizesError,
+    type RoundResultWithParticipant,
+    type TeamRoundResult,
 } from "@melinia/shared"
 import sql from "../connection"
 import postgres from "postgres"
@@ -695,32 +697,15 @@ export async function assignRoundResults(
 export async function getRoundResults(
     eventId: string,
     roundNo: number,
+    from: number,
+    limit: number,
     filters: {
         status?: "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED" | "all"
         sort?: "points_desc" | "points_asc" | "name_asc"
-        page?: number
-        limit?: number
     } = {}
 ): Promise<
     Result<
-        {
-            data: Array<{
-                id: number
-                user_id: string
-                name: string
-                email: string
-                team_id: string | null
-                team_name: string | null
-                points: number
-                status: string
-                eval_at: Date
-                eval_by: string
-            }>
-            total: number
-            page: number
-            limit: number
-            totalPages: number
-        },
+        RoundResultWithParticipant[],
         { code: "round_not_found" | "internal_error"; message: string }
     >
 > {
@@ -740,8 +725,7 @@ export async function getRoundResults(
         }
 
         const roundId = round.id
-        const { status, sort = "points_desc", page = 1, limit = 50 } = filters
-        const offset = (page - 1) * limit
+        const { status, sort = "points_desc" } = filters
 
         // Build status filter condition
         const statusFilter = status && status !== "all" ? sql`AND rr.status = ${status}` : sql``
@@ -759,16 +743,6 @@ export async function getRoundResults(
                 orderBy = sql`ORDER BY p.first_name ASC, p.last_name ASC`
                 break
         }
-
-        // Get total count
-        const [countResult] = await sql`
-            SELECT COUNT(*) as total
-            FROM round_results rr
-            WHERE rr.round_id = ${roundId}
-            ${statusFilter}
-        `
-        const total = parseInt(countResult.total)
-        const totalPages = Math.ceil(total / limit)
 
         // Get paginated results with participant details
         const results = await sql`
@@ -790,21 +764,197 @@ export async function getRoundResults(
             WHERE rr.round_id = ${roundId}
             ${statusFilter}
             ${orderBy}
-            LIMIT ${limit} OFFSET ${offset}
+            LIMIT ${limit} OFFSET ${from}
         `
 
-        return Result.ok({
-            data: results,
-            total,
-            page,
-            limit,
-            totalPages,
-        })
+        return Result.ok(results as unknown as RoundResultWithParticipant[])
     } catch (error) {
         console.error("Error in getRoundResults:", error)
         return Result.err({
             code: "internal_error",
             message: "Failed to fetch round results",
+        })
+    }
+}
+
+/**
+ * Get total count of round results (with optional status filter)
+ */
+export async function getRoundResultsCount(
+    eventId: string,
+    roundNo: number,
+    status?: "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED" | "all"
+): Promise<
+    Result<
+        number,
+        { code: "round_not_found" | "internal_error"; message: string }
+    >
+> {
+    try {
+        const [round] = await sql`
+            SELECT id 
+            FROM event_rounds 
+            WHERE event_id = ${eventId} AND round_no = ${roundNo}
+        `
+
+        if (!round) {
+            return Result.err({
+                code: "round_not_found",
+                message: `Round ${roundNo} not found for event ${eventId}`,
+            })
+        }
+
+        const roundId = round.id
+        const statusFilter = status && status !== "all" ? sql`AND rr.status = ${status}` : sql``
+
+        const [countResult] = await sql`
+            SELECT COUNT(*) as count
+            FROM round_results rr
+            WHERE rr.round_id = ${roundId}
+            ${statusFilter}
+        `
+
+        return Result.ok(parseInt(countResult?.count ?? "0"))
+    } catch (error) {
+        console.error("Error in getRoundResultsCount:", error)
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to fetch round results count",
+        })
+    }
+}
+
+/**
+ * Get round results grouped by team (paginated)
+ */
+export async function getRoundResultsByTeam(
+    eventId: string,
+    roundNo: number,
+    from: number,
+    limit: number,
+    filters: {
+        status?: "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED" | "all"
+        sort?: "points_desc" | "points_asc" | "name_asc"
+    } = {}
+): Promise<
+    Result<
+        TeamRoundResult[],
+        { code: "round_not_found" | "internal_error"; message: string }
+    >
+> {
+    try {
+        const [round] = await sql`
+            SELECT id 
+            FROM event_rounds 
+            WHERE event_id = ${eventId} AND round_no = ${roundNo}
+        `
+
+        if (!round) {
+            return Result.err({
+                code: "round_not_found",
+                message: `Round ${roundNo} not found for event ${eventId}`,
+            })
+        }
+
+        const roundId = round.id
+        const { status, sort = "points_desc" } = filters
+
+        const statusFilter = status && status !== "all" ? sql`AND rr.status = ${status}` : sql``
+
+        let orderBy = sql`ORDER BY MAX(rr.points) DESC`
+        switch (sort) {
+            case "points_asc":
+                orderBy = sql`ORDER BY MAX(rr.points) ASC`
+                break
+            case "points_desc":
+                orderBy = sql`ORDER BY MAX(rr.points) DESC`
+                break
+            case "name_asc":
+                orderBy = sql`ORDER BY MIN(t.name) ASC`
+                break
+        }
+
+        // Get distinct teams with aggregated info
+        const teams = await sql`
+            SELECT 
+                rr.team_id,
+                t.name as team_name,
+                MAX(rr.points) as points,
+                MAX(rr.status) as status,
+                MAX(rr.eval_at) as eval_at,
+                json_agg(
+                    json_build_object(
+                        'user_id', rr.user_id,
+                        'name', CONCAT(p.first_name, ' ', COALESCE(p.last_name, '')),
+                        'email', u.email
+                    )
+                ) as members
+            FROM round_results rr
+            JOIN users u ON rr.user_id = u.id
+            JOIN profile p ON u.id = p.user_id
+            JOIN teams t ON rr.team_id = t.id
+            WHERE rr.round_id = ${roundId}
+              AND rr.team_id IS NOT NULL
+            ${statusFilter}
+            GROUP BY rr.team_id, t.name
+            ${orderBy}
+            LIMIT ${limit} OFFSET ${from}
+        `
+
+        return Result.ok(teams as unknown as TeamRoundResult[])
+    } catch (error) {
+        console.error("Error in getRoundResultsByTeam:", error)
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to fetch team round results",
+        })
+    }
+}
+
+/**
+ * Get total count of distinct teams in round results (with optional status filter)
+ */
+export async function getRoundResultsByTeamCount(
+    eventId: string,
+    roundNo: number,
+    status?: "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED" | "all"
+): Promise<
+    Result<
+        number,
+        { code: "round_not_found" | "internal_error"; message: string }
+    >
+> {
+    try {
+        const [round] = await sql`
+            SELECT id 
+            FROM event_rounds 
+            WHERE event_id = ${eventId} AND round_no = ${roundNo}
+        `
+
+        if (!round) {
+            return Result.err({
+                code: "round_not_found",
+                message: `Round ${roundNo} not found for event ${eventId}`,
+            })
+        }
+
+        const roundId = round.id
+        const statusFilter = status && status !== "all" ? sql`AND rr.status = ${status}` : sql``
+
+        const [countResult] = await sql`
+            SELECT COUNT(DISTINCT rr.team_id) as count
+            FROM round_results rr
+            WHERE rr.round_id = ${roundId}
+              AND rr.team_id IS NOT NULL
+            ${statusFilter}
+        `
+
+        return Result.ok(parseInt(countResult?.count ?? "0"))
+    } catch (error) {
+        console.error("Error in getRoundResultsByTeamCount:", error)
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to fetch team round results count",
         })
     }
 }
