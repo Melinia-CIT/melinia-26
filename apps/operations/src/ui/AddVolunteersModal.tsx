@@ -1,5 +1,5 @@
 import { Xmark, Mail, Plus, Trash } from "iconoir-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./Button";
 import { Input } from "./Input";
 
@@ -7,10 +7,36 @@ interface AddVolunteersModalProps {
     open: boolean;
     onClose: () => void;
     eventName: string;
+    onAdd: (emails: string[]) => void;
+    isAdding: boolean;
+    addSuccess: boolean;
+    addError: string | null;
 }
 
-export function AddVolunteersModal({ open, onClose, eventName }: AddVolunteersModalProps) {
+export function AddVolunteersModal({
+    open,
+    onClose,
+    eventName,
+    onAdd,
+    isAdding,
+    addSuccess,
+    addError
+}: AddVolunteersModalProps) {
     const [emails, setEmails] = useState<{ id: string; value: string }[]>([{ id: crypto.randomUUID(), value: "" }]);
+
+    useEffect(() => {
+        if (!open) {
+            setEmails([{ id: crypto.randomUUID(), value: "" }]);
+        }
+    }, [open]);
+
+    useEffect(() => {
+        if (!open || !addSuccess) return;
+        const timeoutId = window.setTimeout(() => {
+            onClose();
+        }, 2000);
+        return () => window.clearTimeout(timeoutId);
+    }, [open, addSuccess, onClose]);
 
     const handleAddEmail = () => {
         setEmails([...emails, { id: crypto.randomUUID(), value: "" }]);
@@ -31,9 +57,9 @@ export function AddVolunteersModal({ open, onClose, eventName }: AddVolunteersMo
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const validEmails = emails.map(e => e.value.trim()).filter(email => email !== "");
-        console.log("Adding volunteers:", validEmails);
-        // API integration will go here
-        onClose();
+        if (validEmails.length > 0) {
+            onAdd(validEmails);
+        }
     };
 
     if (!open) return null;
@@ -59,6 +85,18 @@ export function AddVolunteersModal({ open, onClose, eventName }: AddVolunteersMo
 
                 {/* Body */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {addSuccess && (
+                        <div className="p-4 bg-green-950/50 border border-green-900 text-green-500 text-sm">
+                            ✓ Volunteers added successfully!
+                        </div>
+                    )}
+
+                    {addError && (
+                        <div className="p-4 bg-red-950/50 border border-red-900 text-red-500 text-sm">
+                            {addError}
+                        </div>
+                    )}
+
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
@@ -87,6 +125,7 @@ export function AddVolunteersModal({ open, onClose, eventName }: AddVolunteersMo
                                             value={email.value}
                                             onChange={(e) => handleEmailChange(email.id, e.target.value)}
                                             className="pl-10"
+                                            disabled={isAdding || addSuccess}
                                             required
                                         />
                                     </div>
@@ -113,9 +152,10 @@ export function AddVolunteersModal({ open, onClose, eventName }: AddVolunteersMo
                         </Button>
                         <Button
                             type="submit"
+                            disabled={isAdding || addSuccess || emails.every(e => e.value.trim() === "")}
                             className="flex-1 bg-white text-black hover:bg-neutral-200 font-bold border-none"
                         >
-                            Send Invitations
+                            {isAdding ? "Sending..." : "Send Invitations"}
                         </Button>
                     </div>
                 </form>

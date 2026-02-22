@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { AxiosError } from 'axios'
 import {
   ArrowLeft,
   Group,
@@ -50,8 +51,10 @@ const LIMIT = 10
 function EventRegistrationsPage() {
   const { eventId } = Route.useParams()
   const { api } = Route.useRouteContext()
+  const queryClient = useQueryClient()
   const [from, setFrom] = useState(0)
   const [showVolunteersModal, setShowVolunteersModal] = useState(false)
+  const [addVolunteersError, setAddVolunteersError] = useState<string | null>(null)
 
   // Fetch detailed event data (includes rounds)
   const { data: event, isLoading: isEventLoading } = useQuery<EventDetail>({
@@ -69,6 +72,20 @@ function EventRegistrationsPage() {
     queryFn: () => api.events.getRegistrations(eventId, { from, limit: LIMIT }),
     staleTime: 1000 * 30,
   })
+
+  const addVolunteersMutation = useMutation({
+    mutationFn: (emails: string[]) => api.events.addVolunteers(eventId, emails),
+    onSuccess: () => {
+      setAddVolunteersError(null);
+      queryClient.invalidateQueries({ queryKey: ['event-detail', eventId] });
+      // If we ever list volunteers in the UI, invalidate that query here
+    },
+    onError: (error) => {
+      const axiosErr = error as AxiosError<{ message?: string }>;
+      const message = axiosErr.response?.data?.message;
+      setAddVolunteersError(message || "Failed to add volunteers.");
+    }
+  });
 
   const pagination = data?.pagination
   const registrations = data?.data ?? []
@@ -108,8 +125,16 @@ function EventRegistrationsPage() {
 
       <AddVolunteersModal
         open={showVolunteersModal}
-        onClose={() => setShowVolunteersModal(false)}
+        onClose={() => {
+          setShowVolunteersModal(false);
+          setAddVolunteersError(null);
+          addVolunteersMutation.reset();
+        }}
         eventName={event?.name ?? ''}
+        onAdd={(emails) => addVolunteersMutation.mutate(emails)}
+        isAdding={addVolunteersMutation.isPending}
+        addSuccess={addVolunteersMutation.isSuccess}
+        addError={addVolunteersError}
       />
 
       {/* Rounds section */}

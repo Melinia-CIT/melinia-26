@@ -71,6 +71,13 @@ export interface PostRoundResultsResponse {
     team_errors?: TeamResultError[];
 }
 
+export interface AddVolunteersResponse {
+    success: boolean;
+    event_id: string;
+    volunteers: string[];
+    message: string;
+}
+
 // ── API factory ────────────────────────────────────────────────────────────
 
 export function createEventsApi(http: AxiosInstance) {
@@ -177,6 +184,17 @@ export function createEventsApi(http: AxiosInstance) {
             const { data } = await http.get<PaginatedRoundResults>(
                 `/ops/events/${eventId}/rounds/${roundNo}/results`,
                 { params },
+            );
+            return data;
+        },
+
+        async addVolunteers(
+            eventId: string,
+            volunteerIds: string[],
+        ): Promise<AddVolunteersResponse> {
+            const { data } = await http.post<AddVolunteersResponse>(
+                `/events/${eventId}/volunteers`,
+                { volunteer_ids: volunteerIds },
             );
             return data;
         },
