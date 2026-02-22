@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError,  } from "./users";
+import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError, } from "./users";
 import type { PaymentPending } from "./payments";
 import { memberSchema } from "./teams";
 
@@ -512,6 +512,7 @@ export const getEventCheckInSchema = z
         z.object({
             team_id: z.string(),
             type: z.literal("TEAM"),
+            team_id: z.string(),
             name: z.string(),
             members: z.array(
                 z.object({
@@ -530,6 +531,7 @@ export const getEventCheckInSchema = z
         z.object({
             participant_id: z.string(),
             type: z.literal("SOLO"),
+            participant_id: z.string(),
             first_name: z.string(),
             last_name: z.string(),
             college: z.string(),
@@ -540,6 +542,7 @@ export const getEventCheckInSchema = z
             checkedin_by: z.string(),
         }),
     ]);
+
 
 export const getEventParticipantSchema = z
     .discriminatedUnion("type", [
@@ -595,9 +598,14 @@ export const checkInTeamSchema = memberSchema.safeExtend({
 export const baseScanResultSchema = z.object({
     type: z.enum(["SOLO", "TEAM"]),
     user_id: z.string().optional(),
+    first_name: z.string().optional(),
+    last_name: z.string().nullable().optional(),
     name: z.string().optional(),
+    email: z.string().optional(),
+    status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPEND', 'SUSPENDED']).optional(),
+    payment_status: z.enum(["PAID", "UNPAID", "EXEMPTED"]).optional(),
     team_id: z.string().optional(),
-    team_name: z.string().optional(),
+    team_name: z.string().nullable().optional(),
     members: z.array(checkInTeamSchema).optional()
 });
 
@@ -654,7 +662,7 @@ export type GetEventCheckInsError = EventOrRoundNotFound | InternalError;
 export type GetEventRegistrationsError = EventNotFound | InternalError;
 export type GetEventParticipant = z.infer<typeof getEventParticipantSchema>;
 export type GetEventParticipantsError = EventOrRoundNotFound | InternalError;
-export type EventRegistration = z.infer<typeof eventRegistrationSchema>
+export type EventRegistration = z.infer<typeof getEventRegistrationSchema>
 export type RoundPatch = z.infer<typeof roundPatchSchema>
 
 
@@ -868,6 +876,7 @@ export type RoundResultWithParticipant = {
     user_id: string
     name: string
     email: string
+    ph_no: string
     team_id: string | null
     team_name: string | null
     points: number
