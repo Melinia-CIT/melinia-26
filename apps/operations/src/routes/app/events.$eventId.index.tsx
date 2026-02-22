@@ -332,7 +332,13 @@ function RoundCard({ round, eventId }: { round: EventDetail['rounds'][number]; e
       params={{ eventId, roundNo: round.round_no.toString() }}
       className="bg-neutral-950 border border-neutral-800 p-5 space-y-4 relative overflow-hidden group block hover:border-neutral-600 hover:bg-neutral-900 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
     >
-      <div className="absolute top-0 right-0 p-3 text-[40px] font-black text-neutral-900/50 leading-none pointer-events-none select-none italic group-hover:text-neutral-800/50 transition-colors">
+      <div
+        className="absolute top-0 right-0 p-3 text-[48px] font-black leading-none pointer-events-none select-none italic transition-all duration-300 opacity-20 group-hover:opacity-40"
+        style={{
+          WebkitTextStroke: '1px var(--color-blue-800)',
+          WebkitTextFillColor: 'var(--color-blue-950)',
+        }}
+      >
         #{round.round_no}
       </div>
 

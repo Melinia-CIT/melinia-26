@@ -55,7 +55,7 @@ export function RoundCheckInPopup({
 
     return (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 sm:p-4">
-            <div className="w-full max-w-3xl max-h-[calc(100dvh-1rem)] bg-neutral-950 border border-neutral-800 flex flex-col overflow-hidden">
+            <div className="w-full max-w-4xl max-h-[calc(100dvh-1rem)] bg-neutral-950 border border-neutral-800 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-neutral-800">
                     <div className="space-y-1">
