@@ -8,7 +8,7 @@ import { Field } from "@/ui/Field";
 import { Input } from "@/ui/Input";
 import { RoundCheckInPopup } from "@/ui/RoundCheckInPopup";
 import { QRScanner } from "@/ui/QRScanner";
-import type { RoundCheckInEntry, RoundQualifiedParticipant, RoundResultStatus } from "@/api/events";
+import type { RoundCheckInEntry, RoundQualifiedParticipant, RoundResultStatus, RoundResultWithParticipant } from "@/api/events";
 
 export const Route = createFileRoute('/app/events/$eventId/$roundNo')({
     component: RoundCheckInPage,
@@ -376,9 +376,7 @@ function RoundCheckInPage() {
                     />
                 )}
                 {activeTab === "results" && (
-                    <div className="p-12 text-center text-neutral-500">
-                        Round results will be available soon.
-                    </div>
+                    <ResultsTab eventId={eventId} roundNo={roundNo} />
                 )}
             </div>
 
@@ -453,6 +451,7 @@ function CheckedInTable({
     onNext,
 }: CheckedInTableProps) {
     const { api } = Route.useRouteContext();
+    const queryClient = useQueryClient();
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [appliedStatus, setAppliedStatus] = useState<Record<string, ParticipantStatus>>({});
     const [feedback, setFeedback] = useState<ResultFeedback | null>(null);
@@ -505,9 +504,23 @@ function CheckedInTable({
                 setFeedback({ kind: "success", count: recorded });
                 setTimeout(() => setFeedback(null), 4000);
             }
+
+            // Invalidate results query to ensure the results tab is fresh
+            queryClient.invalidateQueries({ queryKey: ['round-results'] });
         },
-        onError: () => {
-            setFeedback({ kind: "failure", userErrors: [], teamErrors: [] });
+        onError: (error) => {
+            // The "all failed" case returns HTTP 400 with user_errors/team_errors in the body.
+            // Axios throws on 4xx so we need to read the response body manually.
+            const axiosErr = error as AxiosError<{
+                user_errors?: { user_id: string; error: string }[];
+                team_errors?: { team_id: string; error: string }[];
+            }>;
+            const body = axiosErr.response?.data;
+            setFeedback({
+                kind: "failure",
+                userErrors: body?.user_errors ?? [],
+                teamErrors: body?.team_errors ?? [],
+            });
         },
     });
 
@@ -662,7 +675,6 @@ function CheckedInTable({
                             entry={entry}
                             checked={selected.has(id)}
                             onToggle={() => toggleEntry(id)}
-                            status={appliedStatus[id]}
                         />
                     );
                 })}
@@ -695,9 +707,6 @@ function CheckedInTable({
                                 <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
                                     Phone Number
                                 </th>
-                                <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-l border-neutral-800/60 w-[140px]">
-                                    Status
-                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -709,7 +718,6 @@ function CheckedInTable({
                                         entry={entry}
                                         checked={selected.has(id)}
                                         onToggle={() => toggleEntry(id)}
-                                        status={appliedStatus[id]}
                                     />
                                 );
                             })}
@@ -758,10 +766,9 @@ interface CheckedInRowGroupProps {
     entry: RoundCheckInEntry;
     checked: boolean;
     onToggle: () => void;
-    status?: ParticipantStatus;
 }
 
-function CheckedInRowGroup({ entry, checked, onToggle, status }: CheckedInRowGroupProps) {
+function CheckedInRowGroup({ entry, checked, onToggle }: CheckedInRowGroupProps) {
     const rowHighlight = checked ? "bg-neutral-900/50" : "";
 
     if (entry.type === "SOLO") {
@@ -798,9 +805,6 @@ function CheckedInRowGroup({ entry, checked, onToggle, status }: CheckedInRowGro
                 </td>
                 <td className="px-6 py-4">
                     <div className="text-xs text-neutral-500 font-mono">{entry.ph_no}</div>
-                </td>
-                <td className="px-6 py-4 border-l border-neutral-800/60">
-                    <StatusBadge status={status} />
                 </td>
             </tr>
         );
@@ -848,11 +852,6 @@ function CheckedInRowGroup({ entry, checked, onToggle, status }: CheckedInRowGro
                     <td className="px-6 py-4">
                         <div className="text-xs text-neutral-500 font-mono">{member.ph_no}</div>
                     </td>
-                    {mIdx === 0 && (
-                        <td rowSpan={entry.members.length} className="px-6 py-4 border-l border-neutral-800/60 align-middle">
-                            <StatusBadge status={status} />
-                        </td>
-                    )}
                 </tr>
             ))}
         </>
@@ -863,10 +862,9 @@ interface CheckedInCardProps {
     entry: RoundCheckInEntry;
     checked: boolean;
     onToggle: () => void;
-    status?: ParticipantStatus;
 }
 
-function CheckedInCard({ entry, checked, onToggle, status }: CheckedInCardProps) {
+function CheckedInCard({ entry, checked, onToggle }: CheckedInCardProps) {
     const cardBase = `p-4 space-y-3 relative transition-colors duration-150 ${checked ? "bg-neutral-900/60" : ""}`;
     const checkboxCls = "w-5 h-5 bg-black border-neutral-700 rounded-none checked:bg-white checked:border-white transition-all cursor-pointer accent-white shrink-0";
 
@@ -884,7 +882,6 @@ function CheckedInCard({ entry, checked, onToggle, status }: CheckedInCardProps)
                     <span className="font-semibold text-white truncate flex-1">{entry.first_name} {entry.last_name}</span>
                 </>
             )}
-            {status && <StatusBadge status={status} />}
         </div>
     );
 
@@ -895,7 +892,7 @@ function CheckedInCard({ entry, checked, onToggle, status }: CheckedInCardProps)
                 <div className="space-y-1 pl-8">
                     {entry.members.map(m => (
                         <div key={m.participant_id} className="text-xs text-neutral-400 font-mono">
-                            {m.first_name} {m.last_name} • {m.email}
+                            {m.first_name} {m.last_name} • {m.ph_no}
                         </div>
                     ))}
                 </div>
@@ -909,7 +906,7 @@ function CheckedInCard({ entry, checked, onToggle, status }: CheckedInCardProps)
     return (
         <div className={cardBase}>
             {header}
-            <div className="text-xs text-neutral-400 font-mono pl-8">{entry.participant_id} • {entry.email}</div>
+            <div className="text-xs text-neutral-400 font-mono pl-8">{entry.participant_id} • {entry.ph_no}</div>
             <div className="flex gap-4 text-xs text-neutral-500 items-center pl-8">
                 <span>{entry.college}</span>
                 <span className="ml-auto">{new Date(entry.checkedin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -1137,6 +1134,263 @@ function QualifiedCard({ entry }: { entry: RoundQualifiedParticipant }) {
 
 
 
+
+// ── Results Tab ───────────────────────────────────────────────────────────────
+
+function ResultsTab({ eventId, roundNo }: { eventId: string; roundNo: string }) {
+    const { api } = Route.useRouteContext();
+    const [statusFilter, setStatusFilter] = useState<"all" | "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED">("all");
+    const [sort, setSort] = useState<"points_desc" | "points_asc" | "name_asc">("points_desc");
+    const [page, setPage] = useState(1);
+    const PAGE_LIMIT = 50;
+
+    const { data, isLoading, error, refetch } = useQuery({
+        queryKey: ['round-results', eventId, roundNo, statusFilter, sort, page],
+        queryFn: () => api.events.getRoundResults(eventId, roundNo, {
+            status: statusFilter,
+            sort,
+            page,
+            limit: PAGE_LIMIT,
+        }),
+        staleTime: 1000 * 30,
+    });
+
+    const results = data?.data ?? [];
+    const total = data?.total ?? 0;
+    const totalPages = data?.totalPages ?? 1;
+
+    const statusCounts = results.reduce<Record<string, number>>((acc, r) => {
+        acc[r.status] = (acc[r.status] ?? 0) + 1;
+        return acc;
+    }, {});
+
+    return (
+        <div>
+            {/* ── Filter + Sort Bar ── */}
+            <div className="flex flex-wrap items-center gap-2 px-4 md:px-6 py-3 border-b border-neutral-800 bg-neutral-900/30">
+                {/* Status filter chips */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                    {(["all", "QUALIFIED", "ELIMINATED", "DISQUALIFIED"] as const).map(s => {
+                        const active = statusFilter === s;
+                        const colorMap: Record<string, string> = {
+                            all: "border-neutral-700 text-neutral-300 bg-neutral-900",
+                            QUALIFIED: "border-emerald-700 text-emerald-300 bg-emerald-950/40",
+                            ELIMINATED: "border-amber-700 text-amber-300 bg-amber-950/40",
+                            DISQUALIFIED: "border-red-800 text-red-300 bg-red-950/40",
+                        };
+                        const inactiveColor = "border-neutral-800 text-neutral-600 hover:text-neutral-400 hover:border-neutral-700";
+                        return (
+                            <button
+                                key={s}
+                                type="button"
+                                onClick={() => { setStatusFilter(s); setPage(1); }}
+                                className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest border transition-colors duration-150 focus-visible:outline-none ${active ? colorMap[s] : inactiveColor}`}
+                            >
+                                {s === "all" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
+                                {s !== "all" && (statusCounts[s] != null) && (
+                                    <span className="ml-1 opacity-70">({statusCounts[s]})</span>
+                                )}
+                                {s === "all" && total > 0 && <span className="ml-1 opacity-70">({total})</span>}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Sort selector */}
+                <div className="ml-auto flex items-center gap-2">
+                    <span className="text-[10px] text-neutral-600 uppercase tracking-widest">Sort</span>
+                    <select
+                        value={sort}
+                        onChange={e => { setSort(e.target.value as typeof sort); setPage(1); }}
+                        className="bg-neutral-950 border border-neutral-800 text-neutral-400 text-[10px] uppercase tracking-widest px-2 py-1.5 focus:outline-none focus:border-neutral-600"
+                    >
+                        <option value="points_desc">Points ↓</option>
+                        <option value="points_asc">Points ↑</option>
+                        <option value="name_asc">Name A→Z</option>
+                    </select>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={() => refetch()}
+                    className="text-[10px] text-neutral-600 hover:text-neutral-300 uppercase tracking-widest transition-colors duration-150 border border-neutral-800 px-2 py-1.5 hover:border-neutral-600"
+                >
+                    Refresh
+                </button>
+            </div>
+
+            {/* ── Content ── */}
+            {isLoading && (
+                <div className="p-12 text-center text-neutral-500">Loading results…</div>
+            )}
+
+            {error && (
+                <div className="p-12 text-center">
+                    <p className="text-red-500 mb-2">Failed to load results</p>
+                    <p className="text-xs text-neutral-500">{String(error)}</p>
+                </div>
+            )}
+
+            {!isLoading && !error && results.length === 0 && (
+                <div className="p-12 text-center text-neutral-500">
+                    {statusFilter === "all"
+                        ? "No results recorded for this round yet."
+                        : `No ${statusFilter.toLowerCase()} participants.`}
+                </div>
+            )}
+
+            {!isLoading && !error && results.length > 0 && (
+                <>
+                    {/* Mobile cards */}
+                    <div className="md:hidden divide-y divide-neutral-800">
+                        {results.map(r => (
+                            <ResultCard key={r.id} result={r} />
+                        ))}
+                    </div>
+
+                    {/* Desktop table */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-neutral-800 bg-neutral-900/60">
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-10 font-mono">#</th>
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">Participant</th>
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">Team</th>
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-24">Points</th>
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest w-36">Status</th>
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">Metadata</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {results.map((r, idx) => (
+                                    <ResultRow key={r.id} result={r} rank={(page - 1) * PAGE_LIMIT + idx + 1} />
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="px-6 py-4 border-t border-neutral-800 flex items-center justify-between">
+                        <p className="text-sm text-neutral-500">
+                            {total === 0 ? "No results" : `Showing ${(page - 1) * PAGE_LIMIT + 1}–${Math.min(page * PAGE_LIMIT, total)} of ${total}`}
+                        </p>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page <= 1}
+                                className="p-2 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
+                                aria-label="Previous page"
+                            >
+                                <NavArrowLeft className="w-4 h-4" />
+                            </button>
+                            <span className="px-3 py-2 text-sm text-neutral-400 border border-neutral-800 min-w-[3rem] text-center">
+                                {page} / {totalPages}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={page >= totalPages}
+                                className="p-2 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
+                                aria-label="Next page"
+                            >
+                                <NavArrowRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+function ResultRow({ result, rank }: { result: RoundResultWithParticipant; rank: number }) {
+    const statusColor: Record<string, string> = {
+        QUALIFIED: "text-emerald-400 border-emerald-800 bg-emerald-950/40",
+        ELIMINATED: "text-amber-400 border-amber-800 bg-amber-950/40",
+        DISQUALIFIED: "text-red-400 border-red-900 bg-red-950/40",
+    };
+    const dotColor: Record<string, string> = {
+        QUALIFIED: "bg-emerald-400",
+        ELIMINATED: "bg-amber-400",
+        DISQUALIFIED: "bg-red-400",
+    };
+    const s = result.status;
+    return (
+        <tr className="hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0">
+            <td className="px-6 py-4 text-[11px] font-mono text-neutral-600">{rank}</td>
+            <td className="px-6 py-4">
+                <div className="text-sm font-semibold text-white">{result.name}</div>
+                <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{result.user_id}</div>
+                <div className="text-[10px] text-neutral-600 mt-0.5">{result.email}</div>
+            </td>
+            <td className="px-6 py-4">
+                {result.team_id ? (
+                    <div>
+                        <div className="text-xs text-neutral-300 font-medium">{result.team_name ?? result.team_id}</div>
+                        <div className="text-[10px] text-neutral-600 font-mono mt-0.5">{result.team_id}</div>
+                    </div>
+                ) : (
+                    <span className="text-[10px] text-neutral-700 font-mono">—</span>
+                )}
+            </td>
+            <td className="px-6 py-4">
+                <span className="text-sm font-black text-white tabular-nums">{result.points}</span>
+                <span className="text-[10px] text-neutral-600 ml-1 uppercase">pts</span>
+            </td>
+            <td className="px-6 py-4">
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${statusColor[s] ?? "border-neutral-700 text-neutral-400"}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${dotColor[s] ?? "bg-neutral-400"}`} />
+                    {s.charAt(0) + s.slice(1).toLowerCase()}
+                </span>
+            </td>
+            <td className="px-6 py-4">
+                <div className="text-xs text-neutral-400">
+                    {new Date(result.eval_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+                </div>
+                <div className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider flex items-center gap-1">
+                    <User className="w-2.5 h-2.5" />
+                    By {result.eval_by}
+                </div>
+            </td>
+        </tr>
+    );
+}
+
+function ResultCard({ result }: { result: RoundResultWithParticipant }) {
+    const statusColor: Record<string, string> = {
+        QUALIFIED: "text-emerald-400",
+        ELIMINATED: "text-amber-400",
+        DISQUALIFIED: "text-red-400",
+    };
+    return (
+        <div className="p-4 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+                <div>
+                    <div className="font-semibold text-white">{result.name}</div>
+                    <div className="text-[10px] text-neutral-500 font-mono">{result.user_id}</div>
+                </div>
+                <div className="text-right shrink-0">
+                    <div className="text-lg font-black text-white tabular-nums">{result.points} <span className="text-xs font-normal text-neutral-600">pts</span></div>
+                    <div className={`text-[10px] font-bold uppercase tracking-widest ${statusColor[result.status] ?? "text-neutral-400"}`}>{result.status}</div>
+                </div>
+            </div>
+            {result.team_id && (
+                <div className="text-xs text-neutral-500 flex items-center gap-1.5">
+                    <Group className="w-3 h-3" />
+                    {result.team_name ?? result.team_id}
+                </div>
+            )}
+            <div className="flex items-center justify-between gap-3 text-[10px] text-neutral-600">
+                <div>{new Date(result.eval_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</div>
+                <div className="flex items-center gap-1 uppercase tracking-wider">
+                    <User className="w-2.5 h-2.5" />
+                    {result.eval_by}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
