@@ -56,7 +56,6 @@ import {
 } from "../middleware/auth.middleware"
 import { HTTPException } from "hono/http-exception"
 import { paymentStatusMiddleware } from "../middleware/paymentStatus.middleware"
-import { Http2ServerRequest } from "http2"
 
 export const events = new Hono()
 
