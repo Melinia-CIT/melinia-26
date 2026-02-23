@@ -1031,9 +1031,15 @@ export type CheckInNotFound = {
     message: string
 }
 
+export type ResultsAlreadyDeclared = {
+    code: "results_already_declared"
+    message: string
+}
+
 export type DeleteRoundCheckInError =
     | EventNotFound
     | RoundNotFound
     | UserNotFound
     | CheckInNotFound
+    | ResultsAlreadyDeclared
     | InternalError
