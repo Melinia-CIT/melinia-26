@@ -27,6 +27,7 @@ import {
     type AssignPrizesError,
     type RoundResultWithParticipant,
     type TeamRoundResult,
+    type DeleteRoundCheckInError,
 } from "@melinia/shared"
 import sql from "../connection"
 import postgres from "postgres"
@@ -94,7 +95,10 @@ export async function checkInParticipant(
     }
 }
 
-export async function getCheckIns(from: number, limit: number): Promise<Result<GetCheckIn[], GetCheckInError>> {
+export async function getCheckIns(
+    from: number,
+    limit: number
+): Promise<Result<GetCheckIn[], GetCheckInError>> {
     try {
         const checkIns = await sql`
             SELECT
@@ -115,16 +119,16 @@ export async function getCheckIns(from: number, limit: number): Promise<Result<G
             ORDER BY ci.checkedin_at
             LIMIT ${limit}
             OFFSET ${from}
-        `;
+        `
 
-        const parsedCheckIns = checkIns.map(checkIn => getCheckInSchema.parse(checkIn));
-        return Result.ok(parsedCheckIns);
+        const parsedCheckIns = checkIns.map(checkIn => getCheckInSchema.parse(checkIn))
+        return Result.ok(parsedCheckIns)
     } catch (err) {
-        console.error(err);
+        console.error(err)
         return Result.err({
             code: "internal_error",
-            message: "Failed to get checkedin participants"
-        });
+            message: "Failed to get checkedin participants",
+        })
     }
 }
 
@@ -132,15 +136,15 @@ export async function getTotalCheckIns(): Promise<Result<number, GetCheckInError
     try {
         const [row] = await sql`
             SELECT COUNT(*) AS count FROM check_ins;
-        `;
+        `
 
-        return Result.ok(parseInt(row?.count, 10));
+        return Result.ok(parseInt(row?.count, 10))
     } catch (err) {
-        console.error(err);
+        console.error(err)
         return Result.err({
             code: "internal_error",
-            message: "Failed to get total checkedin participants count"
-        });
+            message: "Failed to get total checkedin participants count",
+        })
     }
 }
 export async function scanUserForRound(
@@ -502,6 +506,116 @@ export async function checkInRoundParticipants(
     }
 }
 
+export async function deleteRoundCheckIn(
+    eventId: string,
+    roundNo: string,
+    participantId: string
+): Promise<Result<string, DeleteRoundCheckInError>> {
+    try {
+        const [event] = await sql`
+            SELECT id FROM events WHERE id = ${eventId};
+        `
+        if (!event) {
+            return Result.err({
+                code: "event_not_found",
+                message: "Event not found",
+            })
+        }
+
+        const [round] = await sql`
+            SELECT id FROM event_rounds
+            WHERE event_id = ${eventId} AND round_no = ${roundNo};
+        `
+        if (!round) {
+            return Result.err({
+                code: "round_not_found",
+                message: "Round not found",
+            })
+        }
+
+        const [user] = await sql`
+            SELECT id FROM users WHERE id = ${participantId} AND role = 'PARTICIPANT';
+        `
+        if (!user) {
+            return Result.err({
+                code: "user_not_found",
+                message: "Participant not found",
+            })
+        }
+
+        const rows = await sql`
+            WITH target AS (
+                SELECT 
+                    erc.user_id,
+                    erc.team_id,
+                    erc.round_id
+                FROM event_round_checkins erc
+                JOIN event_rounds er 
+                    ON er.id = erc.round_id
+                WHERE 
+                    er.event_id = ${eventId}
+                    AND er.round_no = ${roundNo}
+                    AND erc.user_id = ${participantId}
+            )
+            DELETE FROM event_round_checkins erc
+            USING target
+            WHERE 
+                erc.round_id = target.round_id
+                AND (
+                    -- Solo case
+                    erc.user_id = target.user_id
+                    OR
+                    -- Team case
+                    (
+                        target.team_id IS NOT NULL
+                        AND erc.team_id = target.team_id
+                    )
+                )
+            RETURNING erc.*;
+        `
+
+        if (!rows.length) {
+            return Result.err({
+                code: "check_in_not_found",
+                message: "No check-in record found for this participant in the specified round",
+            })
+        }
+
+        const isTeam = rows[0]?.team_id != null
+        const deletedCount = rows.length
+        const message = isTeam
+            ? `Team check-in removed: ${deletedCount} member(s) unchecked from round ${roundNo}`
+            : `Participant check-in removed from round ${roundNo}`
+
+        return Result.ok(message)
+    } catch (err) {
+        console.error(
+            `Error occured while removing RoundCheckIn | EventId: ${eventId} | RoundNo: ${roundNo} | ParticipantId: ${participantId} || ${err}`
+        )
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to remove the checkin",
+        })
+    }
+}
+
+/**
+ * Check whether a user is crew (organizer or volunteer) of the given event.
+ * ADMINs are implicitly considered crew of every event — callers must skip
+ * this check when the requester's role is "ADMIN".
+ */
+export async function isEventCrew(userId: string, eventId: string): Promise<boolean> {
+    try {
+        const [row] = await sql`
+            SELECT 1 FROM event_crews
+            WHERE event_id = ${eventId} AND user_id = ${userId};
+        `
+        return !!row
+    } catch {
+        return false
+    }
+}
+
 /**
  * Assign round results (points and status) for participants
  */
@@ -785,12 +899,7 @@ export async function getRoundResultsCount(
     eventId: string,
     roundNo: number,
     status?: "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED" | "all"
-): Promise<
-    Result<
-        number,
-        { code: "round_not_found" | "internal_error"; message: string }
-    >
-> {
+): Promise<Result<number, { code: "round_not_found" | "internal_error"; message: string }>> {
     try {
         const [round] = await sql`
             SELECT id 
@@ -838,10 +947,7 @@ export async function getRoundResultsByTeam(
         sort?: "points_desc" | "points_asc" | "name_asc"
     } = {}
 ): Promise<
-    Result<
-        TeamRoundResult[],
-        { code: "round_not_found" | "internal_error"; message: string }
-    >
+    Result<TeamRoundResult[], { code: "round_not_found" | "internal_error"; message: string }>
 > {
     try {
         const [round] = await sql`
@@ -919,12 +1025,7 @@ export async function getRoundResultsByTeamCount(
     eventId: string,
     roundNo: number,
     status?: "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED" | "all"
-): Promise<
-    Result<
-        number,
-        { code: "round_not_found" | "internal_error"; message: string }
-    >
-> {
+): Promise<Result<number, { code: "round_not_found" | "internal_error"; message: string }>> {
     try {
         const [round] = await sql`
             SELECT id 

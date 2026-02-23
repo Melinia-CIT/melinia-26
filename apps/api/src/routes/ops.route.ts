@@ -1,34 +1,37 @@
-import { Hono } from "hono";
-import { authMiddleware, opsAuthMiddleware } from "../middleware/auth.middleware";
-import { zValidator } from "@hono/zod-validator";
-import { checkInParamSchema, paginationSchema } from "@packages/shared/dist";
-import { checkInParticipant, getCheckIns, getTotalCheckIns } from "../db/queries";
+import { Hono } from "hono"
+import { authMiddleware, opsAuthMiddleware } from "../middleware/auth.middleware"
+import { zValidator } from "@hono/zod-validator"
+import { checkInParamSchema, paginationSchema } from "@packages/shared/dist"
+import { checkInParticipant, getCheckIns, getTotalCheckIns } from "../db/queries"
 import {
- 	type ScanResult,
-	type ScanError,
-	type RoundCheckIn,
-	type RoundCheckInError,
-	baseScanResultSchema,
-	baseRoundCheckInSchema,
-	roundCheckInScanSchema,
-	assignRoundResultsSchema,
-	getRoundResultsQuerySchema,
-	eventRoundCheckInSchema,
-	assignPrizesSchema,
-   roundCheckInParamSchema
-} from "@melinia/shared";
+    type ScanResult,
+    type ScanError,
+    type RoundCheckIn,
+    type RoundCheckInError,
+    baseScanResultSchema,
+    baseRoundCheckInSchema,
+    roundCheckInScanSchema,
+    assignRoundResultsSchema,
+    getRoundResultsQuerySchema,
+    eventRoundCheckInSchema,
+    assignPrizesSchema,
+    roundCheckInParamSchema,
+} from "@melinia/shared"
 
 import {
-	checkInRoundParticipants, getRegistrationRecordForUser, scanUserForRound,
-	assignRoundResults,
-	getRoundResults,
-	getRoundResultsCount,
-	getRoundResultsByTeam,
-	getRoundResultsByTeamCount,
-	getTeamsForOperations,
-	assignEventPrizes,
-
+    checkInRoundParticipants,
+    getRegistrationRecordForUser,
+    scanUserForRound,
+    assignRoundResults,
+    getRoundResults,
+    getRoundResultsCount,
+    getRoundResultsByTeam,
+    getRoundResultsByTeamCount,
+    getTeamsForOperations,
+    assignEventPrizes,
     getEventWinners,
+    deleteRoundCheckIn,
+    isEventCrew,
 } from "../db/queries"
 
 import { z } from "zod"
@@ -175,7 +178,10 @@ ops.get(
         const { from, limit, status, sort, group_by } = c.req.valid("query")
 
         if (group_by === "team") {
-            const result = await getRoundResultsByTeam(eventId, roundNo, from, limit, { status, sort })
+            const result = await getRoundResultsByTeam(eventId, roundNo, from, limit, {
+                status,
+                sort,
+            })
             if (result.isErr) {
                 const { code, message } = result.error
                 switch (code) {
@@ -199,16 +205,19 @@ ops.get(
             }
             const teamResultsCount = countResult.value
 
-            return c.json({
-                data: teamResults,
-                pagination: {
-                    from: from,
-                    limit: limit,
-                    total: teamResultsCount,
-                    returned: teamResults.length,
-                    has_more: (from + teamResults.length) < teamResultsCount
-                }
-            }, 200)
+            return c.json(
+                {
+                    data: teamResults,
+                    pagination: {
+                        from: from,
+                        limit: limit,
+                        total: teamResultsCount,
+                        returned: teamResults.length,
+                        has_more: from + teamResults.length < teamResultsCount,
+                    },
+                },
+                200
+            )
         }
 
         const result = await getRoundResults(eventId, roundNo, from, limit, { status, sort })
@@ -238,16 +247,19 @@ ops.get(
         }
         const roundResultsCount = countResult.value
 
-        return c.json({
-            data: roundResults,
-            pagination: {
-                from: from,
-                limit: limit,
-                total: roundResultsCount,
-                returned: roundResults.length,
-                has_more: (from + roundResults.length) < roundResultsCount
-            }
-        }, 200)
+        return c.json(
+            {
+                data: roundResults,
+                pagination: {
+                    from: from,
+                    limit: limit,
+                    total: roundResultsCount,
+                    returned: roundResults.length,
+                    has_more: from + roundResults.length < roundResultsCount,
+                },
+            },
+            200
+        )
     }
 )
 
@@ -296,7 +308,7 @@ ops.post(
     authMiddleware,
     opsAuthMiddleware,
     zValidator("json", assignPrizesSchema),
-    async (c) => {
+    async c => {
         const awardedBy = c.get("user_id")
         const eventId = c.req.param("eventId")
         const { results } = c.req.valid("json")
@@ -371,37 +383,40 @@ ops.get(
     authMiddleware,
     opsAuthMiddleware,
     zValidator("query", paginationSchema),
-    async (c) => {
-        const { from, limit } = c.req.valid("query");
+    async c => {
+        const { from, limit } = c.req.valid("query")
 
-        const checkInsCountResult = await getTotalCheckIns();
+        const checkInsCountResult = await getTotalCheckIns()
         if (checkInsCountResult.isErr) {
             switch (checkInsCountResult.error.code) {
                 case "internal_error":
-                    return c.json({ message: checkInsCountResult.error.message }, 500);
+                    return c.json({ message: checkInsCountResult.error.message }, 500)
             }
         }
-        const checkInsCount = checkInsCountResult.value;
+        const checkInsCount = checkInsCountResult.value
 
-        const checkInsResult = await getCheckIns(from, limit);
+        const checkInsResult = await getCheckIns(from, limit)
         if (checkInsResult.isErr) {
             switch (checkInsResult.error.code) {
                 case "internal_error":
-                    return c.json({ message: checkInsResult.error.message }, 500);
+                    return c.json({ message: checkInsResult.error.message }, 500)
             }
         }
-        const checkIns = checkInsResult.value;
+        const checkIns = checkInsResult.value
 
-        return c.json({
-            data: checkIns,
-            pagination: {
-                from: from,
-                limit: limit,
-                total: checkInsCount,
-                returned: checkIns.length,
-                has_more: (from + checkIns.length) < checkInsCount
-            }
-        }, 200)
+        return c.json(
+            {
+                data: checkIns,
+                pagination: {
+                    from: from,
+                    limit: limit,
+                    total: checkInsCount,
+                    returned: checkIns.length,
+                    has_more: from + checkIns.length < checkInsCount,
+                },
+            },
+            200
+        )
     }
 )
 const eventIdParamSchema = z.object({
@@ -470,7 +485,7 @@ ops.get(
                 case "payment_pending":
                     return c.json({ message }, 402)
                 case "profile_not_complete":
-                    return c.json({message}, 409)
+                    return c.json({ message }, 409)
                 case "internal_error":
                     return c.json({ message }, 500)
             }
@@ -525,5 +540,55 @@ ops.post(
             }
         }
         return c.json({ message: "Checked in successfully" }, 200)
+    }
+)
+
+ops.delete(
+    "/events/:eventId/rounds/:roundNo/checkins",
+    authMiddleware,
+    opsAuthMiddleware,
+    async c => {
+        const { eventId, roundNo } = c.req.param()
+
+        if (!eventId || !roundNo) {
+            return c.json({ message: "EventId or RoundNo is missing!" }, 400)
+        }
+
+        const participantId = c.req.query("participant_id")
+        if (!participantId) {
+            return c.json({ message: "participant_id query parameter is required" }, 400)
+        }
+
+        const requesterId = c.get("user_id")
+        const requesterRole = c.get("role")
+
+        // ADMINs can delete any event's check-ins; organizers and volunteers
+        // are only allowed to act on events they are crew of.
+        if (requesterRole !== "ADMIN") {
+            const crewMember = await isEventCrew(requesterId, eventId)
+            if (!crewMember) {
+                return c.json({ message: "You are not a crew member of this event" }, 403)
+            }
+        }
+
+        const result = await deleteRoundCheckIn(eventId, roundNo, participantId)
+
+        if (result.isErr) {
+            const { code, message } = result.error
+            switch (code) {
+                case "event_not_found":
+                    return c.json({ message }, 404)
+                case "round_not_found":
+                    return c.json({ message }, 404)
+                case "user_not_found":
+                    return c.json({ message }, 404)
+                case "check_in_not_found":
+                    return c.json({ message }, 404)
+                case "internal_error":
+                    return c.json({ message }, 500)
+            }
+        }
+
+        return c.json({ message: result.value }, 200)
     }
 )
