@@ -1,8 +1,8 @@
+import type { UserWithProfile } from "@melinia/shared";
 import { useQuery } from "@tanstack/react-query";
 import { Xmark } from "iconoir-react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import type { UserWithProfile } from "@melinia/shared";
 import type { Registration } from "@/api/registrations";
 import { Button } from "@/ui/Button";
 
@@ -63,7 +63,10 @@ export function CheckInPopup({
 	if (!open) return null;
 
 	return createPortal(
-		<div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-2 sm:p-4 min-h-[100dvh]" style={{ height: '100dvh' }}>
+		<div
+			className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-2 sm:p-4 min-h-[100dvh]"
+			style={{ height: "100dvh" }}
+		>
 			<div className="w-full max-w-4xl max-h-[calc(100dvh-1rem)] bg-neutral-950 border border-neutral-800 flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
 				{/* Header */}
 				<div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-neutral-800">
@@ -105,9 +108,7 @@ export function CheckInPopup({
 					{registration && (
 						<div className="space-y-3">
 							<div className="flex items-center justify-between">
-								<h4 className="text-sm font-medium text-white">
-									Registration
-								</h4>
+								<h4 className="text-sm font-medium text-white">Registration</h4>
 								<RegistrationStatusBadge status={registration.status} />
 							</div>
 
@@ -118,7 +119,9 @@ export function CheckInPopup({
 								<Info label="College" value={registration.college} />
 								<Info
 									label="Check-in"
-									value={registration.checkedIn ? "Checked In" : "Not Checked In"}
+									value={
+										registration.checkedIn ? "Checked In" : "Not Checked In"
+									}
 								/>
 								{registration.checkedInAt && (
 									<Info
@@ -161,7 +164,16 @@ export function CheckInPopup({
 							<div className="text-sm text-neutral-500">Loading user...</div>
 						) : isError ? (
 							<div className="p-4 bg-red-950/50 border border-red-900 text-red-500 text-sm">
-								Failed to fetch user details: {String(error)}
+								{(() => {
+									const axErr = error as import("axios").AxiosError<{
+										message?: string;
+									}>;
+									const msg =
+										axErr?.response?.data?.message ||
+										(error instanceof Error ? error.message : null) ||
+										"Failed to fetch user details";
+									return msg;
+								})()}
 							</div>
 						) : (
 							<UserDetails user={user as UserWithProfile} />
@@ -173,7 +185,9 @@ export function CheckInPopup({
 								<Button
 									variant="primary"
 									onClick={() => onCheckIn(effectiveUserId)}
-									disabled={checkInSuccess || isCheckingIn || isLoading || isError}
+									disabled={
+										checkInSuccess || isCheckingIn || isLoading || isError
+									}
 									className="w-full"
 								>
 									{isCheckingIn ? "Checking in..." : "Check In"}
@@ -191,7 +205,7 @@ export function CheckInPopup({
 				</div>
 			</div>
 		</div>,
-		document.body
+		document.body,
 	);
 }
 
@@ -205,7 +219,8 @@ function Info({ label, value }: { label: string; value: string }) {
 }
 
 function UserDetails({ user }: { user: UserWithProfile }) {
-	const fullName = `${user.profile.first_name} ${user.profile.last_name ?? ""}`.trim();
+	const fullName =
+		`${user.profile.first_name} ${user.profile.last_name ?? ""}`.trim();
 
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-2 gap-4">

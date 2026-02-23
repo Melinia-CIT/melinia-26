@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import type { AxiosError } from "axios";
 import {
 	ArrowLeft,
 	NavArrowLeft,
@@ -14,8 +13,6 @@ import { CheckInPopup } from "@/ui/CheckInPopup";
 import { Field } from "@/ui/Field";
 import { Input } from "@/ui/Input";
 import { QRScanner } from "@/ui/QRScanner";
-
-type ApiErrorBody = { message?: string };
 
 export const Route = createFileRoute("/app/check-in")({
 	component: CheckInPage,
@@ -47,22 +44,16 @@ function CheckInPage() {
 	const checkInMutation = useMutation({
 		mutationFn: (userId: string) => api.registrations.checkIn(userId),
 		onSuccess: (data) => {
-			// Update selected registration
 			setSelectedRegistration(data.registration);
-			// Invalidate queries
 			queryClient.invalidateQueries({ queryKey: ["registrations"] });
-			// Clear QR error
 			setQrError("");
 			setCheckInError(null);
 		},
-		onError: (error) => {
-			console.error("Check-in error:", error);
-			// API layer throws plain Error for 200-with-message responses
-			// Axios throws AxiosError for non-2xx responses
-			const axiosErr = error as AxiosError<ApiErrorBody>;
+		onError: (error: any) => {
+			console.log("Check-in error:", error);
 			const message =
-				axiosErr.response?.data?.message ||
-				error.message ||
+				error.response?.data.message ||
+				error.response.message ||
 				"Failed to check in. Please try again.";
 			setCheckInError(message);
 		},
