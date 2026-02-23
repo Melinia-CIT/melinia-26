@@ -361,21 +361,21 @@ events.post(
         }
 
         // Validate registration window
-        const now = new Date()
-        const regStart = new Date(event.registration_start)
-        const regEnd = new Date(event.registration_end)
+        // const now = new Date()
+        // const regStart = new Date(event.registration_start)
+        // const regEnd = new Date(event.registration_end)
 
-        if (now < regStart) {
-            throw new HTTPException(400, {
-                message: "Registration has not started yet for this event",
-            })
-        }
+        // if (now < regStart) {
+        //     throw new HTTPException(400, {
+        //         message: "Registration has not started yet for this event",
+        //     })
+        // }
 
-        if (now > regEnd) {
-            throw new HTTPException(400, {
-                message: "Registration has ended for this event",
-            })
-        }
+        // if (now > regEnd) {
+        //     throw new HTTPException(400, {
+        //         message: "Registration has ended for this event",
+        //     })
+        // }
 
         // Validate participation type matches event type
         // if (event.participation_type !== registration_type) {
@@ -383,7 +383,13 @@ events.post(
         //         message: `This event requires ${event.participation_type} participation`
         //     });
         // }
-
+        
+        const now = new Date();
+        if(now > event.end_time){
+            throw new HTTPException(401, {
+                message:"Game Over! event has ended"
+            })
+        }
         // SOLO REGISTRATION
         if (registration_type === "solo") {
             // Solo event: teamId should not be provided

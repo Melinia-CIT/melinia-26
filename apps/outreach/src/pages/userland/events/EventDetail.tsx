@@ -74,17 +74,17 @@ const EventDetail = () => {
     const formatDate = (dateString: string) =>
         dateString
             ? new Date(dateString).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-            })
+                  month: "short",
+                  day: "numeric",
+              })
             : "TBA"
 
     const formatTime = (dateString: string) =>
         dateString
             ? new Date(dateString).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-            })
+                  hour: "2-digit",
+                  minute: "2-digit",
+              })
             : "TBA"
 
     const getThemeStyles = (type: string) => {
@@ -277,8 +277,8 @@ const EventDetail = () => {
                                         {event.participation_type.toLowerCase() === "solo"
                                             ? "Solo"
                                             : event.min_team_size === event.max_team_size
-                                                ? `${event.max_team_size} per team`
-                                                : `${event.min_team_size} - ${event.max_team_size} per team`}
+                                              ? `${event.max_team_size} per team`
+                                              : `${event.min_team_size} - ${event.max_team_size} per team`}
                                     </p>
                                 </div>
                             </div>
@@ -301,8 +301,8 @@ const EventDetail = () => {
                                             round.start_time && round.end_time
                                                 ? `${formatDate(round.start_time.toString())} ${formatTime(round.start_time.toString())} - ${formatDate(round.end_time.toString())} ${formatTime(round.end_time.toString())}`
                                                 : round.start_time
-                                                    ? `${formatDate(round.start_time.toString())} ${formatTime(round.start_time.toString())}`
-                                                    : "TBA"
+                                                  ? `${formatDate(round.start_time.toString())} ${formatTime(round.start_time.toString())}`
+                                                  : "TBA"
                                         return (
                                             <div
                                                 key={round.round_no}
@@ -465,17 +465,24 @@ const EventDetail = () => {
 
                         <button
                             type="button"
-                            onClick={handleRegisterClick} // Updated to use handler
-                            disabled={isRegistered || status.text !== "Open"}
+                            onClick={handleRegisterClick}
+                            disabled={
+                                isRegistered ||
+                                (status.text !== "Open" && status.text !== "Ongoing")
+                            }
                             className={`w-full py-2.5 rounded-lg font-bold border text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 
-                                ${isRegistered ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" : status.text !== "Open" ? "bg-zinc-800/50 text-zinc-500 border-zinc-700 cursor-not-allowed" : theme.button}`}
+                                ${isRegistered ? "bg-green-500/10 text-green-400 border-green-500/20 cursor-default" : status.text !== "Open" && status.text !== "Ongoing" ? "bg-zinc-800/50 text-zinc-500 border-zinc-700 cursor-not-allowed" : theme.button}`}
                         >
                             {isRegistered ? (
                                 <>
                                     <CheckCircle2 className="w-5 h-5" /> Registered
                                 </>
-                            ) : status.text === "Open" ? (
-                                event.event_type === "flagship" ? "View on Unstop" : "Register"
+                            ) : status.text === "Open" || status.text === "Ongoing" ? (
+                                event.event_type === "flagship" ? (
+                                    "View on Unstop"
+                                ) : (
+                                    "Register"
+                                )
                             ) : (
                                 status.text
                             )}
