@@ -542,7 +542,34 @@ const Leaderboard = () => {
                                 - the average points earned by each participant from respective
                                 college.
                             </p>
-                           <div className="bg-zinc-950 rounded-xl p-4 space-y-6 font-mono">
+                            <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50">
+                                <h3 className="text-white font-medium mb-3">Points Rubric</h3>
+                                <div className="space-y-2 text-xs">
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">1st Prize</span>
+                                        <span className="text-white">100 pts</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">2nd Prize</span>
+                                        <span className="text-white">75 pts</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">3rd Prize</span>
+                                        <span className="text-white">50 pts</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">Qualification</span>
+                                        <span className="text-white">20 pts</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">
+                                            Elimination (Participation)
+                                        </span>
+                                        <span className="text-white">10 pts</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-zinc-950 rounded-xl p-4 space-y-6 font-mono">
                                 <div className="text-zinc-500 mb-2">Total Points</div>
                                 <div
                                     className=" text-base text-zinc-200 overflow-x-auto"
@@ -590,34 +617,6 @@ const Leaderboard = () => {
                                     Dense rank ordered by avg_points_per_user descending
                                 </div>
                             </div>
-                            <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50">
-                                <h3 className="text-white font-medium mb-3">Points Rubric</h3>
-                                <div className="space-y-2 text-xs">
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">1st Prize</span>
-                                        <span className="text-white">100 pts</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">2nd Prize</span>
-                                        <span className="text-white">75 pts</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">3rd Prize</span>
-                                        <span className="text-white">50 pts</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">Qualification</span>
-                                        <span className="text-white">20 pts</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">
-                                            Elimination (Participation)
-                                        </span>
-                                        <span className="text-white">10 pts</span>
-                                    </div>
-                                </div>
-                            </div>
- 
                         </div>
                     </div>
                 </div>
