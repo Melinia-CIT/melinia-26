@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5174",
+    "dev": "vite --port 5174 --host",
     "build": "vite build && tsc",
     "preview": "vite preview",
     "test": "vitest run",

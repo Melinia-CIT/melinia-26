@@ -37,6 +37,36 @@ export interface CheckInResponse {
 	registration: Registration;
 }
 
+export interface OverallCheckIn {
+	participant_id: string;
+	first_name: string;
+	last_name: string;
+	college: string;
+	degree: string;
+	email: string;
+	ph_no: string;
+	checkedin_at: string;
+	checkedin_by: string;
+}
+
+export interface OverallCheckInsPagination {
+	from: number;
+	limit: number;
+	total: number;
+	returned: number;
+	has_more: boolean;
+}
+
+export interface OverallCheckInsResponse {
+	data: OverallCheckIn[];
+	pagination: OverallCheckInsPagination;
+}
+
+export interface OverallCheckInsParams {
+	from?: number;
+	limit?: number;
+}
+
 export function createRegistrationsApi(http: AxiosInstance) {
 	return {
 		async list(
@@ -60,25 +90,45 @@ export function createRegistrationsApi(http: AxiosInstance) {
 		): Promise<Registration> {
 			const { data } = await http.patch<Registration>(
 				`/registrations/${id}/status`,
-				{ status },
+				{
+					status,
+				},
 			);
 			return data;
 		},
 
 		async checkIn(userId: string): Promise<CheckInResponse> {
-			const { data } = await http.post<CheckInResponse>(
+			const { data } = await http.post<CheckInResponse | { message: string }>(
 				"/ops/check-in",
 				{
 					participant_id: userId,
 				},
 			);
-			return data;
+
+			// API returns {message: "..."} on non-success
+			if ("message" in data) {
+				throw new Error(
+					(data as { message: string }).message || "Check-in failed",
+				);
+			}
+
+			return data as CheckInResponse;
 		},
 
 		async search(query: string): Promise<Registration[]> {
 			const { data } = await http.get<Registration[]>("/registrations/search", {
 				params: { q: query },
 			});
+			return data;
+		},
+
+		async getOverallCheckIns(
+			params: OverallCheckInsParams = {},
+		): Promise<OverallCheckInsResponse> {
+			const { data } = await http.get<OverallCheckInsResponse>(
+				"/ops/check-in",
+				{ params },
+			);
 			return data;
 		},
 	};
