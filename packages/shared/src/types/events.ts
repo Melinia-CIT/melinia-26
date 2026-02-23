@@ -1,7 +1,13 @@
-import { z } from "zod";
-import type { InternalError, UserNotFound, ProfileNotCompleted, ProfileNotFound, SuspendError, } from "./users";
-import type { PaymentPending } from "./payments";
-import { memberSchema } from "./teams";
+import { z } from "zod"
+import type {
+    InternalError,
+    UserNotFound,
+    ProfileNotCompleted,
+    ProfileNotFound,
+    SuspendError,
+} from "./users"
+import type { PaymentPending } from "./payments"
+import { memberSchema } from "./teams"
 
 // Base
 export const baseEventSchema = z.object({
@@ -303,39 +309,48 @@ export const getEventsQuerySchema = z.object({
 })
 
 export const assignVolunteersSchema = z.object({
-    volunteer_ids: z.array(z.string()).min(1, "At least one volunteer ID required")
+    volunteer_ids: z.array(z.string()).min(1, "At least one volunteer ID required"),
+})
+
+export const removeVolunteerResponseSchema = baseCrewSchema.omit({
+    assigned_by: true,
+    created_at: true,
 })
 
 export const getVerboseEventResponseSchema = verboseEventSchema.extend({
-    crew: z
-        .object({
-            organizers: z.array(
+    crew: z.object({
+        organizers: z
+            .array(
                 baseCrewSchema
                     .omit({
                         event_id: true,
-                        assigned_by: true
+                        assigned_by: true,
                     })
                     .extend({
                         first_name: z.string(),
                         last_name: z.string(),
-                        ph_no: z.string()
+                        ph_no: z.string(),
                     })
-            ).optional().default([]),
+            )
+            .optional()
+            .default([]),
 
-            volunteers: z.array(
+        volunteers: z
+            .array(
                 baseCrewSchema
                     .omit({
                         event_id: true,
-                        assigned_by: true
+                        assigned_by: true,
                     })
                     .extend({
                         first_name: z.string(),
                         last_name: z.string(),
-                        ph_no: z.string()
+                        ph_no: z.string(),
                     })
-            ).optional(),
-        })
-});
+            )
+            .optional(),
+    }),
+})
 
 export const EventParamSchema = z.object({
     id: z.string(),
@@ -368,70 +383,64 @@ export const userRegisteredEventsSchema = z
         baseEventSchema
             .extend({
                 registration: z.union([
-                    RegisteredSolo
-                        .omit({
-                            registered: true
-                        }),
-                    RegisteredTeam
-                        .omit({
-                            registered: true
-                        })
+                    RegisteredSolo.omit({
+                        registered: true,
+                    }),
+                    RegisteredTeam.omit({
+                        registered: true,
+                    }),
                 ]),
                 rounds: z.array(
-                    baseRoundSchema
-                        .omit({
-                            event_id: true,
-                            round_description: true,
-                        })
-                )
+                    baseRoundSchema.omit({
+                        event_id: true,
+                        round_description: true,
+                    })
+                ),
             })
             .or(
-                baseEventSchema
-                    .omit({
-                        updated_at: true,
-                        created_at: true,
-                        created_by: true
-                    })
+                baseEventSchema.omit({
+                    updated_at: true,
+                    created_at: true,
+                    created_by: true,
+                })
             )
     )
     .default([])
 
 export const eventRegistrationSchema = z.object({
-    registration_type: z.enum(['solo', 'team']),
-    team_id: z.string().optional().nullable()
-});
+    registration_type: z.enum(["solo", "team"]),
+    team_id: z.string().optional().nullable(),
+})
 
-export const getEventRegistrationSchema = z
-    .discriminatedUnion("type", [
-        z.object({
-            type: z.literal("TEAM"),
-            name: z.string(),
-            members: z.array(
-                z.object({
-                    participant_id: z.string(),
-                    first_name: z.string(),
-                    last_name: z.string(),
-                    college: z.string(),
-                    degree: z.string(),
-                    ph_no: z.string(),
-                    email: z.email()
-                })
-            ),
-            registered_at: z.coerce.date()
-        }),
-        z.object({
-            type: z.literal("SOLO"),
-            first_name: z.string(),
-            last_name: z.string(),
-            participant_id: z.string(),
-            college: z.string(),
-            degree: z.string(),
-            ph_no: z.string(),
-            email: z.email(),
-            registered_at: z.coerce.date()
-        })
-    ])
-
+export const getEventRegistrationSchema = z.discriminatedUnion("type", [
+    z.object({
+        type: z.literal("TEAM"),
+        name: z.string(),
+        members: z.array(
+            z.object({
+                participant_id: z.string(),
+                first_name: z.string(),
+                last_name: z.string(),
+                college: z.string(),
+                degree: z.string(),
+                ph_no: z.string(),
+                email: z.email(),
+            })
+        ),
+        registered_at: z.coerce.date(),
+    }),
+    z.object({
+        type: z.literal("SOLO"),
+        first_name: z.string(),
+        last_name: z.string(),
+        participant_id: z.string(),
+        college: z.string(),
+        degree: z.string(),
+        ph_no: z.string(),
+        email: z.email(),
+        registered_at: z.coerce.date(),
+    }),
+])
 
 // round update schema
 export const roundPatchSchema = baseRoundSchema
@@ -463,135 +472,123 @@ export const roundPatchSchema = baseRoundSchema
         }
     })
 
-// Overall Fest CheckIns 
-export const baseCheckInSchema = z
-    .object({
-        id: z.number(),
-        participant_id: z.string(),
-        checkedin_at: z.coerce.date(),
-        checkedin_by: z.string()
+// Overall Fest CheckIns
+export const baseCheckInSchema = z.object({
+    id: z.number(),
+    participant_id: z.string(),
+    checkedin_at: z.coerce.date(),
+    checkedin_by: z.string(),
+})
+
+export const getCheckInSchema = z.object({
+    participant_id: z.string(),
+    first_name: z.string(),
+    last_name: z.string(),
+    college: z.string(),
+    degree: z.string(),
+    email: z.email(),
+    ph_no: z.string(),
+    checkedin_at: z.coerce.date(),
+    checkedin_by: z.string(),
+})
+
+export const checkInParamSchema = z.object({
+    participant_id: z.string().regex(/^MLNU[A-Z0-9]{6}$/, { error: "Invalid user_id" }),
+})
+
+// EventsCheckIns
+export const getEventCheckInsParamSchema = z.object({
+    eventId: z.string(),
+    roundId: z.coerce.number(),
+})
+
+export const getEventParticipantsParamSchema = getEventCheckInsParamSchema
+    .omit({
+        roundId: true,
+    })
+    .extend({
+        roundNo: z.coerce.number().min(1, { error: "Round number must be greater than 1" }),
     })
 
-export const getCheckInSchema = z
-    .object({
+export const getEventCheckInSchema = z.discriminatedUnion("type", [
+    z.object({
+        team_id: z.string(),
+        type: z.literal("TEAM"),
+        name: z.string(),
+        members: z.array(
+            z.object({
+                participant_id: z.string(),
+                first_name: z.string(),
+                last_name: z.string(),
+                college: z.string(),
+                degree: z.string(),
+                ph_no: z.string(),
+                email: z.email(),
+            })
+        ),
+        checkedin_at: z.coerce.date(),
+        checkedin_by: z.string(),
+    }),
+    z.object({
         participant_id: z.string(),
+        type: z.literal("SOLO"),
         first_name: z.string(),
         last_name: z.string(),
         college: z.string(),
         degree: z.string(),
-        email: z.email(),
         ph_no: z.string(),
+        email: z.email(),
         checkedin_at: z.coerce.date(),
-        checkedin_by: z.string()
-    })
+        checkedin_by: z.string(),
+    }),
+])
 
-export const checkInParamSchema = z
-    .object({
-        participant_id: z
-            .string()
-            .regex(/^MLNU[A-Z0-9]{6}$/, { error: "Invalid user_id" })
-    });
+export const getEventParticipantSchema = z.discriminatedUnion("type", [
+    z.object({
+        team_id: z.string(),
+        type: z.literal("TEAM"),
+        name: z.string(),
+        members: z.array(
+            z.object({
+                participant_id: z.string(),
+                first_name: z.string(),
+                last_name: z.string(),
+                college: z.string(),
+                degree: z.string(),
+                ph_no: z.string(),
+                email: z.email(),
+            })
+        ),
+        registered_at: z.coerce.date(),
+    }),
+    z.object({
+        participant_id: z.string(),
+        type: z.literal("SOLO"),
+        first_name: z.string(),
+        last_name: z.string(),
+        college: z.string(),
+        degree: z.string(),
+        ph_no: z.string(),
+        email: z.email(),
+        registered_at: z.coerce.date(),
+    }),
+])
 
-// EventsCheckIns
-export const getEventCheckInsParamSchema = z
-    .object({
-        eventId: z.string(),
-        roundId: z.coerce.number()
-    })
-
-export const getEventParticipantsParamSchema = getEventCheckInsParamSchema
-    .omit({
-        roundId: true
-    })
-    .extend({
-        roundNo: z.coerce.number().min(1, { error: "Round number must be greater than 1" })
-    })
-
-export const getEventCheckInSchema = z
-    .discriminatedUnion("type", [
-        z.object({
-            team_id: z.string(),
-            type: z.literal("TEAM"),
-            name: z.string(),
-            members: z.array(
-                z.object({
-                    participant_id: z.string(),
-                    first_name: z.string(),
-                    last_name: z.string(),
-                    college: z.string(),
-                    degree: z.string(),
-                    ph_no: z.string(),
-                    email: z.email()
-                })
-            ),
-            checkedin_at: z.coerce.date(),
-            checkedin_by: z.string(),
-        }),
-        z.object({
-            participant_id: z.string(),
-            type: z.literal("SOLO"),
-            first_name: z.string(),
-            last_name: z.string(),
-            college: z.string(),
-            degree: z.string(),
-            ph_no: z.string(),
-            email: z.email(),
-            checkedin_at: z.coerce.date(),
-            checkedin_by: z.string(),
-        }),
-    ]);
-
-
-export const getEventParticipantSchema = z
-    .discriminatedUnion("type", [
-        z.object({
-            team_id: z.string(),
-            type: z.literal("TEAM"),
-            name: z.string(),
-            members: z.array(
-                z.object({
-                    participant_id: z.string(),
-                    first_name: z.string(),
-                    last_name: z.string(),
-                    college: z.string(),
-                    degree: z.string(),
-                    ph_no: z.string(),
-                    email: z.email()
-                })
-            ),
-            registered_at: z.coerce.date(),
-        }),
-        z.object({
-            participant_id: z.string(),
-            type: z.literal("SOLO"),
-            first_name: z.string(),
-            last_name: z.string(),
-            college: z.string(),
-            degree: z.string(),
-            ph_no: z.string(),
-            email: z.email(),
-            registered_at: z.coerce.date(),
-        }),
-    ]);
-
-export const paginationSchema = z
-    .object({
-        from: z.coerce.number().min(0).default(0),
-        limit: z.coerce.number().min(1).default(10),
-    })
+export const paginationSchema = z.object({
+    from: z.coerce.number().min(0).default(0),
+    limit: z.coerce.number().min(1).default(10),
+})
 export const roundCheckInScanSchema = z.object({
-    user_id: z.string()
-});
+    user_id: z.string(),
+})
 
 export const roundCheckInParamSchema = z.object({
-    user_ids: z.array(
-        z.string()
-    ).min(1),
-    team_id: z.string().nullable()
-});
+    user_ids: z.array(z.string()).min(1),
+    team_id: z.string().nullable(),
+})
 export const checkInTeamSchema = memberSchema.safeExtend({
-    status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPEND']),
-    payment_status: z.enum(["PAID", "UNPAID", "EXEMPTED"])
+    status: z.enum(["ACTIVE", "INACTIVE", "SUSPEND"]),
+    payment_status: z.enum(["PAID", "UNPAID", "EXEMPTED"]),
 })
 export const baseScanResultSchema = z.object({
     type: z.enum(["SOLO", "TEAM"]),
@@ -600,29 +597,31 @@ export const baseScanResultSchema = z.object({
     last_name: z.string().nullable().optional(),
     name: z.string().optional(),
     email: z.string().optional(),
-    status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPEND', 'SUSPENDED']).optional(),
+    status: z.enum(["ACTIVE", "INACTIVE", "SUSPEND", "SUSPENDED"]).optional(),
     payment_status: z.enum(["PAID", "UNPAID", "EXEMPTED"]).optional(),
     team_id: z.string().optional(),
     team_name: z.string().nullable().optional(),
-    members: z.array(checkInTeamSchema).optional()
-});
+    members: z.array(checkInTeamSchema).optional(),
+})
 
 export const baseRoundCheckInSchema = z.object({
-    checked_in: z.array(z.object({
-        id: z.number(),
-        user_id: z.string(),
-        round_id: z.number(),
-        team_id: z.string().nullable(),
-        checkedin_at: z.coerce.date(),
-        checkedin_by: z.string()
-    }))
-});
+    checked_in: z.array(
+        z.object({
+            id: z.number(),
+            user_id: z.string(),
+            round_id: z.number(),
+            team_id: z.string().nullable(),
+            checkedin_at: z.coerce.date(),
+            checkedin_by: z.string(),
+        })
+    ),
+})
 
 export const fetchLeaderBoardSchema = z.object({
     college_id: z.string(),
     college_name: z.string(),
-    points: z.number()
-});
+    points: z.number(),
+})
 
 export type CreateEvent = z.infer<typeof createEventSchema>
 export type Event = z.infer<typeof baseEventSchema>
@@ -635,35 +634,32 @@ export type UserRegistrationStatus = z.infer<typeof userRegistrationStatus>
 export type CreateEventPrizes = z.infer<typeof createEventPrizesSchema>
 export type Prize = z.infer<typeof basePrizeSchema>
 
-export type GetEventRegistration = z.infer<typeof getEventRegistrationSchema>;
+export type GetEventRegistration = z.infer<typeof getEventRegistrationSchema>
 export type AssignEventCrews = z.infer<typeof assignEventCrewsSchema>
 export type GetCrew = z.infer<typeof getCrewSchema>
 export type Crew = z.infer<typeof baseCrewSchema>
 
-export type CreateRounds = z.infer<typeof createEventRoundsSchema>;
-export type Round = z.infer<typeof baseRoundSchema>;
+export type CreateRounds = z.infer<typeof createEventRoundsSchema>
+export type Round = z.infer<typeof baseRoundSchema>
 export type EventOrRoundNotFound = {
-    code: "event_or_round_not_found";
-    message: string;
+    code: "event_or_round_not_found"
+    message: string
 }
 
-export type CreateRoundRules = z.infer<typeof createEventRoundRulesSchema>;
-export type Rule = z.infer<typeof baseRoundRulesSchema>;
+export type CreateRoundRules = z.infer<typeof createEventRoundRulesSchema>
+export type Rule = z.infer<typeof baseRoundRulesSchema>
 
-
-export type GetCheckIn = z.infer<typeof getCheckInSchema>;
+export type GetCheckIn = z.infer<typeof getCheckInSchema>
 export type FetchLeaderBoard = z.infer<typeof fetchLeaderBoardSchema>
-export type GetCheckInError = InternalError;
+export type GetCheckInError = InternalError
 
-export type GetEventCheckIn = z.infer<typeof getEventCheckInSchema>;
-export type GetEventCheckInsError = EventOrRoundNotFound | InternalError;
-export type GetEventRegistrationsError = EventNotFound | InternalError;
-export type GetEventParticipant = z.infer<typeof getEventParticipantSchema>;
-export type GetEventParticipantsError = EventOrRoundNotFound | InternalError;
+export type GetEventCheckIn = z.infer<typeof getEventCheckInSchema>
+export type GetEventCheckInsError = EventOrRoundNotFound | InternalError
+export type GetEventRegistrationsError = EventNotFound | InternalError
+export type GetEventParticipant = z.infer<typeof getEventParticipantSchema>
+export type GetEventParticipantsError = EventOrRoundNotFound | InternalError
 export type EventRegistration = z.infer<typeof getEventRegistrationSchema>
 export type RoundPatch = z.infer<typeof roundPatchSchema>
-
-
 
 export type CheckIn = z.infer<typeof baseCheckInSchema>
 export type AlreadyCheckedIn = {
@@ -672,23 +668,23 @@ export type AlreadyCheckedIn = {
 }
 
 // Round Check-in Types
-export type CheckInTeam = z.infer<typeof checkInTeamSchema>;
-export type ScanResult = z.infer<typeof baseScanResultSchema>;
-export type RoundCheckIn = z.infer<typeof baseRoundCheckInSchema>;
+export type CheckInTeam = z.infer<typeof checkInTeamSchema>
+export type ScanResult = z.infer<typeof baseScanResultSchema>
+export type RoundCheckIn = z.infer<typeof baseRoundCheckInSchema>
 
 // Errors
 export type NotRegistered = {
-    code: "not_registered";
-    message: string;
-};
+    code: "not_registered"
+    message: string
+}
 export type NotQualified = {
-    code: "not_qualified";
-    message: string;
-};
+    code: "not_qualified"
+    message: string
+}
 export type AlreadyCheckedInRound = {
-    code: "already_checked_in";
-    message: string;
-};
+    code: "already_checked_in"
+    message: string
+}
 
 export type ScanError =
     | UserNotFound
@@ -699,7 +695,7 @@ export type ScanError =
     | PaymentPending
     | SuspendError
     | ProfileNotCompleted
-    | InternalError;
+    | InternalError
 
 export type CheckInError = UserNotFound | AlreadyCheckedIn | PaymentPending | InternalError
 
@@ -727,17 +723,17 @@ export type EventRoundCheckInInput = z.infer<typeof eventRoundCheckInSchema>
 
 export type RoundCheckInError =
     | {
-        code: "round_not_found"
-        message: string
-    }
+          code: "round_not_found"
+          message: string
+      }
     | {
-        code: "user_not_registered"
-        message: string
-    }
+          code: "user_not_registered"
+          message: string
+      }
     | {
-        code: "not_checked_in_globally"
-        message: string
-    }
+          code: "not_checked_in_globally"
+          message: string
+      }
     | AlreadyCheckedIn
     | UserNotFound
     | EventNotFound
@@ -748,7 +744,7 @@ export type RoundCheckInError =
     | PaymentPending
     | SuspendError
     | ProfileNotCompleted
-    | InternalError;
+    | InternalError
 
 export type ParticipantNotCheckedInToRound = {
     code: "participant_not_checked_in_to_round"
@@ -1015,5 +1011,29 @@ export type AssignVolunteersError =
     | EmptyVolunteerList
     | InternalError
 
-export type GetLeaderboardError =
+export type VolunteerNotFound = {
+    code: "volunteer_not_found"
+    message: string
+}
+
+export type RemoveVolunteer = z.infer<typeof removeVolunteerResponseSchema>
+
+export type RemoveVolunteerError =
+    | EventNotFound
+    | PermissionDenied
+    | VolunteerNotFound
+    | InternalError
+
+export type GetLeaderboardError = InternalError
+
+export type CheckInNotFound = {
+    code: "check_in_not_found"
+    message: string
+}
+
+export type DeleteRoundCheckInError =
+    | EventNotFound
+    | RoundNotFound
+    | UserNotFound
+    | CheckInNotFound
     | InternalError

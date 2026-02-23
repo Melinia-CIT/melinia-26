@@ -45,7 +45,8 @@ import {
     getEventCheckInsCount,
     getEventParticipants,
     getEventParticipantsCount,
-    assignVolunteersToEvent
+    assignVolunteersToEvent,
+    removeVolunteer
 } from "../db/queries"
 import {
     authMiddleware,
@@ -152,6 +153,46 @@ events.post(
         }
     }
 );
+
+events.delete(
+    "/:eventId/volunteers/:volunteerId",
+    authMiddleware,
+    adminAndOrganizerMiddleware,
+    async (c) => {
+        const { eventId, volunteerId } = c.req.param();
+        const userId = c.get("user_id");
+        const userRole = c.get("role");
+
+        if (!eventId || !userId) {
+            return c.json({
+                message: "EventId or UserId is missing!"
+            }, 400)
+        }
+
+        const removeVolunteerResult = await removeVolunteer(eventId, volunteerId, userId, userRole);
+        if (removeVolunteerResult.isErr) {
+            const error = removeVolunteerResult.error;
+
+            switch (error.code) {
+                case "event_not_found":
+                    return c.json({ message: error.message }, 404);
+                case "volunteer_not_found":
+                    return c.json({ message: error.message }, 404);
+                case "permission_denied":
+                    return c.json({ message: error.message }, 403);
+                case "internal_error":
+                    return c.json({ message: error.message }, 500);
+            }
+        }
+
+        const removedVolunteer = removeVolunteerResult.value;
+
+        return c.json({
+            message: "Volunteer removed successfully",
+            data: removedVolunteer
+        }, 200);
+    }
+)
 
 events.post(
     "/",
@@ -383,11 +424,11 @@ events.post(
         //         message: `This event requires ${event.participation_type} participation`
         //     });
         // }
-        
+
         const now = new Date();
-        if(now > event.end_time){
+        if (now > event.end_time) {
             throw new HTTPException(401, {
-                message:"Game Over! event has ended"
+                message: "Game Over! event has ended"
             })
         }
         // SOLO REGISTRATION

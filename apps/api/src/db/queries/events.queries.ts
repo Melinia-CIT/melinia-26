@@ -38,9 +38,13 @@ import {
     type GetEventRegistrationsError,
     type GetEventParticipant,
     type GetEventParticipantsError,
-    getEventParticipantSchema
+    getEventParticipantSchema,
+    type RemoveVolunteerError,
+    type RemoveVolunteer,
+    removeVolunteerResponseSchema
 } from "@melinia/shared"
 import { Result } from "true-myth";
+import { i } from "framer-motion/client";
 
 
 export async function insertEvent(created_by: string, data: CreateEvent, tx = sql): Promise<Event> {
@@ -424,6 +428,70 @@ export async function assignVolunteersToEvent(
     } catch (err) {
         console.error(err)
         return Result.err({ code: "internal_error", message: "Failed to assign volunteers" })
+    }
+}
+
+export async function removeVolunteer(
+    eventId: string,
+    volunteerId: string,
+    userId: string,
+    userRole: string
+): Promise<Result<RemoveVolunteer, RemoveVolunteerError>> {
+    try {
+        const [event] = await sql`SELECT 1 FROM events WHERE id = ${eventId};`;
+        if (!event) {
+            return Result.err({ code: "event_not_found", message: "Event not found" });
+        }
+
+        if (userRole !== "ADMIN") {
+            const [organizerCheck] = await sql`
+                SELECT 1 FROM event_crews 
+                WHERE event_id = ${eventId} 
+                AND user_id = ${userId};
+            `;
+            if (!organizerCheck) {
+                return Result.err({
+                    code: "permission_denied",
+                    message: "Only admin or organizer of the respective event can remvoe volunteer"
+                });
+            }
+        }
+
+        const row = await sql`
+            DELETE FROM event_crews ec
+            USING users u
+            WHERE 
+                u.id = ec.user_id
+                AND ec.event_id = ${eventId} 
+                AND ec.user_id = ${volunteerId}
+                AND u.role = 'VOLUNTEER'
+            RETURNING *;
+        `;
+
+        if (!row) {
+            console.error(`Error occured while removing volunteer: ${row}`);
+            return Result.err({
+                code: "internal_error",
+                message: "Failed to removec"
+            })
+        }
+
+        if (row.count === 0) {
+            return Result.err({
+                code: "volunteer_not_found",
+                message: "Volunteer not found"
+            })
+        }
+
+        return Result.ok(
+            removeVolunteerResponseSchema.parse(row[0])
+        );
+    } catch (err) {
+        console.error(`Error occured while removing volunteer: ${err}`);
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to remove volunteer from the event"
+        })
     }
 }
 
