@@ -163,7 +163,6 @@ export function RoundCheckInPopup({
                                     <div className="flex items-center gap-2">
                                         <User className="w-5 h-5 text-neutral-500" />
                                         <h4 className="text-lg font-bold text-white uppercase tracking-wider">Solo Participant</h4>
-                                        <h4 className="text-lg font-bold text-white uppercase tracking-wider">Solo Participant</h4>
                                         <span className="text-xs text-neutral-600 font-mono ml-2">ID: {participant.user_id}</span>
                                     </div>
                                     <div className="p-4 bg-neutral-900 border border-neutral-800 flex items-center justify-between">

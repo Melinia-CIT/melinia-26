@@ -863,7 +863,7 @@ export const getRoundResultsQuerySchema = z.object({
     status: z.enum(["QUALIFIED", "ELIMINATED", "DISQUALIFIED", "all"]).optional(),
     sort: z.enum(["points_desc", "points_asc", "name_asc"]).optional().default("points_desc"),
     from: z.coerce.number().min(0).default(0),
-    limit: z.coerce.number().int().min(1).max(100).default(50),
+    limit: z.coerce.number().int().min(1).default(50),
     group_by: z.enum(["team", "individual"]).optional().default("individual"),
 })
 
