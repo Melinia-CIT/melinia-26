@@ -543,6 +543,30 @@ export async function deleteRoundCheckIn(
             })
         }
 
+        // Block deletion if results have already been declared for this
+        // participant (or any team member) in this round.
+        const [existingResult] = await sql`
+            SELECT 1 FROM round_results rr
+            WHERE rr.round_id = ${round.id}
+            AND (
+                rr.user_id = ${participantId}
+                OR rr.team_id IN (
+                    SELECT team_id FROM event_round_checkins
+                    WHERE round_id = ${round.id}
+                    AND user_id = ${participantId}
+                    AND team_id IS NOT NULL
+                )
+            )
+            LIMIT 1;
+        `
+        if (existingResult) {
+            return Result.err({
+                code: "results_already_declared",
+                message:
+                    "Cannot remove check-in: results have already been declared for this round",
+            })
+        }
+
         const rows = await sql`
             WITH target AS (
                 SELECT 

@@ -584,6 +584,8 @@ ops.delete(
                     return c.json({ message }, 404)
                 case "check_in_not_found":
                     return c.json({ message }, 404)
+                case "results_already_declared":
+                    return c.json({ message }, 409)
                 case "internal_error":
                     return c.json({ message }, 500)
             }
