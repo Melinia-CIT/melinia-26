@@ -28,6 +28,8 @@ import {
     type RoundResultWithParticipant,
     type TeamRoundResult,
     type DeleteRoundCheckInError,
+    type DeleteEventResultsError,
+    type DeleteEventResults,
 } from "@melinia/shared"
 import sql from "../connection"
 import postgres from "postgres"
@@ -1436,6 +1438,37 @@ export async function getEventWinners(eventId: string) {
         return Result.err({
             code: "internal_error",
             message: "Failed to fetch event winners",
+        })
+    }
+}
+
+export async function deleteEventResults(
+    eventId: string
+): Promise<Result<DeleteEventResults, DeleteEventResultsError>> {
+    try {
+        const [event] = await sql`
+            SELECT id FROM events WHERE id = ${eventId}
+        `
+
+        if (!event) {
+            return Result.err({
+                code: "event_not_found",
+                message: "Event not found",
+            })
+        }
+
+        const deleted = await sql`
+            DELETE FROM event_results
+            WHERE event_id = ${eventId}
+            RETURNING id;
+        `
+
+        return Result.ok({ deleted_count: deleted.length })
+    } catch (error) {
+        console.error("Error deleting event results:", error)
+        return Result.err({
+            code: "internal_error",
+            message: "Failed to delete event prizes",
         })
     }
 }
