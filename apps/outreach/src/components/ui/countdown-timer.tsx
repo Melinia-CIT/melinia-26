@@ -1,8 +1,8 @@
 import { motion } from "framer-motion"
 import NumberFlow from "@number-flow/react"
 
-export const FEST_START = new Date("2026-02-25T08:00:00+05:30")
-export const FEST_END = new Date("2026-02-25T16:00:00+05:30")
+export const FEST_START = new Date("2026-02-25T09:00:00+05:30")
+export const FEST_END = new Date("2026-02-25T18:00:00+05:30")
 
 export type EventState = "countdown" | "live" | "ended"
 

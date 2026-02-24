@@ -155,7 +155,7 @@ const renderLatex = (latex: string) => {
 }
 
 const Leaderboard = () => {
-    const targetTime = useMemo(() => new Date("2026-02-25T08:00:00+05:30"), [])
+    const targetTime = useMemo(() => new Date("2026-02-25T09:00:00+05:30"), [])
     const [now, setNow] = useState(() => new Date())
     const forceLeaderboard = import.meta.env.VITE_FORCE_LEADERBOARD === "true"
     const showLeaderboard = forceLeaderboard || now >= targetTime
