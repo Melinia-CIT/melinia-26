@@ -1,21 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import {
-    ArrowLeft,
-    Clock,
-    Group,
-    NavArrowDown,
-    NavArrowLeft,
-    NavArrowRight,
-    Plus,
-    Search,
-    User,
-    Xmark,
-} from "iconoir-react"
+import { ArrowLeft, Group, NavArrowDown, Plus, Search, User, Xmark } from "iconoir-react"
 import { useMemo, useState } from "react"
 import type { EventDetail, EventRegistration, EventRegistrationsResponse } from "@/api/events"
 import { AddVolunteersModal } from "@/ui/AddVolunteersModal"
 import { Button } from "@/ui/Button"
+import { ConfirmDialog } from "@/ui/ConfirmDialog"
+import { TablePagination } from "@/ui/TablePagination"
+import {
+    RegistrationMobileCard,
+    RegistrationRow,
+    RoundCard,
+} from "@/ui/RegistrationComponents"
 
 type CrewMember = {
     user_id: string
@@ -27,36 +23,6 @@ type CrewMember = {
 export const Route = createFileRoute("/app/events/$eventId/")({
     component: EventRegistrationsPage,
 })
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function fmtTime(date: string | Date) {
-    return new Date(date)
-        .toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-        })
-        .toUpperCase()
-}
-
-function TypeBadge({ type }: { type: "TEAM" | "SOLO" }) {
-    if (type === "TEAM") {
-        return (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold border uppercase tracking-tighter bg-blue-950/50 text-blue-400 border-blue-800 w-fit">
-                <Group className="w-2.5 h-2.5" />
-                Team
-            </span>
-        )
-    }
-    return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold border uppercase tracking-tighter bg-blue-950/50 text-blue-400 border-blue-800 w-fit">
-            <User className="w-2.5 h-2.5" />
-            Solo
-        </span>
-    )
-}
-// ── page ──────────────────────────────────────────────────────────────────────
 
 function EventRegistrationsPage() {
     const { eventId } = Route.useParams()
@@ -98,16 +64,13 @@ function EventRegistrationsPage() {
     })
 
     const addVolunteersMutation = useMutation({
-        mutationFn: (emails: string[]) => {
-            return api.events.assignVolunteers(eventId, emails)
-        },
+        mutationFn: (emails: string[]) => api.events.assignVolunteers(eventId, emails),
         onSuccess: () => {
             setAddVolunteersError(null)
             queryClient.invalidateQueries({ queryKey: ["event-detail", eventId] })
         },
-        onError: error => {
-            const axiosErr = error as any
-            const message = axiosErr.response?.data?.message || "Failed to add volunteers."
+        onError: (error: any) => {
+            const message = error.response?.data?.message || "Failed to add volunteers."
             setAddVolunteersError(message)
         },
     })
@@ -123,9 +86,8 @@ function EventRegistrationsPage() {
             setRemoveVolunteerError(null)
             queryClient.invalidateQueries({ queryKey: ["event-detail", eventId] })
         },
-        onError: err => {
-            const axiosErr = err as any
-            const message = axiosErr.response?.data?.message || "Failed to remove volunteer"
+        onError: (err: any) => {
+            const message = err.response?.data?.message || "Failed to remove volunteer"
             setRemoveVolunteerError(message)
             setPendingRemoveVolunteer(null)
         },
@@ -135,7 +97,7 @@ function EventRegistrationsPage() {
     const filteredRegistrations = useMemo(() => {
         if (!activeSearch || !fullData?.data) return []
         const searchLower = activeSearch.toLowerCase()
-        return fullData.data.filter(reg => {
+        return fullData.data.filter((reg: EventRegistration) => {
             if (reg.type === "TEAM") {
                 return (
                     reg.name.toLowerCase().includes(searchLower) ||
@@ -247,9 +209,7 @@ function EventRegistrationsPage() {
                     className="w-full bg-neutral-950 border border-neutral-800 p-4 flex items-center justify-between group hover:border-neutral-600 transition-all duration-200 focus:outline-none"
                 >
                     <div className="flex items-center gap-3">
-                        <div
-                            className={`p-2 bg-blue-950/20 border border-blue-900/50 text-blue-400 group-hover:text-blue-300 transition-colors`}
-                        >
+                        <div className="p-2 bg-blue-950/20 border border-blue-900/50 text-blue-400 group-hover:text-blue-300 transition-colors">
                             <User className="w-5 h-5" />
                         </div>
                         <div className="text-left">
@@ -405,13 +365,11 @@ function EventRegistrationsPage() {
 
                         {/* Desktop View */}
                         <div className="hidden md:block border border-neutral-800 bg-neutral-950 overflow-hidden shadow-2xl">
-                            {/* Table */}
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
                                         <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                                            {event?.participation_type?.toUpperCase() ===
-                                                "TEAM" && (
+                                            {event?.participation_type?.toUpperCase() === "TEAM" && (
                                                 <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
                                                     Team / Entry
                                                 </th>
@@ -427,14 +385,13 @@ function EventRegistrationsPage() {
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="">
+                                    <tbody>
                                         {registrations.map((reg, idx) => (
                                             <RegistrationRow
                                                 key={`${reg.type}-${idx}`}
                                                 reg={reg}
                                                 showTeamColumn={
-                                                    event?.participation_type?.toUpperCase() ===
-                                                    "TEAM"
+                                                    event?.participation_type?.toUpperCase() === "TEAM"
                                                 }
                                             />
                                         ))}
@@ -442,7 +399,6 @@ function EventRegistrationsPage() {
                                 </table>
                             </div>
 
-                            {/* Pagination */}
                             <TablePagination
                                 page={page}
                                 totalPages={totalPages}
@@ -458,426 +414,26 @@ function EventRegistrationsPage() {
                 )}
             </div>
 
-            {/* Remove Volunteer Confirmation Dialog */}
-            {pendingRemoveVolunteer && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-                    <div className="bg-neutral-950 border border-neutral-800 w-full max-w-sm mx-4 shadow-2xl">
-                        <div className="px-6 pt-6 pb-4 border-b border-neutral-800">
-                            <p className="text-sm font-bold text-white uppercase tracking-widest">
-                                Remove Volunteer?
-                            </p>
-                        </div>
-                        <div className="px-6 py-5">
-                            <p className="text-sm text-neutral-400 leading-relaxed">
-                                This will remove{" "}
-                                <strong>
-                                    {pendingRemoveVolunteer.first_name}{" "}
-                                    {pendingRemoveVolunteer.last_name}
-                                </strong>{" "}
-                                from this event. This cannot be undone.
-                            </p>
-                            {removeVolunteerError && (
-                                <p className="mt-3 text-xs text-red-400">{removeVolunteerError}</p>
-                            )}
-                        </div>
-                        <div className="px-6 pb-6 flex items-center justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setPendingRemoveVolunteer(null)
-                                    setRemoveVolunteerError(null)
-                                }}
-                                disabled={removeVolunteerMutation.isPending}
-                                className="px-4 py-2 text-xs font-bold uppercase tracking-widest border border-neutral-700 text-neutral-400 hover:bg-neutral-900 hover:text-white disabled:opacity-40 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    removeVolunteerMutation.mutate(pendingRemoveVolunteer.user_id)
-                                }
-                                disabled={removeVolunteerMutation.isPending}
-                                className="px-4 py-2 text-xs font-bold uppercase tracking-widest border border-red-800 bg-red-950/60 text-red-400 hover:bg-red-900/60 hover:border-red-600 hover:text-red-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500"
-                            >
-                                {removeVolunteerMutation.isPending ? "Removing…" : "Remove"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    )
-}
-
-// ── Table Pagination ────────────────────────────────────────────────────────────
-
-interface TablePaginationProps {
-    page: number
-    totalPages: number
-    total: number
-    pageLimit: number
-    onPrev: () => void
-    onNext: () => void
-    onSetPage?: (page: number) => void
-    onSetLimit?: (limit: number) => void
-    limitOptions?: number[]
-}
-
-function TablePagination({
-    page,
-    totalPages,
-    total,
-    pageLimit,
-    onPrev,
-    onNext,
-    onSetPage,
-    onSetLimit,
-    limitOptions = [10, 20, 50, 100],
-}: TablePaginationProps) {
-    const from = total === 0 ? 0 : page * pageLimit + 1
-    const to = Math.min((page + 1) * pageLimit, total)
-    const [gotoInput, setGotoInput] = useState("")
-
-    const renderPageNumbers = () => {
-        if (!onSetPage || totalPages <= 1) return null
-
-        const pages: (number | string)[] = []
-
-        if (totalPages <= 7) {
-            for (let i = 0; i < totalPages; i++) pages.push(i)
-        } else {
-            if (page < 3) {
-                pages.push(0, 1, 2, 3, "...", totalPages - 1)
-            } else if (page > totalPages - 4) {
-                pages.push(0, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1)
-            } else {
-                pages.push(0, "...", page - 1, page, page + 1, "...", totalPages - 1)
-            }
-        }
-
-        return (
-            <div className="flex items-center gap-1 hidden sm:flex">
-                {pages.map((p, i) => {
-                    if (p === "...") {
-                        return (
-                            <span
-                                key={`ellipsis-${i}`}
-                                className="px-2 text-[10px] text-neutral-600"
-                            >
-                                ...
-                            </span>
-                        )
-                    }
-                    const isCurrent = p === page
-                    return (
-                        <button
-                            key={p}
-                            type="button"
-                            onClick={() => onSetPage(p as number)}
-                            className={`min-w-[28px] h-[28px] flex items-center justify-center text-[10px] font-bold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white border ${
-                                isCurrent
-                                    ? "bg-white text-black border-white"
-                                    : "border-neutral-800 text-neutral-400 bg-transparent hover:bg-neutral-900 hover:text-white"
-                            }`}
-                        >
-                            {(p as number) + 1}
-                        </button>
-                    )
-                })}
-            </div>
-        )
-    }
-
-    const handleGotoPage = () => {
-        if (!onSetPage) return
-        const pageNum = parseInt(gotoInput, 10)
-        if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
-            onSetPage(pageNum - 1)
-            setGotoInput("")
-        }
-    }
-
-    return (
-        <div className="px-6 py-3 border-t border-neutral-800 bg-neutral-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-                <span className="text-[10px] text-neutral-600 uppercase tracking-widest font-mono">
-                    {total === 0 ? "No results" : `${from}–${to} of ${total} entries`}
-                </span>
-                {onSetLimit && (
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-neutral-600 uppercase tracking-widest">
-                            Per page
-                        </span>
-                        <select
-                            value={pageLimit}
-                            onChange={e => {
-                                onSetLimit(parseInt(e.target.value, 10))
-                                onSetPage?.(0)
-                            }}
-                            className="bg-neutral-950 border border-neutral-800 text-neutral-400 text-[10px] uppercase tracking-widest px-2 py-1 focus:outline-none focus:border-neutral-600"
-                        >
-                            {limitOptions.map(opt => (
-                                <option key={opt} value={opt}>
-                                    {opt}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
-            </div>
-            {total > 0 && (
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={onPrev}
-                        disabled={page === 0}
-                        className="inline-flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-neutral-800 text-neutral-500 hover:bg-neutral-900 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
-                    >
-                        <NavArrowLeft className="w-3.5 h-3.5" />
-                        Prev
-                    </button>
-
-                    {renderPageNumbers()}
-
-                    <button
-                        type="button"
-                        onClick={onNext}
-                        disabled={page >= totalPages - 1}
-                        className="inline-flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-neutral-800 text-neutral-500 hover:bg-neutral-900 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
-                    >
-                        Next
-                        <NavArrowRight className="w-3.5 h-3.5" />
-                    </button>
-
-                    {onSetPage && totalPages > 1 && (
-                        <div className="flex items-center gap-1 ml-2">
-                            <span className="text-[10px] text-neutral-600 uppercase tracking-widest">
-                                Go to
-                            </span>
-                            <input
-                                type="number"
-                                min={1}
-                                max={totalPages}
-                                value={gotoInput}
-                                onChange={e => setGotoInput(e.target.value)}
-                                onKeyDown={e => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault()
-                                        handleGotoPage()
-                                    }
-                                }}
-                                onBlur={handleGotoPage}
-                                placeholder={String(page + 1)}
-                                className="w-14 bg-neutral-950 border border-neutral-800 text-neutral-400 text-[10px] px-2 py-1 focus:outline-none focus:border-neutral-600 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    )
-}
-
-// ── mobile card ──────────────────────────────────────────────────────────────────────
-
-function RegistrationMobileCard({ reg }: { reg: EventRegistration }) {
-    if (reg.type === "SOLO") {
-        return (
-            <div className="p-4 space-y-4">
-                <div className="flex items-start justify-between">
-                    <div className="space-y-1.5 flex-1 min-w-0">
-                        <TypeBadge type="SOLO" />
-                        <div className="text-sm font-bold text-white uppercase tracking-wider truncate">
-                            {reg.first_name} {reg.last_name}
-                        </div>
-                        <div className="text-[10px] text-neutral-500 font-mono">
-                            {reg.participant_id}
-                        </div>
-                    </div>
-                    <div className="shrink-0 pl-4">
-                        <div className="text-[11px] text-neutral-400 font-mono tracking-tight">
-                            {reg.ph_no}
-                        </div>
-                    </div>
-                </div>
-                <div className="pt-3 border-t border-neutral-800/40">
-                    <div className="text-[11px] text-neutral-300 font-medium leading-relaxed">
-                        {reg.college}
-                    </div>
-                    <div className="text-[10px] text-neutral-600 mt-0.5">{reg.degree}</div>
-                </div>
-            </div>
-        )
-    }
-
-    return (
-        <div className="p-4 space-y-4">
-            <div className="flex items-start justify-between">
-                <div className="space-y-1.5">
-                    <TypeBadge type="TEAM" />
-                    <div className="text-sm font-black text-white uppercase tracking-widest">
-                        {reg.name}
-                    </div>
-                    <div className="text-[9px] text-neutral-600 uppercase tracking-widest font-black">
-                        {reg.members.length} members
-                    </div>
-                </div>
-            </div>
-            <div className="space-y-4 pl-3 border-l-2 border-neutral-800 ml-1">
-                {reg.members.map(m => (
-                    <div key={m.participant_id} className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="text-xs font-bold text-neutral-300">
-                                {m.first_name} {m.last_name}
-                            </span>
-                            <span className="text-[10px] text-neutral-600 font-mono shrink-0">
-                                {m.ph_no}
-                            </span>
-                        </div>
-                        <div className="text-[10px] leading-relaxed">
-                            <span className="text-neutral-500 font-medium">{m.college}</span>
-                            <span className="mx-1.5 text-neutral-800">·</span>
-                            <span className="text-neutral-700">{m.degree}</span>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    )
-}
-
-// ── round card ──────────────────────────────────────────────────────────────
-
-function RoundCard({ round, eventId }: { round: EventDetail["rounds"][number]; eventId: string }) {
-    return (
-        <Link
-            to="/app/events/$eventId/$roundNo"
-            params={{ eventId, roundNo: round.round_no.toString() }}
-            className="bg-neutral-950 border border-neutral-800 p-5 space-y-4 relative overflow-hidden group block hover:border-neutral-600 hover:bg-neutral-900 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-        >
-            <div
-                className="absolute top-0 right-0 p-3 text-[48px] font-black leading-none pointer-events-none select-none italic transition-all duration-300 opacity-20 group-hover:opacity-40"
-                style={{
-                    WebkitTextStroke: "1px var(--color-blue-800)",
-                    WebkitTextFillColor: "var(--color-blue-800)",
+            {/* Remove Volunteer Confirmation */}
+            <ConfirmDialog
+                open={!!pendingRemoveVolunteer}
+                title="Remove Volunteer?"
+                description={
+                    pendingRemoveVolunteer
+                        ? `This will remove ${pendingRemoveVolunteer.first_name} ${pendingRemoveVolunteer.last_name} from this event. This cannot be undone.${removeVolunteerError ? `\n\nError: ${removeVolunteerError}` : ""}`
+                        : ""
+                }
+                confirmLabel="Remove"
+                isPending={removeVolunteerMutation.isPending}
+                onConfirm={() =>
+                    pendingRemoveVolunteer &&
+                    removeVolunteerMutation.mutate(pendingRemoveVolunteer.user_id)
+                }
+                onCancel={() => {
+                    setPendingRemoveVolunteer(null)
+                    setRemoveVolunteerError(null)
                 }}
-            >
-                #{round.round_no}
-            </div>
-
-            <div className="space-y-1 relative z-10">
-                <div className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
-                    Round {round.round_no}
-                </div>
-                <h4 className="text-lg font-bold text-white leading-tight">{round.round_name}</h4>
-            </div>
-
-            <div className="relative z-10 pt-1">
-                <div className="flex items-center gap-2 text-[11px] text-neutral-500">
-                    <Clock className="w-3.5 h-3.5 text-neutral-700 shrink-0" />
-                    <span>
-                        {fmtTime(round.start_time)} – {fmtTime(round.end_time)}
-                    </span>
-                </div>
-            </div>
-        </Link>
-    )
-}
-
-// ── registration rows ────────────────────────────────────────────────────────
-
-function RegistrationRow({
-    reg,
-    showTeamColumn,
-}: {
-    reg: EventRegistration
-    showTeamColumn: boolean
-}) {
-    if (reg.type === "SOLO") {
-        return (
-            <tr className="hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0">
-                {showTeamColumn && (
-                    <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/20 align-middle">
-                        <div className="flex flex-col items-center justify-center">
-                            <TypeBadge type="SOLO" />
-                        </div>
-                    </td>
-                )}
-                <td className="px-6 py-4">
-                    <div className="flex flex-col gap-2">
-                        {!showTeamColumn && <TypeBadge type="SOLO" />}
-                        <div className="text-sm font-semibold text-white">
-                            {reg.first_name} {reg.last_name}
-                        </div>
-                        <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
-                            {reg.participant_id}
-                        </div>
-                    </div>
-                </td>
-                <td className="px-6 py-4 hidden md:table-cell">
-                    <div className="text-xs text-neutral-400">
-                        <div className="truncate max-w-[240px] font-medium text-neutral-300">
-                            {reg.college}
-                        </div>
-                        <div className="text-[10px] text-neutral-600 mt-0.5">{reg.degree}</div>
-                    </div>
-                </td>
-                <td className="px-6 py-4">
-                    <div className="text-xs text-neutral-400 font-mono">{reg.ph_no}</div>
-                </td>
-            </tr>
-        )
-    }
-
-    return (
-        <>
-            {reg.members.map((member, idx) => (
-                <tr
-                    key={member.participant_id}
-                    className={`hover:bg-neutral-900/20 transition-colors duration-150 border-b border-neutral-800/60 last:border-0 ${
-                        idx === 0 ? "" : "border-t-0"
-                    }`}
-                >
-                    {idx === 0 && showTeamColumn && (
-                        <td
-                            rowSpan={reg.members.length}
-                            className="px-6 py-6 border-r border-neutral-800/60 bg-neutral-950/30 align-middle"
-                        >
-                            <div className="flex flex-col items-center justify-center space-y-2 sticky top-4 text-center">
-                                <TypeBadge type="TEAM" />
-                                <div className="text-sm font-black text-white uppercase tracking-widest leading-none">
-                                    {reg.name}
-                                </div>
-                                <div className="text-[9px] text-neutral-600 uppercase tracking-widest font-bold">
-                                    {reg.members.length} members
-                                </div>
-                            </div>
-                        </td>
-                    )}
-                    <td className="px-6 py-3.5">
-                        <div className="text-sm text-neutral-300 font-medium">
-                            {member.first_name} {member.last_name}
-                        </div>
-                        <div className="text-[10px] text-neutral-600 font-mono mt-0.5">
-                            {member.participant_id}
-                        </div>
-                    </td>
-                    <td className="px-6 py-3.5 hidden md:table-cell">
-                        <div className="text-xs text-neutral-500">
-                            <div className="truncate max-w-[240px] text-neutral-400">
-                                {member.college}
-                            </div>
-                            <div className="text-[10px] text-neutral-700 mt-0.5">
-                                {member.degree}
-                            </div>
-                        </div>
-                    </td>
-                    <td className="px-6 py-3.5">
-                        <div className="text-xs text-neutral-500 font-mono">{member.ph_no}</div>
-                    </td>
-                </tr>
-            ))}
-        </>
+            />
+        </div>
     )
 }
