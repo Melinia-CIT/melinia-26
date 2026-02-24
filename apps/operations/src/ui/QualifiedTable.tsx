@@ -50,14 +50,13 @@ export function QualifiedTable({
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                     <input
-                        type="text"
+                        type="search"
                         placeholder="Search by name, ID, or phone..."
                         value={searchInput}
                         onChange={e => onSearchInputChange(e.target.value)}
                         onKeyDown={e => {
                             if (e.key === "Enter") {
                                 e.preventDefault()
-                                e.stopPropagation()
                                 onSearch()
                                 e.currentTarget.blur()
                             }

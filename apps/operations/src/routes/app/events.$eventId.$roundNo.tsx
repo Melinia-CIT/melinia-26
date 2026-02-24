@@ -382,7 +382,6 @@ function RoundCheckInPage() {
                             onKeyDown={e => {
                                 if (e.key === "Enter") {
                                     e.preventDefault()
-                                    e.stopPropagation()
                                     handleSearch(searchInput)
                                     e.currentTarget.blur()
                                 }
