@@ -7,11 +7,7 @@ import { AddVolunteersModal } from "@/ui/AddVolunteersModal"
 import { Button } from "@/ui/Button"
 import { ConfirmDialog } from "@/ui/ConfirmDialog"
 import { TablePagination } from "@/ui/TablePagination"
-import {
-    RegistrationMobileCard,
-    RegistrationRow,
-    RoundCard,
-} from "@/ui/RegistrationComponents"
+import { RegistrationMobileCard, RegistrationRow, RoundCard } from "@/ui/RegistrationComponents"
 
 type CrewMember = {
     user_id: string
@@ -103,16 +99,14 @@ function EventRegistrationsPage() {
                     reg.name.toLowerCase().includes(searchLower) ||
                     reg.members.some(
                         m =>
-                            m.first_name.toLowerCase().includes(searchLower) ||
-                            m.last_name.toLowerCase().includes(searchLower) ||
+                            `${m.first_name} ${m.last_name}`.toLowerCase().includes(searchLower) ||
                             m.participant_id.toLowerCase().includes(searchLower) ||
                             m.ph_no.includes(searchLower)
                     )
                 )
             }
             return (
-                reg.first_name.toLowerCase().includes(searchLower) ||
-                reg.last_name.toLowerCase().includes(searchLower) ||
+                `${reg.first_name} ${reg.last_name}`.toLowerCase().includes(searchLower) ||
                 reg.participant_id.toLowerCase().includes(searchLower) ||
                 reg.ph_no.includes(searchLower)
             )
@@ -284,7 +278,7 @@ function EventRegistrationsPage() {
 
                 {/* Search Bar */}
                 <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-900/30 px-4 md:px-6 py-3">
-                    <div className="relative flex-1 max-w-md">
+                    <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                         <input
                             type="text"
@@ -320,17 +314,25 @@ function EventRegistrationsPage() {
                             setActiveSearch(searchInput.trim())
                             setPage(0)
                         }}
-                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest border border-neutral-700 text-neutral-300 hover:bg-neutral-800 transition-colors"
+                        className="hidden md:inline-flex px-4 py-2 text-xs font-bold uppercase tracking-widest border border-neutral-700 text-neutral-300 hover:bg-neutral-800 transition-colors"
                     >
                         Search
                     </button>
-                    {activeSearch && (
-                        <span className="text-xs text-neutral-500">
-                            Showing {totalCount} result{totalCount !== 1 ? "s" : ""} for "
-                            {activeSearch}"
-                        </span>
-                    )}
                 </div>
+                {activeSearch && (
+                    <div className="px-4 md:px-6 pb-2">
+                        {registrations.length > 0 ? (
+                            <span className="text-xs text-neutral-500">
+                                Showing {totalCount} result{totalCount !== 1 ? "s" : ""} for "
+                                {activeSearch}"
+                            </span>
+                        ) : (
+                            <span className="text-xs text-neutral-500">
+                                No results found for "{activeSearch}"
+                            </span>
+                        )}
+                    </div>
+                )}
 
                 {isLoadingRegistrations ? (
                     <div className="text-neutral-500 text-sm">Loading registrations…</div>
@@ -369,7 +371,8 @@ function EventRegistrationsPage() {
                                 <table className="w-full">
                                     <thead>
                                         <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                                            {event?.participation_type?.toUpperCase() === "TEAM" && (
+                                            {event?.participation_type?.toUpperCase() ===
+                                                "TEAM" && (
                                                 <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
                                                     Team / Entry
                                                 </th>
@@ -391,7 +394,8 @@ function EventRegistrationsPage() {
                                                 key={`${reg.type}-${idx}`}
                                                 reg={reg}
                                                 showTeamColumn={
-                                                    event?.participation_type?.toUpperCase() === "TEAM"
+                                                    event?.participation_type?.toUpperCase() ===
+                                                    "TEAM"
                                                 }
                                             />
                                         ))}

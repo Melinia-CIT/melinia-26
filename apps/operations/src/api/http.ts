@@ -81,8 +81,8 @@ http.interceptors.response.use(
 
 				// Redirect to login (via window location to ensure clean state)
 				const currentPath = window.location.pathname;
-				if (currentPath !== "/login") {
-					window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+				if (currentPath !== "/auth/login") {
+					window.location.href = `/auth/login?redirect=${encodeURIComponent(currentPath)}`;
 				}
 
 				return Promise.reject(refreshError);

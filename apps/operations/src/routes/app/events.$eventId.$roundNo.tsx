@@ -112,16 +112,14 @@ function RoundCheckInPage() {
                     entry.name.toLowerCase().includes(searchLower) ||
                     entry.members.some(
                         m =>
-                            m.first_name.toLowerCase().includes(searchLower) ||
-                            m.last_name.toLowerCase().includes(searchLower) ||
+                            `${m.first_name} ${m.last_name}`.toLowerCase().includes(searchLower) ||
                             m.participant_id.toLowerCase().includes(searchLower) ||
                             m.ph_no.includes(searchLower)
                     )
                 )
             }
             return (
-                entry.first_name.toLowerCase().includes(searchLower) ||
-                entry.last_name.toLowerCase().includes(searchLower) ||
+                `${entry.first_name} ${entry.last_name}`.toLowerCase().includes(searchLower) ||
                 entry.participant_id.toLowerCase().includes(searchLower) ||
                 entry.ph_no.includes(searchLower)
             )
@@ -174,16 +172,14 @@ function RoundCheckInPage() {
                     entry.name.toLowerCase().includes(searchLower) ||
                     entry.members.some(
                         m =>
-                            m.first_name.toLowerCase().includes(searchLower) ||
-                            m.last_name.toLowerCase().includes(searchLower) ||
+                            `${m.first_name} ${m.last_name}`.toLowerCase().includes(searchLower) ||
                             m.participant_id.toLowerCase().includes(searchLower) ||
                             m.ph_no.includes(searchLower)
                     )
                 )
             }
             return (
-                entry.first_name.toLowerCase().includes(searchLower) ||
-                entry.last_name.toLowerCase().includes(searchLower) ||
+                `${entry.first_name} ${entry.last_name}`.toLowerCase().includes(searchLower) ||
                 entry.participant_id.toLowerCase().includes(searchLower) ||
                 entry.ph_no.includes(searchLower)
             )
@@ -196,9 +192,9 @@ function RoundCheckInPage() {
     const qualifiedTotalPages = Math.ceil(qualifiedTotalCount / qualifiedLimit) || 1
     const paginatedQualified = qualifiedActiveSearch
         ? filteredQualified.slice(
-            qualifiedPage * qualifiedLimit,
-            (qualifiedPage + 1) * qualifiedLimit
-        )
+              qualifiedPage * qualifiedLimit,
+              (qualifiedPage + 1) * qualifiedLimit
+          )
         : (qualifiedData?.data ?? [])
 
     const checkInMutation = useMutation({
@@ -327,8 +323,7 @@ function RoundCheckInPage() {
         : (qualifiedData?.pagination.total ?? 0)
 
     const isLastRound =
-        !!event?.rounds?.length &&
-        roundNumber === Math.max(...event.rounds.map(r => r.round_no))
+        !!event?.rounds?.length && roundNumber === Math.max(...event.rounds.map(r => r.round_no))
 
     return (
         <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -345,11 +340,9 @@ function RoundCheckInPage() {
             {/* Header */}
             <div className="space-y-1">
                 <h2 className="text-2xl md:text-3xl font-bold text-white">
-                    Round {roundNo} Check-in
-                </h2>
-                <p className="text-neutral-500">
                     {targetRound ? targetRound.round_name : "Scan QR codes"}
-                </p>
+                </h2>
+                <p className="text-neutral-500">Round {roundNo}</p>
             </div>
 
             {/* QR Scanner Button */}
@@ -431,17 +424,19 @@ function RoundCheckInPage() {
                             id="tab-participants"
                             type="button"
                             onClick={() => setActiveTab("participants")}
-                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "participants"
-                                ? "text-white border-white"
-                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                                }`}
+                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${
+                                activeTab === "participants"
+                                    ? "text-white border-white"
+                                    : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
+                            }`}
                         >
                             Participants
                             <span
-                                className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "participants"
-                                    ? "bg-white text-black border-white"
-                                    : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                                    }`}
+                                className={`ml-2 text-xs px-1.5 py-0.5 border ${
+                                    activeTab === "participants"
+                                        ? "bg-white text-black border-white"
+                                        : "bg-neutral-800 text-neutral-400 border-neutral-700"
+                                }`}
                             >
                                 {participantsCount}
                             </span>
@@ -450,17 +445,19 @@ function RoundCheckInPage() {
                             id="tab-checkedin"
                             type="button"
                             onClick={() => setActiveTab("checkedin")}
-                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "checkedin"
-                                ? "text-white border-white"
-                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                                }`}
+                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${
+                                activeTab === "checkedin"
+                                    ? "text-white border-white"
+                                    : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
+                            }`}
                         >
                             Checked-In
                             <span
-                                className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "checkedin"
-                                    ? "bg-white text-black border-white"
-                                    : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                                    }`}
+                                className={`ml-2 text-xs px-1.5 py-0.5 border ${
+                                    activeTab === "checkedin"
+                                        ? "bg-white text-black border-white"
+                                        : "bg-neutral-800 text-neutral-400 border-neutral-700"
+                                }`}
                             >
                                 {checkInCount}
                             </span>
@@ -469,10 +466,11 @@ function RoundCheckInPage() {
                             id="tab-results"
                             type="button"
                             onClick={() => setActiveTab("results")}
-                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "results"
-                                ? "text-white border-white"
-                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                                }`}
+                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${
+                                activeTab === "results"
+                                    ? "text-white border-white"
+                                    : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
+                            }`}
                         >
                             Results
                         </button>
@@ -483,7 +481,9 @@ function RoundCheckInPage() {
                 {activeTab === "participants" && (
                     <QualifiedTable
                         data={paginatedQualified}
-                        isLoading={qualifiedActiveSearch ? isQualifiedFullLoading : isQualifiedLoading}
+                        isLoading={
+                            qualifiedActiveSearch ? isQualifiedFullLoading : isQualifiedLoading
+                        }
                         error={qualifiedError}
                         page={qualifiedPage}
                         totalPages={qualifiedTotalPages}

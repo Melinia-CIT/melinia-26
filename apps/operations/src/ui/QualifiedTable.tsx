@@ -47,7 +47,7 @@ export function QualifiedTable({
         <>
             {/* ── Search Bar ── */}
             <div className="flex items-center gap-2 px-4 md:px-6 py-3 border-b border-neutral-800 bg-neutral-900/30">
-                <div className="relative flex-1 max-w-md">
+                <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                     <input
                         type="text"
@@ -75,16 +75,24 @@ export function QualifiedTable({
                 <button
                     type="button"
                     onClick={onSearch}
-                    className="px-4 py-2 text-xs font-bold uppercase tracking-widest border border-neutral-700 text-neutral-300 hover:bg-neutral-800 transition-colors"
+                    className="hidden md:inline-flex px-4 py-2 text-xs font-bold uppercase tracking-widest border border-neutral-700 text-neutral-300 hover:bg-neutral-800 transition-colors"
                 >
                     Search
                 </button>
-                {activeSearch && (
-                    <span className="text-xs text-neutral-500">
-                        Showing {total} result{total !== 1 ? "s" : ""} for "{activeSearch}"
-                    </span>
-                )}
             </div>
+            {activeSearch && (
+                <div className="px-4 md:px-6 pb-2">
+                    {data.length > 0 ? (
+                        <span className="text-xs text-neutral-500">
+                            Showing {total} result{total !== 1 ? "s" : ""} for "{activeSearch}"
+                        </span>
+                    ) : (
+                        <span className="text-xs text-neutral-500">
+                            No results found for "{activeSearch}"
+                        </span>
+                    )}
+                </div>
+            )}
 
             {/* Loading state */}
             {isLoading && (
@@ -126,23 +134,14 @@ export function QualifiedTable({
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-neutral-800 bg-neutral-900/60">
-                                    {participationType?.toUpperCase() === "SOLO" ? (
-                                        <th
-                                            colSpan={2}
-                                            className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60"
-                                        >
-                                            Participant Details
+                                    {participationType?.toUpperCase() === "TEAM" && (
+                                        <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
+                                            Team / Entry
                                         </th>
-                                    ) : (
-                                        <>
-                                            <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-r border-neutral-800/60 w-[200px]">
-                                                Team / Entry
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
-                                                Participant Name
-                                            </th>
-                                        </>
                                     )}
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
+                                        Participant Name
+                                    </th>
                                     <th className="px-6 py-3 text-left text-[10px] font-semibold text-neutral-400 uppercase tracking-widest">
                                         College & Degree
                                     </th>
@@ -153,7 +152,11 @@ export function QualifiedTable({
                             </thead>
                             <tbody>
                                 {data.map((entry, idx) => (
-                                    <QualifiedRowGroup key={idx} entry={entry} />
+                                    <QualifiedRowGroup
+                                        key={idx}
+                                        entry={entry}
+                                        showTeamColumn={participationType?.toUpperCase() === "TEAM"}
+                                    />
                                 ))}
                             </tbody>
                         </table>
@@ -177,29 +180,31 @@ export function QualifiedTable({
 
 // ── Qualified Row Group ───────────────────────────────────────────────────────
 
-function QualifiedRowGroup({ entry }: { entry: RoundQualifiedParticipant }) {
+function QualifiedRowGroup({
+    entry,
+    showTeamColumn,
+}: {
+    entry: RoundQualifiedParticipant
+    showTeamColumn?: boolean
+}) {
     if (entry.type === "SOLO") {
         return (
             <tr className="hover:bg-neutral-900/40 transition-colors duration-150 border-b border-neutral-800/60 last:border-0">
-                <td
-                    colSpan={2}
-                    className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle"
-                >
-                    <div className="flex items-center gap-4">
-                        <div className="flex flex-col items-center justify-center space-y-1.5 min-w-[70px]">
+                {showTeamColumn && (
+                    <td className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/20 align-middle">
+                        <div className="flex flex-col items-center justify-center">
                             <TypeBadge type="SOLO" />
-                            <div className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest">
-                                Solo
-                            </div>
                         </div>
-                        <div className="h-8 w-px bg-neutral-800/40" />
-                        <div className="space-y-1">
-                            <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
-                                {entry.first_name} {entry.last_name}
-                            </div>
-                            <div className="text-[10px] text-neutral-500 font-mono">
-                                {entry.participant_id}
-                            </div>
+                    </td>
+                )}
+                <td className="px-6 py-4">
+                    <div className="flex flex-col gap-2">
+                        {!showTeamColumn && <TypeBadge type="SOLO" />}
+                        <div className="text-sm font-bold text-white uppercase tracking-wider leading-tight">
+                            {entry.first_name} {entry.last_name}
+                        </div>
+                        <div className="text-[10px] text-neutral-500 font-mono">
+                            {entry.participant_id}
                         </div>
                     </div>
                 </td>
@@ -223,7 +228,7 @@ function QualifiedRowGroup({ entry }: { entry: RoundQualifiedParticipant }) {
                     key={member.participant_id}
                     className="hover:bg-neutral-900/20 transition-colors duration-150 border-b border-neutral-800/60 last:border-0"
                 >
-                    {mIdx === 0 && (
+                    {showTeamColumn && mIdx === 0 && (
                         <td
                             rowSpan={entry.members.length}
                             className="px-6 py-4 border-r border-neutral-800/60 bg-neutral-950/30 align-middle"
