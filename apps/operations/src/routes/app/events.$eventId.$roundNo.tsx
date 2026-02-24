@@ -11,6 +11,7 @@ import {
     Trophy,
     User,
     Xmark,
+    Trash,
 } from "iconoir-react"
 import { useMemo, useState } from "react"
 import type {
@@ -210,9 +211,9 @@ function RoundCheckInPage() {
     const qualifiedTotalPages = Math.ceil(qualifiedTotalCount / qualifiedLimit) || 1
     const paginatedQualified = qualifiedActiveSearch
         ? filteredQualified.slice(
-              qualifiedPage * qualifiedLimit,
-              (qualifiedPage + 1) * qualifiedLimit
-          )
+            qualifiedPage * qualifiedLimit,
+            (qualifiedPage + 1) * qualifiedLimit
+        )
         : (qualifiedData?.data ?? [])
 
     const checkInMutation = useMutation({
@@ -442,19 +443,17 @@ function RoundCheckInPage() {
                             id="tab-participants"
                             type="button"
                             onClick={() => setActiveTab("participants")}
-                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${
-                                activeTab === "participants"
-                                    ? "text-white border-white"
-                                    : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                            }`}
+                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "participants"
+                                ? "text-white border-white"
+                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
+                                }`}
                         >
                             Participants
                             <span
-                                className={`ml-2 text-xs px-1.5 py-0.5 border ${
-                                    activeTab === "participants"
-                                        ? "bg-white text-black border-white"
-                                        : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                                }`}
+                                className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "participants"
+                                    ? "bg-white text-black border-white"
+                                    : "bg-neutral-800 text-neutral-400 border-neutral-700"
+                                    }`}
                             >
                                 {participantsCount}
                             </span>
@@ -463,19 +462,17 @@ function RoundCheckInPage() {
                             id="tab-checkedin"
                             type="button"
                             onClick={() => setActiveTab("checkedin")}
-                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${
-                                activeTab === "checkedin"
-                                    ? "text-white border-white"
-                                    : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                            }`}
+                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "checkedin"
+                                ? "text-white border-white"
+                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
+                                }`}
                         >
                             Checked-In
                             <span
-                                className={`ml-2 text-xs px-1.5 py-0.5 border ${
-                                    activeTab === "checkedin"
-                                        ? "bg-white text-black border-white"
-                                        : "bg-neutral-800 text-neutral-400 border-neutral-700"
-                                }`}
+                                className={`ml-2 text-xs px-1.5 py-0.5 border ${activeTab === "checkedin"
+                                    ? "bg-white text-black border-white"
+                                    : "bg-neutral-800 text-neutral-400 border-neutral-700"
+                                    }`}
                             >
                                 {checkInCount}
                             </span>
@@ -484,11 +481,10 @@ function RoundCheckInPage() {
                             id="tab-results"
                             type="button"
                             onClick={() => setActiveTab("results")}
-                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${
-                                activeTab === "results"
-                                    ? "text-white border-white"
-                                    : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
-                            }`}
+                            className={`px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors duration-150 border-b-2 flex-shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${activeTab === "results"
+                                ? "text-white border-white"
+                                : "text-neutral-500 border-transparent hover:text-neutral-300 hover:border-neutral-700"
+                                }`}
                         >
                             Results
                         </button>
@@ -691,17 +687,17 @@ type ResultFeedback =
     | { kind: "delete-success"; message: string }
     | { kind: "delete-failure"; message: string }
     | {
-          kind: "partial"
-          count: number
-          total: number
-          userErrors: { user_id: string; error: string }[]
-          teamErrors: { team_id: string; error: string }[]
-      }
+        kind: "partial"
+        count: number
+        total: number
+        userErrors: { user_id: string; error: string }[]
+        teamErrors: { team_id: string; error: string }[]
+    }
     | {
-          kind: "failure"
-          userErrors: { user_id: string; error: string }[]
-          teamErrors: { team_id: string; error: string }[]
-      }
+        kind: "failure"
+        userErrors: { user_id: string; error: string }[]
+        teamErrors: { team_id: string; error: string }[]
+    }
 
 // ── Prize slot types ─────────────────────────────────────────────────────────
 
@@ -851,10 +847,10 @@ function CheckedInTable({
                 return { user_id: entry.participant_id, status }
             })
             .filter(Boolean) as {
-            user_id?: string
-            team_id?: string
-            status: ParticipantStatus
-        }[]
+                user_id?: string
+                team_id?: string
+                status: ParticipantStatus
+            }[]
     }
 
     /** Post a single batch to the API and return structured result info */
@@ -1115,6 +1111,7 @@ function CheckedInTable({
         }
     }
 
+
     function toggleAll() {
         if (allSelected) setSelected(new Set())
         else setSelected(new Set(allIds))
@@ -1178,13 +1175,12 @@ function CheckedInTable({
             {/* ── Result Feedback Banner ── */}
             {feedback && (
                 <div
-                    className={`px-4 md:px-6 py-3 border-b text-xs font-medium flex flex-col gap-2 ${
-                        feedback.kind === "success" || feedback.kind === "delete-success"
-                            ? "bg-emerald-950/50 border-emerald-800 text-emerald-300"
-                            : feedback.kind === "partial"
-                              ? "bg-amber-950/50 border-amber-800 text-amber-300"
-                              : "bg-red-950/50 border-red-900 text-red-400"
-                    }`}
+                    className={`px-4 md:px-6 py-3 border-b text-xs font-medium flex flex-col gap-2 ${feedback.kind === "success" || feedback.kind === "delete-success"
+                        ? "bg-emerald-950/50 border-emerald-800 text-emerald-300"
+                        : feedback.kind === "partial"
+                            ? "bg-amber-950/50 border-amber-800 text-amber-300"
+                            : "bg-red-950/50 border-red-900 text-red-400"
+                        }`}
                 >
                     <div className="flex items-start justify-between gap-3">
                         <span>
@@ -2344,6 +2340,26 @@ function ResultsTab({
     isLastRound?: boolean;
 }) {
     const { api } = Route.useRouteContext()
+    const queryClient = useQueryClient()
+    const [isFlushing, setIsFlushing] = useState(false)
+    const [showFlushConfirm, setShowFlushConfirm] = useState(false)
+
+    async function handleFlushWinners() {
+        setIsFlushing(true);
+        try {
+            await api.events.deleteEventPrizes(eventId);
+            queryClient.invalidateQueries({ queryKey: ["event-winners", eventId] });
+            queryClient.invalidateQueries({ queryKey: ["round-results"] });
+            setShowFlushConfirm(false);
+        } catch (err) {
+            const axiosErr = err as AxiosError<{ message?: string }>;
+            const msg = axiosErr.response?.data?.message ?? "Failed to flush winners";
+            console.error(msg);
+            setShowFlushConfirm(false);
+        } finally {
+            setIsFlushing(false);
+        }
+    }
     const [statusFilter, setStatusFilter] = useState<
         "all" | "QUALIFIED" | "ELIMINATED" | "DISQUALIFIED"
     >("all")
@@ -2465,13 +2481,24 @@ function ResultsTab({
                                 Event Winners
                             </span>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => refetchWinners()}
-                            className="text-[10px] text-neutral-600 hover:text-neutral-300 uppercase tracking-widest transition-colors border border-neutral-800 px-2 py-1 hover:border-neutral-600"
-                        >
-                            Refresh
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowFlushConfirm(true)}
+                                disabled={isFlushing}
+                                className="inline-flex items-center gap-1.5 text-[10px] text-red-900/60 hover:text-red-500 uppercase tracking-widest transition-colors border border-red-950/20 px-2 py-1 hover:border-red-900/40"
+                            >
+                                <Trash className="w-3 h-3" />
+                                {isFlushing ? "Flushing..." : "Flush Winners"}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => refetchWinners()}
+                                className="text-[10px] text-neutral-600 hover:text-neutral-300 uppercase tracking-widest transition-colors border border-neutral-800 px-2 py-1 hover:border-neutral-600"
+                            >
+                                Refresh
+                            </button>
+                        </div>
                     </div>
 
                     {/* Loading */}
@@ -2706,8 +2733,8 @@ function ResultsTab({
                     {activeSearch
                         ? `No results found for "${activeSearch}"`
                         : statusFilter === "all"
-                          ? "No results recorded for this round yet."
-                          : `No ${statusFilter.toLowerCase()} participants.`}
+                            ? "No results recorded for this round yet."
+                            : `No ${statusFilter.toLowerCase()} participants.`}
                 </div>
             )}
 
@@ -2774,6 +2801,15 @@ function ResultsTab({
                     />
                 </>
             )}
+            <ConfirmDialog
+                open={showFlushConfirm}
+                title="Flush Winners?"
+                description="Are you sure you want to flush all assigned winners for this event? This will remove all prize allocations and cannot be undone."
+                confirmLabel="Flush All"
+                isPending={isFlushing}
+                onConfirm={handleFlushWinners}
+                onCancel={() => setShowFlushConfirm(false)}
+            />
         </div>
     )
 }
@@ -3112,11 +3148,10 @@ function TablePagination({
                             key={p}
                             type="button"
                             onClick={() => onSetPage(p as number)}
-                            className={`min-w-[28px] h-[28px] flex items-center justify-center text-[10px] font-bold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white border ${
-                                isCurrent
-                                    ? "bg-white text-black border-white"
-                                    : "border-neutral-800 text-neutral-400 bg-transparent hover:bg-neutral-900 hover:text-white"
-                            }`}
+                            className={`min-w-[28px] h-[28px] flex items-center justify-center text-[10px] font-bold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white border ${isCurrent
+                                ? "bg-white text-black border-white"
+                                : "border-neutral-800 text-neutral-400 bg-transparent hover:bg-neutral-900 hover:text-white"
+                                }`}
                         >
                             {(p as number) + 1}
                         </button>

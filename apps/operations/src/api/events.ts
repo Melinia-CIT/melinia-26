@@ -251,6 +251,11 @@ export function createEventsApi(http: AxiosInstance) {
             )
             return data
         },
+
+        async deleteEventPrizes(eventId: string): Promise<{ message: string }> {
+            const { data } = await http.delete<{ message: string }>(`/ops/events/${eventId}/prizes`)
+            return data
+        },
     }
 }
 
