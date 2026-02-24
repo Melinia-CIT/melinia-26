@@ -940,11 +940,14 @@ export type PrizeAssignmentRecord = {
     user_id: string
     team_id: string | null
     prize_id: number
-    position: number
+    /** Aliased as `prize_position` in the DB query (ep.position as prize_position) */
+    prize_position: number
     reward_value: number
     points: number
     awarded_at: Date
     awarded_by: string
+    team_name?: string | null
+    participant_name?: string | null
 }
 
 export type BulkPrizeResult = {

@@ -1423,9 +1423,13 @@ export async function getEventWinners(eventId: string) {
                 er.awarded_at,
                 er.awarded_by,
                 ep.position as prize_position,
-                ep.reward_value
+                ep.reward_value,
+                t.name as team_name,
+                CONCAT(p.first_name, ' ', COALESCE(p.last_name, '')) as participant_name
             FROM event_results er
             LEFT JOIN event_prizes ep ON er.prize_id = ep.id
+            LEFT JOIN teams t ON er.team_id = t.id
+            LEFT JOIN profile p ON er.user_id = p.user_id
             WHERE er.event_id = ${eventId}
             ORDER BY ep.position ASC NULLS LAST
         `

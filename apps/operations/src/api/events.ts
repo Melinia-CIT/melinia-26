@@ -16,9 +16,12 @@ import type {
     RoundResultWithParticipant,
     PaginatedRoundResults,
     GetRoundResultsQuery,
+    AssignPrizes,
+    PrizeAssignmentRecord,
+    BulkPrizeResult,
 } from "@melinia/shared"
 
-export type { EventRegistration, Rule, Round, EventDetail }
+export type { EventRegistration, Rule, Round, EventDetail, AssignPrizes, PrizeAssignmentRecord, BulkPrizeResult }
 
 export interface Pagination {
     from: number
@@ -77,6 +80,14 @@ export interface PostRoundResultsResponse {
     data: BulkOperationResult
     user_errors?: UserResultError[]
     team_errors?: TeamResultError[]
+}
+
+// ── Assign event prizes response shape ────────────────────────────────────
+
+export interface AssignPrizesResponse {
+    message: string;
+    data: BulkPrizeResult;
+    errors?: { user_id?: string; team_id?: string; error: string }[];
 }
 
 // ── API factory ────────────────────────────────────────────────────────────
@@ -217,6 +228,26 @@ export function createEventsApi(http: AxiosInstance) {
         async deleteVolunteer(eventId: string, volunteerId: string): Promise<{ message: string }> {
             const { data } = await http.delete<{ message: string }>(
                 `/events/${eventId}/volunteers/${volunteerId}`
+            )
+            return data
+        },
+
+        async assignEventPrizes(
+            eventId: string,
+            payload: AssignPrizes
+        ): Promise<AssignPrizesResponse> {
+            const { data } = await http.post<AssignPrizesResponse>(
+                `/ops/events/${eventId}/prizes`,
+                payload
+            )
+            return data
+        },
+
+        async getEventWinners(
+            eventId: string
+        ): Promise<{ message: string; data: PrizeAssignmentRecord[] }> {
+            const { data } = await http.get<{ message: string; data: PrizeAssignmentRecord[] }>(
+                `/ops/events/${eventId}/winners`
             )
             return data
         },
