@@ -973,6 +973,9 @@ export type AssignPrizesError =
     | InvalidData
     | InternalError
 
+export type DeleteEventResultsError = EventNotFound | InternalError
+export type DeleteEventResults = { deleted_count: number }
+
 // Volunteer Assignment Errors
 export type AssigningUserNotFound = {
     code: "assigning_user_not_found"

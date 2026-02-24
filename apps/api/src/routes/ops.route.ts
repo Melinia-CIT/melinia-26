@@ -32,6 +32,7 @@ import {
     getEventWinners,
     deleteRoundCheckIn,
     isEventCrew,
+    deleteEventResults,
 } from "../db/queries"
 
 import { z } from "zod"
@@ -377,6 +378,37 @@ ops.post(
         )
     }
 )
+
+/**
+ * DELETE /api/ops/events/:eventId/prizes
+ * Delete all prize assignments (event_results) for an event
+ */
+ops.delete("/events/:eventId/prizes", authMiddleware, opsAuthMiddleware, async c => {
+    const eventId = c.req.param("eventId")
+
+    const result = await deleteEventResults(eventId)
+
+    if (result.isErr) {
+        const { code, message } = result.error
+
+        switch (code) {
+            case "event_not_found":
+                return c.json({ message }, 404)
+            case "internal_error":
+            default:
+                console.error("Error deleting event prizes:", result.error)
+                return c.json({ message }, 500)
+        }
+    }
+
+    return c.json(
+        {
+            message: "Event prizes deleted successfully",
+            deleted_count: result.value.deleted_count,
+        },
+        200
+    )
+})
 
 ops.get(
     "/check-in",
