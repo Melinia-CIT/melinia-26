@@ -50,46 +50,62 @@ export async function getCollegeLeaderboard(
         const rows = await sql`
             SELECT *
             FROM (
+                WITH college_stats AS (
+                    SELECT
+                        c.id AS college_id,
+                        c.name AS college_name,
+                        COALESCE(SUM(user_points.total_points), 0) AS total_points,
+                        COUNT(user_points.user_id) AS participant_count,
+                        COALESCE(AVG(user_points.total_points), 0) AS raw_avg
+                    FROM profile p
+                    JOIN users u ON u.id = p.user_id
+                    JOIN colleges c ON c.id = p.college_id
+                    LEFT JOIN (
+                        SELECT
+                            combined.user_id,
+                            SUM(combined.points) AS total_points
+                        FROM (
+                            SELECT user_id, points FROM round_results
+                            UNION ALL
+                            SELECT user_id, points FROM event_results
+                        ) combined
+                        GROUP BY combined.user_id
+                        HAVING SUM(combined.points) > 0
+                    ) user_points ON user_points.user_id = u.id
+                    GROUP BY c.id, c.name
+                ),
+
+                global_avg AS (
+                    SELECT COALESCE(AVG(raw_avg), 0) AS C
+                    FROM college_stats
+                )
+
                 SELECT
-                    c.id AS college_id,
-                    c.name AS college_name,
+                    cs.college_id,
+                    cs.college_name,
+                    cs.total_points,
+                    cs.participant_count,
 
-                    -- Total points scored by the college
-                    COALESCE(SUM(user_points.total_points), 0) AS total_points,
-
-                    -- Number of users who participated (scored at least once)
-                    COUNT(user_points.user_id) AS participant_count,
-
-                    -- Fair score: average points per user (rounded to 2 decimals)
-                    COALESCE(
-                        ROUND(AVG(user_points.total_points), 2),
-                        0
+                    ROUND(
+                        (
+                            (cs.participant_count::numeric / (cs.participant_count + 5)) * cs.raw_avg
+                            +
+                            (5.0 / (cs.participant_count + 5)) * g.C
+                        ),
+                        2
                     ) AS avg_points_per_user,
 
-                    -- Rank colleges by the same rounded value (consistent ranking)
                     DENSE_RANK() OVER (
-                        ORDER BY COALESCE(ROUND(AVG(user_points.total_points), 2), 0) DESC
+                        ORDER BY
+                        (
+                            (cs.participant_count::numeric / (cs.participant_count + 5)) * cs.raw_avg
+                            +
+                            (5.0 / (cs.participant_count + 5)) * g.C
+                        ) DESC
                     ) AS rank
 
-                FROM profile p
-                JOIN users u ON u.id = p.user_id
-                JOIN colleges c ON c.id = p.college_id
-
-                -- Per-user total points
-                LEFT JOIN (
-                    SELECT
-                        combined.user_id,
-                        SUM(combined.points) AS total_points
-                    FROM (
-                        SELECT user_id, points FROM round_results
-                        UNION ALL
-                        SELECT user_id, points FROM event_results
-                    ) combined
-                    GROUP BY combined.user_id
-                    HAVING SUM(combined.points) > 0
-                ) user_points ON user_points.user_id = u.id
-
-                GROUP BY c.id, c.name
+                FROM college_stats cs
+                CROSS JOIN global_avg g
             ) leaderboard
             ORDER BY avg_points_per_user DESC
             LIMIT ${limit} OFFSET ${from};
